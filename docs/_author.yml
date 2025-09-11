@@ -1,0 +1,22 @@
+author:
+  - name: Aly Lamuri
+    corresponding: true
+    email: a.l.m.lamuri.murdani@rug.nl
+    affiliations:
+      - ref: rug
+      - ref: ui
+    roles: [conceptualization, methodology, analysis, visualization, writing]
+
+affiliations:
+  - id: rug
+    name: University of Groningen
+    city: Groningen
+    country: Netherlands
+  - id: ui
+    name: University of Indonesia
+    city: Depok
+    country: Indonesia
+  - id: umcg
+    name: University Medical Centre Groningen
+    city: Groningen
+    country: Netherlands

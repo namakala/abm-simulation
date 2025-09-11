@@ -1,0 +1,43 @@
+---
+title: >
+  An agent-based simulation of psychological resilience
+
+format:
+  pdf:
+    keep-tex: true
+    include-in-header:
+      file: _header.tex
+    output-file: agent-based-model-psychological-resilience.pdf
+
+metadata-files:
+  - _author.yml
+  - _knitr-bib.yml
+---
+
+# Introduction
+
+Anxiety and depression are among the most prevalent psychological disorders in the general population, generating substantial socioeconomic consequences [@gbd2022global; @arias2022quantifying]. These conditions impose considerable direct and indirect costs, while curative and rehabilitative approaches often demonstrate limited effectiveness [@mekonen2021estimating]. Strengthening psychological resilience offers a preventive pathway to reduce vulnerability to such disorders [@troy2023psychological]. Public health policy should therefore prioritize preventive strategies that foster resilience. However, designing cost-effective preventive policies requires rigorous assessment methods. Agent-based modeling (ABM) provides a promising approach to simulate psychological resilience and generate evidence to guide interventions aimed at enhancing resilience at the population level.
+
+## Previous ABM Publications
+
+The following five articles were selected for their relevance to the development of ABM simulations addressing mental health, social interaction, or their intersection. Each study contributed unique methodological insights that informed the current work. While some articles demonstrated only minimal overlap with our research, they were included because they resolved specific modeling challenges pertinent to our framework. Collectively, these studies provided a foundation for constructing comprehensive and realistic ABM simulations in the context of mental health and social dynamics.
+
+@Romanyukha2023 implemented an ABM to evaluate the mental health consequences of policy measures during the COVID-19 pandemic. The model integrated epidemic dynamics with the development of mental disorders in a large urban population. Using Quality-Adjusted Life Years (QALY) as an outcome measure, the study considered major depressive disorder, anxiety disorder, COVID-19 cases (lethal and non-lethal), and immunization. The results showed that mental disorders accounted for a substantial share of pandemic-related health losses, and under strong lockdown conditions, the lowest QALY loss occurred when approximately 70% of the population was isolated. These findings demonstrate that ABM can quantify the impact of policy interventions on mental health outcomes, supporting its use for evaluating preventive strategies that enhance psychological resilience.
+
+@Murase2021 introduced a generalized weighted social network (GWSN) model to describe the formation of social ties and networks. The GWSN model integrates mechanisms previously examined in isolation, including triadic closure (the tendency for friends of friends to become friends), homophilic interactions, and link termination processes. Due to the model's complexity and numerous input parameters, the authors combined extensive simulations with deep neural networks for regression and global sensitivity analysis, enabling prediction of network properties and identification of key determinants of network dynamics. By providing a robust framework for modeling realistic social interactions, this approach is directly relevant for simulating how social connectivity influences resilience and the spread of mental disorders in ABM.
+
+@Andarlia2021 examined the contagion effect of psychological disorders using ABM to simulate the spread of depression in a population. The model accounted for the influence of close social relationships, which could trigger mild, moderate, or severe depressive episodes, and modeled recovery through therapy with transition dynamics and recovery rates differentiated by gender. Simulation results indicated that higher contact rates with depressed individuals increased episode severity, whereas greater therapy uptake reduced depression prevalence. This study highlights how ABM can capture both the propagation and mitigation of mental disorders through social mechanisms, a key component for modeling interventions aimed at strengthening psychological resilience.
+
+@Lopez2024 introduced a methodology embedding an ABM within adaptive temporal networks to simulate daily interactions and examine the interplay between infectious disease spread and individual behavior. The model integrates individual behavior, social dynamics, and epidemiological factors, validated using real-world influenza outbreak data, and can simulate complex social phenomena such as social awareness. By incorporating self-organized system logic, agents respond dynamically to external stimuli, perceptions, and health states. Combined with social network models and mental health contagion dynamics, this approach demonstrates that ABM can simulate emergent phenomena arising from the interaction of social behavior and health, providing a powerful tool for testing policies that influence population resilience.
+
+@Benny2022 employed ABM to evaluate the impact of government policies on mental health, focusing on depression in expectant mothers. The model incorporated parameters from the "All Our Families" cohort dataset and literature, including household income, age, education, and environmental factors. The study hypothesized that income-supportive programs would reduce maternal depression, and simulations confirmed that progressive income policies significantly lowered prevalence. Additionally, modeling mothers' social networks showed that expanding social connections further reduced depression risk. These findings illustrate that ABM can assess the effectiveness of policy interventions on mental health outcomes, underscoring its applicability for designing strategies to enhance resilience and reduce the prevalence of psychological disorders.
+
+## Current Research
+
+This study aims to simulate stress perception using an ABM approach. Stress perception is operationalized as a generalization of the Perceived Stress Scale-10, following the guidance provided in its interpretation manual [@cohen1988perceived]. Modeling stress perception is essential for capturing the activation of psychological resilience [@parsons2016cognitive]. Under equivalent stress exposure, agents with higher resilience are less likely to develop psychological disorders, whereas less resilient agents are more vulnerable. The simulation incorporates multiple psychological resources, including social support, family support, and psychological capital, with the latter encompassing personality traits such as openness, conscientiousness, and extraversion [@Hobfoll1989; @klaver2021exposure; @ZagerKocjan2021].
+
+# References {-}
+
+\multicols{2}
+\footnotesize
+
