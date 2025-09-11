@@ -1,0 +1,426 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else  
+    % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{typearea}
+\floatplacement{figure}{htbp}
+\floatplacement{table}{htbp}
+\AtBeginDocument{%
+  \storeareas\normalpapersize
+}
+\BeforeRestoreareas{\cleardoublepage}
+\newcommand*\uselandscape{%
+  \cleardoublepage
+  \KOMAoptions{paper=landscape}%
+  \recalctypearea
+  \areaset{1.2\textwidth}{1.2\textheight}%
+}
+\KOMAoption{captions}{tableheading}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={An agent-based simulation of psychological resilience},
+  pdfauthor={Aly Lamuri},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\title{An agent-based simulation of psychological resilience}
+\author{Aly Lamuri}
+\date{}
+
+\begin{document}
+\maketitle
+
+
+\section{Introduction}\label{introduction}
+
+Anxiety and depression are among the most prevalent psychological
+disorders in the general population, generating substantial
+socioeconomic consequences (GBD Collaborators 2022; Arias, Saxena, and
+Verguet 2022). These conditions impose considerable direct and indirect
+costs, while curative and rehabilitative approaches often demonstrate
+limited effectiveness (Mekonen et al. 2021). Strengthening psychological
+resilience offers a preventive pathway to reduce vulnerability to such
+disorders (Troy et al. 2023). Public health policy should therefore
+prioritize preventive strategies that foster resilience. However,
+designing cost-effective preventive policies requires rigorous
+assessment methods. Agent-based modeling (ABM) provides a promising
+approach to simulate psychological resilience and generate evidence to
+guide interventions aimed at enhancing resilience at the population
+level.
+
+\subsection{Previous ABM Publications}\label{previous-abm-publications}
+
+The following five articles were selected for their relevance to the
+development of ABM simulations addressing mental health, social
+interaction, or their intersection. Each study contributed unique
+methodological insights that informed the current work. While some
+articles demonstrated only minimal overlap with our research, they were
+included because they resolved specific modeling challenges pertinent to
+our framework. Collectively, these studies provided a foundation for
+constructing comprehensive and realistic ABM simulations in the context
+of mental health and social dynamics.
+
+Romanyukha et al. (2023) implemented an ABM to evaluate the mental
+health consequences of policy measures during the COVID-19 pandemic. The
+model integrated epidemic dynamics with the development of mental
+disorders in a large urban population. Using Quality-Adjusted Life Years
+(QALY) as an outcome measure, the study considered major depressive
+disorder, anxiety disorder, COVID-19 cases (lethal and non-lethal), and
+immunization. The results showed that mental disorders accounted for a
+substantial share of pandemic-related health losses, and under strong
+lockdown conditions, the lowest QALY loss occurred when approximately
+70\% of the population was isolated. These findings demonstrate that ABM
+can quantify the impact of policy interventions on mental health
+outcomes, supporting its use for evaluating preventive strategies that
+enhance psychological resilience.
+
+Murase et al. (2021) introduced a generalized weighted social network
+(GWSN) model to describe the formation of social ties and networks. The
+GWSN model integrates mechanisms previously examined in isolation,
+including triadic closure (the tendency for friends of friends to become
+friends), homophilic interactions, and link termination processes. Due
+to the model's complexity and numerous input parameters, the authors
+combined extensive simulations with deep neural networks for regression
+and global sensitivity analysis, enabling prediction of network
+properties and identification of key determinants of network dynamics.
+By providing a robust framework for modeling realistic social
+interactions, this approach is directly relevant for simulating how
+social connectivity influences resilience and the spread of mental
+disorders in ABM.
+
+Andarlia and Gunawan (2021) examined the contagion effect of
+psychological disorders using ABM to simulate the spread of depression
+in a population. The model accounted for the influence of close social
+relationships, which could trigger mild, moderate, or severe depressive
+episodes, and modeled recovery through therapy with transition dynamics
+and recovery rates differentiated by gender. Simulation results
+indicated that higher contact rates with depressed individuals increased
+episode severity, whereas greater therapy uptake reduced depression
+prevalence. This study highlights how ABM can capture both the
+propagation and mitigation of mental disorders through social
+mechanisms, a key component for modeling interventions aimed at
+strengthening psychological resilience.
+
+López and Giovanini (2024) introduced a methodology embedding an ABM
+within adaptive temporal networks to simulate daily interactions and
+examine the interplay between infectious disease spread and individual
+behavior. The model integrates individual behavior, social dynamics, and
+epidemiological factors, validated using real-world influenza outbreak
+data, and can simulate complex social phenomena such as social
+awareness. By incorporating self-organized system logic, agents respond
+dynamically to external stimuli, perceptions, and health states.
+Combined with social network models and mental health contagion
+dynamics, this approach demonstrates that ABM can simulate emergent
+phenomena arising from the interaction of social behavior and health,
+providing a powerful tool for testing policies that influence population
+resilience.
+
+Benny et al. (2022) employed ABM to evaluate the impact of government
+policies on mental health, focusing on depression in expectant mothers.
+The model incorporated parameters from the ``All Our Families'' cohort
+dataset and literature, including household income, age, education, and
+environmental factors. The study hypothesized that income-supportive
+programs would reduce maternal depression, and simulations confirmed
+that progressive income policies significantly lowered prevalence.
+Additionally, modeling mothers' social networks showed that expanding
+social connections further reduced depression risk. These findings
+illustrate that ABM can assess the effectiveness of policy interventions
+on mental health outcomes, underscoring its applicability for designing
+strategies to enhance resilience and reduce the prevalence of
+psychological disorders.
+
+\subsection{Current Research}\label{current-research}
+
+This study aims to simulate stress perception using an ABM approach.
+Stress perception is operationalized as a generalization of the
+Perceived Stress Scale-10, following the guidance provided in its
+interpretation manual (Cohen 1988). Modeling stress perception is
+essential for capturing the activation of psychological resilience
+(Parsons, Kruijt, and Fox 2016). Under equivalent stress exposure,
+agents with higher resilience are less likely to develop psychological
+disorders, whereas less resilient agents are more vulnerable. The
+simulation incorporates multiple psychological resources, including
+social support, family support, and psychological capital, with the
+latter encompassing personality traits such as openness,
+conscientiousness, and extraversion (Hobfoll 1989; Klaver et al. 2021;
+Zager Kocjan, Kavčič, and Avsec 2021).
+
+\section*{References}\label{references}
+\addcontentsline{toc}{section}{References}
+
+\multicols{2}
+\footnotesize
+
+\phantomsection\label{refs}
+\begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-Andarlia2021}
+Andarlia, H T, and I Gunawan. 2021. {``An Agent-Based Model of Contagion
+Effects in Affected Depression and Its Recovery Process.''}
+\emph{Journal of Physics: Conference Series} 1751 (1): 012007.
+\url{https://doi.org/10.1088/1742-6596/1751/1/012007}.
+
+\bibitem[\citeproctext]{ref-arias2022quantifying}
+Arias, Daniel, Shekhar Saxena, and Stéphane Verguet. 2022.
+{``Quantifying the Global Burden of Mental Disorders and Their Economic
+Value.''} \emph{EClinicalMedicine} 54.
+
+\bibitem[\citeproctext]{ref-Benny2022}
+Benny, Claire, Shelby Yamamoto, Sheila McDonald, Radha Chari, and Roman
+Pabayo. 2022. {``Modelling Maternal Depression: An Agent-Based Model to
+Examine the Complex Relationship Between Relative Income and
+Depression.''} \emph{International Journal of Environmental Research and
+Public Health} 19 (7): 4208.
+\url{https://doi.org/10.3390/ijerph19074208}.
+
+\bibitem[\citeproctext]{ref-cohen1988perceived}
+Cohen, Sheldon. 1988. {``Perceived Stress in a Probability Sample of the
+United States.''}
+
+\bibitem[\citeproctext]{ref-gbd2022global}
+GBD Collaborators. 2022. {``Global, Regional, and National Burden of 12
+Mental Disorders in 204 Countries and Territories, 1990--2019: A
+Systematic Analysis for the Global Burden of Disease Study 2019.''}
+\emph{The Lancet Psychiatry} 9 (2): 137--50.
+
+\bibitem[\citeproctext]{ref-Hobfoll1989}
+Hobfoll, Stevan E. 1989. {``Conservation of Resources: A New Attempt at
+Conceptualizing Stress.''} \emph{American Psychologist} 44 (3): 513--24.
+\url{https://doi.org/10.1037/0003-066x.44.3.513}.
+
+\bibitem[\citeproctext]{ref-klaver2021exposure}
+Klaver, M, BJ Van den Hoofdakker, H Wouters, G De Kuijper, PJ Hoekstra,
+and A De Bildt. 2021. {``Exposure to Challenging Behaviours and Burnout
+Symptoms Among Care Staff: The Role of Psychological Resources.''}
+\emph{Journal of Intellectual Disability Research} 65 (2): 173--85.
+
+\bibitem[\citeproctext]{ref-Lopez2024}
+López, Leonardo, and Leonardo Giovanini. 2024. {``Adaptive Dynamic
+Social Networks Using an Agent-Based Model to Study the Role of Social
+Awareness in Infectious Disease Spread,''} July.
+\url{https://doi.org/10.1101/2024.07.16.24310475}.
+
+\bibitem[\citeproctext]{ref-mekonen2021estimating}
+Mekonen, Tesfa, Gary CK Chan, Jason P Connor, Leanne Hides, and Janni
+Leung. 2021. {``Estimating the Global Treatment Rates for Depression: A
+Systematic Review and Meta-Analysis.''} \emph{Journal of Affective
+Disorders} 295: 1234--42.
+
+\bibitem[\citeproctext]{ref-Murase2021}
+Murase, Yohsuke, Hang-Hyun Jo, János Török, János Kertész, and Kimmo
+Kaski. 2021. {``Deep Learning Exploration of Agent-Based Social Network
+Model Parameters.''} \emph{Frontiers in Big Data} 4 (September).
+\url{https://doi.org/10.3389/fdata.2021.739081}.
+
+\bibitem[\citeproctext]{ref-parsons2016cognitive}
+Parsons, Sam, Anne-Wil Kruijt, and Elaine Fox. 2016. {``A Cognitive
+Model of Psychological Resilience.''} \emph{Journal of Experimental
+Psychopathology} 7 (3): 296--310.
+
+\bibitem[\citeproctext]{ref-Romanyukha2023}
+Romanyukha, Alexei Alexeevich, Konstantin Alexandrovich Novikov,
+Konstantin Konstantinovich Avilov, Timofey Alexandrovich Nestik, and
+Tatiana Evgenevna Sannikova. 2023. {``The Trade-Off Between COVID-19 and
+Mental Diseases Burden During a Lockdown: Mathematical Modeling of
+Control Measures.''} \emph{Infectious Disease Modelling} 8 (2): 403--14.
+\url{https://doi.org/10.1016/j.idm.2023.04.003}.
+
+\bibitem[\citeproctext]{ref-troy2023psychological}
+Troy, Allison S, Emily C Willroth, Amanda J Shallcross, Nicole R
+Giuliani, James J Gross, and Iris B Mauss. 2023. {``Psychological
+Resilience: An Affect-Regulation Framework.''} \emph{Annual Review of
+Psychology} 74 (1): 547--76.
+
+\bibitem[\citeproctext]{ref-ZagerKocjan2021}
+Zager Kocjan, Gaja, Tina Kavčič, and Andreja Avsec. 2021. {``Resilience
+Matters: Explaining the Association Between Personality and
+Psychological Functioning During the COVID-19 Pandemic.''}
+\emph{International Journal of Clinical and Health Psychology} 21 (1):
+100198. \url{https://doi.org/10.1016/j.ijchp.2020.08.002}.
+
+\end{CSLReferences}
+
+
+
+
+\end{document}
