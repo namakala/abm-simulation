@@ -38,13 +38,3 @@ class StressModel(mesa.Model):
         if self.day >= self.max_days:
             self.running = False
 
-# Simulate
-model = StressModel(N=10, max_days=1000, seed=42)
-while model.running:
-    model.step()
-
-resilience = [a.resilience for a in model.agents]
-print(resilience)
-
-affect = [a.affect for a in model.agents]
-print(affect)
