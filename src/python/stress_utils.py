@@ -5,11 +5,12 @@ This module contains stateless functions for:
 - Stress event generation and appraisal
 - Challenge/hindrance mapping
 - Threshold evaluation for stress responses
+- PSS-10 mapping functionality
 - All functions are pure and support dependency injection for testability
 """
 
 import numpy as np
-from typing import Tuple, Optional, Dict, Any
+from typing import Tuple, Optional, Dict, Any, List
 from dataclasses import dataclass, field
 from src.python.config import get_config
 
@@ -239,3 +240,205 @@ def process_stress_event(
     )
 
     return is_stressed, challenge, hindrance
+
+
+@dataclass
+class PSS10Item:
+    """Represents a PSS-10 questionnaire item with response mapping."""
+    text: str
+    reverse_scored: bool = False
+    weight_controllability: float = 0.0
+    weight_predictability: float = 0.0
+    weight_overload: float = 0.0
+    weight_distress: float = 0.0
+
+
+def create_pss10_mapping() -> Dict[int, PSS10Item]:
+    """
+    Create PSS-10 item mapping with theoretical relationships to stress components.
+
+    Returns:
+        Dictionary mapping item numbers (1-10) to PSS10Item objects
+    """
+    return {
+        1: PSS10Item(
+            text="In the last month, how often have you been upset because of something that happened unexpectedly?",
+            reverse_scored=False,
+            weight_predictability=0.8,  # High predictability weight
+            weight_distress=0.6
+        ),
+        2: PSS10Item(
+            text="In the last month, how often have you felt that you were unable to control the important things in your life?",
+            reverse_scored=False,
+            weight_controllability=0.9,  # High controllability weight
+            weight_distress=0.7
+        ),
+        3: PSS10Item(
+            text="In the last month, how often have you felt nervous and 'stressed'?",
+            reverse_scored=False,
+            weight_overload=0.6,
+            weight_distress=0.8
+        ),
+        4: PSS10Item(
+            text="In the last month, how often have you felt confident about your ability to handle your personal problems?",
+            reverse_scored=True,  # Reverse scored
+            weight_controllability=0.7,
+            weight_distress=0.5
+        ),
+        5: PSS10Item(
+            text="In the last month, how often have you felt that things were going your way?",
+            reverse_scored=True,  # Reverse scored
+            weight_controllability=0.6,
+            weight_predictability=0.5,
+            weight_distress=0.4
+        ),
+        6: PSS10Item(
+            text="In the last month, how often have you found that you could not cope with all the things that you had to do?",
+            reverse_scored=False,
+            weight_overload=0.9,  # High overload weight
+            weight_distress=0.8
+        ),
+        7: PSS10Item(
+            text="In the last month, how often have you been able to control irritations in your life?",
+            reverse_scored=True,  # Reverse scored
+            weight_controllability=0.8,
+            weight_distress=0.6
+        ),
+        8: PSS10Item(
+            text="In the last month, how often have you felt that you were on top of things?",
+            reverse_scored=True,  # Reverse scored
+            weight_controllability=0.5,
+            weight_predictability=0.4,
+            weight_overload=0.3,
+            weight_distress=0.5
+        ),
+        9: PSS10Item(
+            text="In the last month, how often have you been angered because of things that were outside of your control?",
+            reverse_scored=False,
+            weight_controllability=0.8,
+            weight_distress=0.7
+        ),
+        10: PSS10Item(
+            text="In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?",
+            reverse_scored=False,
+            weight_overload=0.9,  # High overload weight
+            weight_distress=0.9
+        )
+    }
+
+
+def map_agent_stress_to_pss10(
+    controllability: float,
+    predictability: float,
+    overload: float,
+    distress: float,
+    rng: Optional[np.random.Generator] = None
+) -> Dict[int, int]:
+    """
+    Map agent stress state to PSS-10 item responses.
+
+    Args:
+        controllability: Agent's controllability level ∈ [0,1]
+        predictability: Agent's predictability level ∈ [0,1]
+        overload: Agent's overload level ∈ [0,1]
+        distress: Agent's current distress level ∈ [0,1]
+        rng: Random number generator for response variability
+
+    Returns:
+        Dictionary mapping item numbers (1-10) to response values (0-4)
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+
+    pss10_items = create_pss10_mapping()
+    responses = {}
+
+    for item_num, item in pss10_items.items():
+        # Calculate base score from weighted components
+        base_score = (
+            item.weight_controllability * (1.0 - controllability) +  # Low controllability = high stress
+            item.weight_predictability * (1.0 - predictability) +    # Low predictability = high stress
+            item.weight_overload * overload +                        # High overload = high stress
+            item.weight_distress * distress                          # High distress = high stress
+        ) / max(sum([item.weight_controllability, item.weight_predictability,
+                   item.weight_overload, item.weight_distress]), 1e-10)
+
+        # Add response variability (±0.2) and measurement error
+        variability = rng.normal(0, 0.1)
+        measurement_error = rng.normal(0, 0.05)
+
+        # Apply reverse scoring if needed
+        if item.reverse_scored:
+            score = 1.0 - base_score + variability + measurement_error
+        else:
+            score = base_score + variability + measurement_error
+
+        # Clamp to [0,1] and scale to PSS-10 response range (0-4)
+        score = max(0.0, min(1.0, score))
+        response_value = int(round(score * 4.0))
+
+        responses[item_num] = response_value
+
+    return responses
+
+
+def compute_pss10_score(responses: Dict[int, int]) -> int:
+    """
+    Compute total PSS-10 score from item responses.
+
+    Args:
+        responses: Dictionary mapping item numbers to response values (0-4)
+
+    Returns:
+        Total PSS-10 score (0-40)
+
+    Raises:
+        ValueError: If responses don't contain all required items or contain invalid values
+    """
+    required_items = set(range(1, 11))
+
+    if set(responses.keys()) != required_items:
+        missing = required_items - set(responses.keys())
+        raise ValueError(f"Missing PSS-10 items: {missing}")
+
+    for item_num, response in responses.items():
+        if not (0 <= response <= 4):
+            raise ValueError(f"Invalid response for item {item_num}: {response} (must be 0-4)")
+
+    # Apply reverse scoring for items 4, 5, 7, 8
+    reverse_items = {4, 5, 7, 8}
+    total_score = 0
+
+    for item_num in range(1, 11):
+        response = responses[item_num]
+        if item_num in reverse_items:
+            # Reverse score: 0→4, 1→3, 2→2, 3→1, 4→0
+            total_score += (4 - response)
+        else:
+            total_score += response
+
+    return total_score
+
+
+def interpret_pss10_score(score: int) -> str:
+    """
+    Interpret PSS-10 score according to standard categories.
+
+    Args:
+        score: Total PSS-10 score (0-40)
+
+    Returns:
+        Interpretation string
+
+    Raises:
+        ValueError: If score is outside valid range
+    """
+    if not (0 <= score <= 40):
+        raise ValueError(f"Invalid PSS-10 score: {score} (must be 0-40)")
+
+    if score <= 13:
+        return "Low stress"
+    elif score <= 26:
+        return "Moderate stress"
+    else:
+        return "High stress"
