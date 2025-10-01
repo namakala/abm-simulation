@@ -35,6 +35,13 @@ jobs:
 
     - name: Run tests with coverage
       run: |
+        # Activate conda environment and run tests
+        source ${{ env.CONDA }}/etc/profile.d/conda.sh
+        conda activate ABM
+        echo "Python path: $(which python)"
+        echo "Python version: $(python --version)"
+        echo "Conda environment: $(conda env list)"
+        python -c "import pytest; print('pytest version:', pytest.__version__)"
         python -m pytest --cov=src/python --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v
 
     - name: Upload coverage to Codecov
@@ -47,6 +54,11 @@ jobs:
 
     - name: Generate coverage report
       run: |
+        # Activate conda environment and generate HTML report
+        source ${{ env.CONDA }}/etc/profile.d/conda.sh
+        conda activate ABM
+        echo "Python path: $(which python)"
+        python -c "import pytest; print('pytest available in environment')"
         python -m pytest --cov=src/python --cov-report=html --cov-report=term-missing
 
     - name: Upload coverage HTML report
