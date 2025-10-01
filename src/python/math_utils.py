@@ -93,7 +93,7 @@ def sigmoid(x: float, gamma: float = None) -> float:
         Sigmoid output in [0,1]
     """
     if gamma is None:
-        gamma = config.get('math', 'sigmoid_gamma')
+        gamma = config.get('appraisal', 'gamma')  # Use existing gamma parameter
     return 1.0 / (1.0 + np.exp(-gamma * x))
 
 
@@ -109,7 +109,7 @@ def softmax(x: np.ndarray, temperature: float = None) -> np.ndarray:
         Softmax probabilities
     """
     if temperature is None:
-        temperature = config.get('math', 'softmax_temperature')
+        temperature = config.get('utility', 'softmax_temperature')
     if temperature == 0:
         # Handle temperature = 0 case (returns one-hot of max)
         max_idx = np.argmax(x)
@@ -142,7 +142,7 @@ def sample_poisson(
     if rng is None:
         rng = np.random.default_rng()
     if min_value is None:
-        min_value = config.get('math', 'poisson_min')
+        min_value = 0  # Default minimum value
 
     sample = rng.poisson(lam)
     return max(sample, min_value)
@@ -189,7 +189,7 @@ def sample_exponential(
     if rng is None:
         rng = np.random.default_rng()
     if max_value is None:
-        max_value = config.get('math', 'exponential_max')
+        max_value = 10.0  # Default maximum value
 
     sample = rng.exponential(scale)
     return min(sample, max_value)

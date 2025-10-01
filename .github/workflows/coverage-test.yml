@@ -1,0 +1,67 @@
+name: Python Coverage and Test
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache conda environment
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.CONDA }}/envs
+        key: ${{ runner.os }}-conda-${{ hashFiles('environment.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-conda-
+
+    - name: Set up conda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        miniconda-version: 'latest'
+        environment-file: environment.yml
+        activate-environment: ABM
+
+    - name: Create .env file for testing
+      run: |
+        if [ -f .env.example ]; then cp .env.example .env; fi
+      shell: bash -l {0}
+
+    - name: Run tests with coverage
+      run: |
+        python -m pytest --cov=src/python --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v
+      shell: bash -l {0}
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+      shell: bash -l {0}
+
+    - name: Generate coverage report
+      run: |
+        python -m pytest --cov=src/python --cov-report=html --cov-report=term-missing
+      shell: bash -l {0}
+
+    - name: Upload coverage HTML report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test-results.xml
+      if: always()
