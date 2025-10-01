@@ -31,22 +31,24 @@ Each agent represents an individual with the following state variables:
 ## Source Code Organization
 
 ### [`src/python/`](src/python/) - Core ABM Implementation
-- `agent.py` - Agent class definition and methods
-- `network.py` - Social network generation and dynamics
-- `events.py` - Event generation and appraisal processing
-- `simulation.py` - Main simulation loop and orchestration
-- `parameters.py` - Parameter management and sampling
-- `validation.py` - Pattern matching and validation functions
+- `agent.py` - Person class with stress events, social interactions, and resource dynamics
+- `model.py` - StressModel class using Mesa framework with NetworkGrid
+- `stress_utils.py` - Stress event generation and appraisal processing utilities
+- `affect_utils.py` - Social interaction and resilience computation utilities
+- `math_utils.py` - Mathematical utilities for random sampling and clamping
+- `config.py` - Centralized configuration management with environment variable loading and validation
+- `simulate.py` - Main simulation runner (in project root)
+- `test_*.py` - Comprehensive test suite including unit tests, integration tests, and configuration validation
 
 ### [`src/r/`](src/r/) - Analysis and Visualization
-- `analysis/` - Statistical analysis and sensitivity analysis
-- `visualization/` - Plot generation and dashboard creation
-- `calibration/` - ABC/SMM parameter calibration routines
+- `analysis/` - Statistical analysis and sensitivity analysis (planned)
+- `visualization/` - Plot generation and dashboard creation (planned)
+- `calibration/` - ABC/SMM parameter calibration routines (planned)
 
 ### [`src/sql/`](src/sql/) - Data Management
-- `schema.sql` - Database schema for parameter sweeps
-- `queries/` - Standard queries for result extraction
-- `procedures/` - Stored procedures for aggregation
+- `schema.sql` - Database schema for parameter sweeps (planned)
+- `queries/` - Standard queries for result extraction (planned)
+- `procedures/` - Stored procedures for aggregation (planned)
 
 ## Data Flow
 

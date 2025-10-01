@@ -21,6 +21,10 @@ from src.python.affect_utils import (
 )
 
 from src.python.math_utils import sample_poisson, create_rng
+from src.python.config import get_config
+
+# Load configuration
+config = get_config()
 
 
 class Person(mesa.Agent):
@@ -49,13 +53,15 @@ class Person(mesa.Agent):
 
         # Set default configuration
         if config is None:
+            # Use the global config object directly
+            cfg = get_config()
             config = {
-                'initial_resilience': 0.5,
-                'initial_affect': 0.0,
-                'initial_resources': 0.6,
-                'stress_probability': 0.5,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 3
+                'initial_resilience': cfg.get('agent', 'initial_resilience'),
+                'initial_affect': cfg.get('agent', 'initial_affect'),
+                'initial_resources': cfg.get('agent', 'initial_resources'),
+                'stress_probability': cfg.get('agent', 'stress_probability'),
+                'coping_success_rate': cfg.get('agent', 'coping_success_rate'),
+                'subevents_per_day': cfg.get('agent', 'subevents_per_day')
             }
 
         # Initialize state variables
@@ -92,7 +98,7 @@ class Person(mesa.Agent):
         """
         # Determine number of subevents using utility function
         n_subevents = sample_poisson(
-            lam=3,  # 3 subevents per day on average
+            lam=config.get('agent', 'subevents_per_day'),  # subevents per day from config
             rng=self._rng,
             min_value=1
         )
@@ -115,7 +121,10 @@ class Person(mesa.Agent):
 
         # Apply resource regeneration using utility function
         from .affect_utils import compute_resource_regeneration, ResourceParams
-        regen_params = ResourceParams(base_regeneration=0.05)
+        regen_params = ResourceParams(
+            base_regeneration=config.get('resource', 'base_regeneration')
+        )
+
         self.resources += compute_resource_regeneration(self.resources, regen_params)
 
         # Clamp all values to valid ranges
@@ -213,5 +222,5 @@ class Person(mesa.Agent):
 
         # Use resources for coping if successful
         if coped_successfully:
-            resource_cost = 0.1  # Configurable resource cost
+            resource_cost = config.get('agent', 'resource_cost')
             self.resources = max(0.0, self.resources - resource_cost)

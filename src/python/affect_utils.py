@@ -11,32 +11,36 @@ This module contains stateless functions for:
 
 import numpy as np
 from typing import List, Optional, Dict, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from src.python.config import get_config
+
+# Load configuration
+config = get_config()
 
 
 @dataclass
 class InteractionConfig:
     """Configuration parameters for social interactions."""
-    influence_rate: float = 0.05      # Base influence rate per interaction
-    resilience_influence: float = 0.05 # How much affect influences resilience
-    max_neighbors: int = 10           # Maximum neighbors to consider
+    influence_rate: float = field(default_factory=lambda: get_config().get('interaction', 'influence_rate'))
+    resilience_influence: float = field(default_factory=lambda: get_config().get('interaction', 'resilience_influence'))
+    max_neighbors: int = field(default_factory=lambda: get_config().get('interaction', 'max_neighbors'))
 
 
 @dataclass
 class ProtectiveFactors:
     """Agent's protective factors for resource allocation."""
-    social_support: float = 0.5    # α_soc ∈ [0,1]
-    family_support: float = 0.5    # α_fam ∈ [0,1]
-    formal_intervention: float = 0.5  # α_int ∈ [0,1]
-    psychological_capital: float = 0.5  # α_cap ∈ [0,1]
+    social_support: float = field(default_factory=lambda: get_config().get('protective', 'social_support'))
+    family_support: float = field(default_factory=lambda: get_config().get('protective', 'family_support'))
+    formal_intervention: float = field(default_factory=lambda: get_config().get('protective', 'formal_intervention'))
+    psychological_capital: float = field(default_factory=lambda: get_config().get('protective', 'psychological_capital'))
 
 
 @dataclass
 class ResourceParams:
     """Parameters for resource dynamics."""
-    base_regeneration: float = 0.05    # γ_R ∈ [0,1]
-    allocation_cost: float = 0.15      # κ ∈ [0,1]
-    cost_exponent: float = 1.5         # γ_c > 1 for convex costs
+    base_regeneration: float = field(default_factory=lambda: get_config().get('resource', 'base_regeneration'))
+    allocation_cost: float = field(default_factory=lambda: get_config().get('resource', 'allocation_cost'))
+    cost_exponent: float = field(default_factory=lambda: get_config().get('resource', 'cost_exponent'))
 
 
 def clamp(value: float, min_val: float = 0.0, max_val: float = 1.0) -> float:
@@ -195,10 +199,12 @@ def compute_stress_impact_on_affect(
         Affect change
     """
     if config is None:
+        # Get fresh config instance to avoid global config issues
+        cfg = get_config()
         config = {
-            'coping_improvement': 0.05,  # Affect improvement from successful coping
-            'coping_deterioration': 0.05,  # Affect deterioration from failed coping
-            'no_stress_effect': 0.0       # No change if not stressed
+            'coping_improvement': cfg.get('agent', 'coping_success_rate') * 0.2,  # Scale based on success rate
+            'coping_deterioration': cfg.get('agent', 'coping_success_rate') * 0.4,  # Scale based on success rate
+            'no_stress_effect': 0.0 # No change if not stressed
         }
 
     if not is_stressed:
@@ -229,10 +235,12 @@ def compute_stress_impact_on_resilience(
         Resilience change
     """
     if config is None:
+        # Get fresh config instance to avoid global config issues
+        cfg = get_config()
         config = {
-            'coping_improvement': 0.05,  # Resilience improvement from successful coping
-            'coping_deterioration': 0.05,  # Resilience deterioration from failed coping
-            'no_stress_effect': 0.0       # No change if not stressed
+            'coping_improvement': cfg.get('agent', 'coping_success_rate') * 0.1,  # Scale based on success rate
+            'coping_deterioration': cfg.get('agent', 'coping_success_rate') * 0.2,  # Scale based on success rate
+            'no_stress_effect': 0.0 # No change if not stressed
         }
 
     if not is_stressed:
@@ -262,6 +270,8 @@ def allocate_protective_resources(
     Returns:
         Dictionary mapping factor names to allocated resources
     """
+    cfg = get_config()
+
     if protective_factors is None:
         protective_factors = ProtectiveFactors()
 
@@ -280,8 +290,8 @@ def allocate_protective_resources(
         protective_factors.psychological_capital
     ]
 
-    # Softmax decision making with temperature
-    temperature = 1.0  # Can be made configurable
+    # Softmax decision making with temperature from config
+    temperature = cfg.get('utility', 'softmax_temperature')
     logits = np.array(efficacies) / temperature
     softmax_weights = np.exp(logits) / np.sum(np.exp(logits))
 

@@ -7,6 +7,10 @@ import mesa
 
 from mesa.space import NetworkGrid
 from src.python.agent import Person
+from src.python.config import get_config
+
+# Load configuration
+config = get_config()
 
 # Initialize the model
 
@@ -15,13 +19,26 @@ class StressModel(mesa.Model):
     Model description
     """
 
-    def __init__(self, N=20, max_days=100, seed=None):
+    def __init__(self, N=None, max_days=None, seed=None):
         super().__init__(seed=seed)
         self.day = 0
+
+        # Use config values if parameters not provided
+        if N is None:
+            N = config.get('simulation', 'num_agents')
+        if max_days is None:
+            max_days = config.get('simulation', 'max_days')
+        if seed is None:
+            seed = config.get('simulation', 'seed')
+
         self.max_days = max_days
 
         # Build social network
-        G = nx.watts_strogatz_graph(n=N, k=4, p=0.1)
+        G = nx.watts_strogatz_graph(
+            n=N,
+            k=config.get('network', 'watts_k'),
+            p=config.get('network', 'watts_p')
+        )
         self.grid = NetworkGrid(G)
 
         # Create and register agents

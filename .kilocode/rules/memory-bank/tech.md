@@ -13,12 +13,17 @@
   - Parameter calibration: abc, sensitivity
 
 ### Python Environment (Core ABM Implementation)
-- **Primary Language:** Python 3.x (to be configured)
-- **Expected Libraries:**
-  - Agent-based modeling: mesa, networkx
-  - Scientific computing: numpy, scipy, pandas
-  - Machine learning: scikit-learn
-  - Visualization: matplotlib, seaborn
+- **Primary Language:** Python 3.x (implemented)
+- **Framework:** Mesa for agent-based modeling
+- **Network Library:** NetworkX for social network operations
+- **Configuration Management:** python-dotenv for environment variable loading and validation
+- **Current Libraries:**
+  - Agent-based modeling: mesa (implemented)
+  - Network analysis: networkx (implemented)
+  - Scientific computing: numpy (implemented)
+  - Data manipulation: pandas (implemented)
+  - Configuration management: python-dotenv (implemented)
+  - Testing: pytest (implemented)
 
 ### SQL Database (Data Management)
 - **Purpose:** Large-scale parameter sweep storage
@@ -85,10 +90,10 @@
 4. Parameter configuration validation
 
 ### Execution Pipeline
-1. **Python:** Run ABM simulations, store results in SQL
-2. **SQL:** Aggregate and query simulation data
-3. **R:** Statistical analysis, visualization, reporting
-4. **Integration:** Cross-validate results across languages
+1. **Python:** Run ABM simulations, store results in SQL (planned)
+2. **SQL:** Aggregate and query simulation data (planned)
+3. **R:** Statistical analysis, visualization, reporting (planned)
+4. **Integration:** Cross-validate results across languages (planned)
 
 ## Tool Usage Patterns
 
@@ -104,7 +109,9 @@
 - BibTeX for reference management
 
 ### Quality Assurance
-- Unit testing frameworks for each language
-- Parameter validation routines
-- Sensitivity analysis for robustness checks
-- Pattern matching for model validation
+- **Unit testing frameworks** for each language with comprehensive coverage
+- **Integration testing** for component interactions
+- **Configuration validation** with type checking and range validation
+- **Parameter validation routines** with comprehensive error handling
+- **Sensitivity analysis** for robustness checks (planned)
+- **Pattern matching** for model validation (planned)
