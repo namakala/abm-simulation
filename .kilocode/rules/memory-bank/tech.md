@@ -24,6 +24,7 @@
   - Data manipulation: pandas (implemented)
   - Configuration management: python-dotenv (implemented)
   - Testing: pytest (implemented)
+  - Coverage reporting: coverage.py (implemented)
 
 ### SQL Database (Data Management)
 - **Purpose:** Large-scale parameter sweep storage
@@ -113,5 +114,9 @@
 - **Integration testing** for component interactions
 - **Configuration validation** with type checking and range validation
 - **Parameter validation routines** with comprehensive error handling
+- **CI/CD Pipeline** - GitHub Actions workflow for automated testing and coverage reporting
+- **Coverage Reporting** - Automated test coverage tracking with 80% minimum threshold and HTML report generation
+- **Codecov Integration** - External coverage analysis and reporting service
+- **Debug Tools** - Threshold evaluation and stress processing debugging utilities for troubleshooting
 - **Sensitivity analysis** for robustness checks (planned)
 - **Pattern matching** for model validation (planned)

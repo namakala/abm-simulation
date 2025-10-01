@@ -38,7 +38,14 @@ Each agent represents an individual with the following state variables:
 - `math_utils.py` - Mathematical utilities for random sampling and clamping
 - `config.py` - Centralized configuration management with environment variable loading and validation
 - `simulate.py` - Main simulation runner (in project root)
+- `debug/` - Debugging utilities for threshold evaluation and stress processing troubleshooting
 - `test_*.py` - Comprehensive test suite including unit tests, integration tests, and configuration validation
+
+### Development Infrastructure
+- **CI/CD Pipeline** - GitHub Actions workflow for automated testing and coverage reporting
+- **Coverage Reporting** - Automated test coverage tracking with 80% minimum threshold
+- **Code Quality** - Codecov integration for coverage analysis and HTML report generation
+- **Environment Management** - Conda-based environment with automated setup and caching
 
 ### [`src/r/`](src/r/) - Analysis and Visualization
 - `analysis/` - Statistical analysis and sensitivity analysis (planned)
