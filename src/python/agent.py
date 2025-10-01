@@ -1,105 +1,217 @@
-# Import modules
+"""
+Agent-based model for mental health simulation with modular, testable utilities.
+
+This module implements an agent that experiences stress events and social interactions,
+using utility functions for all domain-specific behaviors to ensure modularity and testability.
+"""
 
 import random
 import numpy as np
-import pandas as pd
 import mesa
 
-# Function
+# Import utility modules
+from src.python.stress_utils import (
+    generate_stress_event, process_stress_event,
+    StressEvent, AppraisalWeights, ThresholdParams
+)
 
-def influence(affect, diff = 0.05):
-    changes = float(diff * np.sign(affect))
-    return changes
+from src.python.affect_utils import (
+    process_interaction, compute_stress_impact_on_affect,
+    compute_stress_impact_on_resilience, clamp, InteractionConfig
+)
 
-def clamp(value, minval=0, maxval=1):
-    clean = min(max(value, minval), maxval)
-    return clean
+from src.python.math_utils import sample_poisson, create_rng
 
-# Initialize an agent
 
 class Person(mesa.Agent):
     """
     A person who experiences social interactions and stressful events.
-    Positive/negative affect is tracked in self.affect.
+
+    This agent implementation uses utility functions for all domain-specific behaviors,
+    keeping the class focused on simulation orchestration and state management.
+
+    State variables:
+    - resilience: Current resilience level ∈ [0,1]
+    - affect: Current affect level ∈ [-1,1]
+    - resources: Available psychological/physical resources ∈ [0,1]
+    - protective_factors: Current levels of protective mechanisms
     """
 
-    def __init__(self, model):
-        # Pas the parameters to the parent class
+    def __init__(self, model, config=None):
+        """
+        Initialize agent with configuration parameters.
+
+        Args:
+            model: Mesa model instance
+            config: Optional configuration dictionary for agent parameters
+        """
         super().__init__(model)
 
-        # Set an agent variable
-        self.resilience = 0.5
-        self.affect = 0
+        # Set default configuration
+        if config is None:
+            config = {
+                'initial_resilience': 0.5,
+                'initial_affect': 0.0,
+                'initial_resources': 0.6,
+                'stress_probability': 0.5,
+                'coping_success_rate': 0.5,
+                'subevents_per_day': 3
+            }
+
+        # Initialize state variables
+        self.resilience = config['initial_resilience']
+        self.affect = config['initial_affect']
+        self.resources = config['initial_resources']
+
+        # Initialize protective factors (from memory bank architecture)
+        self.protective_factors = {
+            'social_support': 0.5,
+            'family_support': 0.5,
+            'formal_intervention': 0.5,
+            'psychological_capital': 0.5
+        }
+
+        # Configuration for utility functions
+        self.stress_config = {
+            'stress_probability': config['stress_probability'],
+            'coping_success_rate': config['coping_success_rate']
+        }
+
+        self.interaction_config = InteractionConfig()
+
+        # Random number generator for reproducible testing
+        # Note: Mesa Agent base class has 'rng' property, so we use '_rng'
+        self._rng = create_rng(getattr(model, 'seed', None))
 
     def step(self):
         """
-        One day of simulation epoch. Perform a random sequence of interactions
-        and stressful events in random order and random count.
-        """
-        # Decide the number of subevents
-        n_subevents = np.random.poisson(lam=3) # 3 subevents per day
-        if n_subevents == 0:
-            n_subevents = 1
+        Execute one day of simulation.
 
-        # Randomly choose the event type for each subevent
+        Performs random sequence of social interactions and stress events,
+        using utility functions for all domain-specific behaviors.
+        """
+        # Determine number of subevents using utility function
+        n_subevents = sample_poisson(
+            lam=3,  # 3 subevents per day on average
+            rng=self._rng,
+            min_value=1
+        )
+
+        # Generate random sequence of actions
         actions = [
-            random.choice(["interact", "stress"]) for _ in range(n_subevents)
+            self._rng.choice(["interact", "stress"])
+            for _ in range(n_subevents)
         ]
 
-        # Shuffle to create a random order
-        random.shuffle(actions)
+        # Shuffle for random order
+        self._rng.shuffle(actions)
 
-        # Execute actions
-        for act in actions:
-            if act == "interact":
+        # Execute actions using utility functions
+        for action in actions:
+            if action == "interact":
                 self.interact()
-            else:
+            elif action == "stress":
                 self.stressful_event()
 
-        # Clamp values to prevent moving beyond the reasonable bound
-        self.resilience = clamp(self.resilience, minval=0, maxval=1)
-        self.affect = clamp(self.affect, minval=-1, maxval=1)
+        # Apply resource regeneration using utility function
+        from .affect_utils import compute_resource_regeneration, ResourceParams
+        regen_params = ResourceParams(base_regeneration=0.05)
+        self.resources += compute_resource_regeneration(self.resources, regen_params)
+
+        # Clamp all values to valid ranges
+        self.resilience = clamp(self.resilience, 0.0, 1.0)
+        self.affect = clamp(self.affect, -1.0, 1.0)
+        self.resources = clamp(self.resources, 0.0, 1.0)
 
     def interact(self):
         """
-        Interact with a random neighbor. The agent's affect shifts slightly
-        toward the neighbor's affect.
+        Interact with a random neighbor using utility functions.
+
+        Delegates all domain logic to utility functions for modularity and testability.
         """
+        # Get neighbors using Mesa's grid
         neighbors = list(
             self.model.grid.get_neighbors(
                 self.pos, include_center=False
             )
         )
+
         if not neighbors:
             return
 
-        partner = random.choice(neighbors)
+        # Select random interaction partner
+        partner = self._rng.choice(neighbors)
 
-        # Positive neighbor pulls affect upward, negative pulls downward
-        self.affect += influence(partner.affect, diff = 0.05)
-        partner.affect += influence(self.affect, diff = 0.05)
-        self.resilience += influence(partner.affect, diff = 0.05)
-        partner.resilience += influence(self.affect, diff = 0.05)
+        # Use utility function for interaction processing
+        new_self_affect, new_partner_affect, new_self_resilience, new_partner_resilience = (
+            process_interaction(
+                self_affect=self.affect,
+                partner_affect=partner.affect,
+                self_resilience=self.resilience,
+                partner_resilience=partner.resilience,
+                config=self.interaction_config
+            )
+        )
 
-        # Clamp the values to prevent overflow
-        self.affect = clamp(self.affect, minval=-1, maxval=1)
-        partner.affect = clamp(partner.affect, minval=-1, maxval=1)
-        self.resilience = clamp(self.resilience, minval=-1, maxval=1)
-        partner.resilience = clamp(partner.resilience, minval=-1, maxval=1)
+        # Update state with results from utility function
+        self.affect = new_self_affect
+        partner.affect = new_partner_affect
+        self.resilience = new_self_resilience
+        partner.resilience = new_partner_resilience
 
     def stressful_event(self):
         """
-        Chance of stress. If stressed, coping depends on resilience. Coping
-        improves resilience and affect, failure reduces both.
+        Process a stressful event using utility functions.
+
+        Delegates stress generation, appraisal, and outcome computation to utilities.
         """
-        stressed = random.random() < 0.5
-        if not stressed:
+        # Generate stress event using utility function
+        event = generate_stress_event(rng=self._rng)
+
+        # Set up stress processing parameters (from memory bank)
+        threshold_params = ThresholdParams(
+            base_threshold=0.5,
+            challenge_scale=0.15,
+            hindrance_scale=0.25
+        )
+
+        weights = AppraisalWeights(
+            omega_c=1.0, omega_p=1.0, omega_o=1.0,
+            bias=0.0, gamma=6.0
+        )
+
+        # Process stress event using utility function
+        is_stressed, challenge, hindrance = process_stress_event(
+            event=event,
+            threshold_params=threshold_params,
+            weights=weights,
+            rng=self._rng
+        )
+
+        if not is_stressed:
             return
 
-        coped = random.random() < self.resilience
-        if coped:
-            self.resilience += 0.05
-            self.affect += 0.05
-        else:
-            self.resilience -= 0.05
-            self.affect -= 0.05
+        # Determine coping outcome using utility function
+        coped_successfully = self.rng.random() < self.resilience
+
+        # Compute affect and resilience changes using utility functions
+        affect_change = compute_stress_impact_on_affect(
+            current_affect=self.affect,
+            is_stressed=True,
+            coped_successfully=coped_successfully
+        )
+
+        resilience_change = compute_stress_impact_on_resilience(
+            current_resilience=self.resilience,
+            is_stressed=True,
+            coped_successfully=coped_successfully
+        )
+
+        # Apply changes
+        self.affect += affect_change
+        self.resilience += resilience_change
+
+        # Use resources for coping if successful
+        if coped_successfully:
+            resource_cost = 0.1  # Configurable resource cost
+            self.resources = max(0.0, self.resources - resource_cost)
