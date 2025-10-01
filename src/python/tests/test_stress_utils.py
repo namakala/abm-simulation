@@ -10,7 +10,9 @@ import numpy as np
 from src.python.stress_utils import (
     generate_stress_event, process_stress_event, apply_weights,
     compute_appraised_stress, evaluate_stress_threshold,
-    StressEvent, AppraisalWeights, ThresholdParams
+    StressEvent, AppraisalWeights, ThresholdParams,
+    create_pss10_mapping, map_agent_stress_to_pss10, compute_pss10_score,
+    interpret_pss10_score, PSS10Item
 )
 
 
@@ -246,6 +248,175 @@ class TestCompleteStressProcessing:
         assert result1 == result2
 
 
-# Example of how to run these tests:
-# pytest test_stress_utils.py -v
-# pytest test_stress_utils.py::TestStressEventGeneration::test_generate_stress_event_deterministic -v
+class TestPSS10Mapping:
+    """Test PSS-10 mapping functionality."""
+
+    def test_create_pss10_mapping_structure(self):
+        """Test that PSS-10 mapping creates correct structure."""
+        mapping = create_pss10_mapping()
+
+        # Should have 10 items
+        assert len(mapping) == 10
+
+        # All items should be numbered 1-10
+        assert set(mapping.keys()) == set(range(1, 11))
+
+        # All items should be PSS10Item objects
+        for item in mapping.values():
+            assert isinstance(item, PSS10Item)
+            assert len(item.text) > 0  # Should have non-empty text
+
+    def test_create_pss10_mapping_content(self):
+        """Test that PSS-10 items have appropriate content and weights."""
+        mapping = create_pss10_mapping()
+
+        # Check specific items for correct reverse scoring
+        assert not mapping[1].reverse_scored  # Item 1: not reverse scored
+        assert not mapping[2].reverse_scored  # Item 2: not reverse scored
+        assert not mapping[3].reverse_scored  # Item 3: not reverse scored
+        assert mapping[4].reverse_scored     # Item 4: reverse scored
+        assert mapping[5].reverse_scored     # Item 5: reverse scored
+        assert not mapping[6].reverse_scored  # Item 6: not reverse scored
+        assert mapping[7].reverse_scored     # Item 7: reverse scored
+        assert mapping[8].reverse_scored     # Item 8: reverse scored
+        assert not mapping[9].reverse_scored  # Item 9: not reverse scored
+        assert not mapping[10].reverse_scored # Item 10: not reverse scored
+
+        # Check that controllability items have appropriate weights
+        assert mapping[2].weight_controllability > 0.5  # Item 2: high controllability weight
+        assert mapping[4].weight_controllability > 0.5  # Item 4: high controllability weight
+
+        # Check that overload items have appropriate weights
+        assert mapping[6].weight_overload > 0.5  # Item 6: high overload weight
+        assert mapping[10].weight_overload > 0.5  # Item 10: high overload weight
+
+    def test_map_agent_stress_to_pss10_deterministic(self):
+        """Test that PSS-10 mapping is deterministic with fixed seed."""
+        rng = np.random.default_rng(42)
+
+        responses1 = map_agent_stress_to_pss10(0.5, 0.5, 0.5, 0.5, rng)
+        rng = np.random.default_rng(42)  # Reset seed
+        responses2 = map_agent_stress_to_pss10(0.5, 0.5, 0.5, 0.5, rng)
+
+        assert responses1 == responses2
+
+    def test_map_agent_stress_to_pss10_response_range(self):
+        """Test that PSS-10 responses are in valid range [0,4]."""
+        rng = np.random.default_rng(123)
+
+        # Test with various stress levels
+        test_cases = [
+            (0.0, 0.0, 0.0, 0.0),  # No stress
+            (1.0, 1.0, 1.0, 1.0),  # Maximum stress
+            (0.5, 0.5, 0.5, 0.5),  # Moderate stress
+            (0.2, 0.8, 0.3, 0.6),  # Mixed stress
+        ]
+
+        for c, p, o, d in test_cases:
+            responses = map_agent_stress_to_pss10(c, p, o, d, rng)
+
+            for item_num, response in responses.items():
+                assert 0 <= response <= 4, f"Item {item_num} response {response} out of range [0,4]"
+
+    def test_map_agent_stress_to_pss10_extreme_stress(self):
+        """Test PSS-10 mapping with extreme stress conditions."""
+        rng = np.random.default_rng(456)
+
+        # High controllability, predictability; low overload, distress
+        responses_low_stress = map_agent_stress_to_pss10(0.9, 0.9, 0.1, 0.1, rng)
+
+        # Low controllability, predictability; high overload, distress
+        responses_high_stress = map_agent_stress_to_pss10(0.1, 0.1, 0.9, 0.9, rng)
+
+        # High stress should generally have higher scores than low stress
+        # (though not guaranteed for every item due to variability)
+        high_stress_scores = list(responses_high_stress.values())
+        low_stress_scores = list(responses_low_stress.values())
+
+        # The average should be higher for high stress (allowing for some variance)
+        assert np.mean(high_stress_scores) > np.mean(low_stress_scores) - 0.5  # Allow some tolerance
+
+    def test_compute_pss10_score_complete_responses(self):
+        """Test PSS-10 score computation with complete responses."""
+        # All zeros (minimum stress) - but items 4,5,7,8 are reverse scored, so they become 4 each
+        reversed = [4, 5, 7, 8]
+        responses_min = {i: 4 if i in reversed else 0 for i in range(1, 11)}
+        score_min = compute_pss10_score(responses_min)
+        assert score_min == 0
+
+        # All maximum values
+        responses_max = {i: 0 if i in reversed else 4 for i in range(1, 11)}
+        score_max = compute_pss10_score(responses_max)
+        assert score_max == 40  # 10 items * 4 points each
+
+        # Mixed responses
+        responses_mixed = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 2, 7: 1, 8: 0, 9: 3, 10: 4}
+        score_mixed = compute_pss10_score(responses_mixed)
+        expected_mixed = 0+1+2+(4-3)+(4-4)+2+(4-1)+(4-0)+3+4  # Apply reverse scoring: items 4,5,7,8 are reversed
+        assert score_mixed == expected_mixed
+
+    def test_compute_pss10_score_missing_items(self):
+        """Test PSS-10 score computation with missing items raises error."""
+        responses_missing = {1: 0, 2: 1, 3: 2}  # Missing items 4-10
+
+        with pytest.raises(ValueError, match="Missing PSS-10 items"):
+            compute_pss10_score(responses_missing)
+
+    def test_compute_pss10_score_invalid_responses(self):
+        """Test PSS-10 score computation with invalid response values."""
+        # Test 1: Invalid response value (but complete set of items)
+        responses_invalid = {i: 2 for i in range(1, 11)}  # All items present
+        responses_invalid[1] = 5  # Invalid value
+
+        with pytest.raises(ValueError, match="Invalid response for item 1"):
+            compute_pss10_score(responses_invalid)
+
+        # Test 2: Missing items
+        responses_missing = {i: 2 for i in range(1, 10)}  # Item 10 missing
+
+        with pytest.raises(ValueError, match="Missing PSS-10 items"):
+            compute_pss10_score(responses_missing)
+
+    def test_interpret_pss10_score_categories(self):
+        """Test PSS-10 score interpretation categories."""
+        # Low stress (0-13)
+        assert interpret_pss10_score(0) == "Low stress"
+        assert interpret_pss10_score(13) == "Low stress"
+
+        # Moderate stress (14-26)
+        assert interpret_pss10_score(14) == "Moderate stress"
+        assert interpret_pss10_score(26) == "Moderate stress"
+
+        # High stress (27-40)
+        assert interpret_pss10_score(27) == "High stress"
+        assert interpret_pss10_score(40) == "High stress"
+
+    def test_interpret_pss10_score_invalid_range(self):
+        """Test PSS-10 score interpretation with invalid scores."""
+        with pytest.raises(ValueError, match="Invalid PSS-10 score"):
+            interpret_pss10_score(-1)
+
+        with pytest.raises(ValueError, match="Invalid PSS-10 score"):
+            interpret_pss10_score(41)
+
+    def test_pss10_integration_pipeline(self):
+        """Test complete PSS-10 pipeline from agent state to interpretation."""
+        rng = np.random.default_rng(789)
+
+        # Test with moderate stress agent
+        c, p, o, d = 0.3, 0.4, 0.6, 0.5
+
+        # Map to PSS-10 responses
+        responses = map_agent_stress_to_pss10(c, p, o, d, rng)
+
+        # Compute total score
+        total_score = compute_pss10_score(responses)
+
+        # Interpret score
+        interpretation = interpret_pss10_score(total_score)
+
+        # Verify pipeline produces valid results
+        assert 0 <= total_score <= 40
+        assert interpretation in ["Low stress", "Moderate stress", "High stress"]
+        assert len(responses) == 10
+        assert all(0 <= response <= 4 for response in responses.values())
