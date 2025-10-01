@@ -32,12 +32,10 @@ jobs:
     - name: Create .env file for testing
       run: |
         if [ -f .env.example ]; then cp .env.example .env; fi
-      shell: bash -l {0}
 
     - name: Run tests with coverage
       run: |
         python -m pytest --cov=src/python --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v
-      shell: bash -l {0}
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -46,12 +44,10 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
-      shell: bash -l {0}
 
     - name: Generate coverage report
       run: |
         python -m pytest --cov=src/python --cov-report=html --cov-report=term-missing
-      shell: bash -l {0}
 
     - name: Upload coverage HTML report
       uses: actions/upload-artifact@v3
