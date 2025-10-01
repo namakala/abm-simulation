@@ -2,14 +2,28 @@ name: ABM
 channels:
   - conda-forge
 dependencies:
+  - bandit
+  - black
+  - coverage
   - dataclasses
+  - faker
+  - flake8
+  - hypothesis
+  - isort
   - mesa=3.3.0
+  - mypy
   - networkx=3.5
   - numpy=2.3.3
   - pandas=2.3.2
   - pytest
+  - pytest-benchmark
+  - pytest-cov
+  - pytest-html
+  - pytest-mock
+  - pytest-xdist
   - python=3.12.11
   - conda-forge::python-dotenv
   - r-base=4.5.1
+  - safety
   - typing
 
