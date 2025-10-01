@@ -1,12 +1,15 @@
 name: ABM
 channels:
   - conda-forge
-  - bioconda
-  - defaults
 dependencies:
+  - dataclasses
   - mesa=3.3.0
   - networkx=3.5
   - numpy=2.3.3
   - pandas=2.3.2
+  - pytest
   - python=3.12.11
+  - conda-forge::python-dotenv
   - r-base=4.5.1
+  - typing
+
