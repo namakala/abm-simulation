@@ -2,9 +2,18 @@
 
 from src.python.agent import Person
 from src.python.model import StressModel
+from src.python.config import get_config
+
+# Load configuration
+config = get_config()
 
 # Simulate
-model = StressModel(N=10, max_days=1000, seed=42)
+model = StressModel(
+    N=config.get('simulation', 'num_agents'),
+    max_days=config.get('simulation', 'max_days'),
+    seed=config.get('simulation', 'seed')
+)
+
 while model.running:
     model.step()
 

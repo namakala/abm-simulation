@@ -10,14 +10,18 @@ This module contains stateless functions for:
 
 import numpy as np
 from typing import Tuple, Optional, Dict, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from src.python.config import get_config
+
+# Load configuration
+config = get_config()
 
 
 @dataclass
 class StressEvent:
     """Represents a stress event with controllability, predictability, and overload."""
-    controllability: float  # c ∈ [0,1]
-    predictability: float   # p ∈ [0,1]
+    controllability: float # c ∈ [0,1]
+    predictability: float  # p ∈ [0,1]
     overload: float        # o ∈ [0,1]
     magnitude: float       # s ∈ [0,1]
 
@@ -25,19 +29,19 @@ class StressEvent:
 @dataclass
 class AppraisalWeights:
     """Weights for the apply-weight function in stress appraisal."""
-    omega_c: float = 1.0  # Weight for controllability
-    omega_p: float = 1.0  # Weight for predictability
-    omega_o: float = 1.0  # Weight for overload
-    bias: float = 0.0     # Bias term
-    gamma: float = 6.0    # Sigmoid steepness
+    omega_c: float = field(default_factory=lambda: get_config().get('appraisal', 'omega_c')) # Weight for controllability
+    omega_p: float = field(default_factory=lambda: get_config().get('appraisal', 'omega_p')) # Weight for predictability
+    omega_o: float = field(default_factory=lambda: get_config().get('appraisal', 'omega_o')) # Weight for overload
+    bias: float    = field(default_factory=lambda: get_config().get('appraisal', 'bias')) # Bias term
+    gamma: float   = field(default_factory=lambda: get_config().get('appraisal', 'gamma')) # Sigmoid steepness
 
 
 @dataclass
 class ThresholdParams:
     """Parameters for stress threshold evaluation."""
-    base_threshold: float      # T_stress ∈ [0,1]
-    challenge_scale: float     # λ_C ≥ 0
-    hindrance_scale: float     # λ_H ≥ 0
+    base_threshold: float  = field(default_factory=lambda: get_config().get('threshold', 'base_threshold'))
+    challenge_scale: float = field(default_factory=lambda: get_config().get('threshold', 'challenge_scale'))
+    hindrance_scale: float = field(default_factory=lambda: get_config().get('threshold', 'hindrance_scale'))
 
 
 def generate_stress_event(
@@ -54,21 +58,26 @@ def generate_stress_event(
     Returns:
         StressEvent with normalized attributes in [0,1]
     """
+    # Get fresh config instance to avoid global config issues
+    cfg = get_config()
+
     if rng is None:
         rng = np.random.default_rng()
 
     if config is None:
         config = {
-            'controllability_mean': 0.5,
-            'predictability_mean': 0.5,
-            'overload_mean': 0.5,
-            'magnitude_scale': 0.4
+            'controllability_mean': cfg.get('stress', 'controllability_mean'),
+            'predictability_mean': cfg.get('stress', 'predictability_mean'),
+            'overload_mean': cfg.get('stress', 'overload_mean'),
+            'magnitude_scale': cfg.get('stress', 'magnitude_scale')
         }
 
     # Generate event attributes using beta distribution for bounded [0,1] values
-    controllability = rng.beta(2, 2)  # Symmetric around 0.5
-    predictability = rng.beta(2, 2)
-    overload = rng.beta(2, 2)
+    alpha = cfg.get('stress', 'beta_alpha')
+    beta  = cfg.get('stress', 'beta_beta')
+    controllability = rng.beta(alpha, beta)
+    predictability = rng.beta(alpha, beta)
+    overload = rng.beta(alpha, beta)
     magnitude = min(rng.exponential(config['magnitude_scale']), 1.0)  # Cap at 1.0
 
     return StressEvent(
@@ -142,10 +151,12 @@ def compute_appraised_stress(
         Appraised stress load L ∈ [0,1]
     """
     if config is None:
+        # Get fresh config instance to avoid global config issues
+        cfg = get_config()
         config = {
-            'alpha_challenge': 0.8,  # Challenge reduces stress per unit magnitude
-            'alpha_hindrance': 1.2,  # Hindrance increases stress per unit magnitude
-            'delta': 0.2             # Polarity weighting factor
+            'alpha_challenge': cfg.get('stress_params', 'alpha_challenge'),
+            'alpha_hindrance': cfg.get('stress_params', 'alpha_hindrance'),
+            'delta': cfg.get('stress_params', 'delta')
         }
 
     # Method 1: Weighted combination
@@ -177,10 +188,12 @@ def evaluate_stress_threshold(
         True if agent becomes stressed, False otherwise
     """
     if threshold_params is None:
+        # Get fresh config instance to avoid global config issues
+        cfg = get_config()
         threshold_params = ThresholdParams(
-            base_threshold=0.5,
-            challenge_scale=0.15,
-            hindrance_scale=0.25
+            base_threshold=cfg.get('threshold', 'base_threshold'),
+            challenge_scale=cfg.get('threshold', 'challenge_scale'),
+            hindrance_scale=cfg.get('threshold', 'hindrance_scale')
         )
 
     # Effective threshold: T_eff = T_base + λ_C*challenge - λ_H*hindrance
