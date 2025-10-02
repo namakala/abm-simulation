@@ -1,15 +1,14 @@
 name: Python Coverage and Test
 
 on:
-  push:
-    branches: [ main, master, develop ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: master
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    name: Coverage Test
 
     steps:
     - uses: actions/checkout@v4
