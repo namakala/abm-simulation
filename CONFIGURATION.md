@@ -160,6 +160,19 @@ All configuration parameters are organized into logical categories. Each paramet
 | `RESILIENCE_OVERLOAD_THRESHOLD` | 3 | 1-10 | Minimum consecutive hindrances for overload effect - number of hindrance events needed to trigger overload |
 | `N_INFLUENCING_HINDRANCE` | 3 | 1-10 | Consecutive hindrances for overload effect - threshold for cumulative hindrance impact on resilience |
 
+#### Stress and Coping Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `COPING_CHALLENGE_BONUS` | 0.2 | 0.0-0.5 | Bonus to coping success when facing challenge events |
+| `COPING_HINDRANCE_PENALTY` | 0.3 | 0.0-0.5 | Penalty to coping success when facing hindrance events | 
+| `COPING_BASE_PROBABILITY` | 0.5 | 0.0-1.0 | Base coping ability before situational modifiers |
+| `COPING_SOCIAL_INFLUENCE` | 0.1 | 0.0-0.5 | Social network influence on coping outcomes |
+| `DAILY_RESET_RATE` | 0.1 | 0.0-0.5 | Rate at which coping modifiers reset to baseline |
+| `STRESS_DECAY_RATE` | 0.05 | 0.0-0.5 | Natural stress recovery rate over time |
+| `THRESHOLD_STRESS_THRESHOLD` | 0.3 | 0.0-0.5 | Minimum stress level to trigger coping |
+| `THRESHOLD_AFFECT_THRESHOLD` | 0.3 | 0.0-0.5 | Minimum emotional change for resilience adjustment |
+
 #### Detailed Parameter Descriptions
 
 **Affect Dynamics Parameters:**
