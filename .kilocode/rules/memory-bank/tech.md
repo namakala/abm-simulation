@@ -25,12 +25,13 @@
   - Configuration management: python-dotenv (implemented)
   - Testing: pytest (implemented)
   - Coverage reporting: coverage.py (implemented)
+  - Debug utilities: Custom debugging tools for threshold evaluation and stress processing
 
 ### Shell Environment (Configuration Management)
 - **Shell Scripts:** POSIX-compliant shell utilities for configuration management
 - **extract_env.sh:** Automated extraction of default parameter values from Python configuration files
-- **update_env_example.sh:** Automated syncing between `.env` and `.env.example`.
-- **Configuration Utilities:** Shell-based tools for research workflow automation
+- **update_env_example.sh:** Automated syncing between `.env` and `.env.example`
+- **Configuration Utilities:** Shell-based tools for research workflow automation and parameter management
 
 ### SQL Database (Data Management)
 - **Purpose:** Large-scale parameter sweep storage
@@ -125,5 +126,6 @@
 - **Coverage Reporting** - Automated test coverage tracking with 80% minimum threshold and HTML report generation
 - **Codecov Integration** - External coverage analysis and reporting service
 - **Debug Tools** - Threshold evaluation and stress processing debugging utilities for troubleshooting
+- **Comprehensive Testing Suite** - 18 specialized test files covering unit tests, integration tests, configuration validation, environment variable validation, dataclass validation, dependency testing, stress processing mechanisms, affect dynamics, resilience mechanisms, homeostatic adjustment, and new mechanism validation
 - **Sensitivity analysis** for robustness checks (planned)
 - **Pattern matching** for model validation (planned)
