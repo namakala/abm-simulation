@@ -41,11 +41,17 @@ Each agent represents an individual with the following state variables:
 - `debug/` - Debugging utilities for threshold evaluation and stress processing troubleshooting
 - `test_*.py` - Comprehensive test suite including unit tests, integration tests, and configuration validation
 
+### [`src/shell/`](src/shell/) - Configuration Management Utilities
+- `extract_env.sh` - Shell script for extracting default parameter values from configuration files
+- `update_env_example.sh` - Shell script to update `.env.example` value based on `.env`
+- Configuration extraction and management scripts for research workflows
+
 ### Development Infrastructure
 - **CI/CD Pipeline** - GitHub Actions workflow for automated testing and coverage reporting
 - **Coverage Reporting** - Automated test coverage tracking with 80% minimum threshold
 - **Code Quality** - Codecov integration for coverage analysis and HTML report generation
 - **Environment Management** - Conda-based environment with automated setup and caching
+- **Configuration Management** - Comprehensive `.env`-based parameter system with validation and documentation
 
 ### [`src/r/`](src/r/) - Analysis and Visualization
 - `analysis/` - Statistical analysis and sensitivity analysis (planned)

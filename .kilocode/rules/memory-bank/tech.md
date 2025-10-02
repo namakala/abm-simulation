@@ -26,6 +26,12 @@
   - Testing: pytest (implemented)
   - Coverage reporting: coverage.py (implemented)
 
+### Shell Environment (Configuration Management)
+- **Shell Scripts:** POSIX-compliant shell utilities for configuration management
+- **extract_env.sh:** Automated extraction of default parameter values from Python configuration files
+- **update_env_example.sh:** Automated syncing between `.env` and `.env.example`.
+- **Configuration Utilities:** Shell-based tools for research workflow automation
+
 ### SQL Database (Data Management)
 - **Purpose:** Large-scale parameter sweep storage
 - **Schema:** Parameter configurations, simulation results, aggregated metrics
@@ -55,6 +61,7 @@
 
 /src/
 ├── python/       # Core ABM implementation
+├── shell/        # Configuration management utilities
 ├── r/           # Analysis and visualization
 └── sql/         # Database schemas and queries
 
