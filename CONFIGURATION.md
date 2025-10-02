@@ -140,6 +140,82 @@ All configuration parameters are organized into logical categories. Each paramet
 | `INTERACTION_RESILIENCE_INFLUENCE` | 0.05 | 0.0-0.5 | How partner affect influences agent resilience |
 | `INTERACTION_MAX_NEIGHBORS` | 10 | 1-50 | Maximum neighbors considered for interactions |
 
+### Affect and Resilience Dynamics Parameters
+
+#### Affect Dynamics Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `AFFECT_PEER_INFLUENCE_RATE` | 0.1 | 0.0-1.0 | Strength of peer influence on affect - controls how much neighbors' emotional states influence an agent's affect |
+| `AFFECT_EVENT_APPRAISAL_RATE` | 0.15 | 0.0-1.0 | How events affect baseline affect through challenge/hindrance appraisal - determines emotional impact of stress events |
+| `AFFECT_HOMEOSTASIS_RATE` | 0.05 | 0.0-0.5 | Tendency for affect to return to baseline - models emotional regulation and recovery toward neutral state |
+| `N_INFLUENCING_NEIGHBORS` | 5 | 1-20 | Number of neighbors that can influence an agent's affect - limits social influence to closest connections |
+
+#### Resilience Dynamics Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `RESILIENCE_COPING_SUCCESS_RATE` | 0.1 | 0.0-0.5 | Resilience change from successful coping - positive effect on resilience when agent successfully handles stress |
+| `RESILIENCE_SOCIAL_SUPPORT_RATE` | 0.08 | 0.0-0.5 | Resilience boost from social support - improvement in resilience from receiving help from others |
+| `RESILIENCE_OVERLOAD_THRESHOLD` | 3 | 1-10 | Minimum consecutive hindrances for overload effect - number of hindrance events needed to trigger overload |
+| `N_INFLUENCING_HINDRANCE` | 3 | 1-10 | Consecutive hindrances for overload effect - threshold for cumulative hindrance impact on resilience |
+
+#### Detailed Parameter Descriptions
+
+**Affect Dynamics Parameters:**
+
+- **`AFFECT_PEER_INFLUENCE_RATE`**: Controls the strength of emotional contagion between agents. Higher values mean agents' emotions are more influenced by their social network, creating stronger emotional clustering. Lower values result in more independent emotional dynamics.
+
+- **`AFFECT_EVENT_APPRAISAL_RATE`**: Determines how strongly stress events impact an agent's emotional state through cognitive appraisal. Challenge events tend to have positive emotional effects while hindrance events have negative effects. This parameter modulates the emotional sensitivity to life events.
+
+- **`AFFECT_HOMEOSTASIS_RATE`**: Models emotional regulation and the tendency to return to baseline emotional states. Higher values create more emotionally stable agents who recover quickly from emotional extremes. Lower values allow emotions to persist longer.
+
+- **`N_INFLUENCING_NEIGHBORS`**: Limits the scope of social influence by specifying how many network neighbors can affect an agent's emotional state. This creates more realistic local influence patterns rather than global network effects.
+
+**Resilience Dynamics Parameters:**
+
+- **`RESILIENCE_COPING_SUCCESS_RATE`**: Controls how much resilience improves when an agent successfully copes with stress. This represents learning and growth from successful stress management experiences.
+
+- **`RESILIENCE_SOCIAL_SUPPORT_RATE`**: Determines the resilience benefit from receiving social support during difficult times. This models the protective effect of social relationships on mental resilience.
+
+- **`RESILIENCE_OVERLOAD_THRESHOLD`**: Sets the minimum number of consecutive hindrance events needed to trigger overload effects. This represents the cumulative burden threshold before resilience begins to significantly decline.
+
+- **`N_INFLUENCING_HINDRANCE`**: Specifies the number of consecutive hindrance events that amplify overload effects. This parameter controls how cumulative stress experiences compound to affect resilience.
+
+#### Usage Scenarios
+
+**Scenario 1: High Social Influence Environment**
+```
+AFFECT_PEER_INFLUENCE_RATE=0.3
+N_INFLUENCING_NEIGHBORS=10
+AFFECT_HOMEOSTASIS_RATE=0.02
+```
+*Use case:* Modeling workplace environments where emotional states spread rapidly through social networks, with persistent emotional effects.
+
+**Scenario 2: Trauma Recovery Focus**
+```
+RESILIENCE_OVERLOAD_THRESHOLD=5
+RESILIENCE_COPING_SUCCESS_RATE=0.2
+RESILIENCE_SOCIAL_SUPPORT_RATE=0.15
+```
+*Use case:* Studying recovery from traumatic events where agents need multiple successful coping experiences to build resilience.
+
+**Scenario 3: Emotional Regulation Study**
+```
+AFFECT_EVENT_APPRAISAL_RATE=0.3
+AFFECT_HOMEOSTASIS_RATE=0.1
+RESILIENCE_COPING_SUCCESS_RATE=0.05
+```
+*Use case:* Investigating how different emotional regulation strategies affect mental health outcomes over time.
+
+**Scenario 4: Social Isolation Effects**
+```
+N_INFLUENCING_NEIGHBORS=2
+AFFECT_PEER_INFLUENCE_RATE=0.05
+RESILIENCE_SOCIAL_SUPPORT_RATE=0.02
+```
+*Use case:* Modeling the impact of limited social connections on emotional well-being and resilience development.
+
 ### Resource Dynamics Parameters
 
 | Parameter | Default | Range | Description |
