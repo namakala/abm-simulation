@@ -1,6 +1,7 @@
 # Build outputs and artifacts
 *.pdf
 *.swp
+*.xml
 
 # Environment variables and configuration
 .env
