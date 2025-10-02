@@ -125,7 +125,10 @@ def process_interaction(
     config: Optional[InteractionConfig] = None
 ) -> tuple[float, float, float, float]:
     """
-    Process a complete social interaction between two agents.
+    Process a complete social interaction between two agents with positive/negative effects.
+
+    Positive neighbor affect provides greater benefit, negative affect causes greater harm.
+    This reflects realistic social dynamics where negative interactions are more impactful.
 
     Args:
         self_affect: First agent's affect
@@ -141,21 +144,33 @@ def process_interaction(
     if config is None:
         config = InteractionConfig()
 
-    # Compute mutual influences
+    # Compute mutual influences with asymmetric positive/negative effects
     affect_influence_self, affect_influence_partner = compute_mutual_influence(
         self_affect, partner_affect, config
     )
+
+    # Apply asymmetric weighting: negative affects have stronger impact
+    if affect_influence_self < 0:
+        affect_influence_self *= 1.5  # Negative influence is 50% stronger
+    if affect_influence_partner < 0:
+        affect_influence_partner *= 1.5  # Negative influence is 50% stronger
 
     # Apply affect changes
     new_self_affect = self_affect + affect_influence_self
     new_partner_affect = partner_affect + affect_influence_partner
 
-    # Compute resilience changes based on partner's affect
+    # Compute resilience changes based on partner's affect with threshold effects
     resilience_influence_self = compute_resilience_influence(partner_affect, config)
     resilience_influence_partner = compute_resilience_influence(self_affect, config)
 
-    new_self_resilience = self_resilience + resilience_influence_self
-    new_partner_resilience = partner_resilience + resilience_influence_partner
+    # Apply resilience influence only if partner affect exceeds threshold
+    stress_config = StressProcessingConfig()
+    if abs(partner_affect) > stress_config.affect_threshold:
+        new_self_resilience = self_resilience + resilience_influence_self
+        new_partner_resilience = partner_resilience + resilience_influence_partner
+    else:
+        new_self_resilience = self_resilience
+        new_partner_resilience = partner_resilience
 
     # Clamp all values to valid ranges
     new_self_affect = clamp(new_self_affect, -1.0, 1.0)
@@ -170,15 +185,19 @@ def compute_stress_impact_on_affect(
     current_affect: float,
     is_stressed: bool,
     coped_successfully: bool,
+    challenge: float = 0.5,
+    hindrance: float = 0.5,
     config: Optional[Dict[str, float]] = None
 ) -> float:
     """
-    Compute affect change due to stress event outcome.
+    Compute affect change due to stress event outcome using new mechanism.
 
     Args:
         current_affect: Agent's current affect
         is_stressed: Whether the agent experienced stress
         coped_successfully: Whether coping was successful
+        challenge: Challenge component from event appraisal (0-1)
+        hindrance: Hindrance component from event appraisal (0-1)
         config: Configuration for affect changes
 
     Returns:
@@ -196,25 +215,44 @@ def compute_stress_impact_on_affect(
     if not is_stressed:
         return config['no_stress_effect']
 
-    if coped_successfully:
-        return config['coping_improvement']
+    # Check if using default challenge/hindrance values (backward compatibility)
+    if challenge == 0.5 and hindrance == 0.5:
+        # Fall back to old mechanism for backward compatibility
+        if coped_successfully:
+            return config['coping_improvement']
+        else:
+            return -config['coping_deterioration']
     else:
-        return -config['coping_deterioration']
+        # Use new mechanism with challenge/hindrance effects
+        stress_config = StressProcessingConfig()
+
+        if coped_successfully:
+            # Success: challenge provides positive affect boost
+            affect_change = stress_config.challenge_bonus * challenge
+        else:
+            # Failure: hindrance provides negative affect impact
+            affect_change = -stress_config.hindrance_penalty * hindrance
+
+        return affect_change
 
 
 def compute_stress_impact_on_resilience(
     current_resilience: float,
     is_stressed: bool,
     coped_successfully: bool,
+    challenge: float = 0.5,
+    hindrance: float = 0.5,
     config: Optional[Dict[str, float]] = None
 ) -> float:
     """
-    Compute resilience change due to stress event outcome.
+    Compute resilience change due to stress event outcome using new mechanism.
 
     Args:
         current_resilience: Agent's current resilience
         is_stressed: Whether the agent experienced stress
         coped_successfully: Whether coping was successful
+        challenge: Challenge component from event appraisal (0-1)
+        hindrance: Hindrance component from event appraisal (0-1)
         config: Configuration for resilience changes
 
     Returns:
@@ -232,10 +270,20 @@ def compute_stress_impact_on_resilience(
     if not is_stressed:
         return config['no_stress_effect']
 
-    if coped_successfully:
-        return config['coping_improvement']
+    # Check if using default challenge/hindrance values (backward compatibility)
+    if challenge == 0.5 and hindrance == 0.5:
+        # Fall back to old mechanism for backward compatibility
+        if coped_successfully:
+            return config['coping_improvement']
+        else:
+            return -config['coping_deterioration']
     else:
-        return -config['coping_deterioration']
+        # Use new mechanism with challenge/hindrance effects
+        resilience_effect = compute_challenge_hindrance_resilience_effect(
+            challenge, hindrance, coped_successfully
+        )
+
+        return resilience_effect
 
 
 def allocate_protective_resources(
@@ -338,6 +386,234 @@ def compute_allocation_cost(
 
 
 # ==============================================
+# NEW STRESS PROCESSING MECHANISMS
+# ==============================================
+
+@dataclass
+class StressProcessingConfig:
+    """Configuration parameters for new stress processing mechanisms."""
+    stress_threshold: float = field(default_factory=lambda: get_config().get('threshold', 'stress_threshold'))
+    affect_threshold: float = field(default_factory=lambda: get_config().get('threshold', 'affect_threshold'))
+    base_coping_probability: float = field(default_factory=lambda: get_config().get('coping', 'base_probability'))
+    social_influence_factor: float = field(default_factory=lambda: get_config().get('coping', 'social_influence'))
+    challenge_bonus: float = field(default_factory=lambda: get_config().get('coping', 'challenge_bonus'))
+    hindrance_penalty: float = field(default_factory=lambda: get_config().get('coping', 'hindrance_penalty'))
+    daily_decay_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostatic_rate'))
+    stress_decay_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'homeostatic_rate'))
+
+
+def compute_coping_probability(
+    challenge: float,
+    hindrance: float,
+    neighbor_affects: List[float],
+    config: Optional[StressProcessingConfig] = None
+) -> float:
+    """
+    Compute coping success probability based on challenge/hindrance and social influence.
+
+    Challenge increases coping probability, hindrance decreases it.
+    Positive neighbor affects increase probability, negative decrease it.
+
+    Args:
+        challenge: Challenge component from event appraisal (0-1)
+        hindrance: Hindrance component from event appraisal (0-1)
+        neighbor_affects: List of neighbor affect values
+        config: Stress processing configuration
+
+    Returns:
+        Coping success probability (0-1)
+    """
+    if config is None:
+        config = StressProcessingConfig()
+
+    # Base probability from configuration
+    base_prob = config.base_coping_probability
+
+    # Challenge/hindrance effects
+    challenge_effect = config.challenge_bonus * challenge
+    hindrance_effect = -config.hindrance_penalty * hindrance
+
+    # Social influence from neighbors
+    social_effect = 0.0
+    if neighbor_affects:
+        avg_neighbor_affect = np.mean(neighbor_affects)
+        social_effect = config.social_influence_factor * avg_neighbor_affect
+
+    # Combine all effects
+    total_effect = challenge_effect + hindrance_effect + social_effect
+
+    # Apply effects to base probability
+    coping_prob = base_prob + total_effect
+
+    # Clamp to valid range
+    return clamp(coping_prob, 0.0, 1.0)
+
+
+def compute_challenge_hindrance_resilience_effect(
+    challenge: float,
+    hindrance: float,
+    coped_successfully: bool,
+    config: Optional[StressProcessingConfig] = None
+) -> float:
+    """
+    Compute resilience change based on challenge/hindrance and coping outcome.
+
+    When coping fails:
+    - Hindrance greatly reduces resilience (-0.3 to -0.5)
+    - Challenge slightly reduces resilience (-0.05 to -0.1)
+
+    When coping succeeds:
+    - Hindrance slightly increases resilience (+0.05 to +0.1)
+    - Challenge greatly increases resilience (+0.2 to +0.4)
+
+    Args:
+        challenge: Challenge component from event appraisal (0-1)
+        hindrance: Hindrance component from event appraisal (0-1)
+        coped_successfully: Whether coping was successful
+        config: Stress processing configuration
+
+    Returns:
+        Resilience change
+    """
+    if config is None:
+        config = StressProcessingConfig()
+
+    if coped_successfully:
+        # Success case: hindrance slightly helps, challenge greatly helps
+        hindrance_effect = 0.1 * hindrance  # Small positive effect
+        challenge_effect = 0.3 * challenge  # Large positive effect
+    else:
+        # Failure case: hindrance greatly hurts, challenge slightly hurts
+        hindrance_effect = -0.4 * hindrance  # Large negative effect
+        challenge_effect = -0.1 * challenge  # Small negative effect
+
+    total_effect = hindrance_effect + challenge_effect
+    return total_effect
+
+
+def compute_daily_affect_reset(
+    current_affect: float,
+    baseline_affect: float,
+    config: Optional[StressProcessingConfig] = None
+) -> float:
+    """
+    Reset affect toward baseline at the end of each day.
+
+    Args:
+        current_affect: Agent's current affect
+        baseline_affect: Agent's baseline affect level
+        config: Stress processing configuration
+
+    Returns:
+        Reset affect value
+    """
+    if config is None:
+        config = StressProcessingConfig()
+
+    # Calculate distance from baseline
+    distance = baseline_affect - current_affect
+
+    # Apply decay toward baseline
+    reset_amount = config.daily_decay_rate * distance
+
+    # Apply reset
+    new_affect = current_affect + reset_amount
+
+    # Clamp to valid range
+    return clamp(new_affect, -1.0, 1.0)
+
+
+def compute_stress_decay(
+    current_stress: float,
+    config: Optional[StressProcessingConfig] = None
+) -> float:
+    """
+    Apply natural decay to stress levels over time.
+
+    Args:
+        current_stress: Agent's current stress level
+        config: Stress processing configuration
+
+    Returns:
+        Decayed stress value
+    """
+    if config is None:
+        config = StressProcessingConfig()
+
+    # Exponential decay toward zero
+    decayed_stress = current_stress * (1.0 - config.stress_decay_rate)
+
+    # Clamp to valid range
+    return clamp(decayed_stress, 0.0, 1.0)
+
+
+def process_stress_event_with_new_mechanism(
+    current_affect: float,
+    current_resilience: float,
+    current_stress: float,
+    challenge: float,
+    hindrance: float,
+    neighbor_affects: List[float],
+    config: Optional[StressProcessingConfig] = None
+) -> tuple[float, float, float, bool]:
+    """
+    Process stress event using new mechanism with challenge/hindrance effects.
+
+    Args:
+        current_affect: Agent's current affect
+        current_resilience: Agent's current resilience
+        current_stress: Agent's current stress level
+        challenge: Challenge component from event appraisal (0-1)
+        hindrance: Hindrance component from event appraisal (0-1)
+        neighbor_affects: List of neighbor affect values
+        config: Stress processing configuration
+
+    Returns:
+        Tuple of (new_affect, new_resilience, new_stress, coped_successfully)
+    """
+    if config is None:
+        config = StressProcessingConfig()
+
+    # Compute coping probability based on challenge/hindrance and social influence
+    coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+
+    # Determine if coping was successful
+    coped_successfully = np.random.random() < coping_prob
+
+    # Compute resilience effect based on challenge/hindrance and coping outcome
+    resilience_effect = compute_challenge_hindrance_resilience_effect(
+        challenge, hindrance, coped_successfully, config
+    )
+
+    # Update resilience
+    new_resilience = current_resilience + resilience_effect
+    new_resilience = clamp(new_resilience, 0.0, 1.0)
+
+    # Update stress based on coping outcome
+    if coped_successfully:
+        # Successful coping reduces stress
+        stress_reduction = 0.2 * (1.0 + challenge)  # Challenge helps reduce stress more
+        new_stress = current_stress - stress_reduction
+    else:
+        # Failed coping increases stress
+        stress_increase = 0.3 * (1.0 + hindrance)  # Hindrance increases stress more
+        new_stress = current_stress + stress_increase
+
+    new_stress = clamp(new_stress, 0.0, 1.0)
+
+    # Update affect based on stress outcome
+    if coped_successfully:
+        affect_change = 0.1 * challenge  # Challenge provides positive affect boost
+    else:
+        affect_change = -0.2 * hindrance  # Hindrance provides negative affect impact
+
+    new_affect = current_affect + affect_change
+    new_affect = clamp(new_affect, -1.0, 1.0)
+
+    return new_affect, new_resilience, new_stress, coped_successfully
+
+
+# ==============================================
 # ENHANCED AFFECT AND RESILIENCE DYNAMICS
 # ==============================================
 
@@ -346,7 +622,7 @@ class AffectDynamicsConfig:
     """Configuration parameters for affect dynamics."""
     peer_influence_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'peer_influence_rate'))
     event_appraisal_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'event_appraisal_rate'))
-    homeostasis_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostasis_rate'))
+    homeostatic_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostatic_rate'))
     influencing_neighbors: int = field(default_factory=lambda: get_config().get('influence', 'influencing_neighbors'))
 
 
@@ -407,6 +683,9 @@ def compute_event_appraisal_effect(
     """
     Compute affect change based on challenge/hindrance appraisal of events.
 
+    Based on theoretical model where challenge tends to improve affect (motivating)
+    and hindrance tends to worsen it (demotivating).
+
     Args:
         challenge: Challenge component from event appraisal (0-1)
         hindrance: Hindrance component from event appraisal (0-1)
@@ -420,9 +699,9 @@ def compute_event_appraisal_effect(
         config = AffectDynamicsConfig()
 
     # Challenge tends to improve affect (motivating), hindrance tends to worsen it
-    # The effect is stronger when current affect is more extreme
+    # Effect is proportional to the challenge/hindrance intensity and current affect state
     challenge_effect = config.event_appraisal_rate * challenge * (1.0 - current_affect)
-    hindrance_effect = -config.event_appraisal_rate * hindrance * (current_affect + 1.0)
+    hindrance_effect = -config.event_appraisal_rate * hindrance * max(0.1, current_affect + 1.0)
 
     total_effect = challenge_effect + hindrance_effect
 
@@ -451,7 +730,7 @@ def compute_homeostasis_effect(
     # Homeostasis pulls affect toward baseline
     # Strength increases with distance from baseline
     distance_from_baseline = baseline_affect - current_affect
-    homeostasis_strength = config.homeostasis_rate * abs(distance_from_baseline)
+    homeostasis_strength = config.homeostatic_rate * abs(distance_from_baseline)
 
     # Direction toward baseline
     if distance_from_baseline > 0:
@@ -460,6 +739,64 @@ def compute_homeostasis_effect(
     else:
         # Current affect is above baseline, push down
         return -homeostasis_strength
+
+
+def compute_homeostatic_adjustment(
+    initial_value: float,
+    final_value: float,
+    homeostatic_rate: Optional[float] = None,
+    value_type: str = 'affect'
+) -> float:
+    """
+    Apply homeostatic adjustment to pull values back toward initial state.
+
+    This function implements a homeostatic mechanism that adjusts values toward
+    their initial state at the beginning of each day, simulating natural
+    tendencies to return to baseline levels.
+
+    Args:
+        initial_value: Value at the start of the day (baseline)
+        final_value: Value at the end of the day after all actions
+        homeostatic_rate: Rate of homeostatic adjustment (0-1).
+                         If None, uses config default.
+        value_type: Type of value being adjusted ('affect' or 'resilience')
+
+    Returns:
+        Homeostatically adjusted value
+
+    Raises:
+        ValueError: If value_type is not 'affect' or 'resilience'
+    """
+    if homeostatic_rate is None:
+        homeostatic_rate = get_config().get('affect_dynamics', 'homeostatic_rate')
+
+    # Validate value_type
+    if value_type not in ['affect', 'resilience']:
+        raise ValueError(f"value_type must be 'affect' or 'resilience', got '{value_type}'")
+
+    # Calculate distance from initial value
+    distance = homeostatic_rate * abs(final_value - initial_value)
+
+    # Determine adjustment direction
+    if final_value > initial_value:
+        # Final value is above initial, adjust downward
+        adjusted_value = final_value - distance
+    elif final_value < initial_value:
+        # Final value is below initial, adjust upward
+        adjusted_value = final_value + distance
+    else:
+        # Values are equal, no adjustment needed
+        adjusted_value = final_value
+
+    # Apply appropriate normalization based on value type
+    if value_type == 'affect':
+        # Affect values normalized to [-1, 1]
+        adjusted_value = clamp(adjusted_value, -1.0, 1.0)
+    else:  # resilience
+        # Resilience values normalized to [0, 1]
+        adjusted_value = clamp(adjusted_value, 0.0, 1.0)
+
+    return adjusted_value
 
 
 def compute_cumulative_overload(

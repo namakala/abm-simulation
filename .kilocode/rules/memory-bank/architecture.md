@@ -38,14 +38,26 @@ Each agent represents an individual with the following state variables:
 - `math_utils.py` - Mathematical utilities for random sampling and clamping
 - `config.py` - Centralized configuration management with environment variable loading and validation
 - `simulate.py` - Main simulation runner (in project root)
-- `debug/` - Debugging utilities for threshold evaluation and stress processing troubleshooting
-- `test_*.py` - Comprehensive test suite including unit tests, integration tests, and configuration validation
+- `debug/` - Debugging utilities for threshold evaluation (`debug_threshold.py`) and stress processing troubleshooting (`simple_threshold_test.py`)
+- `test_*.py` - Comprehensive test suite with 18 specialized test files:
+  - Unit tests: `test_math_utils.py`, `test_stress_utils.py`, `test_affect_utils.py`
+  - Integration tests: `test_agent_integration.py`, `test_model_integration.py`, `test_affect_resilience_integration.py`
+  - Configuration tests: `test_config_integration.py`, `test_dataclass_config.py`, `test_environment_variable_validation.py`
+  - Mechanism tests: `test_stress_processing_mechanisms.py`, `test_affect_resilience_dynamics.py`, `test_homeostatic_adjustment.py`, `test_homeostatic_stabilization_integration.py`
+  - Validation tests: `test_imports_and_dependencies.py`, `test_integration_new_mechanisms.py`, `test_new_mechanisms.py`
+
+### [`src/shell/`](src/shell/) - Configuration Management Utilities
+- `extract_env.sh` - Shell script for extracting default parameter values from configuration files
+- `update_env_example.sh` - Shell script to update `.env.example` value based on `.env`
+- Configuration extraction and management scripts for research workflows
 
 ### Development Infrastructure
 - **CI/CD Pipeline** - GitHub Actions workflow for automated testing and coverage reporting
 - **Coverage Reporting** - Automated test coverage tracking with 80% minimum threshold
 - **Code Quality** - Codecov integration for coverage analysis and HTML report generation
 - **Environment Management** - Conda-based environment with automated setup and caching
+- **Configuration Management** - Comprehensive `.env`-based parameter system with validation and documentation
+- **Shell Utilities** - Configuration management scripts (`extract_env.sh`, `update_env_example.sh`) for automated parameter extraction and environment file synchronization
 
 ### [`src/r/`](src/r/) - Analysis and Visualization
 - `analysis/` - Statistical analysis and sensitivity analysis (planned)

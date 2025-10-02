@@ -74,6 +74,9 @@ class Person(mesa.Agent):
         # Initialize baseline affect for homeostasis
         self.baseline_affect = config['initial_affect']
 
+        # Initialize baseline resilience for homeostasis
+        self.baseline_resilience = config['initial_resilience']
+
         # Initialize protective factors
         self.protective_factors = {
             'social_support': 0.5,
@@ -84,6 +87,12 @@ class Person(mesa.Agent):
 
         # Initialize consecutive hindrances tracking for overload effects
         self.consecutive_hindrances = 0
+
+        # Initialize new stress tracking state variables
+        self.current_stress = 0.0  # Current stress level ∈ [0,1]
+        self.daily_stress_events = []  # Track stress events within current day
+        self.stress_history = []  # Historical stress levels for analysis
+        self.last_reset_day = 0  # Track when last daily reset occurred
 
         # Configuration for utility functions
         self.stress_config = {
@@ -107,6 +116,10 @@ class Person(mesa.Agent):
         # Get configuration for dynamics
         affect_config = AffectDynamicsConfig()
         resilience_config = ResilienceDynamicsConfig()
+
+        # Store initial affect and resilience values at the beginning of each day
+        initial_affect = self.affect
+        initial_resilience = self.resilience
 
         # Get neighbor affects for social influence throughout the day
         neighbor_affects = self._get_neighbor_affects()
@@ -159,13 +172,18 @@ class Person(mesa.Agent):
             affect_config=affect_config
         )
 
-        # Apply integrated resilience dynamics (coping + social support + overload effects)
-        # Check if agent received social support during interactions
+        # Apply integrated resilience dynamics using new stress processing mechanisms
+        # The new mechanism handles coping success determination within each stress event
+        # and incorporates social interaction effects on coping probability
+
+        # Check if agent received social support during interactions (for resilience boost)
         received_social_support = social_interactions_count > 0 and self._rng.random() < 0.3
 
+        # Use new resilience dynamics that work with the updated stress processing
+        # The coping success is now determined within each stress event using social influence
         self.resilience = update_resilience_dynamics(
             current_resilience=self.resilience,
-            coped_successfully=stress_events_count > 0,  # Simplified: coped if had stress events
+            coped_successfully=False,  # Will be handled per event in new mechanism
             received_social_support=received_social_support,
             consecutive_hindrances=getattr(self, 'consecutive_hindrances', 0),
             resilience_config=resilience_config
@@ -192,10 +210,44 @@ class Person(mesa.Agent):
             decay_rate = 0.1
             self.consecutive_hindrances = max(0, self.consecutive_hindrances - decay_rate)
 
+        # Apply homeostatic adjustment to both affect and resilience
+        # This pulls values back toward their FIXED baseline (natural equilibrium point)
+        from .affect_utils import compute_homeostatic_adjustment
+
+        # Get homeostatic rates from configuration
+        cfg = get_config()
+        affect_homeostatic_rate = cfg.get('affect_dynamics', 'homeostatic_rate')
+        resilience_homeostatic_rate = cfg.get('resilience_dynamics', 'homeostatic_rate')
+
+        # Apply homeostatic adjustment to affect using FIXED baseline
+        self.affect = compute_homeostatic_adjustment(
+            initial_value=self.baseline_affect,  # Use fixed baseline, not daily initial value
+            final_value=self.affect,
+            homeostatic_rate=affect_homeostatic_rate,
+            value_type='affect'
+        )
+
+        # Apply homeostatic adjustment to resilience using FIXED baseline
+        self.resilience = compute_homeostatic_adjustment(
+            initial_value=self.baseline_resilience,  # Use fixed baseline, not daily initial value
+            final_value=self.resilience,
+            homeostatic_rate=resilience_homeostatic_rate,
+            value_type='resilience'
+        )
+
+        # NOTE: baseline_affect and baseline_resilience remain FIXED (not updated daily)
+        # This ensures homeostasis pulls toward the agent's natural equilibrium point
+
+        # Apply daily stress decay and affect reset if it's a new day
+        current_day = getattr(self.model, 'current_day', 0)
+        if current_day != self.last_reset_day:
+            self._daily_reset(current_day)
+
         # Clamp all values to valid ranges
         self.resilience = clamp(self.resilience, 0.0, 1.0)
         self.affect = clamp(self.affect, -1.0, 1.0)
         self.resources = clamp(self.resources, 0.0, 1.0)
+        self.current_stress = clamp(self.current_stress, 0.0, 1.0)
 
     def interact(self):
         """
@@ -235,11 +287,11 @@ class Person(mesa.Agent):
 
     def stressful_event(self):
         """
-        Process a stressful event using enhanced challenge/hindrance appraisal.
+        Process a stressful event using the complete stress processing pipeline:
+        stress exposure → perception → appraisal → coping → resilience/affect changes
 
         Returns challenge and hindrance values for integration with daily dynamics.
-        Uses dynamic threshold adjustment based on challenge/hindrance as specified
-        in the theoretical model: T_eff = T_base + λ_C*challenge - λ_H*hindrance
+        Uses new stress processing mechanism with social interaction effects on coping.
 
         Returns:
             Tuple of (challenge, hindrance) values for the event
@@ -277,8 +329,35 @@ class Person(mesa.Agent):
         if not is_stressed:
             return 0.0, 0.0  # No challenge/hindrance if not stressed
 
-        # Determine coping outcome using utility function
-        coped_successfully = self._rng.random() < self.resilience
+        # Get neighbor affects for social influence on coping
+        neighbor_affects = self._get_neighbor_affects()
+
+        # Use new stress processing mechanism with social interaction effects
+        from .affect_utils import process_stress_event_with_new_mechanism, StressProcessingConfig
+
+        stress_config = StressProcessingConfig()
+        new_affect, new_resilience, new_stress, coped_successfully = process_stress_event_with_new_mechanism(
+            current_affect=self.affect,
+            current_resilience=self.resilience,
+            current_stress=self.current_stress,
+            challenge=challenge,
+            hindrance=hindrance,
+            neighbor_affects=neighbor_affects,
+            config=stress_config
+        )
+
+        # Update agent state with new values
+        self.affect = new_affect
+        self.resilience = new_resilience
+        self.current_stress = new_stress
+
+        # Track the stress event for daily reset
+        self.daily_stress_events.append({
+            'challenge': challenge,
+            'hindrance': hindrance,
+            'coped_successfully': coped_successfully,
+            'stress_level': new_stress
+        })
 
         # Use resources for coping if successful
         if coped_successfully:
@@ -434,6 +513,55 @@ class Person(mesa.Agent):
 
         # Reset stress breach count after adaptation
         self.stress_breach_count = 0
+
+    def _daily_reset(self, current_day):
+        """
+        Perform daily reset of stress tracking variables and apply stress decay.
+
+        This method implements the daily affect reset to baseline and stress decay
+        mechanisms as specified in the new stress processing flow.
+
+        Args:
+            current_day: Current simulation day for tracking reset timing
+        """
+        from .affect_utils import compute_daily_affect_reset, compute_stress_decay, StressProcessingConfig
+
+        # Update last reset day
+        self.last_reset_day = current_day
+
+        # Apply daily affect reset to baseline
+        stress_config = StressProcessingConfig()
+        self.affect = compute_daily_affect_reset(
+            current_affect=self.affect,
+            baseline_affect=self.baseline_affect,
+            config=stress_config
+        )
+
+        # Apply stress decay over time
+        self.current_stress = compute_stress_decay(
+            current_stress=self.current_stress,
+            config=stress_config
+        )
+
+        # Store daily stress summary in history for analysis
+        if self.daily_stress_events:
+            daily_summary = {
+                'day': current_day,
+                'avg_stress': np.mean([event['stress_level'] for event in self.daily_stress_events]),
+                'max_stress': max([event['stress_level'] for event in self.daily_stress_events]),
+                'num_events': len(self.daily_stress_events),
+                'coping_success_rate': np.mean([event['coped_successfully'] for event in self.daily_stress_events])
+            }
+            self.stress_history.append(daily_summary)
+
+        # Reset daily stress events for new day
+        self.daily_stress_events = []
+
+        # Apply gradual decay to consecutive hindrances over days
+        if hasattr(self, 'consecutive_hindrances') and self.consecutive_hindrances > 0:
+            # Slowly decay consecutive hindrances over days when no new hindrance events
+            daily_decay_rate = 0.05  # Small daily decay rate
+            self.consecutive_hindrances = max(0, self.consecutive_hindrances - daily_decay_rate)
 
     def _rewire_to_similar_agent(self, exclude_agents):
         """

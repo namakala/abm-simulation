@@ -6,11 +6,16 @@ This file demonstrates testing patterns for affect dynamics and social interacti
 
 import pytest
 import numpy as np
+from unittest.mock import patch
 from src.python.affect_utils import (
     process_interaction, compute_stress_impact_on_affect,
     compute_stress_impact_on_resilience, clamp, allocate_protective_resources,
     compute_resource_regeneration, compute_allocation_cost,
-    InteractionConfig, ProtectiveFactors, ResourceParams
+    InteractionConfig, ProtectiveFactors, ResourceParams,
+    # New stress processing functions
+    compute_coping_probability, compute_challenge_hindrance_resilience_effect,
+    compute_daily_affect_reset, compute_stress_decay,
+    process_stress_event_with_new_mechanism, StressProcessingConfig
 )
 
 
@@ -297,3 +302,110 @@ class TestIntegrationScenarios:
         # All values should be in valid ranges
         assert -1.0 <= new_affect <= 1.0
         assert 0.0 <= new_resilience <= 1.0
+
+
+class TestNewStressProcessingMechanisms:
+    """Test new stress processing mechanisms for compatibility."""
+
+    def test_compute_coping_probability_basic(self):
+        """Test basic coping probability computation with new mechanism."""
+        config = StressProcessingConfig(
+            base_coping_probability=0.5,
+            challenge_bonus=0.2,
+            hindrance_penalty=0.3,
+            social_influence_factor=0.1
+        )
+
+        challenge = 0.7
+        hindrance = 0.3
+        neighbor_affects = [0.4, 0.6]
+
+        coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+
+        # Should be in valid range
+        assert 0.0 <= coping_prob <= 1.0
+
+        # With positive challenge/hindrance balance and social influence, should be above base
+        assert coping_prob > 0.5
+
+    def test_compute_daily_affect_reset(self):
+        """Test daily affect reset mechanism."""
+        config = StressProcessingConfig(daily_decay_rate=0.2)
+
+        current_affect = 0.8
+        baseline_affect = 0.2
+
+        reset_affect = compute_daily_affect_reset(current_affect, baseline_affect, config)
+
+        # Should move toward baseline
+        assert reset_affect < current_affect
+        assert reset_affect > baseline_affect
+
+        # Should be in valid range
+        assert -1.0 <= reset_affect <= 1.0
+
+    def test_compute_stress_decay(self):
+        """Test stress decay mechanism."""
+        config = StressProcessingConfig(stress_decay_rate=0.1)
+
+        current_stress = 0.7
+
+        decayed_stress = compute_stress_decay(current_stress, config)
+
+        # Should decrease stress
+        assert decayed_stress < current_stress
+
+        # Should be in valid range
+        assert 0.0 <= decayed_stress <= 1.0
+
+        # Should be positive (no negative stress)
+        assert decayed_stress >= 0.0
+
+    def test_process_stress_event_with_new_mechanism_basic(self):
+        """Test complete stress processing with new mechanism."""
+        config = StressProcessingConfig()
+
+        current_affect = 0.0
+        current_resilience = 0.5
+        current_stress = 0.3
+        challenge = 0.6
+        hindrance = 0.4
+        neighbor_affects = [0.2, 0.4, 0.6]
+
+        # Use deterministic RNG for testing
+        with patch('numpy.random.random', return_value=0.5):
+            new_affect, new_resilience, new_stress, coped_successfully = (
+                process_stress_event_with_new_mechanism(
+                    current_affect, current_resilience, current_stress,
+                    challenge, hindrance, neighbor_affects, config
+                )
+            )
+
+        # All values should be in valid ranges
+        assert -1.0 <= new_affect <= 1.0
+        assert 0.0 <= new_resilience <= 1.0
+        assert 0.0 <= new_stress <= 1.0
+
+        # Coping success should be boolean (including numpy bool types)
+        assert isinstance(coped_successfully, (bool, np.bool_))
+
+    def test_stress_processing_config_compatibility(self):
+        """Test that StressProcessingConfig works with existing configuration."""
+        # Test that config can be created and used
+        config = StressProcessingConfig()
+
+        # Should have all required attributes
+        assert hasattr(config, 'base_coping_probability')
+        assert hasattr(config, 'challenge_bonus')
+        assert hasattr(config, 'hindrance_penalty')
+        assert hasattr(config, 'social_influence_factor')
+        assert hasattr(config, 'daily_decay_rate')
+        assert hasattr(config, 'stress_decay_rate')
+
+        # All values should be in reasonable ranges
+        assert 0.0 <= config.base_coping_probability <= 1.0
+        assert config.challenge_bonus >= 0.0
+        assert config.hindrance_penalty >= 0.0
+        assert 0.0 <= config.social_influence_factor <= 1.0
+        assert 0.0 <= config.daily_decay_rate <= 1.0
+        assert 0.0 <= config.stress_decay_rate <= 1.0

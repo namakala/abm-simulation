@@ -372,7 +372,7 @@ class TestRecoveryScenario:
         to baseline levels through homeostasis, demonstrating natural
         recovery tendencies.
         """
-        config = AffectDynamicsConfig(homeostasis_rate=0.15)  # Strong homeostasis
+        config = AffectDynamicsConfig(homeostatic_rate=0.15)  # Strong homeostasis
 
         # Test recovery from very positive affect
         high_affect = update_affect_dynamics(
@@ -855,14 +855,14 @@ class TestConfigurationIntegration:
         high_config = AffectDynamicsConfig(
             peer_influence_rate=0.3,
             event_appraisal_rate=0.2,
-            homeostasis_rate=0.05
+            homeostatic_rate=0.05
         )
 
         # Test with low influence configuration
         low_config = AffectDynamicsConfig(
             peer_influence_rate=0.05,
             event_appraisal_rate=0.02,
-            homeostasis_rate=0.01
+            homeostatic_rate=0.01
         )
 
         # Same inputs should produce different outputs
@@ -893,7 +893,7 @@ class TestConfigurationIntegration:
         config = AffectDynamicsConfig(
             peer_influence_rate=0.5,  # High influence
             event_appraisal_rate=0.3,
-            homeostasis_rate=0.2
+            homeostatic_rate=0.2
         )
 
         # Test with extreme inputs
