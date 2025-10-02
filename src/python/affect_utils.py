@@ -13,6 +13,7 @@ import numpy as np
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
 from src.python.config import get_config
+from src.python.math_utils import clamp, softmax
 
 # Load configuration
 config = get_config()
@@ -41,21 +42,6 @@ class ResourceParams:
     base_regeneration: float = field(default_factory=lambda: get_config().get('resource', 'base_regeneration'))
     allocation_cost: float = field(default_factory=lambda: get_config().get('resource', 'allocation_cost'))
     cost_exponent: float = field(default_factory=lambda: get_config().get('resource', 'cost_exponent'))
-
-
-def clamp(value: float, min_val: float = 0.0, max_val: float = 1.0) -> float:
-    """
-    Clamp a value to specified bounds.
-
-    Args:
-        value: Value to clamp
-        min_val: Minimum allowed value
-        max_val: Maximum allowed value
-
-    Returns:
-        Clamped value
-    """
-    return max(min_val, min(value, max_val))
 
 
 def compute_social_influence(
@@ -349,3 +335,240 @@ def compute_allocation_cost(
     cost = config.allocation_cost * (allocated_amount ** config.cost_exponent)
 
     return cost
+
+
+# ==============================================
+# ENHANCED AFFECT AND RESILIENCE DYNAMICS
+# ==============================================
+
+@dataclass
+class AffectDynamicsConfig:
+    """Configuration parameters for affect dynamics."""
+    peer_influence_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'peer_influence_rate'))
+    event_appraisal_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'event_appraisal_rate'))
+    homeostasis_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostasis_rate'))
+    influencing_neighbors: int = field(default_factory=lambda: get_config().get('influence', 'influencing_neighbors'))
+
+
+@dataclass
+class ResilienceDynamicsConfig:
+    """Configuration parameters for resilience dynamics."""
+    coping_success_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'coping_success_rate'))
+    social_support_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'social_support_rate'))
+    overload_threshold: int = field(default_factory=lambda: get_config().get('resilience_dynamics', 'overload_threshold'))
+    influencing_hindrance: int = field(default_factory=lambda: get_config().get('influence', 'influencing_hindrance'))
+
+
+def compute_peer_influence(
+    self_affect: float,
+    neighbor_affects: List[float],
+    config: Optional[AffectDynamicsConfig] = None
+) -> float:
+    """
+    Compute aggregated influence from multiple neighbors on an agent's affect.
+
+    Args:
+        self_affect: Agent's current affect
+        neighbor_affects: List of neighbor affect values
+        config: Affect dynamics configuration
+
+    Returns:
+        Net affect change from peer influence
+    """
+    if config is None:
+        config = AffectDynamicsConfig()
+
+    if not neighbor_affects:
+        return 0.0
+
+    # Limit to specified number of influencing neighbors
+    n_neighbors = min(len(neighbor_affects), config.influencing_neighbors)
+    selected_affects = neighbor_affects[:n_neighbors]
+
+    # Compute influence from each neighbor
+    influences = []
+    for neighbor_affect in selected_affects:
+        # Positive neighbor affect pulls self upward, negative pulls downward
+        raw_influence = config.peer_influence_rate * (neighbor_affect - self_affect)
+        influences.append(raw_influence)
+
+    # Average the influences and apply homeostasis consideration
+    avg_influence = np.mean(influences)
+
+    return avg_influence
+
+
+def compute_event_appraisal_effect(
+    challenge: float,
+    hindrance: float,
+    current_affect: float,
+    config: Optional[AffectDynamicsConfig] = None
+) -> float:
+    """
+    Compute affect change based on challenge/hindrance appraisal of events.
+
+    Args:
+        challenge: Challenge component from event appraisal (0-1)
+        hindrance: Hindrance component from event appraisal (0-1)
+        current_affect: Agent's current affect
+        config: Affect dynamics configuration
+
+    Returns:
+        Affect change from event appraisal
+    """
+    if config is None:
+        config = AffectDynamicsConfig()
+
+    # Challenge tends to improve affect (motivating), hindrance tends to worsen it
+    # The effect is stronger when current affect is more extreme
+    challenge_effect = config.event_appraisal_rate * challenge * (1.0 - current_affect)
+    hindrance_effect = -config.event_appraisal_rate * hindrance * (current_affect + 1.0)
+
+    total_effect = challenge_effect + hindrance_effect
+
+    return total_effect
+
+
+def compute_homeostasis_effect(
+    current_affect: float,
+    baseline_affect: float = 0.0,
+    config: Optional[AffectDynamicsConfig] = None
+) -> float:
+    """
+    Compute tendency of affect to return to baseline (homeostasis).
+
+    Args:
+        current_affect: Agent's current affect
+        baseline_affect: Agent's baseline affect level
+        config: Affect dynamics configuration
+
+    Returns:
+        Affect change toward baseline
+    """
+    if config is None:
+        config = AffectDynamicsConfig()
+
+    # Homeostasis pulls affect toward baseline
+    # Strength increases with distance from baseline
+    distance_from_baseline = baseline_affect - current_affect
+    homeostasis_strength = config.homeostasis_rate * abs(distance_from_baseline)
+
+    # Direction toward baseline
+    if distance_from_baseline > 0:
+        # Current affect is below baseline, push up
+        return homeostasis_strength
+    else:
+        # Current affect is above baseline, push down
+        return -homeostasis_strength
+
+
+def compute_cumulative_overload(
+    consecutive_hindrances: int,
+    config: Optional[ResilienceDynamicsConfig] = None
+) -> float:
+    """
+    Compute resilience impact from cumulative hindrance events.
+
+    Args:
+        consecutive_hindrances: Number of consecutive hindrance events
+        config: Resilience dynamics configuration
+
+    Returns:
+        Resilience change from overload effect
+    """
+    if config is None:
+        config = ResilienceDynamicsConfig()
+
+    # Overload effect only occurs after threshold is reached
+    if consecutive_hindrances < config.overload_threshold:
+        return 0.0
+
+    # Overload effect increases with more consecutive hindrances
+    overload_intensity = min(consecutive_hindrances / config.influencing_hindrance, 2.0)
+
+    # Overload reduces resilience significantly
+    return -0.2 * overload_intensity
+
+
+def update_affect_dynamics(
+    current_affect: float,
+    baseline_affect: float,
+    neighbor_affects: List[float],
+    challenge: float = 0.0,
+    hindrance: float = 0.0,
+    affect_config: Optional[AffectDynamicsConfig] = None
+) -> float:
+    """
+    Update agent's affect based on peer influence, event appraisal, and homeostasis.
+
+    Args:
+        current_affect: Agent's current affect
+        baseline_affect: Agent's baseline affect level
+        neighbor_affects: List of neighbor affect values
+        challenge: Challenge component from recent events
+        hindrance: Hindrance component from recent events
+        affect_config: Affect dynamics configuration
+
+    Returns:
+        New affect value
+    """
+    if affect_config is None:
+        affect_config = AffectDynamicsConfig()
+
+    # Compute individual effect components
+    peer_effect = compute_peer_influence(current_affect, neighbor_affects, affect_config)
+    appraisal_effect = compute_event_appraisal_effect(challenge, hindrance, current_affect, affect_config)
+    homeostasis_effect = compute_homeostasis_effect(current_affect, baseline_affect, affect_config)
+
+    # Combine all effects
+    total_effect = peer_effect + appraisal_effect + homeostasis_effect
+
+    # Apply the change
+    new_affect = current_affect + total_effect
+
+    # Clamp to valid range
+    return clamp(new_affect, -1.0, 1.0)
+
+
+def update_resilience_dynamics(
+    current_resilience: float,
+    coped_successfully: bool = False,
+    received_social_support: bool = False,
+    consecutive_hindrances: int = 0,
+    resilience_config: Optional[ResilienceDynamicsConfig] = None
+) -> float:
+    """
+    Update agent's resilience based on coping, social support, and overload effects.
+
+    Args:
+        current_resilience: Agent's current resilience
+        coped_successfully: Whether agent successfully coped with recent stress
+        received_social_support: Whether agent received social support
+        consecutive_hindrances: Number of consecutive hindrance events
+        resilience_config: Resilience dynamics configuration
+
+    Returns:
+        New resilience value
+    """
+    if resilience_config is None:
+        resilience_config = ResilienceDynamicsConfig()
+
+    # Compute individual effect components
+    coping_effect = 0.0
+    if coped_successfully:
+        coping_effect = resilience_config.coping_success_rate
+
+    social_support_effect = 0.0
+    if received_social_support:
+        social_support_effect = resilience_config.social_support_rate
+
+    overload_effect = compute_cumulative_overload(consecutive_hindrances, resilience_config)
+
+    # Combine all effects
+    total_effect = coping_effect + social_support_effect + overload_effect
+
+    # Apply the change
+    new_resilience = current_resilience + total_effect
+
+    # Clamp to valid range
+    return clamp(new_resilience, 0.0, 1.0)

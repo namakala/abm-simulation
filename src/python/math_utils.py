@@ -49,7 +49,7 @@ def clamp(value: float, min_val: float = 0.0, max_val: float = 1.0) -> float:
     Returns:
         Clamped value in [min_val, max_val]
     """
-    return float(np.clip(value, min_val, max_val))
+    return max(min_val, min(value, max_val))
 
 
 def normalize_to_range(

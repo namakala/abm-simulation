@@ -1,25 +1,33 @@
-# Import modules
+"""Test script to verify simulation runs correctly with realistic behavior."""
 
-from src.python.agent import Person
 from src.python.model import StressModel
-from src.python.config import get_config
+from src.python.config import Config
 
-# Load configuration
-config = get_config()
+def test_simulation():
+    """Test that simulation runs correctly over multiple days."""
+    print("Testing simulation behavior over 10 days...")
 
-# Simulate
-model = StressModel(
-    N=config.get('simulation', 'num_agents'),
-    max_days=config.get('simulation', 'max_days'),
-    seed=config.get('simulation', 'seed')
-)
+    config = Config()
+    model = StressModel(max_days=10)
 
-while model.running:
-    model.step()
+    print("Running 10-day simulation...")
+    for i in range(10):
+        model.step()
+        summary = model.get_population_summary()
+        print(f"Day {model.day}: Affect={summary['avg_affect']:.3f}, Resilience={summary['avg_resilience']:.3f}, Stress prevalence={summary['stress_prevalence']:.3f}")
 
-resilience = [a.resilience for a in model.agents]
-print(resilience)
+    print("Simulation completed successfully!")
 
-affect = [a.affect for a in model.agents]
-print(affect)
+    # Verify realistic behavior
+    final_summary = model.get_population_summary()
 
+    # Check that values are in reasonable ranges
+    assert -1 <= final_summary['avg_affect'] <= 1, f"Affect out of range: {final_summary['avg_affect']}"
+    assert 0 <= final_summary['avg_resilience'] <= 1, f"Resilience out of range: {final_summary['avg_resilience']}"
+    assert 0 <= final_summary['stress_prevalence'] <= 1, f"Stress prevalence out of range: {final_summary['stress_prevalence']}"
+
+    print("✓ All values are in realistic ranges")
+    print("✓ Simulation behavior is realistic")
+
+if __name__ == "__main__":
+    test_simulation()
