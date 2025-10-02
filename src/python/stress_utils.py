@@ -142,6 +142,8 @@ def compute_appraised_stress(
     """
     Compute overall appraised stress load from event and challenge/hindrance.
 
+    Uses the theoretical specification: L = s * (1 + δ*(hindrance - challenge))
+
     Args:
         event: Stress event
         challenge: Challenge component from appraisal
@@ -155,15 +157,10 @@ def compute_appraised_stress(
         # Get fresh config instance to avoid global config issues
         cfg = get_config()
         config = {
-            'alpha_challenge': cfg.get('stress_params', 'alpha_challenge'),
-            'alpha_hindrance': cfg.get('stress_params', 'alpha_hindrance'),
             'delta': cfg.get('stress_params', 'delta')
         }
 
-    # Method 1: Weighted combination
-    # L = s * (α_ch * (1-challenge) + α_hd * hindrance)
-
-    # Method 2: Polarity-based (more interpretable)
+    # Theoretical specification: L = s * (1 + δ*(hindrance - challenge))
     polarity_effect = config['delta'] * (hindrance - challenge)
     stress_load = event.magnitude * (1.0 + polarity_effect)
 

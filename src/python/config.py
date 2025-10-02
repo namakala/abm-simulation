@@ -139,10 +139,18 @@ class Config:
         self.threshold_base_threshold = self._get_env_value('THRESHOLD_BASE_THRESHOLD', float, 0.5)
         self.threshold_challenge_scale = self._get_env_value('THRESHOLD_CHALLENGE_SCALE', float, 0.15)
         self.threshold_hindrance_scale = self._get_env_value('THRESHOLD_HINDRANCE_SCALE', float, 0.25)
+        self.threshold_stress_threshold = self._get_env_value('THRESHOLD_STRESS_THRESHOLD', float, 0.3)
+        self.threshold_affect_threshold = self._get_env_value('THRESHOLD_AFFECT_THRESHOLD', float, 0.3)
 
         self.stress_alpha_challenge = self._get_env_value('STRESS_ALPHA_CHALLENGE', float, 0.8)
         self.stress_alpha_hindrance = self._get_env_value('STRESS_ALPHA_HINDRANCE', float, 1.2)
         self.stress_delta = self._get_env_value('STRESS_DELTA', float, 0.2)
+
+        # New coping probability mechanism parameters
+        self.coping_base_probability = self._get_env_value('COPING_BASE_PROBABILITY', float, 0.5)
+        self.coping_social_influence = self._get_env_value('COPING_SOCIAL_INFLUENCE', float, 0.1)
+        self.coping_challenge_bonus = self._get_env_value('COPING_CHALLENGE_BONUS', float, 0.2)
+        self.coping_hindrance_penalty = self._get_env_value('COPING_HINDRANCE_PENALTY', float, 0.3)
 
         # ==============================================
         # SOCIAL INTERACTION PARAMETERS
@@ -165,6 +173,10 @@ class Config:
 
         self.influencing_neighbors = self._get_env_value('N_INFLUENCING_NEIGHBORS', int, 5)
         self.influencing_hindrance = self._get_env_value('N_INFLUENCING_HINDRANCE', int, 3)
+
+        # Stress and affect dynamics parameters
+        self.stress_decay_rate = self._get_env_value('STRESS_DECAY_RATE', float, 0.05)
+        self.daily_reset_rate = self._get_env_value('DAILY_RESET_RATE', float, 0.1)
 
         # ==============================================
         # RESOURCE DYNAMICS PARAMETERS
@@ -216,6 +228,12 @@ class Config:
                 'subevents_per_day': self.agent_subevents_per_day,
                 'resource_cost': self.agent_resource_cost,
             },
+            'coping': {
+                'base_probability': self.coping_base_probability,
+                'social_influence': self.coping_social_influence,
+                'challenge_bonus': self.coping_challenge_bonus,
+                'hindrance_penalty': self.coping_hindrance_penalty,
+            },
             'stress': {
                 'controllability_mean': self.stress_controllability_mean,
                 'predictability_mean': self.stress_predictability_mean,
@@ -235,6 +253,8 @@ class Config:
                 'base_threshold': self.threshold_base_threshold,
                 'challenge_scale': self.threshold_challenge_scale,
                 'hindrance_scale': self.threshold_hindrance_scale,
+                'stress_threshold': self.threshold_stress_threshold,
+                'affect_threshold': self.threshold_affect_threshold,
             },
             'stress_params': {
                 'alpha_challenge': self.stress_alpha_challenge,
@@ -260,6 +280,10 @@ class Config:
             'influence': {
                 'influencing_neighbors': self.influencing_neighbors,
                 'influencing_hindrance': self.influencing_hindrance,
+            },
+            'dynamics': {
+                'stress_decay_rate': self.stress_decay_rate,
+                'daily_reset_rate': self.daily_reset_rate,
             },
             'protective': {
                 'social_support': self.protective_social_support,
@@ -342,6 +366,26 @@ class Config:
         # Threshold validation
         if not (0 <= self.threshold_base_threshold <= 1):
             raise ConfigurationError("Base threshold must be in [0, 1]")
+        if not (0 <= self.threshold_stress_threshold <= 1):
+            raise ConfigurationError("Stress threshold must be in [0, 1]")
+        if not (0 <= self.threshold_affect_threshold <= 1):
+            raise ConfigurationError("Affect threshold must be in [0, 1]")
+
+        # Coping validation
+        if not (0 <= self.coping_base_probability <= 1):
+            raise ConfigurationError("Coping base probability must be in [0, 1]")
+        if not (0 <= self.coping_social_influence <= 1):
+            raise ConfigurationError("Coping social influence must be in [0, 1]")
+        if not (0 <= self.coping_challenge_bonus <= 1):
+            raise ConfigurationError("Coping challenge bonus must be in [0, 1]")
+        if not (0 <= self.coping_hindrance_penalty <= 1):
+            raise ConfigurationError("Coping hindrance penalty must be in [0, 1]")
+
+        # Dynamics validation
+        if not (0 <= self.stress_decay_rate <= 1):
+            raise ConfigurationError("Stress decay rate must be in [0, 1]")
+        if not (0 <= self.daily_reset_rate <= 1):
+            raise ConfigurationError("Daily reset rate must be in [0, 1]")
 
         # Protective factors validation
         for param in [self.protective_social_support, self.protective_family_support,

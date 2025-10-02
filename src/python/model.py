@@ -71,12 +71,19 @@ class StressModel(mesa.Model):
             'avg_affect': [],
             'avg_resilience': [],
             'avg_resources': [],
+            'avg_stress': [],
             'social_support_rate': [],
             'stress_events': [],
             'network_density': [],
             'stress_prevalence': [],
             'low_resilience': [],
-            'high_resilience': []
+            'high_resilience': [],
+            # New stress processing metrics
+            'avg_challenge': [],
+            'avg_hindrance': [],
+            'coping_success_rate': [],
+            'avg_consecutive_hindrances': [],
+            'challenge_hindrance_ratio': []
         }
 
         self.running = True
@@ -116,6 +123,9 @@ class StressModel(mesa.Model):
         # Collect and record population metrics
         self._collect_population_metrics()
 
+        # Apply network adaptation mechanisms
+        self._apply_network_adaptation()
+
         # Update social support tracking
         self._update_social_support_tracking()
 
@@ -139,7 +149,7 @@ class StressModel(mesa.Model):
         }
 
     def _collect_population_metrics(self):
-        """Collect population-level metrics for affect, resilience, and resources."""
+        """Collect population-level metrics for affect, resilience, resources, and new stress processing metrics."""
         if not self.agents:
             return
 
@@ -147,16 +157,18 @@ class StressModel(mesa.Model):
         total_affect = sum(agent.affect for agent in self.agents)
         total_resilience = sum(agent.resilience for agent in self.agents)
         total_resources = sum(agent.resources for agent in self.agents)
+        total_stress = sum(getattr(agent, 'current_stress', 0.0) for agent in self.agents)
 
         avg_affect = total_affect / len(self.agents)
         avg_resilience = total_resilience / len(self.agents)
         avg_resources = total_resources / len(self.agents)
+        avg_stress = total_stress / len(self.agents)
 
         # Enhanced social support rate calculation
         social_support_rate = self._calculate_social_support_rate()
 
-        # Enhanced stress events counting with challenge/hindrance awareness
-        stress_events = self._count_stress_events()
+        # Enhanced stress events counting with actual data from agents
+        stress_events_data = self._collect_stress_events_data()
 
         # Calculate network density
         network_density = self._calculate_network_density()
@@ -170,17 +182,30 @@ class StressModel(mesa.Model):
         low_resilience  = sum(1 for agent in self.agents if agent.resilience < 0.3)
         high_resilience = sum(1 for agent in self.agents if agent.resilience > 0.7)
 
+        # New stress processing metrics
+        challenge_hindrance_data = self._collect_challenge_hindrance_data()
+        coping_data = self._collect_coping_data()
+        consecutive_hindrances_data = self._collect_consecutive_hindrances_data()
+
         # Store enhanced metrics
         self.population_metrics['day'].append(self.day)
         self.population_metrics['avg_affect'].append(avg_affect)
         self.population_metrics['avg_resilience'].append(avg_resilience)
         self.population_metrics['avg_resources'].append(avg_resources)
+        self.population_metrics['avg_stress'].append(avg_stress)
         self.population_metrics['social_support_rate'].append(social_support_rate)
-        self.population_metrics['stress_events'].append(stress_events)
+        self.population_metrics['stress_events'].append(stress_events_data['count'])
         self.population_metrics['network_density'].append(network_density)
         self.population_metrics['stress_prevalence'].append(stress_prevalence)
         self.population_metrics['low_resilience'].append(low_resilience)
         self.population_metrics['high_resilience'].append(high_resilience)
+
+        # Store new stress processing metrics
+        self.population_metrics['avg_challenge'].append(challenge_hindrance_data['avg_challenge'])
+        self.population_metrics['avg_hindrance'].append(challenge_hindrance_data['avg_hindrance'])
+        self.population_metrics['coping_success_rate'].append(coping_data['success_rate'])
+        self.population_metrics['avg_consecutive_hindrances'].append(consecutive_hindrances_data['avg'])
+        self.population_metrics['challenge_hindrance_ratio'].append(challenge_hindrance_data['ratio'])
 
     def _calculate_social_support_rate(self) -> float:
         """Calculate rate of social support exchanges in the population."""
@@ -189,11 +214,111 @@ class StressModel(mesa.Model):
 
         return self.social_support_exchanges / self.total_interactions
 
-    def _count_stress_events(self) -> int:
-        """Count approximate number of stress events from agent states."""
-        # This is an approximation - in a full implementation, agents would report events
-        stressed_agents = sum(1 for agent in self.agents if agent.affect < -0.2)
-        return int(stressed_agents * 0.3)  # Assume 30% of stressed agents had events
+    def _collect_stress_events_data(self) -> Dict[str, Any]:
+        """Collect actual stress events data from all agents."""
+        total_events = 0
+        total_challenge = 0.0
+        total_hindrance = 0.0
+
+        for agent in self.agents:
+            # Count events from agent's daily stress events
+            daily_events = getattr(agent, 'daily_stress_events', [])
+            agent_events = len(daily_events)
+            total_events += agent_events
+
+            # Sum challenge and hindrance from events
+            for event in daily_events:
+                total_challenge += event.get('challenge', 0.0)
+                total_hindrance += event.get('hindrance', 0.0)
+
+        # Calculate averages
+        if total_events > 0:
+            avg_challenge = total_challenge / total_events
+            avg_hindrance = total_hindrance / total_events
+        else:
+            avg_challenge = 0.0
+            avg_hindrance = 0.0
+
+        return {
+            'count': total_events,
+            'avg_challenge': avg_challenge,
+            'avg_hindrance': avg_hindrance
+        }
+
+    def _collect_challenge_hindrance_data(self) -> Dict[str, float]:
+        """Collect population-level challenge and hindrance statistics."""
+        total_challenge = 0.0
+        total_hindrance = 0.0
+        total_events = 0
+
+        for agent in self.agents:
+            daily_events = getattr(agent, 'daily_stress_events', [])
+            for event in daily_events:
+                total_challenge += event.get('challenge', 0.0)
+                total_hindrance += event.get('hindrance', 0.0)
+                total_events += 1
+
+        if total_events > 0:
+            avg_challenge = total_challenge / total_events
+            avg_hindrance = total_hindrance / total_events
+            # Calculate ratio (challenge dominance vs hindrance dominance)
+            ratio = (avg_challenge - avg_hindrance) if (avg_challenge + avg_hindrance) > 0 else 0.0
+        else:
+            avg_challenge = 0.0
+            avg_hindrance = 0.0
+            ratio = 0.0
+
+        return {
+            'avg_challenge': avg_challenge,
+            'avg_hindrance': avg_hindrance,
+            'ratio': ratio
+        }
+
+    def _collect_coping_data(self) -> Dict[str, float]:
+        """Collect population-level coping success statistics."""
+        total_attempts = 0
+        total_successes = 0
+
+        for agent in self.agents:
+            daily_events = getattr(agent, 'daily_stress_events', [])
+            for event in daily_events:
+                if 'coped_successfully' in event:
+                    total_attempts += 1
+                    if event['coped_successfully']:
+                        total_successes += 1
+
+        if total_attempts > 0:
+            success_rate = total_successes / total_attempts
+        else:
+            success_rate = 0.0
+
+        return {
+            'success_rate': success_rate,
+            'total_attempts': total_attempts,
+            'total_successes': total_successes
+        }
+
+    def _collect_consecutive_hindrances_data(self) -> Dict[str, float]:
+        """Collect population-level consecutive hindrances statistics."""
+        total_consecutive = 0.0
+        valid_agents = 0
+
+        for agent in self.agents:
+            consecutive = getattr(agent, 'consecutive_hindrances', 0)
+            if consecutive > 0:  # Only count agents with hindrance tracking
+                total_consecutive += consecutive
+                valid_agents += 1
+
+        if valid_agents > 0:
+            avg_consecutive = total_consecutive / valid_agents
+        else:
+            avg_consecutive = 0.0
+
+        return {
+            'avg': avg_consecutive,
+            'max': max((getattr(agent, 'consecutive_hindrances', 0) for agent in self.agents), default=0.0),
+            'agents_affected': valid_agents
+        }
 
     def _calculate_network_density(self) -> float:
         """Calculate approximate network density based on agent connections."""
@@ -213,6 +338,37 @@ class StressModel(mesa.Model):
         # This would be enhanced to track actual support exchanges
         # For now, we estimate based on interactions
         pass
+
+    def _apply_network_adaptation(self):
+        """Apply network adaptation mechanisms across all agents."""
+        # This method coordinates network adaptation at the model level
+        # Individual agents handle their own adaptation in their step() method
+        # but the model can track population-level adaptation metrics
+
+        adaptation_count = 0
+        for agent in self.agents:
+            # Check if agent performed network adaptation (tracked via attribute)
+            if hasattr(agent, '_adapted_network') and agent._adapted_network:
+                adaptation_count += 1
+                agent._adapted_network = False  # Reset for next day
+
+        return adaptation_count
+
+    def get_network_adaptation_summary(self) -> Dict[str, Any]:
+        """Get summary of network adaptation across the population."""
+        total_adaptations = 0
+        agents_adapting = 0
+
+        for agent in self.agents:
+            # Count agents who have adapted their network recently
+            stress_breach_count = getattr(agent, 'stress_breach_count', 0)
+            if stress_breach_count >= 3:  # Adaptation threshold
+                agents_adapting += 1
+
+        return {
+            'agents_considering_adaptation': agents_adapting,
+            'adaptation_rate': agents_adapting / max(1, len(self.agents))
+        }
 
     def _record_daily_stats(self):
         """Record daily statistics for analysis."""
@@ -234,10 +390,12 @@ class StressModel(mesa.Model):
         current_affect = np.mean([agent.affect for agent in self.agents])
         current_resilience = np.mean([agent.resilience for agent in self.agents])
         current_resources = np.mean([agent.resources for agent in self.agents])
+        current_stress = np.mean([getattr(agent, 'current_stress', 0.0) for agent in self.agents])
 
         # Distribution statistics
         affect_std = np.std([agent.affect for agent in self.agents])
         resilience_std = np.std([agent.resilience for agent in self.agents])
+        stress_std = np.std([getattr(agent, 'current_stress', 0.0) for agent in self.agents])
 
         # Stress prevalence
         stressed_agents = sum(1 for agent in self.agents if agent.affect < -0.3)
@@ -249,6 +407,11 @@ class StressModel(mesa.Model):
                               if 0.3 <= agent.resilience <= 0.7)
         high_resilience = sum(1 for agent in self.agents if agent.resilience > 0.7)
 
+        # New stress processing metrics
+        challenge_hindrance_data = self._collect_challenge_hindrance_data()
+        coping_data = self._collect_coping_data()
+        consecutive_hindrances_data = self._collect_consecutive_hindrances_data()
+
         return {
             'day': self.day,
             'num_agents': len(self.agents),
@@ -257,6 +420,8 @@ class StressModel(mesa.Model):
             'avg_resilience': current_resilience,
             'resilience_std': resilience_std,
             'avg_resources': current_resources,
+            'avg_stress': current_stress,
+            'stress_std': stress_std,
             'stress_prevalence': stress_prevalence,
             'resilience_distribution': {
                 'low': low_resilience,
@@ -269,7 +434,15 @@ class StressModel(mesa.Model):
             # Enhanced integrated metrics
             'mental_health_index': (current_affect + current_resilience) / 2,  # Combined mental health score
             'recovery_potential': high_resilience / max(1, len(self.agents)),  # Proportion with high resilience
-            'vulnerability_index': low_resilience / max(1, len(self.agents))   # Proportion with low resilience
+            'vulnerability_index': low_resilience / max(1, len(self.agents)),   # Proportion with low resilience
+            # New stress processing metrics
+            'avg_challenge': challenge_hindrance_data['avg_challenge'],
+            'avg_hindrance': challenge_hindrance_data['avg_hindrance'],
+            'challenge_hindrance_ratio': challenge_hindrance_data['ratio'],
+            'coping_success_rate': coping_data['success_rate'],
+            'avg_consecutive_hindrances': consecutive_hindrances_data['avg'],
+            'max_consecutive_hindrances': consecutive_hindrances_data['max'],
+            'agents_with_hindrances': consecutive_hindrances_data['agents_affected']
         }
 
     def get_time_series_data(self) -> pd.DataFrame:
