@@ -346,7 +346,7 @@ class AffectDynamicsConfig:
     """Configuration parameters for affect dynamics."""
     peer_influence_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'peer_influence_rate'))
     event_appraisal_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'event_appraisal_rate'))
-    homeostasis_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostasis_rate'))
+    homeostatic_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostatic_rate'))
     influencing_neighbors: int = field(default_factory=lambda: get_config().get('influence', 'influencing_neighbors'))
 
 
@@ -451,7 +451,7 @@ def compute_homeostasis_effect(
     # Homeostasis pulls affect toward baseline
     # Strength increases with distance from baseline
     distance_from_baseline = baseline_affect - current_affect
-    homeostasis_strength = config.homeostasis_rate * abs(distance_from_baseline)
+    homeostasis_strength = config.homeostatic_rate * abs(distance_from_baseline)
 
     # Direction toward baseline
     if distance_from_baseline > 0:

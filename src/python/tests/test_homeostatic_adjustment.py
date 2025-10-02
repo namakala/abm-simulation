@@ -281,6 +281,47 @@ class TestHomeostaticAdjustmentConfiguration:
         )
         assert result != config_result
 
+    def test_independent_affect_and_resilience_homeostatic_rates(self):
+        """Test that affect and resilience homeostatic rates work independently."""
+        config = get_config()
+
+        # Get the independent rates from configuration
+        affect_rate = config.get('affect_dynamics', 'homeostatic_rate')
+        resilience_rate = config.get('resilience_dynamics', 'homeostatic_rate')
+
+        # They should be different values (0.1 for affect, 0.05 for resilience)
+        assert affect_rate != resilience_rate
+
+        initial_affect = 0.0
+        final_affect = 0.5
+
+        initial_resilience = 0.5
+        final_resilience = 0.8
+
+        # Apply affect homeostatic adjustment
+        adjusted_affect = compute_homeostatic_adjustment(
+            initial_affect, final_affect, affect_rate, 'affect'
+        )
+
+        # Apply resilience homeostatic adjustment
+        adjusted_resilience = compute_homeostatic_adjustment(
+            initial_resilience, final_resilience, resilience_rate, 'resilience'
+        )
+
+        # Calculate expected results
+        expected_affect_distance = affect_rate * abs(final_affect - initial_affect)
+        expected_affect = final_affect - expected_affect_distance
+
+        expected_resilience_distance = resilience_rate * abs(final_resilience - initial_resilience)
+        expected_resilience = final_resilience - expected_resilience_distance
+
+        # Verify the adjustments are different due to different rates
+        assert adjusted_affect == pytest.approx(expected_affect, abs=1e-10)
+        assert adjusted_resilience == pytest.approx(expected_resilience, abs=1e-10)
+
+        # The adjustments should be different because the rates are different
+        assert adjusted_affect != adjusted_resilience
+
 
 class TestHomeostaticAdjustmentMultiDay:
     """Test multi-day stabilization behavior."""

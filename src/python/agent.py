@@ -203,15 +203,16 @@ class Person(mesa.Agent):
         # This pulls values back toward their FIXED baseline (natural equilibrium point)
         from .affect_utils import compute_homeostatic_adjustment
 
-        # Get homeostatic rate from configuration
+        # Get homeostatic rates from configuration
         cfg = get_config()
-        homeostatic_rate = cfg.get('affect_dynamics', 'homeostatic_rate')
+        affect_homeostatic_rate = cfg.get('affect_dynamics', 'homeostatic_rate')
+        resilience_homeostatic_rate = cfg.get('resilience_dynamics', 'homeostatic_rate')
 
         # Apply homeostatic adjustment to affect using FIXED baseline
         self.affect = compute_homeostatic_adjustment(
             initial_value=self.baseline_affect,  # Use fixed baseline, not daily initial value
             final_value=self.affect,
-            homeostatic_rate=homeostatic_rate,
+            homeostatic_rate=affect_homeostatic_rate,
             value_type='affect'
         )
 
@@ -219,7 +220,7 @@ class Person(mesa.Agent):
         self.resilience = compute_homeostatic_adjustment(
             initial_value=self.baseline_resilience,  # Use fixed baseline, not daily initial value
             final_value=self.resilience,
-            homeostatic_rate=homeostatic_rate,
+            homeostatic_rate=resilience_homeostatic_rate,
             value_type='resilience'
         )
 

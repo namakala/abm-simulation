@@ -241,7 +241,7 @@ class TestHomeostasisEffect:
 
     def test_homeostasis_effect_above_baseline(self):
         """Test homeostasis when current affect is above baseline."""
-        config = AffectDynamicsConfig(homeostasis_rate=0.1)
+        config = AffectDynamicsConfig(homeostatic_rate=0.1)
         current_affect = 0.5
         baseline_affect = 0.0
 
@@ -255,7 +255,7 @@ class TestHomeostasisEffect:
 
     def test_homeostasis_effect_below_baseline(self):
         """Test homeostasis when current affect is below baseline."""
-        config = AffectDynamicsConfig(homeostasis_rate=0.15)
+        config = AffectDynamicsConfig(homeostatic_rate=0.15)
         current_affect = -0.4
         baseline_affect = 0.2
 
@@ -269,7 +269,7 @@ class TestHomeostasisEffect:
 
     def test_homeostasis_effect_at_baseline(self):
         """Test homeostasis when current affect equals baseline."""
-        config = AffectDynamicsConfig(homeostasis_rate=0.1)
+        config = AffectDynamicsConfig(homeostatic_rate=0.1)
         current_affect = 0.3
         baseline_affect = 0.3
 
@@ -280,7 +280,7 @@ class TestHomeostasisEffect:
 
     def test_homeostasis_effect_extreme_values(self):
         """Test homeostasis with extreme affect values."""
-        config = AffectDynamicsConfig(homeostasis_rate=0.1)
+        config = AffectDynamicsConfig(homeostatic_rate=0.1)
 
         # Test with very high current affect
         effect_high = compute_homeostasis_effect(1.0, 0.0, config)
@@ -298,8 +298,8 @@ class TestHomeostasisEffect:
         baseline_affect = 0.0
 
         # Test different homeostasis rates
-        config_low = AffectDynamicsConfig(homeostasis_rate=0.05)
-        config_high = AffectDynamicsConfig(homeostasis_rate=0.2)
+        config_low = AffectDynamicsConfig(homeostatic_rate=0.05)
+        config_high = AffectDynamicsConfig(homeostatic_rate=0.2)
 
         effect_low = compute_homeostasis_effect(current_affect, baseline_affect, config_low)
         effect_high = compute_homeostasis_effect(current_affect, baseline_affect, config_high)
@@ -434,7 +434,7 @@ class TestAffectDynamicsIntegration:
 
     def test_affect_dynamics_homeostasis_dominance(self):
         """Test that homeostasis pulls extreme affects toward baseline."""
-        affect_config = AffectDynamicsConfig(homeostasis_rate=0.2)  # Strong homeostasis
+        affect_config = AffectDynamicsConfig(homeostatic_rate=0.2)  # Strong homeostasis
 
         # Start with extreme positive affect
         new_affect = update_affect_dynamics(
@@ -474,14 +474,14 @@ class TestAffectDynamicsIntegration:
         config_high = AffectDynamicsConfig(
             peer_influence_rate=0.3,
             event_appraisal_rate=0.3,
-            homeostasis_rate=0.1
+            homeostatic_rate=0.1
         )
 
         # Low influence configuration
         config_low = AffectDynamicsConfig(
             peer_influence_rate=0.05,
             event_appraisal_rate=0.05,
-            homeostasis_rate=0.01
+            homeostatic_rate=0.01
         )
 
         affect_high = update_affect_dynamics(
@@ -701,7 +701,7 @@ class TestMathematicalCorrectness:
 
     def test_homeostasis_mathematical_properties(self):
         """Test mathematical properties of homeostasis."""
-        config = AffectDynamicsConfig(homeostasis_rate=0.1)
+        config = AffectDynamicsConfig(homeostatic_rate=0.1)
 
         # Test that effect strength increases with distance from baseline
         effect_close = compute_homeostasis_effect(0.1, 0.0, config)
@@ -746,7 +746,7 @@ class TestConfigurationIntegration:
         # Should use values from configuration system
         assert 0.0 <= config.peer_influence_rate <= 1.0
         assert 0.0 <= config.event_appraisal_rate <= 1.0
-        assert 0.0 <= config.homeostasis_rate <= 1.0
+        assert 0.0 <= config.homeostatic_rate <= 1.0
         assert config.influencing_neighbors > 0
 
     def test_resilience_dynamics_config_defaults(self):
@@ -764,14 +764,14 @@ class TestConfigurationIntegration:
         config = AffectDynamicsConfig(
             peer_influence_rate=0.25,
             event_appraisal_rate=0.18,
-            homeostasis_rate=0.08,
+            homeostatic_rate=0.08,
             influencing_neighbors=3
         )
 
         # Test that custom values are preserved
         assert config.peer_influence_rate == 0.25
         assert config.event_appraisal_rate == 0.18
-        assert config.homeostasis_rate == 0.08
+        assert config.homeostatic_rate == 0.08
         assert config.influencing_neighbors == 3
 
         # Test that custom config affects computation
@@ -901,7 +901,7 @@ class TestIntegrationScenarios:
 
     def test_recovery_scenario(self):
         """Test scenario of recovery from stress."""
-        config_affect = AffectDynamicsConfig(homeostasis_rate=0.2)  # Strong homeostasis
+        config_affect = AffectDynamicsConfig(homeostatic_rate=0.2)  # Strong homeostasis
         config_resilience = ResilienceDynamicsConfig()
 
         # Initial state (recovering)
