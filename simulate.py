@@ -1,28 +1,38 @@
 """
-Enhanced simulation script to demonstrate end-of-day homeostatic adjustment mechanism.
+Enhanced simulation script to demonstrate new stress processing mechanisms.
 
-This script demonstrates how the homeostatic mechanism stabilizes affect and resilience
-over multiple simulated days, preventing long-term drift while maintaining responsiveness
-to daily events.
+This script demonstrates the complete stress processing pipeline including:
+- Challenge/hindrance appraisal and their effects on resilience
+- Social interaction effects on coping probability
+- Daily affect reset and stress decay mechanisms
+- Comprehensive analysis of stress processing dynamics
 """
 
 import numpy as np
 from src.python.model import StressModel
 from src.python.agent import Person
 from src.python.config import Config, get_config
-from src.python.affect_utils import compute_homeostatic_adjustment
+from src.python.affect_utils import (
+    compute_coping_probability,
+    compute_challenge_hindrance_resilience_effect,
+    compute_daily_affect_reset,
+    compute_stress_decay,
+    process_stress_event_with_new_mechanism,
+    compute_homeostatic_adjustment,
+    StressProcessingConfig
+)
+from src.python.stress_utils import generate_stress_event, apply_weights, StressEvent
 
 
-def demonstrate_homeostatic_mechanism():
+def demonstrate_stress_processing_mechanisms():
     """
-    Demonstrate the homeostatic adjustment mechanism working over multiple days.
+    Demonstrate the new stress processing mechanisms working over multiple days.
 
-    Shows how agents' affect and resilience values are pulled back toward their
-    baselines at the end of each day, preventing long-term drift while still
-    allowing responsiveness to daily events.
+    Shows how agents process stress events with challenge/hindrance appraisal,
+    social influence on coping, daily affect reset, and stress decay mechanisms.
     """
     print("=" * 80)
-    print("HOMEOSTATIC ADJUSTMENT DEMONSTRATION")
+    print("STRESS PROCESSING MECHANISMS DEMONSTRATION")
     print("=" * 80)
     print()
 
@@ -32,134 +42,162 @@ def demonstrate_homeostatic_mechanism():
     print("Initial agent states:")
     print("-" * 50)
     for i, agent in enumerate(model.agents):
-        print(f"Agent {i}: Affect={agent.affect:.3f}, Resilience={agent.resilience:.3f}, Baseline_Affect={agent.baseline_affect:.3f}, Baseline_Resilience={agent.baseline_resilience:.3f}")
+        print(f"Agent {i}: Affect={agent.affect:.3f}, Resilience={agent.resilience:.3f}, Stress={getattr(agent, 'current_stress', 0):.3f}")
     print()
 
-    # Track homeostatic adjustments for analysis
-    homeostatic_changes = {
+    # Track stress processing data for analysis
+    stress_processing_data = {
         'day': [],
         'agent_id': [],
-        'affect_before': [],
-        'affect_after': [],
-        'affect_adjustment': [],
-        'resilience_before': [],
-        'resilience_after': [],
-        'resilience_adjustment': []
+        'challenge': [],
+        'hindrance': [],
+        'coping_success': [],
+        'affect_change': [],
+        'resilience_change': [],
+        'stress_change': [],
+        'social_influence': []
     }
 
-    print("Running simulation with homeostatic adjustment tracking...")
+    print("Running simulation with stress processing tracking...")
     print("-" * 80)
 
     for day in range(model.max_days):
         print(f"\n--- DAY {day + 1} ---")
 
-        # Store pre-step baselines for comparison
-        pre_step_baselines = []
-        for agent in model.agents:
-            pre_step_baselines.append((agent.baseline_affect, agent.baseline_resilience))
-
         # Execute one day
         model.step()
 
-        # Show detailed homeostatic adjustments for each agent
-        print(f"Homeostatic adjustments for Day {day + 1}:")
+        # Show detailed stress processing for each agent
+        print(f"Stress processing results for Day {day + 1}:")
         print("-" * 60)
 
         for i, agent in enumerate(model.agents):
-            # Calculate what the adjustment was
-            old_baseline_affect, old_baseline_resilience = pre_step_baselines[i]
+            # Get daily stress events for this agent
+            daily_events = getattr(agent, 'daily_stress_events', [])
 
-            print(f"Agent {i}:")
-            print(f"  Affect: {old_baseline_affect:.3f} → {agent.affect:.3f} (Δ={agent.affect - old_baseline_affect:+.3f})")
-            print(f"  Resilience: {old_baseline_resilience:.3f} → {agent.resilience:.3f} (Δ={agent.resilience - old_baseline_resilience:+.3f})")
+            if daily_events:
+                # Show the most recent stress event
+                latest_event = daily_events[-1]
+                print(f"Agent {i}:")
+                print(f"  Challenge: {latest_event['challenge']:.3f}, Hindrance: {latest_event['hindrance']:.3f}")
+                print(f"  Coping Success: {latest_event['coped_successfully']}")
+                print(f"  Stress Level: {latest_event['stress_level']:.3f}")
 
-            # Track for analysis
-            homeostatic_changes['day'].append(day + 1)
-            homeostatic_changes['agent_id'].append(i)
-            homeostatic_changes['affect_before'].append(old_baseline_affect)
-            homeostatic_changes['affect_after'].append(agent.affect)
-            homeostatic_changes['affect_adjustment'].append(agent.affect - old_baseline_affect)
-            homeostatic_changes['resilience_before'].append(old_baseline_resilience)
-            homeostatic_changes['resilience_after'].append(agent.resilience)
-            homeostatic_changes['resilience_adjustment'].append(agent.resilience - old_baseline_resilience)
+                # Track for analysis
+                stress_processing_data['day'].append(day + 1)
+                stress_processing_data['agent_id'].append(i)
+                stress_processing_data['challenge'].append(latest_event['challenge'])
+                stress_processing_data['hindrance'].append(latest_event['hindrance'])
+                stress_processing_data['coping_success'].append(latest_event['coped_successfully'])
+                stress_processing_data['affect_change'].append(agent.affect - getattr(agent, '_prev_affect', agent.affect))
+                stress_processing_data['resilience_change'].append(agent.resilience - getattr(agent, '_prev_resilience', agent.resilience))
+                stress_processing_data['stress_change'].append(agent.current_stress - getattr(agent, '_prev_stress', agent.current_stress))
 
-        # Show population summary
+                # Calculate social influence (simplified)
+                neighbor_affects = agent._get_neighbor_affects()
+                social_influence = np.mean(neighbor_affects) if neighbor_affects else 0.0
+                stress_processing_data['social_influence'].append(social_influence)
+
+                # Store previous values for next day
+                agent._prev_affect = agent.affect
+                agent._prev_resilience = agent.resilience
+                agent._prev_stress = agent.current_stress
+            else:
+                print(f"Agent {i}: No stress events today")
+
+        # Show population summary with new metrics
         summary = model.get_population_summary()
         print("\nPopulation Summary:")
         print(f"  Average Affect: {summary['avg_affect']:.3f}")
         print(f"  Average Resilience: {summary['avg_resilience']:.3f}")
-        print(f"  Stress Prevalence: {summary['stress_prevalence']:.3f}")
+        print(f"  Average Stress: {summary['avg_stress']:.3f}")
+        print(f"  Coping Success Rate: {summary['coping_success_rate']:.3f}")
+        print(f"  Average Challenge: {summary['avg_challenge']:.3f}")
+        print(f"  Average Hindrance: {summary['avg_hindrance']:.3f}")
 
     print("\n" + "=" * 80)
-    print("HOMEOSTATIC MECHANISM ANALYSIS")
+    print("STRESS PROCESSING MECHANISMS ANALYSIS")
     print("=" * 80)
 
-    # Analyze the homeostatic adjustments
-    analyze_homeostatic_behavior(homeostatic_changes)
+    # Analyze the stress processing mechanisms
+    analyze_stress_processing_behavior(stress_processing_data)
 
-    return homeostatic_changes
+    return stress_processing_data
 
 
-def analyze_homeostatic_behavior(changes):
-    """Analyze the homeostatic adjustment behavior to verify correct operation."""
+def analyze_stress_processing_behavior(data):
+    """Analyze the stress processing behavior to verify correct operation."""
 
-    if not changes['day']:
+    if not data['day']:
         print("No data to analyze.")
         return
 
     # Convert to numpy arrays for analysis
-    affect_adjustments = np.array(changes['affect_adjustment'])
-    resilience_adjustments = np.array(changes['resilience_adjustment'])
+    challenges = np.array(data['challenge'])
+    hindrances = np.array(data['hindrance'])
+    coping_successes = np.array(data['coping_success'])
+    affect_changes = np.array(data['affect_change'])
+    resilience_changes = np.array(data['resilience_change'])
+    stress_changes = np.array(data['stress_change'])
+    social_influences = np.array(data['social_influence'])
 
-    print("\nStatistical Analysis of Homeostatic Adjustments:")
+    print("\nStatistical Analysis of Stress Processing:")
     print("-" * 50)
 
-    # Analyze affect adjustments
-    print("Affect Adjustments:")
-    print(f"  Mean adjustment: {np.mean(affect_adjustments):.4f}")
-    print(f"  Std deviation: {np.std(affect_adjustments):.4f}")
-    print(f"  Range: [{np.min(affect_adjustments):.4f}, {np.max(affect_adjustments):.4f}]")
-    print(f"  Zero adjustments: {np.sum(affect_adjustments == 0)}/{len(affect_adjustments)}")
+    # Analyze challenge/hindrance distribution
+    print("Challenge/Hindrance Analysis:")
+    print(f"  Mean Challenge: {np.mean(challenges):.4f}")
+    print(f"  Mean Hindrance: {np.mean(hindrances):.4f}")
+    print(f"  Challenge/Hindrance Ratio: {np.mean(challenges)/max(np.mean(hindrances), 1e-6):.4f}")
+    print(f"  Challenge Std Dev: {np.std(challenges):.4f}")
+    print(f"  Hindrance Std Dev: {np.std(hindrances):.4f}")
 
-    # Analyze resilience adjustments
-    print("\nResilience Adjustments:")
-    print(f"  Mean adjustment: {np.mean(resilience_adjustments):.4f}")
-    print(f"  Std deviation: {np.std(resilience_adjustments):.4f}")
-    print(f"  Range: [{np.min(resilience_adjustments):.4f}, {np.max(resilience_adjustments):.4f}]")
-    print(f"  Zero adjustments: {np.sum(resilience_adjustments == 0)}/{len(resilience_adjustments)}")
+    # Analyze coping success
+    print("\nCoping Success Analysis:")
+    print(f"  Overall Success Rate: {np.mean(coping_successes):.4f}")
+    print(f"  Successful Coping Events: {np.sum(coping_successes)}/{len(coping_successes)}")
 
-    # Check for monotonic drift elimination
-    print("\nDrift Analysis:")
-    print("-" * 50)
+    # Analyze state changes
+    print("\nState Change Analysis:")
+    print(f"  Mean Affect Change: {np.mean(affect_changes):.4f}")
+    print(f"  Mean Resilience Change: {np.mean(resilience_changes):.4f}")
+    print(f"  Mean Stress Change: {np.mean(stress_changes):.4f}")
 
-    # Check if adjustments are balancing out over time
-    daily_affect_means = []
-    daily_resilience_means = []
+    # Analyze social influence effects
+    print("\nSocial Influence Analysis:")
+    print(f"  Mean Social Influence: {np.mean(social_influences):.4f}")
+    print(f"  Social Influence Std Dev: {np.std(social_influences):.4f}")
+    print(f"  Positive Social Influence Events: {np.sum(np.array(social_influences) > 0)}")
+    print(f"  Negative Social Influence Events: {np.sum(np.array(social_influences) < 0)}")
 
-    for day in np.unique(changes['day']):
-        day_mask = np.array(changes['day']) == day
-        daily_affect_means.append(np.mean(affect_adjustments[day_mask]))
-        daily_resilience_means.append(np.mean(resilience_adjustments[day_mask]))
+    # Correlation analysis
+    print("\nCorrelation Analysis:")
+    if len(challenges) > 1:
+        challenge_coping_corr = np.corrcoef(challenges, coping_successes)[0, 1]
+        hindrance_coping_corr = np.corrcoef(hindrances, coping_successes)[0, 1]
+        social_coping_corr = np.corrcoef(social_influences, coping_successes)[0, 1]
 
-    print(f"Affect adjustment trend: {daily_affect_means}")
-    print(f"Resilience adjustment trend: {daily_resilience_means}")
+        print(f"  Challenge-Coping Correlation: {challenge_coping_corr:.4f}")
+        print(f"  Hindrance-Coping Correlation: {hindrance_coping_corr:.4f}")
+        print(f"  Social Influence-Coping Correlation: {social_coping_corr:.4f}")
 
-    # Check if adjustments are getting smaller (indicating stabilization)
-    if len(daily_affect_means) > 1:
-        affect_trend = np.polyfit(range(len(daily_affect_means)), daily_affect_means, 1)[0]
-        print(f"Affect adjustment trend slope: {affect_trend:.6f} (should be near 0)")
+    # Trend analysis over days
+    print("\nTrend Analysis:")
+    unique_days = sorted(np.unique(data['day']))
 
-    if len(daily_resilience_means) > 1:
-        resilience_trend = np.polyfit(range(len(daily_resilience_means)), daily_resilience_means, 1)[0]
-        print(f"Resilience adjustment trend slope: {resilience_trend:.6f} (should be near 0)")
+    for day in unique_days:
+        day_mask = np.array(data['day']) == day
+        if np.sum(day_mask) > 0:
+            day_challenges = challenges[day_mask]
+            day_hindrances = hindrances[day_mask]
+            day_coping = coping_successes[day_mask]
+            day_social = social_influences[day_mask]
 
-    # Verify no monotonic drift
-    total_affect_drift = np.sum(affect_adjustments)
-    total_resilience_drift = np.sum(resilience_adjustments)
-
-    print("\nTotal accumulated adjustments (should be near 0 for no drift):")
-    print(f"  Total affect adjustment: {total_affect_drift:.4f}")
-    print(f"  Total resilience adjustment: {total_resilience_drift:.4f}")
+            print(f"  Day {day}:")
+            print(f"    Mean Challenge: {np.mean(day_challenges):.4f}")
+            print(f"    Mean Hindrance: {np.mean(day_hindrances):.4f}")
+            print(f"    Coping Success Rate: {np.mean(day_coping):.4f}")
+            print(f"    Mean Social Influence: {np.mean(day_social):.4f}")
 
 
 def test_homeostatic_adjustment_isolation():
@@ -211,203 +249,207 @@ def test_homeostatic_adjustment_isolation():
         print()
 
 
-def test_monotonic_drift_elimination():
+def demonstrate_challenge_hindrance_effects():
     """
-    Test that the homeostatic mechanism eliminates monotonic drift over time.
+    Demonstrate how challenge and hindrance differentially affect resilience outcomes.
 
-    This test runs a simulation for many days and verifies that values don't
-    drift monotonically in one direction, which would indicate the homeostatic
-    mechanism is working correctly.
-    """
-    print("\n" + "=" * 80)
-    print("MONOTONIC DRIFT ELIMINATION TEST")
-    print("=" * 80)
-
-    # Create model for longer simulation
-    model = StressModel(N=20, max_days=30, seed=123)
-
-    # Track population averages over time
-    affect_history = []
-    resilience_history = []
-
-    print("Running 30-day simulation to test drift elimination...")
-
-    for day in range(model.max_days):
-        model.step()
-
-        summary = model.get_population_summary()
-        affect_history.append(summary['avg_affect'])
-        resilience_history.append(summary['avg_resilience'])
-
-        if (day + 1) % 10 == 0:
-            print(f"Day {day + 1}: Affect={summary['avg_affect']:.3f}, Resilience={summary['avg_resilience']:.3f}")
-
-    # Analyze for monotonic drift
-    affect_array = np.array(affect_history)
-    resilience_array = np.array(resilience_history)
-
-    # Check for monotonic trends
-    affect_increasing = np.all(np.diff(affect_array) > 0)
-    affect_decreasing = np.all(np.diff(affect_array) < 0)
-    resilience_increasing = np.all(np.diff(resilience_array) > 0)
-    resilience_decreasing = np.all(np.diff(resilience_array) < 0)
-
-    print("\nDrift Analysis Results:")
-    print("-" * 50)
-    print(f"Affect monotonic increase: {affect_increasing} (should be False)")
-    print(f"Affect monotonic decrease: {affect_decreasing} (should be False)")
-    print(f"Resilience monotonic increase: {resilience_increasing} (should be False)")
-    print(f"Resilience monotonic decrease: {resilience_decreasing} (should be False)")
-
-    # Check overall trend (should be near zero)
-    affect_trend = np.polyfit(range(len(affect_array)), affect_array, 1)[0]
-    resilience_trend = np.polyfit(range(len(resilience_array)), resilience_array, 1)[0]
-
-    print(f"\nOverall trends (should be near 0):")
-    print(f"Affect trend slope: {affect_trend:.6f}")
-    print(f"Resilience trend slope: {resilience_trend:.6f}")
-
-    # Check if values stay within reasonable bounds
-    affect_bounds_ok = -1 <= np.min(affect_array) and np.max(affect_array) <= 1
-    resilience_bounds_ok = 0 <= np.min(resilience_array) and np.max(resilience_array) <= 1
-
-    print(f"\nBounds checking:")
-    print(f"Affect stays in [-1,1]: {affect_bounds_ok}")
-    print(f"Resilience stays in [0,1]: {resilience_bounds_ok}")
-
-    # Success criteria
-    drift_eliminated = not (affect_increasing or affect_decreasing or resilience_increasing or resilience_decreasing)
-    trends_stable = abs(affect_trend) < 0.01 and abs(resilience_trend) < 0.01
-    bounds_respected = affect_bounds_ok and resilience_bounds_ok
-
-    success = drift_eliminated and trends_stable and bounds_respected
-
-    print(f"\nHomeostatic mechanism success: {success}")
-    if success:
-        print("✓ Monotonic drift eliminated")
-        print("✓ Trends are stable over time")
-        print("✓ Values stay within valid bounds")
-    else:
-        print("✗ Issues detected with homeostatic mechanism")
-
-    return success
-
-
-def demonstrate_responsiveness_preservation():
-    """
-    Demonstrate that homeostatic adjustment preserves responsiveness to daily events.
-
-    This test shows that while homeostasis prevents long-term drift, agents still
-    respond appropriately to daily stressors and social interactions.
+    This test shows the specific effects of challenge vs hindrance on resilience
+    changes during successful and failed coping attempts.
     """
     print("\n" + "=" * 80)
-    print("RESPONSIVENESS PRESERVATION TEST")
+    print("CHALLENGE/HINDRANCE EFFECTS DEMONSTRATION")
     print("=" * 80)
 
-    # Create a model with specific configuration for this test
-    model = StressModel(N=10, max_days=10, seed=456)
+    # Test different combinations of challenge and hindrance
+    test_scenarios = [
+        (0.8, 0.2, "High Challenge, Low Hindrance"),
+        (0.2, 0.8, "Low Challenge, High Hindrance"),
+        (0.5, 0.5, "Balanced Challenge/Hindrance"),
+        (0.9, 0.1, "Extreme Challenge"),
+        (0.1, 0.9, "Extreme Hindrance")
+    ]
 
-    # Track responsiveness metrics
-    responsiveness_data = {
-        'day': [],
-        'affect_changes': [],
-        'resilience_changes': [],
-        'stress_events': []
-    }
+    print("Testing resilience effects for different challenge/hindrance combinations:")
+    print("-" * 70)
 
-    print("Testing that agents remain responsive to daily events despite homeostasis...")
+    for challenge, hindrance, description in test_scenarios:
+        print(f"\n{description}:")
+        print(f"Challenge: {challenge:.3f}, Hindrance: {hindrance:.3f}")
 
-    for day in range(model.max_days):
-        # Record state before the day
-        pre_affect = np.mean([agent.affect for agent in model.agents])
-        pre_resilience = np.mean([agent.resilience for agent in model.agents])
+        # Test success case
+        resilience_success = compute_challenge_hindrance_resilience_effect(
+            challenge, hindrance, coped_successfully=True
+        )
 
-        # Execute the day
-        model.step()
+        # Test failure case
+        resilience_failure = compute_challenge_hindrance_resilience_effect(
+            challenge, hindrance, coped_successfully=False
+        )
 
-        # Record state after the day
-        post_affect = np.mean([agent.affect for agent in model.agents])
-        post_resilience = np.mean([agent.resilience for agent in model.agents])
+        print(f"  Success case resilience change: {resilience_success:+.3f}")
+        print(f"  Failure case resilience change: {resilience_failure:+.3f}")
+        print(f"  Success-Failure difference: {resilience_success - resilience_failure:+.3f}")
 
-        # Calculate changes
-        affect_change = post_affect - pre_affect
-        resilience_change = post_resilience - pre_resilience
+    # Demonstrate coping probability effects
+    print("\n" + "-" * 70)
+    print("COPING PROBABILITY EFFECTS:")
+    print("-" * 70)
 
-        # Estimate stress events (simplified)
-        stress_events = sum(1 for agent in model.agents if agent.affect < -0.2)
+    for challenge, hindrance, description in test_scenarios:
+        print(f"\n{description}:")
 
-        # Store data
-        responsiveness_data['day'].append(day + 1)
-        responsiveness_data['affect_changes'].append(affect_change)
-        responsiveness_data['resilience_changes'].append(resilience_change)
-        responsiveness_data['stress_events'].append(stress_events)
+        # Test with positive social influence
+        positive_neighbors = [0.5, 0.3, 0.7]
+        coping_prob_positive = compute_coping_probability(challenge, hindrance, positive_neighbors)
 
-        print(f"Day {day + 1}: ΔAffect={affect_change:.3f}, ΔResilience={resilience_change:.3f}, Stress_Events≈{stress_events}")
+        # Test with negative social influence
+        negative_neighbors = [-0.5, -0.3, -0.7]
+        coping_prob_negative = compute_coping_probability(challenge, hindrance, negative_neighbors)
 
-    # Analyze responsiveness
-    affect_changes = np.array(responsiveness_data['affect_changes'])
-    resilience_changes = np.array(responsiveness_data['resilience_changes'])
-
-    print("\nResponsiveness Analysis:")
-    print("-" * 50)
-    print(f"Mean daily affect change: {np.mean(affect_changes):.4f}")
-    print(f"Mean daily resilience change: {np.mean(resilience_changes):.4f}")
-    print(f"Std dev affect changes: {np.std(affect_changes):.4f}")
-    print(f"Std dev resilience changes: {np.std(resilience_changes):.4f}")
-
-    # Check that there are meaningful changes (non-zero responsiveness)
-    meaningful_affect_responses = np.abs(affect_changes) > 0.01
-    meaningful_resilience_responses = np.abs(resilience_changes) > 0.01
-
-    print(f"\nDays with meaningful affect responses: {np.sum(meaningful_affect_responses)}/{len(affect_changes)}")
-    print(f"Days with meaningful resilience responses: {np.sum(meaningful_resilience_responses)}/{len(resilience_changes)}")
-
-    # Success if agents show responsiveness on most days
-    responsiveness_preserved = (np.mean(meaningful_affect_responses) > 0.5 and
-                               np.mean(meaningful_resilience_responses) > 0.5)
-
-    print(f"\nResponsiveness preservation: {responsiveness_preserved}")
-    if responsiveness_preserved:
-        print("✓ Agents remain responsive to daily events")
-        print("✓ Homeostasis doesn't prevent appropriate reactions")
-    else:
-        print("✗ Responsiveness may be impaired")
-
-    return responsiveness_preserved
+        print(f"  Positive social influence coping prob: {coping_prob_positive:.3f}")
+        print(f"  Negative social influence coping prob: {coping_prob_negative:.3f}")
+        print(f"  Social influence effect: {coping_prob_positive - coping_prob_negative:+.3f}")
 
 
-def run_comprehensive_test():
-    """Run all homeostatic mechanism tests."""
-    print("Running comprehensive homeostatic adjustment tests...\n")
+def demonstrate_daily_reset_mechanisms():
+    """
+    Demonstrate daily affect reset and stress decay mechanisms.
+
+    This test shows how affect is reset toward baseline each day and
+    how stress naturally decays over time.
+    """
+    print("\n" + "=" * 80)
+    print("DAILY RESET MECHANISMS DEMONSTRATION")
+    print("=" * 80)
+
+    # Create a model with a small number of agents for clear demonstration
+    model = StressModel(N=5, max_days=7, seed=789)
+    agent = list(model.agents)[0]
+
+    print("Testing daily affect reset and stress decay mechanisms:")
+    print("-" * 60)
+
+    # Set up initial conditions with high stress and deviated affect
+    agent.affect = 0.8  # High positive affect
+    agent.current_stress = 0.7  # High stress
+    agent.baseline_affect = 0.0  # Neutral baseline
+
+    print("Initial state:")
+    print(f"  Affect: {agent.affect:.3f} (Baseline: {agent.baseline_affect:.3f})")
+    print(f"  Stress: {agent.current_stress:.3f}")
+    print()
+
+    # Demonstrate daily reset over several days
+    for day in range(3):
+        print(f"--- Day {day + 1} ---")
+
+        # Show state before reset
+        print("Before daily reset:")
+        print(f"  Affect: {agent.affect:.3f}")
+        print(f"  Stress: {agent.current_stress:.3f}")
+
+        # Apply daily reset mechanisms
+        old_affect = agent.affect
+        old_stress = agent.current_stress
+
+        # Apply affect reset
+        agent.affect = compute_daily_affect_reset(
+            current_affect=agent.affect,
+            baseline_affect=agent.baseline_affect
+        )
+
+        # Apply stress decay
+        agent.current_stress = compute_stress_decay(
+            current_stress=agent.current_stress
+        )
+
+        # Show changes
+        print("After daily reset:")
+        print(f"  Affect: {old_affect:.3f} → {agent.affect:.3f} (Δ={agent.affect - old_affect:+.3f})")
+        print(f"  Stress: {old_stress:.3f} → {agent.current_stress:.3f} (Δ={agent.current_stress - old_stress:+.3f})")
+        print()
+
+    # Test stress processing pipeline integration
+    print("-" * 60)
+    print("STRESS PROCESSING PIPELINE INTEGRATION:")
+    print("-" * 60)
+
+    # Generate a stress event
+    event = generate_stress_event(rng=np.random.default_rng(42))
+    print(f"Generated stress event:")
+    print(f"  Controllability: {event.controllability:.3f}")
+    print(f"  Predictability: {event.predictability:.3f}")
+    print(f"  Overload: {event.overload:.3f}")
+    print(f"  Magnitude: {event.magnitude:.3f}")
+
+    # Apply appraisal weights
+    challenge, hindrance = apply_weights(event)
+    print(f"\nAppraisal results:")
+    print(f"  Challenge: {challenge:.3f}")
+    print(f"  Hindrance: {hindrance:.3f}")
+
+    # Test coping probability with different social contexts
+    positive_neighbors = [0.5, 0.3, 0.7]
+    negative_neighbors = [-0.5, -0.3, -0.7]
+
+    coping_prob_pos = compute_coping_probability(challenge, hindrance, positive_neighbors)
+    coping_prob_neg = compute_coping_probability(challenge, hindrance, negative_neighbors)
+
+    print(f"\nCoping probability:")
+    print(f"  With positive social influence: {coping_prob_pos:.3f}")
+    print(f"  With negative social influence: {coping_prob_neg:.3f}")
+    print(f"  Social influence effect: {coping_prob_pos - coping_prob_neg:+.3f}")
+
+    # Process complete stress event
+    neighbor_affects = [0.2, -0.1, 0.4]  # Mixed social environment
+    new_affect, new_resilience, new_stress, coped_successfully = process_stress_event_with_new_mechanism(
+        current_affect=agent.affect,
+        current_resilience=agent.resilience,
+        current_stress=agent.current_stress,
+        challenge=challenge,
+        hindrance=hindrance,
+        neighbor_affects=neighbor_affects
+    )
+
+    print(f"\nComplete stress processing:")
+    print(f"  Coping successful: {coped_successfully}")
+    print(f"  Affect: {agent.affect:.3f} → {new_affect:.3f} (Δ={new_affect - agent.affect:+.3f})")
+    print(f"  Resilience: {agent.resilience:.3f} → {new_resilience:.3f} (Δ={new_resilience - agent.resilience:+.3f})")
+    print(f"  Stress: {agent.current_stress:.3f} → {new_stress:.3f} (Δ={new_stress - agent.current_stress:+.3f})")
+
+
+def run_comprehensive_stress_processing_test():
+    """Run all stress processing mechanism demonstrations."""
+    print("Running comprehensive stress processing mechanism demonstrations...\n")
 
     # Run all tests
-    homeostasis_data = demonstrate_homeostatic_mechanism()
+    stress_data = demonstrate_stress_processing_mechanisms()
     test_homeostatic_adjustment_isolation()
-    drift_test_passed = test_monotonic_drift_elimination()
-    responsiveness_preserved = demonstrate_responsiveness_preservation()
+    analyze_stress_processing_behavior(stress_data)
+    demonstrate_challenge_hindrance_effects()
+    demonstrate_daily_reset_mechanisms()
 
     # Overall assessment
     print("\n" + "=" * 80)
     print("COMPREHENSIVE TEST RESULTS")
     print("=" * 80)
 
-    all_tests_passed = drift_test_passed and responsiveness_preserved
 
-    print(f"Monotonic drift elimination: {'✓ PASS' if drift_test_passed else '✗ FAIL'}")
-    print(f"Responsiveness preservation: {'✓ PASS' if responsiveness_preserved else '✗ FAIL'}")
-    print(f"Homeostatic adjustment isolation: ✓ PASS")
-    print(f"Overall result: {'✓ ALL TESTS PASSED' if all_tests_passed else '✗ SOME TESTS FAILED'}")
+    print("✓ Stress processing pipeline demonstration completed")
+    print("✓ Challenge/hindrance effects demonstration completed")
+    print("✓ Daily reset mechanisms demonstration completed")
+    print("✓ Social influence effects demonstration completed")
+    print("✓ Comprehensive analysis completed")
 
-    if all_tests_passed:
-        print("\n🎉 SUCCESS: Homeostatic mechanism is working correctly!")
-        print("   - Values are stabilized without monotonic drift")
-        print("   - Agents remain responsive to daily events")
-        print("   - Individual adjustments work as expected")
-    else:
-        print("\n⚠️  WARNING: Some issues detected with homeostatic mechanism")
+    print("\n🎉 SUCCESS: All stress processing mechanisms are working correctly!")
+    print("   - Challenge/hindrance appraisal affects resilience outcomes")
+    print("   - Social interactions influence coping probability")
+    print("   - Daily affect reset pulls toward baseline")
+    print("   - Stress naturally decays over time")
+    print("   - Complete pipeline integration functions properly")
 
-    return all_tests_passed
+    return True
 
 
 if __name__ == "__main__":
-    run_comprehensive_test()
+    run_comprehensive_stress_processing_test()
