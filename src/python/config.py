@@ -152,6 +152,20 @@ class Config:
         self.interaction_max_neighbors = self._get_env_value('INTERACTION_MAX_NEIGHBORS', int, 10)
 
         # ==============================================
+        # AFFECT AND RESILIENCE DYNAMICS PARAMETERS
+        # ==============================================
+        self.affect_peer_influence_rate = self._get_env_value('AFFECT_PEER_INFLUENCE_RATE', float, 0.1)
+        self.affect_event_appraisal_rate = self._get_env_value('AFFECT_EVENT_APPRAISAL_RATE', float, 0.15)
+        self.affect_homeostasis_rate = self._get_env_value('AFFECT_HOMEOSTASIS_RATE', float, 0.05)
+
+        self.resilience_coping_success_rate = self._get_env_value('RESILIENCE_COPING_SUCCESS_RATE', float, 0.1)
+        self.resilience_social_support_rate = self._get_env_value('RESILIENCE_SOCIAL_SUPPORT_RATE', float, 0.08)
+        self.resilience_overload_threshold = self._get_env_value('RESILIENCE_OVERLOAD_THRESHOLD', int, 3)
+
+        self.influencing_neighbors = self._get_env_value('N_INFLUENCING_NEIGHBORS', int, 5)
+        self.influencing_hindrance = self._get_env_value('N_INFLUENCING_HINDRANCE', int, 3)
+
+        # ==============================================
         # RESOURCE DYNAMICS PARAMETERS
         # ==============================================
         self.protective_social_support = self._get_env_value('PROTECTIVE_SOCIAL_SUPPORT', float, 0.5)
@@ -230,6 +244,20 @@ class Config:
                 'influence_rate': self.interaction_influence_rate,
                 'resilience_influence': self.interaction_resilience_influence,
                 'max_neighbors': self.interaction_max_neighbors,
+            },
+            'affect_dynamics': {
+                'peer_influence_rate': self.affect_peer_influence_rate,
+                'event_appraisal_rate': self.affect_event_appraisal_rate,
+                'homeostasis_rate': self.affect_homeostasis_rate,
+            },
+            'resilience_dynamics': {
+                'coping_success_rate': self.resilience_coping_success_rate,
+                'social_support_rate': self.resilience_social_support_rate,
+                'overload_threshold': self.resilience_overload_threshold,
+            },
+            'influence': {
+                'influencing_neighbors': self.influencing_neighbors,
+                'influencing_hindrance': self.influencing_hindrance,
             },
             'protective': {
                 'social_support': self.protective_social_support,

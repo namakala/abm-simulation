@@ -17,7 +17,9 @@ from src.python.stress_utils import (
 
 from src.python.affect_utils import (
     process_interaction, compute_stress_impact_on_affect,
-    compute_stress_impact_on_resilience, clamp, InteractionConfig
+    compute_stress_impact_on_resilience, clamp, InteractionConfig,
+    update_affect_dynamics, update_resilience_dynamics,
+    AffectDynamicsConfig, ResilienceDynamicsConfig
 )
 
 from src.python.math_utils import sample_poisson, create_rng
@@ -69,13 +71,19 @@ class Person(mesa.Agent):
         self.affect = config['initial_affect']
         self.resources = config['initial_resources']
 
-        # Initialize protective factors (from memory bank architecture)
+        # Initialize baseline affect for homeostasis
+        self.baseline_affect = config['initial_affect']
+
+        # Initialize protective factors
         self.protective_factors = {
             'social_support': 0.5,
             'family_support': 0.5,
             'formal_intervention': 0.5,
             'psychological_capital': 0.5
         }
+
+        # Initialize consecutive hindrances tracking for overload effects
+        self.consecutive_hindrances = 0
 
         # Configuration for utility functions
         self.stress_config = {
@@ -91,14 +99,27 @@ class Person(mesa.Agent):
 
     def step(self):
         """
-        Execute one day of simulation.
+        Execute one day of simulation with integrated stress and affect dynamics.
 
-        Performs random sequence of social interactions and stress events,
-        using utility functions for all domain-specific behaviors.
+        Coordinates stress events, social interactions, and baseline dynamics
+        to create realistic mental health trajectories.
         """
+        # Get configuration for dynamics
+        affect_config = AffectDynamicsConfig()
+        resilience_config = ResilienceDynamicsConfig()
+
+        # Get neighbor affects for social influence throughout the day
+        neighbor_affects = self._get_neighbor_affects()
+
+        # Initialize daily tracking variables
+        daily_challenge = 0.0
+        daily_hindrance = 0.0
+        stress_events_count = 0
+        social_interactions_count = 0
+
         # Determine number of subevents using utility function
         n_subevents = sample_poisson(
-            lam=config.get('agent', 'subevents_per_day'),  # subevents per day from config
+            lam=config.get('agent', 'subevents_per_day'),
             rng=self._rng,
             min_value=1
         )
@@ -112,20 +133,64 @@ class Person(mesa.Agent):
         # Shuffle for random order
         self._rng.shuffle(actions)
 
-        # Execute actions using utility functions
+        # Execute actions and accumulate daily challenge/hindrance
         for action in actions:
             if action == "interact":
                 self.interact()
+                social_interactions_count += 1
             elif action == "stress":
-                self.stressful_event()
+                challenge, hindrance = self.stressful_event()
+                daily_challenge += challenge
+                daily_hindrance += hindrance
+                stress_events_count += 1
 
-        # Apply resource regeneration using utility function
+        # Normalize daily challenge/hindrance by number of events
+        if stress_events_count > 0:
+            daily_challenge /= stress_events_count
+            daily_hindrance /= stress_events_count
+
+        # Apply integrated affect dynamics (homeostasis + peer influence + event appraisal)
+        self.affect = update_affect_dynamics(
+            current_affect=self.affect,
+            baseline_affect=self.baseline_affect,
+            neighbor_affects=neighbor_affects,
+            challenge=daily_challenge,
+            hindrance=daily_hindrance,
+            affect_config=affect_config
+        )
+
+        # Apply integrated resilience dynamics (coping + social support + overload effects)
+        # Check if agent received social support during interactions
+        received_social_support = social_interactions_count > 0 and self._rng.random() < 0.3
+
+        self.resilience = update_resilience_dynamics(
+            current_resilience=self.resilience,
+            coped_successfully=stress_events_count > 0,  # Simplified: coped if had stress events
+            received_social_support=received_social_support,
+            consecutive_hindrances=getattr(self, 'consecutive_hindrances', 0),
+            resilience_config=resilience_config
+        )
+
+        # Add boost from protective factors
+        protective_boost = self._get_resilience_boost_from_protective_factors()
+        self.resilience = min(1.0, self.resilience + protective_boost)
+
+        # Apply enhanced resource regeneration with affect influence
         from .affect_utils import compute_resource_regeneration, ResourceParams
         regen_params = ResourceParams(
             base_regeneration=config.get('resource', 'base_regeneration')
         )
 
-        self.resources += compute_resource_regeneration(self.resources, regen_params)
+        # Affect influences resource regeneration (positive affect helps recovery)
+        affect_multiplier = 1.0 + 0.2 * max(0.0, self.affect)  # Positive affect boosts regeneration
+        base_regeneration = compute_resource_regeneration(self.resources, regen_params)
+        self.resources += base_regeneration * affect_multiplier
+
+        # Decay consecutive hindrances over time if no new hindrance events
+        if hasattr(self, 'consecutive_hindrances') and self.consecutive_hindrances > 0:
+            # Slowly decay consecutive hindrances when no new hindrance events occur
+            decay_rate = 0.1
+            self.consecutive_hindrances = max(0, self.consecutive_hindrances - decay_rate)
 
         # Clamp all values to valid ranges
         self.resilience = clamp(self.resilience, 0.0, 1.0)
@@ -163,64 +228,263 @@ class Person(mesa.Agent):
         )
 
         # Update state with results from utility function
-        self.affect = new_self_affect
-        partner.affect = new_partner_affect
-        self.resilience = new_self_resilience
-        partner.resilience = new_partner_resilience
+        self.affect = clamp(new_self_affect, -1.0, 1.0)
+        partner.affect = clamp(new_partner_affect, -1.0, 1.0)
+        self.resilience = clamp(new_self_resilience, 0.0, 1.0)
+        partner.resilience = clamp(new_partner_resilience, 0.0, 1.0)
 
     def stressful_event(self):
         """
-        Process a stressful event using utility functions.
+        Process a stressful event using enhanced challenge/hindrance appraisal.
 
-        Delegates stress generation, appraisal, and outcome computation to utilities.
+        Returns challenge and hindrance values for integration with daily dynamics.
+        Uses dynamic threshold adjustment based on challenge/hindrance as specified
+        in the theoretical model: T_eff = T_base + λ_C*challenge - λ_H*hindrance
+
+        Returns:
+            Tuple of (challenge, hindrance) values for the event
         """
         # Generate stress event using utility function
         event = generate_stress_event(rng=self._rng)
 
-        # Set up stress processing parameters (from memory bank)
-        threshold_params = ThresholdParams(
-            base_threshold=0.5,
-            challenge_scale=0.15,
-            hindrance_scale=0.25
-        )
+        # Get configuration parameters for threshold adjustment
+        cfg = get_config()
+        base_threshold = cfg.get('threshold', 'base_threshold')
+        challenge_scale = cfg.get('threshold', 'challenge_scale')
+        hindrance_scale = cfg.get('threshold', 'hindrance_scale')
 
+        # Compute challenge and hindrance using appraisal weights
         weights = AppraisalWeights(
-            omega_c=1.0, omega_p=1.0, omega_o=1.0,
-            bias=0.0, gamma=6.0
+            omega_c=cfg.get('appraisal', 'omega_c'),
+            omega_p=cfg.get('appraisal', 'omega_p'),
+            omega_o=cfg.get('appraisal', 'omega_o'),
+            bias=cfg.get('appraisal', 'bias'),
+            gamma=cfg.get('appraisal', 'gamma')
         )
 
-        # Process stress event using utility function
+        # Process stress event to get challenge/hindrance values
         is_stressed, challenge, hindrance = process_stress_event(
             event=event,
-            threshold_params=threshold_params,
+            threshold_params=ThresholdParams(
+                base_threshold=base_threshold,
+                challenge_scale=challenge_scale,
+                hindrance_scale=hindrance_scale
+            ),
             weights=weights,
             rng=self._rng
         )
 
         if not is_stressed:
-            return
+            return 0.0, 0.0  # No challenge/hindrance if not stressed
 
         # Determine coping outcome using utility function
-        coped_successfully = self.rng.random() < self.resilience
-
-        # Compute affect and resilience changes using utility functions
-        affect_change = compute_stress_impact_on_affect(
-            current_affect=self.affect,
-            is_stressed=True,
-            coped_successfully=coped_successfully
-        )
-
-        resilience_change = compute_stress_impact_on_resilience(
-            current_resilience=self.resilience,
-            is_stressed=True,
-            coped_successfully=coped_successfully
-        )
-
-        # Apply changes
-        self.affect += affect_change
-        self.resilience += resilience_change
+        coped_successfully = self._rng.random() < self.resilience
 
         # Use resources for coping if successful
         if coped_successfully:
-            resource_cost = config.get('agent', 'resource_cost')
+            resource_cost = cfg.get('agent', 'resource_cost')
             self.resources = max(0.0, self.resources - resource_cost)
+
+        # Track consecutive hindrances for overload effects
+        if hindrance > challenge:  # More hindrance than challenge
+            self.consecutive_hindrances = getattr(self, 'consecutive_hindrances', 0) + 1
+        else:
+            self.consecutive_hindrances = 0  # Reset if not predominantly hindrance
+
+        # Track stress breach count for network adaptation
+        self.stress_breach_count = getattr(self, 'stress_breach_count', 0) + 1
+
+        # Allocate resources to protective factors for next time step
+        self._allocate_protective_factors()
+
+        # Adapt network based on stress patterns
+        self._adapt_network()
+
+        return challenge, hindrance
+
+    def _allocate_protective_factors(self):
+        """
+        Allocate available resources across protective factors using enhanced dynamics.
+
+        Uses current stress state and resilience to determine optimal allocation.
+        """
+        from .affect_utils import allocate_protective_resources, ProtectiveFactors, ResourceParams
+
+        # Create protective factors object with current efficacy levels
+        protective_factors = ProtectiveFactors(
+            social_support=self.protective_factors['social_support'],
+            family_support=self.protective_factors['family_support'],
+            formal_intervention=self.protective_factors['formal_intervention'],
+            psychological_capital=self.protective_factors['psychological_capital']
+        )
+
+        # Adjust allocation based on current stress and resilience state
+        available_for_allocation = self.resources * 0.3  # Allocate 30% of resources to protective factors
+
+        if available_for_allocation > 0:
+            # Allocate resources using enhanced utility function
+            allocations = allocate_protective_resources(
+                available_resources=available_for_allocation,
+                protective_factors=protective_factors,
+                rng=self._rng
+            )
+
+            # Update protective factor levels based on allocations
+            total_allocated = sum(allocations.values())
+            if total_allocated > 0:
+                # Update efficacy based on resource investment and current needs
+                for factor, allocation in allocations.items():
+                    if allocation > 0:
+                        # Current efficacy influences how effectively resources are used
+                        current_efficacy = self.protective_factors[factor]
+                        # Investment return is higher when current efficacy is lower (more room for improvement)
+                        improvement_rate = 0.5  # Fixed improvement rate for now
+                        investment_effectiveness = 1.0 - current_efficacy  # Higher return when efficacy is low
+
+                        efficacy_increase = allocation * improvement_rate * investment_effectiveness
+                        self.protective_factors[factor] = min(1.0, current_efficacy + efficacy_increase)
+
+                        # Use some resources for the allocation
+                        self.resources -= allocation
+
+    def _get_resilience_boost_from_protective_factors(self):
+        """
+        Calculate resilience boost from active protective factors.
+
+        Returns:
+            Float indicating resilience boost from protective factors
+        """
+        total_boost = 0.0
+
+        # Each protective factor provides boost based on efficacy and current resilience need
+        for factor, efficacy in self.protective_factors.items():
+            if efficacy > 0:
+                # Boost is higher when resilience is low (more needed)
+                need_multiplier = max(0.1, 1.0 - self.resilience)
+                boost_rate = 0.1  # Fixed boost rate for now
+                total_boost += efficacy * need_multiplier * boost_rate
+
+        return total_boost
+
+    def _get_neighbor_affects(self):
+        """
+        Get affect values of neighboring agents for social influence calculations.
+
+        Returns:
+            List of neighbor affect values
+        """
+        neighbors = list(
+            self.model.grid.get_neighbors(
+                self.pos, include_center=False
+            )
+        )
+
+        return [neighbor.affect for neighbor in neighbors if hasattr(neighbor, 'affect')]
+
+    def _adapt_network(self):
+        """
+        Adapt network connections based on stress patterns and social support effectiveness.
+
+        Implements the theoretical network adaptation mechanisms:
+        - Rewiring when stress threshold is breached repeatedly
+        - Strengthening ties with effective support providers
+        - Homophily based on similar stress levels
+        """
+        cfg = get_config()
+
+        # Check if agent should consider network adaptation
+        stress_breach_count = getattr(self, 'stress_breach_count', 0)
+        adaptation_threshold = 3  # Fixed adaptation threshold for now
+
+        if stress_breach_count < adaptation_threshold:
+            return
+
+        # Get current neighbors
+        current_neighbors = list(
+            self.model.grid.get_neighbors(
+                self.pos, include_center=False
+            )
+        )
+
+        if not current_neighbors:
+            return
+
+        # Calculate adaptation metrics
+        rewire_prob = 0.01  # Fixed rewire probability for now
+        homophily_strength = 0.7  # Fixed homophily strength for now
+
+        # Check each neighbor for potential rewiring
+        for neighbor in current_neighbors:
+            if self._rng.random() < rewire_prob:
+                # Calculate similarity with neighbor (for homophily)
+                affect_similarity = 1.0 - abs(self.affect - neighbor.affect)
+                resilience_similarity = 1.0 - abs(self.resilience - neighbor.resilience)
+                overall_similarity = (affect_similarity + resilience_similarity) / 2.0
+
+                # Calculate support effectiveness (track if implemented)
+                support_effectiveness = getattr(self, '_get_support_effectiveness', lambda n: 0.5)(neighbor)
+
+                # Decide whether to keep or rewire connection
+                keep_connection_prob = (overall_similarity * homophily_strength +
+                                     support_effectiveness * (1.0 - homophily_strength))
+
+                if self._rng.random() > keep_connection_prob:
+                    # Rewire: find a new potential connection
+                    self._rewire_to_similar_agent(current_neighbors)
+
+        # Reset stress breach count after adaptation
+        self.stress_breach_count = 0
+
+    def _rewire_to_similar_agent(self, exclude_agents):
+        """
+        Find and connect to a new agent with similar stress characteristics.
+
+        Args:
+            exclude_agents: List of agents to exclude from potential connections
+        """
+        # Get all agents except current neighbors and self
+        all_agents = [agent for agent in self.model.agents if agent != self]
+        available_agents = [agent for agent in all_agents if agent not in exclude_agents]
+
+        if not available_agents:
+            return
+
+        # Find agents with similar affect/resilience levels
+        similarities = []
+        for agent in available_agents:
+            affect_similarity = 1.0 - abs(self.affect - agent.affect)
+            resilience_similarity = 1.0 - abs(self.resilience - agent.resilience)
+            overall_similarity = (affect_similarity + resilience_similarity) / 2.0
+            similarities.append((agent, overall_similarity))
+
+        # Sort by similarity (highest first)
+        similarities.sort(key=lambda x: x[1], reverse=True)
+
+        # Try to connect to most similar agent
+        for similar_agent, _ in similarities[:3]:  # Try top 3 most similar
+            # Check if connection is possible (simplified - would need actual grid management)
+            # This is a placeholder for the actual network rewiring logic
+            # In a real implementation, this would involve:
+            # 1. Checking if the target position has space
+            # 2. Updating the grid structure
+            # 3. Updating both agents' neighbor relationships
+            pass
+
+    def _get_support_effectiveness(self, neighbor):
+        """
+        Get the effectiveness of a neighbor as a support provider.
+
+        Args:
+            neighbor: Neighbor agent to evaluate
+
+        Returns:
+            Float indicating support effectiveness (0.0 to 1.0)
+        """
+        # Placeholder implementation - in practice this would track:
+        # - Historical success of support provided
+        # - Response times to support requests
+        # - Quality of support based on neighbor's own resilience/affect
+
+        # For now, return a value based on neighbor's current state
+        neighbor_fitness = (neighbor.resilience + (1.0 + neighbor.affect) / 2.0) / 2.0
+        return min(1.0, neighbor_fitness + 0.2)  # Add some base effectiveness
