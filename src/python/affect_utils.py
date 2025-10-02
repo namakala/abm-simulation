@@ -462,6 +462,64 @@ def compute_homeostasis_effect(
         return -homeostasis_strength
 
 
+def compute_homeostatic_adjustment(
+    initial_value: float,
+    final_value: float,
+    homeostatic_rate: Optional[float] = None,
+    value_type: str = 'affect'
+) -> float:
+    """
+    Apply homeostatic adjustment to pull values back toward initial state.
+
+    This function implements a homeostatic mechanism that adjusts values toward
+    their initial state at the beginning of each day, simulating natural
+    tendencies to return to baseline levels.
+
+    Args:
+        initial_value: Value at the start of the day (baseline)
+        final_value: Value at the end of the day after all actions
+        homeostatic_rate: Rate of homeostatic adjustment (0-1).
+                         If None, uses config default.
+        value_type: Type of value being adjusted ('affect' or 'resilience')
+
+    Returns:
+        Homeostatically adjusted value
+
+    Raises:
+        ValueError: If value_type is not 'affect' or 'resilience'
+    """
+    if homeostatic_rate is None:
+        homeostatic_rate = get_config().get('affect_dynamics', 'homeostatic_rate')
+
+    # Validate value_type
+    if value_type not in ['affect', 'resilience']:
+        raise ValueError(f"value_type must be 'affect' or 'resilience', got '{value_type}'")
+
+    # Calculate distance from initial value
+    distance = homeostatic_rate * abs(final_value - initial_value)
+
+    # Determine adjustment direction
+    if final_value > initial_value:
+        # Final value is above initial, adjust downward
+        adjusted_value = final_value - distance
+    elif final_value < initial_value:
+        # Final value is below initial, adjust upward
+        adjusted_value = final_value + distance
+    else:
+        # Values are equal, no adjustment needed
+        adjusted_value = final_value
+
+    # Apply appropriate normalization based on value type
+    if value_type == 'affect':
+        # Affect values normalized to [-1, 1]
+        adjusted_value = clamp(adjusted_value, -1.0, 1.0)
+    else:  # resilience
+        # Resilience values normalized to [0, 1]
+        adjusted_value = clamp(adjusted_value, 0.0, 1.0)
+
+    return adjusted_value
+
+
 def compute_cumulative_overload(
     consecutive_hindrances: int,
     config: Optional[ResilienceDynamicsConfig] = None

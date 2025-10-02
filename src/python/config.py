@@ -157,6 +157,7 @@ class Config:
         self.affect_peer_influence_rate = self._get_env_value('AFFECT_PEER_INFLUENCE_RATE', float, 0.1)
         self.affect_event_appraisal_rate = self._get_env_value('AFFECT_EVENT_APPRAISAL_RATE', float, 0.15)
         self.affect_homeostasis_rate = self._get_env_value('AFFECT_HOMEOSTASIS_RATE', float, 0.05)
+        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.1)
 
         self.resilience_coping_success_rate = self._get_env_value('RESILIENCE_COPING_SUCCESS_RATE', float, 0.1)
         self.resilience_social_support_rate = self._get_env_value('RESILIENCE_SOCIAL_SUPPORT_RATE', float, 0.08)
@@ -249,6 +250,7 @@ class Config:
                 'peer_influence_rate': self.affect_peer_influence_rate,
                 'event_appraisal_rate': self.affect_event_appraisal_rate,
                 'homeostasis_rate': self.affect_homeostasis_rate,
+                'homeostatic_rate': self.affect_homeostatic_rate,
             },
             'resilience_dynamics': {
                 'coping_success_rate': self.resilience_coping_success_rate,

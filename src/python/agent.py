@@ -74,6 +74,9 @@ class Person(mesa.Agent):
         # Initialize baseline affect for homeostasis
         self.baseline_affect = config['initial_affect']
 
+        # Initialize baseline resilience for homeostasis
+        self.baseline_resilience = config['initial_resilience']
+
         # Initialize protective factors
         self.protective_factors = {
             'social_support': 0.5,
@@ -107,6 +110,10 @@ class Person(mesa.Agent):
         # Get configuration for dynamics
         affect_config = AffectDynamicsConfig()
         resilience_config = ResilienceDynamicsConfig()
+
+        # Store initial affect and resilience values at the beginning of each day
+        initial_affect = self.affect
+        initial_resilience = self.resilience
 
         # Get neighbor affects for social influence throughout the day
         neighbor_affects = self._get_neighbor_affects()
@@ -191,6 +198,33 @@ class Person(mesa.Agent):
             # Slowly decay consecutive hindrances when no new hindrance events occur
             decay_rate = 0.1
             self.consecutive_hindrances = max(0, self.consecutive_hindrances - decay_rate)
+
+        # Apply homeostatic adjustment to both affect and resilience
+        # This pulls values back toward their FIXED baseline (natural equilibrium point)
+        from .affect_utils import compute_homeostatic_adjustment
+
+        # Get homeostatic rate from configuration
+        cfg = get_config()
+        homeostatic_rate = cfg.get('affect_dynamics', 'homeostatic_rate')
+
+        # Apply homeostatic adjustment to affect using FIXED baseline
+        self.affect = compute_homeostatic_adjustment(
+            initial_value=self.baseline_affect,  # Use fixed baseline, not daily initial value
+            final_value=self.affect,
+            homeostatic_rate=homeostatic_rate,
+            value_type='affect'
+        )
+
+        # Apply homeostatic adjustment to resilience using FIXED baseline
+        self.resilience = compute_homeostatic_adjustment(
+            initial_value=self.baseline_resilience,  # Use fixed baseline, not daily initial value
+            final_value=self.resilience,
+            homeostatic_rate=homeostatic_rate,
+            value_type='resilience'
+        )
+
+        # NOTE: baseline_affect and baseline_resilience remain FIXED (not updated daily)
+        # This ensures homeostasis pulls toward the agent's natural equilibrium point
 
         # Clamp all values to valid ranges
         self.resilience = clamp(self.resilience, 0.0, 1.0)
