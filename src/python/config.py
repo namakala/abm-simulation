@@ -91,6 +91,77 @@ class Config:
         except (ValueError, TypeError) as e:
             raise ConfigurationError(f"Invalid value for '{key}': '{value}'. Expected {expected_type.__name__}. {e}")
 
+    def _get_env_array(self, key: str, expected_type: type, default_array: list, required: bool = False, expected_length: int = None) -> list:
+        """
+        Get environment variable as array with type conversion and validation.
+
+        Supports both bracket notation: [2.1, 1.8, 2.3, ...]
+        and space-separated format: 2.1 1.8 2.3 ... (for backward compatibility)
+
+        Args:
+            key: Environment variable name
+            expected_type: Expected type for array elements (int, float)
+            default_array: Default array if not found
+            required: Whether this variable is required
+            expected_length: Expected length of array (optional validation)
+
+        Returns:
+            List of converted values in the expected type
+
+        Raises:
+            ConfigurationError: If required variable is missing, conversion fails, or length validation fails
+        """
+        value = os.getenv(key)
+
+        if value is None:
+            if required:
+                raise ConfigurationError(f"Required environment variable '{key}' is not set")
+            logger.debug(f"Using default array for '{key}': {default_array}")
+            return default_array
+
+        try:
+            # Determine format and parse accordingly
+            if value is None:
+                stripped_value = ""
+            else:
+                stripped_value = value.strip()
+
+            if stripped_value.startswith('[') and stripped_value.endswith(']'):
+                # Bracket notation: [2.1, 1.8, 2.3, ...]
+                # Remove brackets and split by comma
+                inner_value = stripped_value[1:-1].strip()
+                if inner_value:
+                    elements = [elem.strip() for elem in inner_value.split(',')]
+                else:
+                    elements = []
+            else:
+                # Space-separated format (backward compatibility): 2.1 1.8 2.3 ...
+                elements = stripped_value.split()
+
+            result = []
+
+            for element in elements:
+                # Skip empty elements (handles extra whitespace or commas)
+                element = element.strip()
+                if not element:
+                    continue
+
+                if expected_type == int:
+                    result.append(int(float(element)))  # Handle cases like "2.0"
+                elif expected_type == float:
+                    result.append(float(element))
+                else:
+                    raise ConfigurationError(f"Unsupported array type: {expected_type}")
+
+            # Validate length if specified
+            if expected_length is not None and len(result) != expected_length:
+                raise ConfigurationError(f"Array '{key}' must have exactly {expected_length} elements, got {len(result)}")
+
+            return result
+
+        except (ValueError, TypeError) as e:
+            raise ConfigurationError(f"Invalid array value for '{key}': '{value}'. Expected array of {expected_type.__name__}s. {e}")
+
     def _load_all_parameters(self) -> None:
         """Load all configuration parameters from environment variables."""
 
@@ -145,6 +216,12 @@ class Config:
         self.stress_alpha_challenge = self._get_env_value('STRESS_ALPHA_CHALLENGE', float, 0.8)
         self.stress_alpha_hindrance = self._get_env_value('STRESS_ALPHA_HINDRANCE', float, 1.2)
         self.stress_delta = self._get_env_value('STRESS_DELTA', float, 0.2)
+
+        # ==============================================
+        # PSS-10 SCORE GENERATION PARAMETERS
+        # ==============================================
+        self.pss10_item_means = self._get_env_array('PSS10_ITEM_MEAN', float, [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5], expected_length=10)
+        self.pss10_item_sds = self._get_env_array('PSS10_ITEM_SD', float, [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8], expected_length=10)
 
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value('COPING_BASE_PROBABILITY', float, 0.5)
@@ -261,6 +338,10 @@ class Config:
                 'alpha_hindrance': self.stress_alpha_hindrance,
                 'delta': self.stress_delta,
             },
+            'pss10': {
+                'item_means': self.pss10_item_means,
+                'item_sds': self.pss10_item_sds,
+            },
             'interaction': {
                 'influence_rate': self.interaction_influence_rate,
                 'resilience_influence': self.interaction_resilience_influence,
@@ -362,6 +443,21 @@ class Config:
         for param in [self.stress_controllability_mean, self.stress_predictability_mean, self.stress_overload_mean]:
             if not (0 <= param <= 1):
                 raise ConfigurationError("Stress event means must be in [0, 1]")
+
+        # PSS-10 validation
+        if len(self.pss10_item_means) != 10:
+            raise ConfigurationError("PSS-10 item means must have exactly 10 values")
+
+        if len(self.pss10_item_sds) != 10:
+            raise ConfigurationError("PSS-10 item standard deviations must have exactly 10 values")
+
+        for i, mean_val in enumerate(self.pss10_item_means):
+            if not (0 <= mean_val <= 4):
+                raise ConfigurationError(f"PSS-10 item mean at index {i} must be in [0, 4], got {mean_val}")
+
+        for i, sd_val in enumerate(self.pss10_item_sds):
+            if sd_val <= 0:
+                raise ConfigurationError(f"PSS-10 item standard deviation at index {i} must be positive, got {sd_val}")
 
         # Threshold validation
         if not (0 <= self.threshold_base_threshold <= 1):
