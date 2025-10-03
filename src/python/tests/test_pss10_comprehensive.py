@@ -15,11 +15,7 @@ import os
 import tempfile
 from pathlib import Path
 
-# Add the src directory to the path so we can import our modules
-import sys
-sys.path.append('src/python')
-
-from config import Config, ConfigurationError
+from src.python.config import Config, ConfigurationError
 
 
 def test_bracket_notation_parsing():

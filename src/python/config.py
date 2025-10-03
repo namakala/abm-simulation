@@ -223,6 +223,11 @@ class Config:
         self.pss10_item_means = self._get_env_array('PSS10_ITEM_MEAN', float, [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5], expected_length=10)
         self.pss10_item_sds = self._get_env_array('PSS10_ITEM_SD', float, [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8], expected_length=10)
 
+        # PSS-10 bifactor model parameters
+        self.pss10_load_controllability = self._get_env_array('PSS10_LOAD_CONTROLLABILITY', float, [0.2, 0.8, 0.1, 0.7, 0.6, 0.1, 0.8, 0.6, 0.7, 0.1], expected_length=10)
+        self.pss10_load_overload = self._get_env_array('PSS10_LOAD_OVERLOAD', float, [0.7, 0.3, 0.8, 0.2, 0.4, 0.9, 0.2, 0.3, 0.4, 0.9], expected_length=10)
+        self.pss10_bifactor_correlation = self._get_env_value('PSS10_BIFACTOR_COR', float, 0.3)
+
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value('COPING_BASE_PROBABILITY', float, 0.5)
         self.coping_social_influence = self._get_env_value('COPING_SOCIAL_INFLUENCE', float, 0.1)
@@ -341,6 +346,9 @@ class Config:
             'pss10': {
                 'item_means': self.pss10_item_means,
                 'item_sds': self.pss10_item_sds,
+                'load_controllability': self.pss10_load_controllability,
+                'load_overload': self.pss10_load_overload,
+                'bifactor_correlation': self.pss10_bifactor_correlation,
             },
             'interaction': {
                 'influence_rate': self.interaction_influence_rate,
@@ -451,6 +459,12 @@ class Config:
         if len(self.pss10_item_sds) != 10:
             raise ConfigurationError("PSS-10 item standard deviations must have exactly 10 values")
 
+        if len(self.pss10_load_controllability) != 10:
+            raise ConfigurationError("PSS-10 controllability loadings must have exactly 10 values")
+
+        if len(self.pss10_load_overload) != 10:
+            raise ConfigurationError("PSS-10 overload loadings must have exactly 10 values")
+
         for i, mean_val in enumerate(self.pss10_item_means):
             if not (0 <= mean_val <= 4):
                 raise ConfigurationError(f"PSS-10 item mean at index {i} must be in [0, 4], got {mean_val}")
@@ -458,6 +472,35 @@ class Config:
         for i, sd_val in enumerate(self.pss10_item_sds):
             if sd_val <= 0:
                 raise ConfigurationError(f"PSS-10 item standard deviation at index {i} must be positive, got {sd_val}")
+
+        for i, loading_val in enumerate(self.pss10_load_controllability):
+            if not (0 <= loading_val <= 1):
+                raise ConfigurationError(f"PSS-10 controllability loading at index {i} must be in [0, 1], got {loading_val}")
+
+        for i, loading_val in enumerate(self.pss10_load_overload):
+            if not (0 <= loading_val <= 1):
+                raise ConfigurationError(f"PSS-10 overload loading at index {i} must be in [0, 1], got {loading_val}")
+
+        if not (-1 <= self.pss10_bifactor_correlation <= 1):
+            raise ConfigurationError(f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}")
+
+        # PSS-10 bifactor model validation
+        if len(self.pss10_load_controllability) != 10:
+            raise ConfigurationError("PSS-10 controllability loadings must have exactly 10 values")
+
+        if len(self.pss10_load_overload) != 10:
+            raise ConfigurationError("PSS-10 overload loadings must have exactly 10 values")
+
+        for i, load_val in enumerate(self.pss10_load_controllability):
+            if not (0 <= load_val <= 1):
+                raise ConfigurationError(f"PSS-10 controllability loading at index {i} must be in [0, 1], got {load_val}")
+
+        for i, load_val in enumerate(self.pss10_load_overload):
+            if not (0 <= load_val <= 1):
+                raise ConfigurationError(f"PSS-10 overload loading at index {i} must be in [0, 1], got {load_val}")
+
+        if not (-1 <= self.pss10_bifactor_correlation <= 1):
+            raise ConfigurationError(f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}")
 
         # Threshold validation
         if not (0 <= self.threshold_base_threshold <= 1):

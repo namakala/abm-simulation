@@ -15,13 +15,10 @@ import pytest
 import tempfile
 from pathlib import Path
 
-import sys
-import os
-sys.path.append('.')
-
 from src.python.config import Config, ConfigurationError, get_config, reload_config
 
 
+@pytest.mark.config
 class TestPSS10ConfigurationDefaults:
     """Test PSS-10 configuration with default values (no .env file)."""
 
@@ -90,6 +87,7 @@ class TestPSS10ConfigurationDefaults:
                 os.chdir(original_cwd)
 
 
+@pytest.mark.config
 class TestPSS10ConfigurationBracketNotation:
     """Test PSS-10 configuration with bracket notation format."""
 
@@ -194,6 +192,7 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
                 os.chdir(original_cwd)
 
 
+@pytest.mark.config
 class TestPSS10ConfigurationValidValues:
     """Test PSS-10 configuration with valid .env file values."""
 
@@ -270,6 +269,7 @@ PSS10_ITEM_SD=0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1
                 os.chdir(original_cwd)
 
 
+@pytest.mark.config
 class TestPSS10ConfigurationInvalidValues:
     """Test PSS-10 configuration error handling for invalid values."""
 
@@ -388,6 +388,7 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.0
                 os.chdir(original_cwd)
 
 
+@pytest.mark.config
 class TestPSS10ConfigurationAccessMethods:
     """Test PSS-10 configuration access methods."""
 
@@ -476,6 +477,7 @@ class TestPSS10ConfigurationAccessMethods:
             config.get('pss10', 'invalid_key')
 
 
+@pytest.mark.config
 class TestPSS10ConfigurationIntegration:
     """Test PSS-10 configuration integration with existing system."""
 
@@ -527,6 +529,7 @@ class TestPSS10ConfigurationIntegration:
         assert len(pss10_sds) == 10
 
 
+@pytest.mark.config
 class TestPSS10ConfigurationEdgeCases:
     """Test PSS-10 configuration edge cases and error conditions."""
 
