@@ -192,9 +192,7 @@ class Config:
         # STRESS EVENT PARAMETERS
         # ==============================================
         self.stress_controllability_mean = self._get_env_value('STRESS_CONTROLLABILITY_MEAN', float, 0.5)
-        self.stress_predictability_mean = self._get_env_value('STRESS_PREDICTABILITY_MEAN', float, 0.5)
         self.stress_overload_mean = self._get_env_value('STRESS_OVERLOAD_MEAN', float, 0.5)
-        self.stress_magnitude_scale = self._get_env_value('STRESS_MAGNITUDE_SCALE', float, 0.4)
         self.stress_beta_alpha = self._get_env_value('STRESS_BETA_ALPHA', float, 2.0)
         self.stress_beta_beta = self._get_env_value('STRESS_BETA_BETA', float, 2.0)
 
@@ -202,7 +200,6 @@ class Config:
         # APPRAISAL AND THRESHOLD PARAMETERS
         # ==============================================
         self.appraisal_omega_c = self._get_env_value('APPRAISAL_OMEGA_C', float, 1.0)
-        self.appraisal_omega_p = self._get_env_value('APPRAISAL_OMEGA_P', float, 1.0)
         self.appraisal_omega_o = self._get_env_value('APPRAISAL_OMEGA_O', float, 1.0)
         self.appraisal_bias = self._get_env_value('APPRAISAL_BIAS', float, 0.0)
         self.appraisal_gamma = self._get_env_value('APPRAISAL_GAMMA', float, 6.0)
@@ -318,15 +315,12 @@ class Config:
             },
             'stress': {
                 'controllability_mean': self.stress_controllability_mean,
-                'predictability_mean': self.stress_predictability_mean,
                 'overload_mean': self.stress_overload_mean,
-                'magnitude_scale': self.stress_magnitude_scale,
                 'beta_alpha': self.stress_beta_alpha,
                 'beta_beta': self.stress_beta_beta,
             },
             'appraisal': {
                 'omega_c': self.appraisal_omega_c,
-                'omega_p': self.appraisal_omega_p,
                 'omega_o': self.appraisal_omega_o,
                 'bias': self.appraisal_bias,
                 'gamma': self.appraisal_gamma,
@@ -448,7 +442,7 @@ class Config:
             raise ConfigurationError("Agent stress probability must be in [0, 1]")
 
         # Stress validation
-        for param in [self.stress_controllability_mean, self.stress_predictability_mean, self.stress_overload_mean]:
+        for param in [self.stress_controllability_mean, self.stress_overload_mean]:
             if not (0 <= param <= 1):
                 raise ConfigurationError("Stress event means must be in [0, 1]")
 

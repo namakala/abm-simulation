@@ -32,18 +32,15 @@ config = get_config()
 
 @dataclass
 class StressEvent:
-    """Represents a stress event with controllability, predictability, and overload."""
+    """Represents a stress event with controllability and overload."""
     controllability: float # c ∈ [0,1]
-    predictability: float  # p ∈ [0,1]
     overload: float        # o ∈ [0,1]
-    magnitude: float       # s ∈ [0,1]
 
 
 @dataclass
 class AppraisalWeights:
     """Weights for the apply-weight function in stress appraisal."""
     omega_c: float = field(default_factory=lambda: get_config().get('appraisal', 'omega_c')) # Weight for controllability
-    omega_p: float = field(default_factory=lambda: get_config().get('appraisal', 'omega_p')) # Weight for predictability
     omega_o: float = field(default_factory=lambda: get_config().get('appraisal', 'omega_o')) # Weight for overload
     bias: float    = field(default_factory=lambda: get_config().get('appraisal', 'bias')) # Bias term
     gamma: float   = field(default_factory=lambda: get_config().get('appraisal', 'gamma')) # Sigmoid steepness
@@ -62,7 +59,7 @@ def generate_stress_event(
     config: Optional[Dict[str, Any]] = None
 ) -> StressEvent:
     """
-    Generate a random stress event with controllability, predictability, and overload.
+    Generate a random stress event with controllability and overload.
 
     Args:
         rng: Random number generator for reproducible testing
@@ -80,24 +77,18 @@ def generate_stress_event(
     if config is None:
         config = {
             'controllability_mean': cfg.get('stress', 'controllability_mean'),
-            'predictability_mean': cfg.get('stress', 'predictability_mean'),
-            'overload_mean': cfg.get('stress', 'overload_mean'),
-            'magnitude_scale': cfg.get('stress', 'magnitude_scale')
+            'overload_mean': cfg.get('stress', 'overload_mean')
         }
 
     # Generate event attributes using beta distribution for bounded [0,1] values
     alpha = cfg.get('stress', 'beta_alpha')
     beta  = cfg.get('stress', 'beta_beta')
     controllability = rng.beta(alpha, beta)
-    predictability = rng.beta(alpha, beta)
     overload = rng.beta(alpha, beta)
-    magnitude = min(rng.exponential(config['magnitude_scale']), 1.0)  # Cap at 1.0
 
     return StressEvent(
         controllability=controllability,
-        predictability=predictability,
-        overload=overload,
-        magnitude=magnitude
+        overload=overload
     )
 
 
@@ -123,7 +114,7 @@ def apply_weights(
     Apply weights to stress event attributes to compute challenge and hindrance.
 
     Args:
-        event: Stress event with c, p, o attributes
+        event: Stress event with c, o attributes
         weights: Weight parameters for the mapping function
 
     Returns:
@@ -132,9 +123,8 @@ def apply_weights(
     if weights is None:
         weights = AppraisalWeights()
 
-    # Compute weighted sum: z = ωc*c + ωp*p - ωo*o + b
-    z = (weights.omega_c * event.controllability +
-         weights.omega_p * event.predictability -
+    # Compute weighted sum: z = ωc*c - ωo*o + b (removed predictability term)
+    z = (weights.omega_c * event.controllability -
          weights.omega_o * event.overload +
          weights.bias)
 
@@ -154,7 +144,7 @@ def compute_appraised_stress(
     """
     Compute overall appraised stress load from event and challenge/hindrance.
 
-    Uses the theoretical specification: L = s * (1 + δ*(hindrance - challenge))
+    Uses the theoretical specification: L = (1 + δ*(hindrance - challenge))
 
     Args:
         event: Stress event
@@ -172,9 +162,9 @@ def compute_appraised_stress(
             'delta': cfg.get('stress_params', 'delta')
         }
 
-    # Theoretical specification: L = s * (1 + δ*(hindrance - challenge))
+    # Theoretical specification: L = 1 + δ*(hindrance - challenge) (removed magnitude)
     polarity_effect = config['delta'] * (hindrance - challenge)
-    stress_load = event.magnitude * (1.0 + polarity_effect)
+    stress_load = 1.0 + polarity_effect
 
     return min(stress_load, 1.0)  # Cap at 1.0
 
@@ -333,9 +323,7 @@ def create_pss10_mapping() -> Dict[int, PSS10Item]:
 
 def map_agent_stress_to_pss10(
     controllability: float,
-    predictability: float,
     overload: float,
-    distress: float,
     rng: Optional[np.random.Generator] = None
 ) -> Dict[int, int]:
     """
@@ -349,9 +337,7 @@ def map_agent_stress_to_pss10(
 
     Args:
         controllability: Agent's controllability level ∈ [0,1]
-        predictability: Agent's predictability level ∈ [0,1] (used for compatibility)
         overload: Agent's overload level ∈ [0,1]
-        distress: Agent's current distress level ∈ [0,1] (used for compatibility)
         rng: Random number generator for reproducible testing
 
     Returns:
