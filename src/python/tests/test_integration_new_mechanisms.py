@@ -206,9 +206,7 @@ class TestEndToEndWorkflows:
         # Verify event structure
         assert isinstance(event, StressEvent)
         assert 0.0 <= event.controllability <= 1.0
-        assert 0.0 <= event.predictability <= 1.0
         assert 0.0 <= event.overload <= 1.0
-        assert 0.0 <= event.magnitude <= 1.0
 
         # Process through new mechanism
         config = StressProcessingConfig()

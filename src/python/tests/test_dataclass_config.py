@@ -63,13 +63,11 @@ class TestDataclassConfigIntegration:
 
         appraisal_weights = AppraisalWeights()
         expected_omega_c = config.get('appraisal', 'omega_c')
-        expected_omega_p = config.get('appraisal', 'omega_p')
         expected_omega_o = config.get('appraisal', 'omega_o')
         expected_bias = config.get('appraisal', 'bias')
         expected_gamma = config.get('appraisal', 'gamma')
 
         assert appraisal_weights.omega_c == expected_omega_c
-        assert appraisal_weights.omega_p == expected_omega_p
         assert appraisal_weights.omega_o == expected_omega_o
         assert appraisal_weights.bias == expected_bias
         assert appraisal_weights.gamma == expected_gamma
@@ -141,7 +139,7 @@ class TestModuleImports:
         config = get_config()
         interaction = InteractionConfig()
         protective = ProtectiveFactors()
-        stress_event = StressEvent(0.5, 0.5, 0.5, 0.5)
+        stress_event = StressEvent(0.5, 0.5)
         weights = AppraisalWeights()
         rng_config = RNGConfig()
 

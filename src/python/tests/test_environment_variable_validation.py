@@ -35,6 +35,8 @@ class TestDataclassEnvironmentVariableUsage:
     @pytest.mark.config
     def test_environment_variable_override(self, clean_env, reload_config_fixture):
         """Test that environment variables properly override defaults."""
+        os.environ.clear()
+
         # Set new environment variables
         test_env_vars = {
             'INTERACTION_INFLUENCE_RATE': '0.123',

@@ -21,7 +21,6 @@
 1. **Life event is initialized** with three continuous attributes (normalized to $[0,1]$):
 
    * controllability $c\in[0,1]$ (how much the agent can influence the event)
-   * predictability $p\in[0,1]$ (how foreseeable the event is)
    * overload $o\in[0,1]$ (perceived burden / intensity relative to capacity)
 
 2. **Apply Weight function** $W(c,p,o)$: this maps the triple $(c,p,o)$ to a single scalar $z\in\mathbb{R}$ that then produces **challenge** and **hindrance** stress values on a shared scale. Challenge and hindrance are *opposite polar* of the same scale:
@@ -116,7 +115,6 @@ Use normalized variables in $[0,1]$.
 
 Create three composite scores per agent from the PSS-10-like item responses:
 * **Controllability $c$**: average of items/concepts about perceived control over events.
-* **Predictability $p$**: average of items/concepts about predictability/unexpectedness.
 * **Overload $o$**: average of items/concepts about feeling overwhelmed/overloaded.
 
 # Parameterization Plan

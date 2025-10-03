@@ -1,32 +1,48 @@
 #!/bin/sh
-# POSIX: extract KEY=DEFAULT from _get_env_value(...) calls
+# POSIX: extract KEY=DEFAULT from _get_env_value(...) or _get_env_array(...) calls
 # Usage: ./extract_env.sh [file]
 file=${1:-src/python/config.py}
 
 awk -f - "$file" <<'AWK'
-/\._get_env_value/ {
-    s = $0
-    p = index(s, "._get_env_value")
-    if (p == 0) next
-    rest = substr(s, p)
-    # match the first (...) pair that contains no other parentheses
-    if (match(rest, /\([^()]*\)/)) {
-        args = substr(rest, RSTART+1, RLENGTH-2)
-        n = split(args, a, ",")
+# helper functions
+function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+function strip_quotes(s) { gsub(/^["']+|["']+$/, "", s); return s }
 
-        # trim spaces and surrounding single/double quotes from each arg
-        for (i = 1; i <= n; i++) {
-            gsub(/^[ \t]+|[ \t]+$/, "", a[i])
-            gsub(/^["']+|["']+$/, "", a[i])
+# bracket-aware split
+function split_args(s, a,    i, c, level, n) {
+    n = 1
+    level = 0
+    a[1] = ""
+    for (i = 1; i <= length(s); i++) {
+        c = substr(s, i, 1)
+        if (c == "[" || c == "(") level++
+        if (c == "]" || c == ")") level--
+        if (c == "," && level == 0) {
+            n++
+            a[n] = ""
+        } else {
+            a[n] = a[n] c
         }
+    }
+    return n
+}
 
-        key = (n >= 1 ? a[1] : "")
-        val = (n >= 3 ? a[3] : "")
+# main processing
+/\._get_env_(value|array)/ {
+    s = $0
+    if (match(s, /\._get_env_(value|array)/)) {
+        p = RSTART
+        rest = substr(s, p)
 
-        # final trim (just in case) and print
-        gsub(/^[ \t]+|[ \t]+$/, "", key)
-        gsub(/^[ \t]+|[ \t]+$/, "", val)
-        if (key != "") print key "=" val
+        if (match(rest, /\((.*)\)/, m)) {
+            args = m[1]
+            n = split_args(args, a)
+
+            key = (n >= 1 ? trim(strip_quotes(a[1])) : "")
+            val = (n >= 3 ? trim(a[3]) : "")
+
+            if (key != "") print key "=" val
+        }
     }
 }
 AWK

@@ -91,6 +91,77 @@ class Config:
         except (ValueError, TypeError) as e:
             raise ConfigurationError(f"Invalid value for '{key}': '{value}'. Expected {expected_type.__name__}. {e}")
 
+    def _get_env_array(self, key: str, expected_type: type, default_array: list, required: bool = False, expected_length: int = None) -> list:
+        """
+        Get environment variable as array with type conversion and validation.
+
+        Supports both bracket notation: [2.1, 1.8, 2.3, ...]
+        and space-separated format: 2.1 1.8 2.3 ... (for backward compatibility)
+
+        Args:
+            key: Environment variable name
+            expected_type: Expected type for array elements (int, float)
+            default_array: Default array if not found
+            required: Whether this variable is required
+            expected_length: Expected length of array (optional validation)
+
+        Returns:
+            List of converted values in the expected type
+
+        Raises:
+            ConfigurationError: If required variable is missing, conversion fails, or length validation fails
+        """
+        value = os.getenv(key)
+
+        if value is None:
+            if required:
+                raise ConfigurationError(f"Required environment variable '{key}' is not set")
+            logger.debug(f"Using default array for '{key}': {default_array}")
+            return default_array
+
+        try:
+            # Determine format and parse accordingly
+            if value is None:
+                stripped_value = ""
+            else:
+                stripped_value = value.strip()
+
+            if stripped_value.startswith('[') and stripped_value.endswith(']'):
+                # Bracket notation: [2.1, 1.8, 2.3, ...]
+                # Remove brackets and split by comma
+                inner_value = stripped_value[1:-1].strip()
+                if inner_value:
+                    elements = [elem.strip() for elem in inner_value.split(',')]
+                else:
+                    elements = []
+            else:
+                # Space-separated format (backward compatibility): 2.1 1.8 2.3 ...
+                elements = stripped_value.split()
+
+            result = []
+
+            for element in elements:
+                # Skip empty elements (handles extra whitespace or commas)
+                element = element.strip()
+                if not element:
+                    continue
+
+                if expected_type == int:
+                    result.append(int(float(element)))  # Handle cases like "2.0"
+                elif expected_type == float:
+                    result.append(float(element))
+                else:
+                    raise ConfigurationError(f"Unsupported array type: {expected_type}")
+
+            # Validate length if specified
+            if expected_length is not None and len(result) != expected_length:
+                raise ConfigurationError(f"Array '{key}' must have exactly {expected_length} elements, got {len(result)}")
+
+            return result
+
+        except (ValueError, TypeError) as e:
+            raise ConfigurationError(f"Invalid array value for '{key}': '{value}'. Expected array of {expected_type.__name__}s. {e}")
+
     def _load_all_parameters(self) -> None:
         """Load all configuration parameters from environment variables."""
 
@@ -121,9 +192,7 @@ class Config:
         # STRESS EVENT PARAMETERS
         # ==============================================
         self.stress_controllability_mean = self._get_env_value('STRESS_CONTROLLABILITY_MEAN', float, 0.5)
-        self.stress_predictability_mean = self._get_env_value('STRESS_PREDICTABILITY_MEAN', float, 0.5)
         self.stress_overload_mean = self._get_env_value('STRESS_OVERLOAD_MEAN', float, 0.5)
-        self.stress_magnitude_scale = self._get_env_value('STRESS_MAGNITUDE_SCALE', float, 0.4)
         self.stress_beta_alpha = self._get_env_value('STRESS_BETA_ALPHA', float, 2.0)
         self.stress_beta_beta = self._get_env_value('STRESS_BETA_BETA', float, 2.0)
 
@@ -131,7 +200,6 @@ class Config:
         # APPRAISAL AND THRESHOLD PARAMETERS
         # ==============================================
         self.appraisal_omega_c = self._get_env_value('APPRAISAL_OMEGA_C', float, 1.0)
-        self.appraisal_omega_p = self._get_env_value('APPRAISAL_OMEGA_P', float, 1.0)
         self.appraisal_omega_o = self._get_env_value('APPRAISAL_OMEGA_O', float, 1.0)
         self.appraisal_bias = self._get_env_value('APPRAISAL_BIAS', float, 0.0)
         self.appraisal_gamma = self._get_env_value('APPRAISAL_GAMMA', float, 6.0)
@@ -145,6 +213,21 @@ class Config:
         self.stress_alpha_challenge = self._get_env_value('STRESS_ALPHA_CHALLENGE', float, 0.8)
         self.stress_alpha_hindrance = self._get_env_value('STRESS_ALPHA_HINDRANCE', float, 1.2)
         self.stress_delta = self._get_env_value('STRESS_DELTA', float, 0.2)
+
+        # ==============================================
+        # PSS-10 SCORE GENERATION PARAMETERS
+        # ==============================================
+        self.pss10_item_means = self._get_env_array('PSS10_ITEM_MEAN', float, [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5], expected_length=10)
+        self.pss10_item_sds = self._get_env_array('PSS10_ITEM_SD', float, [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8], expected_length=10)
+
+        # PSS-10 bifactor model parameters
+        self.pss10_load_controllability = self._get_env_array('PSS10_LOAD_CONTROLLABILITY', float, [0.2, 0.8, 0.1, 0.7, 0.6, 0.1, 0.8, 0.6, 0.7, 0.1], expected_length=10)
+        self.pss10_load_overload = self._get_env_array('PSS10_LOAD_OVERLOAD', float, [0.7, 0.3, 0.8, 0.2, 0.4, 0.9, 0.2, 0.3, 0.4, 0.9], expected_length=10)
+        self.pss10_bifactor_correlation = self._get_env_value('PSS10_BIFACTOR_COR', float, 0.3)
+
+        # PSS-10 standard deviations for controllability and overload factors
+        self.pss10_controllability_sd = self._get_env_value('PSS10_CONTROLLABILITY_SD', float, 1.0)
+        self.pss10_overload_sd = self._get_env_value('PSS10_OVERLOAD_SD', float, 1.0)
 
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value('COPING_BASE_PROBABILITY', float, 0.5)
@@ -198,7 +281,7 @@ class Config:
         # ==============================================
         # OUTPUT AND LOGGING CONFIGURATION
         # ==============================================
-        self.log_level = self._get_env_value('LOG_LEVEL', str, 'INFO').upper()
+        self.log_level = self._get_env_value('LOG_LEVEL', str, 'INFO')
 
         self.output_results_dir = self._get_env_value('OUTPUT_RESULTS_DIR', str, 'data/processed')
         self.output_raw_dir = self._get_env_value('OUTPUT_RAW_DIR', str, 'data/raw')
@@ -236,15 +319,12 @@ class Config:
             },
             'stress': {
                 'controllability_mean': self.stress_controllability_mean,
-                'predictability_mean': self.stress_predictability_mean,
                 'overload_mean': self.stress_overload_mean,
-                'magnitude_scale': self.stress_magnitude_scale,
                 'beta_alpha': self.stress_beta_alpha,
                 'beta_beta': self.stress_beta_beta,
             },
             'appraisal': {
                 'omega_c': self.appraisal_omega_c,
-                'omega_p': self.appraisal_omega_p,
                 'omega_o': self.appraisal_omega_o,
                 'bias': self.appraisal_bias,
                 'gamma': self.appraisal_gamma,
@@ -260,6 +340,15 @@ class Config:
                 'alpha_challenge': self.stress_alpha_challenge,
                 'alpha_hindrance': self.stress_alpha_hindrance,
                 'delta': self.stress_delta,
+            },
+            'pss10': {
+                'item_means': self.pss10_item_means,
+                'item_sds': self.pss10_item_sds,
+                'load_controllability': self.pss10_load_controllability,
+                'load_overload': self.pss10_load_overload,
+                'bifactor_correlation': self.pss10_bifactor_correlation,
+                'controllability_sd': self.pss10_controllability_sd,
+                'overload_sd': self.pss10_overload_sd,
             },
             'interaction': {
                 'influence_rate': self.interaction_influence_rate,
@@ -359,9 +448,65 @@ class Config:
             raise ConfigurationError("Agent stress probability must be in [0, 1]")
 
         # Stress validation
-        for param in [self.stress_controllability_mean, self.stress_predictability_mean, self.stress_overload_mean]:
+        for param in [self.stress_controllability_mean, self.stress_overload_mean]:
             if not (0 <= param <= 1):
                 raise ConfigurationError("Stress event means must be in [0, 1]")
+
+        # PSS-10 validation
+        if len(self.pss10_item_means) != 10:
+            raise ConfigurationError("PSS-10 item means must have exactly 10 values")
+
+        if len(self.pss10_item_sds) != 10:
+            raise ConfigurationError("PSS-10 item standard deviations must have exactly 10 values")
+
+        if len(self.pss10_load_controllability) != 10:
+            raise ConfigurationError("PSS-10 controllability loadings must have exactly 10 values")
+
+        if len(self.pss10_load_overload) != 10:
+            raise ConfigurationError("PSS-10 overload loadings must have exactly 10 values")
+
+        for i, mean_val in enumerate(self.pss10_item_means):
+            if not (0 <= mean_val <= 4):
+                raise ConfigurationError(f"PSS-10 item mean at index {i} must be in [0, 4], got {mean_val}")
+
+        for i, sd_val in enumerate(self.pss10_item_sds):
+            if sd_val <= 0:
+                raise ConfigurationError(f"PSS-10 item standard deviation at index {i} must be positive, got {sd_val}")
+
+        for i, loading_val in enumerate(self.pss10_load_controllability):
+            if not (0 <= loading_val <= 1):
+                raise ConfigurationError(f"PSS-10 controllability loading at index {i} must be in [0, 1], got {loading_val}")
+
+        for i, loading_val in enumerate(self.pss10_load_overload):
+            if not (0 <= loading_val <= 1):
+                raise ConfigurationError(f"PSS-10 overload loading at index {i} must be in [0, 1], got {loading_val}")
+
+        if not (-1 <= self.pss10_bifactor_correlation <= 1):
+            raise ConfigurationError(f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}")
+
+        # PSS-10 standard deviation validation
+        if self.pss10_controllability_sd <= 0:
+            raise ConfigurationError(f"PSS-10 controllability SD must be positive, got {self.pss10_controllability_sd}")
+        if self.pss10_overload_sd <= 0:
+            raise ConfigurationError(f"PSS-10 overload SD must be positive, got {self.pss10_overload_sd}")
+
+        # PSS-10 bifactor model validation
+        if len(self.pss10_load_controllability) != 10:
+            raise ConfigurationError("PSS-10 controllability loadings must have exactly 10 values")
+
+        if len(self.pss10_load_overload) != 10:
+            raise ConfigurationError("PSS-10 overload loadings must have exactly 10 values")
+
+        for i, load_val in enumerate(self.pss10_load_controllability):
+            if not (0 <= load_val <= 1):
+                raise ConfigurationError(f"PSS-10 controllability loading at index {i} must be in [0, 1], got {load_val}")
+
+        for i, load_val in enumerate(self.pss10_load_overload):
+            if not (0 <= load_val <= 1):
+                raise ConfigurationError(f"PSS-10 overload loading at index {i} must be in [0, 1], got {load_val}")
+
+        if not (-1 <= self.pss10_bifactor_correlation <= 1):
+            raise ConfigurationError(f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}")
 
         # Threshold validation
         if not (0 <= self.threshold_base_threshold <= 1):

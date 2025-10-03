@@ -6,7 +6,6 @@ Test script to verify the new stress processing mechanisms work correctly.
 import numpy as np
 import sys
 import os
-sys.path.append('.')
 
 from affect_utils import (
     compute_coping_probability,

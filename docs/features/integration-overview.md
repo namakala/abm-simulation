@@ -2,13 +2,14 @@
 
 ## System Architecture Overview
 
-The agent-based model integrates five core mechanism groups that work together to simulate realistic mental health dynamics:
+The agent-based model integrates six core mechanism groups that work together to simulate realistic mental health dynamics:
 
-1. **Stress Perception** - Event appraisal and challenge/hindrance determination
+1. **Stress Perception** - Event appraisal and challenge/hindrance determination with PSS-10 integration
 2. **Resilience Dynamics** - Coping responses and resilience changes
 3. **Affect Dynamics** - Emotional state changes and social influence
 4. **Agent Interactions** - Social network effects and support systems
 5. **Resource Management** - Protective factors and resource allocation
+6. **PSS-10 Assessment** - Empirical stress measurement, agent initialization, and feedback loops
 
 ## Core Integration Pathways
 
@@ -34,6 +35,10 @@ graph TD
 - **Stress → Resilience**: Coping outcomes determine resilience changes
 - **Stress → Resources**: Successful coping consumes resources
 - **Stress → Network**: High stress triggers network adaptation
+- **Stress ↔ PSS-10**: Bidirectional feedback between stress levels and PSS-10 scores
+- **PSS-10 → Agent Initialization**: PSS-10 scores influence initial agent stress thresholds
+- **PSS-10 → Behavioral Effects**: High PSS-10 scores may modify agent behavior patterns
+- **PSS-10 → Validation**: Empirical stress measurements enable pattern matching with literature
 
 ### Daily Step Integration
 
@@ -218,6 +223,24 @@ interaction_config = InteractionConfig()
 - **Resilience Parameters**: Coping rates, support effects, overload thresholds
 - **Network Parameters**: Grid size, neighbor limits, adaptation rates
 - **Resource Parameters**: Regeneration rates, allocation costs, protective efficacy
+- **PSS-10 Parameters**: Item means/SDs, factor loadings, bifactor correlations, dimension parameters
+
+**PSS-10 Configuration Integration**:
+```python
+# PSS-10 parameters integrated into unified configuration system
+pss10_config = {
+    'item_means': [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5],
+    'item_sds': [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8],
+    'factor_loadings': {
+        'controllability': [0.2, 0.8, 0.1, 0.7, 0.6, 0.1, 0.8, 0.6, 0.7, 0.1],
+        'overload': [0.7, 0.3, 0.8, 0.2, 0.4, 0.9, 0.2, 0.3, 0.4, 0.9]
+    },
+    'bifactor_correlation': 0.3,
+    'dimension_sds': {'controllability': 1.0, 'overload': 1.0},
+    'update_frequency': 'daily',  # How often to update PSS-10 scores
+    'initialization_method': 'stress_based'  # How to initialize PSS-10 for new agents
+}
+```
 
 ## Validation Integration
 
@@ -310,7 +333,7 @@ population_metrics = {
 
 **Complete Agent State**:
 ```
-S_t = [A_t, R_t, S_t, P_t, N_t, R_t]
+S_t = [A_t, R_t, S_t, P_t, N_t, R_t, PSS_t]
 ```
 
 Where:
@@ -320,6 +343,21 @@ Where:
 - `P_t`: Protective factors state at time t
 - `N_t`: Network state at time t
 - `R_t`: Resources state at time t
+- `PSS_t`: PSS-10 state at time t (controllability, overload, responses, total score, dimension scores)
+
+**PSS-10 State Integration**:
+```python
+# PSS-10 state is fully integrated into agent state management
+pss10_state = {
+    'total_score': self.pss10,                    # Overall PSS-10 score (0-40)
+    'responses': self.pss10_responses,            # Individual item responses (0-4)
+    'controllability': self.stress_controllability,  # Controllability dimension (0-1)
+    'overload': self.stress_overload,             # Overload dimension (0-1)
+    'dimension_scores': self.pss10_dimension_scores,  # Raw dimension scores
+    'history': self.pss10_history,                # Historical PSS-10 trajectory
+    'changes': self.pss10_changes                 # Step-by-step PSS-10 changes
+}
+```
 
 **State Transition Function**:
 ```

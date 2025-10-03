@@ -193,7 +193,7 @@ class TestAgentStressEvents:
     def test_agent_stressful_event_processing(self, mock_generate_stress, mock_process_stress):
         """Test that stressful events are processed correctly."""
         # Setup mocks
-        stress_event = StressEvent(0.5, 0.5, 0.5, 0.5)
+        stress_event = StressEvent(0.5, 0.5)
         mock_generate_stress.return_value = stress_event
         mock_process_stress.return_value = (True, 0.7, 0.3)  # is_stressed=True
 
@@ -255,13 +255,23 @@ class TestAgentResourceManagement:
         # Mock the random number generator to ensure coping success
         with patch.object(agent, '_rng') as mock_rng:
             mock_rng.random.return_value = 0.5  # Less than resilience (0.9), so coping succeeds
+            # Add missing mocks for PSS-10 computation
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
+            mock_rng.normal.side_effect = lambda *args, **kwargs: 2.0 if (args and args[0] != 0) else 0.0
+            
+            # Mock process_stress_event to ensure stress occurs and coping succeeds
+            with patch('src.python.agent.process_stress_event') as mock_process_stress:
+                mock_process_stress.return_value = (True, 0.7, 0.3)  # is_stressed=True, challenge=0.7, hindrance=0.3
+                
+                # Also need to mock the new mechanism function to use agent's RNG
+                with patch('src.python.affect_utils.process_stress_event_with_new_mechanism') as mock_new_mechanism:
+                    # Mock to return successful coping (coped_successfully=True)
+                    mock_new_mechanism.return_value = (0.0, 0.9, 0.2, True)  # affect, resilience, stress, coped_successfully
 
-            # Mock a high magnitude stress event that will trigger stress
-            with patch('src.python.agent.generate_stress_event') as mock_stress_event:
-                mock_stress_event.return_value = StressEvent(0.0, 0.0, 1.0, 0.8)  # High magnitude stress event
-
-                # Execute stressful event
-                agent.stressful_event()
+                    # Mock a high magnitude stress event that will trigger stress
+                    with patch('src.python.agent.generate_stress_event') as mock_stress_event:
+                        mock_stress_event.return_value = StressEvent(0.0, 0.8)  # High overload stress event
+                        agent.stressful_event()
 
         # Resources should have been consumed for coping
         assert agent.resources < 0.5  # Should be reduced
@@ -280,9 +290,13 @@ class TestAgentResourceManagement:
         })
 
         # Mock no stress scenario - create event that won't trigger stress
-        with patch('src.python.stress_utils.generate_stress_event') as mock_stress_event:
+        with patch('src.python.stress_utils.generate_stress_event') as mock_stress_event, \
+             patch('src.python.agent.process_stress_event') as mock_process_stress:
+            
             # Create event with low magnitude that won't exceed threshold
-            mock_stress_event.return_value = StressEvent(0.5, 0.5, 0.5, 0.1)
+            mock_stress_event.return_value = StressEvent(0.5, 0.1)
+            # Ensure the event doesn't trigger stress
+            mock_process_stress.return_value = (False, 0.0, 0.0)  # is_stressed=False
 
             # Execute stressful event
             agent.stressful_event()

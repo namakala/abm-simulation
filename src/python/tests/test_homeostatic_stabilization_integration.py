@@ -14,6 +14,14 @@ from src.python.model import StressModel
 from src.python.config import get_config
 
 
+def mock_normal(*args, **kwargs):
+    # Return 2.0 for raw_response (when args provided), 0.0 for measurement_error (when called with just 0, 0.1)
+    if len(args) >= 2 and args[0] != 0:
+        return 2.0  # raw_response call
+    else:
+        return 0.0  # measurement_error call
+
+
 class MockModel:
     """Mock Mesa model for testing."""
 
@@ -71,14 +79,13 @@ class TestHomeostaticStabilizationIntegration:
         # Mock a stress event that should cause disruption
         with patch('src.python.agent.generate_stress_event') as mock_stress_event, \
              patch('src.python.agent.process_stress_event') as mock_process_stress, \
-             patch('src.python.agent.sample_poisson') as mock_sample_poisson:
+             patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
+             patch.object(agent, '_rng') as mock_rng:
 
-            # Create a high-magnitude stress event that will trigger stress
+            # Create a high-overload stress event that will trigger stress
             mock_stress_event.return_value = Mock()
             mock_stress_event.return_value.controllability = 0.2
-            mock_stress_event.return_value.predictability = 0.2
             mock_stress_event.return_value.overload = 0.8
-            mock_stress_event.return_value.magnitude = 0.8
 
             # Mock stress processing to return stressed=True with high hindrance
             mock_process_stress.return_value = (True, 0.3, 0.7)  # challenge=0.3, hindrance=0.7
@@ -87,11 +94,15 @@ class TestHomeostaticStabilizationIntegration:
             mock_sample_poisson.return_value = 1
 
             # Mock random for coping decision (fail coping to see negative impact)
-            with patch.object(agent, '_rng') as mock_rng:
-                mock_rng.random.side_effect = [0.8, 0.8]  # High values for stress and coping failure
+            mock_rng.random.side_effect = [0.8, 0.8]  # High values for stress and coping failure
+            # Mock multivariate_normal call that happens in PSS-10 computation
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
+            # Mock normal calls that happen in PSS-10 item response generation
+            # Return 2.0 for raw_response calls, 0.0 for measurement_error calls
+            mock_rng.normal.side_effect = lambda *args, **kwargs: 2.0 if (args and args[0] != 0) else 0.0
 
-                # Execute one step
-                agent.step()
+            # Execute one step
+            agent.step()
 
         # Values should have changed from initial state despite homeostatic adjustment
         assert agent.affect != initial_affect or agent.resilience != initial_resilience
@@ -129,7 +140,12 @@ class TestHomeostaticStabilizationIntegration:
             # Mock no events for several days
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
+            # Mock the multivariate_normal call in affect_utils and PSS-10 computation
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
             mock_rng.random.return_value = 0.5  # Neutral random values
+            # Mock normal calls that happen in PSS-10 item response generation
+            # Return 2.0 for raw_response calls, 0.0 for measurement_error calls
+            mock_rng.normal.side_effect = mock_normal
 
             # Run multiple days
             for day in range(10):
@@ -195,8 +211,15 @@ class TestHomeostaticStabilizationIntegration:
             # Mock no events
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
+            # Mock the multivariate_normal call in affect_utils and PSS-10 computation
+            mock_rng_low.multivariate_normal.return_value = np.array([0.5, 0.5])
+            mock_rng_high.multivariate_normal.return_value = np.array([0.5, 0.5])
             mock_rng_low.random.return_value = 0.5
             mock_rng_high.random.return_value = 0.5
+            # Mock normal calls that happen in PSS-10 item response generation
+            # Return 2.0 for raw_response calls, 0.0 for measurement_error calls
+            mock_rng_low.normal.side_effect = lambda *args, **kwargs: 2.0 if (args and args[0] != 0) else 0.0
+            mock_rng_high.normal.side_effect = lambda *args, **kwargs: 2.0 if (args and args[0] != 0) else 0.0
 
             # Run multiple days
             for day in range(5):
@@ -242,9 +265,14 @@ class TestHomeostaticStabilizationIntegration:
             # Mock no events for clean testing
             mock_sample_poisson.return_value = 0  # No subevents
             mock_stress_event.return_value = None  # No stress events
+            # Mock the multivariate_normal call in affect_utils and PSS-10 computation
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
 
             # Provide enough random values for all calls
             mock_rng.random.return_value = 0.5  # Consistent random value
+            # Mock normal calls that happen in PSS-10 item response generation
+            # Return 2.0 for raw_response calls, 0.0 for measurement_error calls
+            mock_rng.normal.side_effect = lambda *args, **kwargs: 2.0 if (args and args[0] != 0) else 0.0
 
             # Execute one step
             agent.step()
@@ -281,13 +309,18 @@ class TestHomeostaticStabilizationIntegration:
         resilience_trajectory = [agent.resilience]
 
         with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch.object(agent, '_rng') as mock_rng:
+               patch('src.python.agent.generate_stress_event') as mock_stress_event, \
+               patch.object(agent, '_rng') as mock_rng:
 
             # Mock no events for multiple days
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
+            # Mock the multivariate_normal call in affect_utils and PSS-10 computation
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
             mock_rng.random.return_value = 0.5
+            # Mock normal calls that happen in PSS-10 item response generation
+            # Return 2.0 for raw_response calls, 0.0 for measurement_error calls
+            mock_rng.normal.side_effect = mock_normal
 
             # Run multiple days
             for day in range(10):
@@ -325,20 +358,22 @@ class TestHomeostaticStabilizationIntegration:
         agent.resilience = 0.1  # Very low resilience initially
 
         with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch('src.python.agent.process_stress_event') as mock_process_stress, \
-             patch.object(agent, '_rng') as mock_rng:
+               patch('src.python.agent.generate_stress_event') as mock_stress_event, \
+               patch('src.python.agent.process_stress_event') as mock_process_stress, \
+               patch.object(agent, '_rng') as mock_rng:
 
             # Create extreme stress event
             mock_sample_poisson.return_value = 1
+            # Mock the multivariate_normal call in affect_utils and PSS-10 computation
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
             mock_rng.random.return_value = 0.5  # Consistent random values
             mock_rng.choice.return_value = 'stress'
+            # Mock normal calls that happen in PSS-10 item response generation
+            mock_rng.normal.side_effect = mock_normal
 
             mock_stress_event.return_value = Mock()
             mock_stress_event.return_value.controllability = 0.0  # No control
-            mock_stress_event.return_value.predictability = 0.0  # Unpredictable
             mock_stress_event.return_value.overload = 1.0      # Maximum overload
-            mock_stress_event.return_value.magnitude = 1.0      # Maximum magnitude
 
             mock_process_stress.return_value = (True, 0.0, 1.0)  # Pure hindrance
 
@@ -355,12 +390,15 @@ class TestHomeostaticStabilizationIntegration:
 
         # Run recovery days with no events
         with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch.object(agent, '_rng') as mock_rng:
+               patch('src.python.agent.generate_stress_event') as mock_stress_event, \
+               patch.object(agent, '_rng') as mock_rng:
 
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
             mock_rng.random.return_value = 0.5
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
+            # Mock normal calls that happen in PSS-10 item response generation
+            mock_rng.normal.side_effect = mock_normal
 
             # Run 5 recovery days (fewer to avoid precision issues)
             for day in range(5):
@@ -454,12 +492,16 @@ class TestHomeostaticStabilizationEdgeCases:
         resilience_values = [agent.resilience]
 
         with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch.object(agent, '_rng') as mock_rng:
+                patch('src.python.agent.generate_stress_event') as mock_stress_event, \
+                patch.object(agent, '_rng') as mock_rng:
 
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
+            # Mock the multivariate_normal call in affect_utils and PSS-10 computation
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
             mock_rng.random.return_value = 0.5
+            # Add missing mock for normal calls in PSS-10 computation
+            mock_rng.normal.side_effect = mock_normal
 
             # Run multiple days
             for day in range(5):
@@ -491,12 +533,16 @@ class TestHomeostaticStabilizationEdgeCases:
         resilience_values = [agent.resilience]
 
         with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch.object(agent, '_rng') as mock_rng:
+            patch('src.python.agent.generate_stress_event') as mock_stress_event, \
+            patch.object(agent, '_rng') as mock_rng:
 
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
+            # Mock the multivariate_normal call in affect_utils and PSS-10 computation
+            mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
             mock_rng.random.return_value = 0.5
+            # Add missing mock for normal calls in PSS-10 computation
+            mock_rng.normal.side_effect = mock_normal
 
             # Run multiple days
             for day in range(5):
