@@ -8,6 +8,7 @@ from typing import Dict, List, Any
 from collections import defaultdict
 
 from mesa.space import NetworkGrid
+from mesa import DataCollector
 from src.python.agent import Person
 from src.python.config import get_config
 
@@ -44,8 +45,8 @@ class StressModel(mesa.Model):
         self.max_days = max_days
         self.num_agents = N
 
-        # Initialize data collection for population metrics
-        self._initialize_data_collection()
+        # Initialize DataCollector for population and agent metrics
+        self._initialize_datacollector()
 
         # Build social network
         G = nx.watts_strogatz_graph(
@@ -88,20 +89,53 @@ class StressModel(mesa.Model):
 
         self.running = True
 
-    def _initialize_data_collection(self):
-        """Initialize data collection structures for population metrics."""
-        # Track daily statistics
+    def _initialize_datacollector(self):
+        """Initialize Mesa DataCollector for population and agent metrics."""
+        # Define model reporters (population-level metrics)
+        model_reporters = {
+            'avg_pss10': lambda m: m.get_avg_pss10(),
+            'avg_resilience': lambda m: m.get_avg_resilience(),
+            'avg_affect': lambda m: m.get_avg_affect(),
+            'coping_success_rate': lambda m: m.get_success_rate(),
+            'avg_resources': lambda m: np.mean([agent.resources for agent in m.agents]) if m.agents else 0.0,
+            'avg_stress': lambda m: np.mean([getattr(agent, 'current_stress', 0.0) for agent in m.agents]) if m.agents else 0.0,
+            'social_support_rate': lambda m: m._calculate_social_support_rate(),
+            'stress_events': lambda m: sum(len(getattr(agent, 'daily_stress_events', [])) for agent in m.agents),
+            'network_density': lambda m: m._calculate_network_density(),
+            'stress_prevalence': lambda m: sum(1 for agent in m.agents if agent.affect < -0.3) / len(m.agents) if m.agents else 0.0,
+            'low_resilience': lambda m: sum(1 for agent in m.agents if agent.resilience < 0.3) if m.agents else 0,
+            'high_resilience': lambda m: sum(1 for agent in m.agents if agent.resilience > 0.7) if m.agents else 0,
+            'avg_challenge': lambda m: m._get_avg_challenge(),
+            'avg_hindrance': lambda m: m._get_avg_hindrance(),
+            'challenge_hindrance_ratio': lambda m: m._get_challenge_hindrance_ratio(),
+            'avg_consecutive_hindrances': lambda m: m._get_avg_consecutive_hindrances()
+        }
+
+        # Define agent reporters (agent-level metrics)
+        agent_reporters = {
+            'pss10': lambda a: a.pss10,
+            'resilience': lambda a: a.resilience,
+            'affect': lambda a: a.affect,
+            'resources': lambda a: a.resources,
+            'current_stress': lambda a: getattr(a, 'current_stress', 0.0),
+            'stress_controllability': lambda a: getattr(a, 'stress_controllability', 0.5),
+            'stress_overload': lambda a: getattr(a, 'stress_overload', 0.5),
+            'consecutive_hindrances': lambda a: getattr(a, 'consecutive_hindrances', 0)
+        }
+
+        # Initialize DataCollector
+        self.datacollector = DataCollector(
+            model_reporters=model_reporters,
+            agent_reporters=agent_reporters
+        )
+
+        # Keep daily stats for backward compatibility
         self.daily_stats = {
             'total_stress_events': 0,
             'successful_coping': 0,
             'social_interactions': 0,
             'support_exchanges': 0
         }
-
-        # Track agent-level time series if needed
-        self.agent_time_series = defaultdict(lambda: {
-            'affect': [], 'resilience': [], 'resources': []
-        })
 
     def step(self):
         """
@@ -120,8 +154,8 @@ class StressModel(mesa.Model):
         # Execute agent steps with enhanced social interactions
         self.agents.shuffle_do("step")
 
-        # Collect and record population metrics
-        self._collect_population_metrics()
+        # Collect data using DataCollector
+        self.datacollector.collect(self)
 
         # Apply network adaptation mechanisms
         self._apply_network_adaptation()
@@ -386,6 +420,79 @@ class StressModel(mesa.Model):
         if not self.agents:
             return {}
 
+        # Use DataCollector if available, otherwise calculate manually
+        if hasattr(self, 'datacollector') and self.datacollector is not None:
+            try:
+                # Get latest data from DataCollector
+                model_data = self.datacollector.get_model_vars_dataframe()
+                if not model_data.empty:
+                    latest_data = model_data.iloc[-1] if len(model_data) > 0 else {}
+
+                    # Get agent data for additional statistics
+                    agent_data = self.datacollector.get_agent_vars_dataframe()
+
+                    # Current averages from DataCollector
+                    current_affect = latest_data.get('avg_affect', np.mean([agent.affect for agent in self.agents]))
+                    current_resilience = latest_data.get('avg_resilience', np.mean([agent.resilience for agent in self.agents]))
+                    current_resources = latest_data.get('avg_resources', np.mean([agent.resources for agent in self.agents]))
+                    current_stress = latest_data.get('avg_stress', np.mean([getattr(agent, 'current_stress', 0.0) for agent in self.agents]))
+
+                    # Distribution statistics
+                    if not agent_data.empty:
+                        affect_std = agent_data['affect'].std() if 'affect' in agent_data.columns else np.std([agent.affect for agent in self.agents])
+                        resilience_std = agent_data['resilience'].std() if 'resilience' in agent_data.columns else np.std([agent.resilience for agent in self.agents])
+                        stress_std = agent_data['current_stress'].std() if 'current_stress' in agent_data.columns else np.std([getattr(agent, 'current_stress', 0.0) for agent in self.agents])
+                    else:
+                        affect_std = np.std([agent.affect for agent in self.agents])
+                        resilience_std = np.std([agent.resilience for agent in self.agents])
+                        stress_std = np.std([getattr(agent, 'current_stress', 0.0) for agent in self.agents])
+
+                    # Stress prevalence
+                    stressed_agents = latest_data.get('stress_prevalence', sum(1 for agent in self.agents if agent.affect < -0.3))
+                    stress_prevalence = stressed_agents * len(self.agents) if isinstance(stressed_agents, float) else stressed_agents / len(self.agents)
+
+                    # Resilience categories
+                    low_resilience = latest_data.get('low_resilience', sum(1 for agent in self.agents if agent.resilience < 0.3))
+                    high_resilience = latest_data.get('high_resilience', sum(1 for agent in self.agents if agent.resilience > 0.7))
+                    medium_resilience = len(self.agents) - low_resilience - high_resilience
+
+                    return {
+                        'day': self.day,
+                        'num_agents': len(self.agents),
+                        'avg_affect': current_affect,
+                        'affect_std': affect_std,
+                        'avg_resilience': current_resilience,
+                        'resilience_std': resilience_std,
+                        'avg_resources': current_resources,
+                        'avg_stress': current_stress,
+                        'stress_std': stress_std,
+                        'stress_prevalence': stress_prevalence,
+                        'resilience_distribution': {
+                            'low': low_resilience,
+                            'medium': medium_resilience,
+                            'high': high_resilience
+                        },
+                        'social_support_rate': latest_data.get('social_support_rate', self._calculate_social_support_rate()),
+                        'total_interactions': self.total_interactions,
+                        'network_density': latest_data.get('network_density', self._calculate_network_density()),
+                        # Enhanced integrated metrics
+                        'mental_health_index': (current_affect + current_resilience) / 2,  # Combined mental health score
+                        'recovery_potential': high_resilience / max(1, len(self.agents)),  # Proportion with high resilience
+                        'vulnerability_index': low_resilience / max(1, len(self.agents)),   # Proportion with low resilience
+                        # New stress processing metrics
+                        'avg_challenge': latest_data.get('avg_challenge', self._get_avg_challenge()),
+                        'avg_hindrance': latest_data.get('avg_hindrance', self._get_avg_hindrance()),
+                        'challenge_hindrance_ratio': latest_data.get('challenge_hindrance_ratio', self._get_challenge_hindrance_ratio()),
+                        'coping_success_rate': latest_data.get('success_rate', self.get_success_rate()),
+                        'avg_consecutive_hindrances': latest_data.get('avg_consecutive_hindrances', self._get_avg_consecutive_hindrances()),
+                        'max_consecutive_hindrances': 0,  # Would need additional calculation
+                        'agents_with_hindrances': 0      # Would need additional calculation
+                    }
+            except Exception:
+                # Fallback to manual calculation if DataCollector fails
+                pass
+
+        # Manual calculation (fallback)
         # Current averages
         current_affect = np.mean([agent.affect for agent in self.agents])
         current_resilience = np.mean([agent.resilience for agent in self.agents])
@@ -452,11 +559,19 @@ class StressModel(mesa.Model):
         Returns:
             DataFrame with daily population metrics
         """
-        if not self.population_metrics['day']:
+        # Use DataCollector to get model data
+        if not hasattr(self, 'datacollector') or self.datacollector is None:
+            # Fallback to old method if DataCollector not initialized
+            if not self.population_metrics['day']:
+                return pd.DataFrame()
+            return pd.DataFrame(self.population_metrics)
+
+        # Get data from DataCollector
+        model_data = self.datacollector.get_model_vars_dataframe()
+        if model_data.empty:
             return pd.DataFrame()
 
-        return pd.DataFrame(self.population_metrics)
-
+        return model_data
     def export_results(self, filename: str = None) -> str:
         """
         Export simulation results to CSV file.
@@ -470,10 +585,176 @@ class StressModel(mesa.Model):
         if filename is None:
             filename = f"simulation_results_day_{self.day}.csv"
 
+        # Get data from DataCollector
         df = self.get_time_series_data()
 
         if not df.empty:
             df.to_csv(filename, index=False)
 
         return filename
+
+    def export_agent_data(self, filename: str = None) -> str:
+        """
+        Export agent-level time series data to CSV file.
+
+        Args:
+            filename: Optional filename for export (default: auto-generated)
+
+        Returns:
+            Path to exported file
+        """
+        if filename is None:
+            filename = f"agent_data_day_{self.day}.csv"
+
+        # Get agent data from DataCollector
+        df = self.get_agent_time_series_data()
+
+        if not df.empty:
+            df.to_csv(filename, index=False)
+
+        return filename
+
+    def get_avg_pss10(self) -> float:
+        """Calculate population average PSS-10 score."""
+        if not self.agents:
+            return 0.0
+
+        try:
+            # Handle missing PSS-10 data gracefully
+            pss10_values = []
+            for agent in self.agents:
+                if hasattr(agent, 'pss10') and agent.pss10 is not None:
+                    pss10_values.append(float(agent.pss10))
+                else:
+                    # Use default PSS-10 score if missing
+                    pss10_values.append(10.0)
+
+            if not pss10_values:
+                return 0.0
+
+            return sum(pss10_values) / len(pss10_values)
+        except (AttributeError, TypeError, ValueError):
+            # Fallback to 0.0 if there are any errors
+            return 0.0
+
+    def get_avg_resilience(self) -> float:
+        """Calculate population average resilience."""
+        if not self.agents:
+            return 0.0
+
+        try:
+            resilience_values = [float(agent.resilience) for agent in self.agents if hasattr(agent, 'resilience')]
+            if not resilience_values:
+                return 0.0
+            return sum(resilience_values) / len(resilience_values)
+        except (AttributeError, TypeError, ValueError):
+            return 0.0
+
+    def get_avg_affect(self) -> float:
+        """Calculate population average affect."""
+        if not self.agents:
+            return 0.0
+
+        try:
+            affect_values = [float(agent.affect) for agent in self.agents if hasattr(agent, 'affect')]
+            if not affect_values:
+                return 0.0
+            return sum(affect_values) / len(affect_values)
+        except (AttributeError, TypeError, ValueError):
+            return 0.0
+
+    def get_success_rate(self) -> float:
+        """Calculate population coping success rate."""
+        if not self.agents:
+            return 0.0
+
+        total_attempts = 0
+        total_successes = 0
+
+        try:
+            for agent in self.agents:
+                if not hasattr(agent, 'daily_stress_events'):
+                    continue
+
+                daily_events = agent.daily_stress_events
+                if not isinstance(daily_events, list):
+                    continue
+
+                for event in daily_events:
+                    if not isinstance(event, dict):
+                        continue
+
+                    if 'coped_successfully' in event:
+                        total_attempts += 1
+                        if event['coped_successfully']:
+                            total_successes += 1
+
+            if total_attempts == 0:
+                return 0.0
+
+            return total_successes / total_attempts
+        except (AttributeError, TypeError, ValueError):
+            return 0.0
+
+    def _get_avg_challenge(self) -> float:
+        """Get average challenge from stress events."""
+        stress_events_data = self._collect_stress_events_data()
+        return stress_events_data.get('avg_challenge', 0.0)
+
+    def _get_avg_hindrance(self) -> float:
+        """Get average hindrance from stress events."""
+        stress_events_data = self._collect_stress_events_data()
+        return stress_events_data.get('avg_hindrance', 0.0)
+
+    def _get_challenge_hindrance_ratio(self) -> float:
+        """Get challenge-hindrance ratio."""
+        challenge_hindrance_data = self._collect_challenge_hindrance_data()
+        return challenge_hindrance_data.get('ratio', 0.0)
+
+    def _get_avg_consecutive_hindrances(self) -> float:
+        """Get average consecutive hindrances."""
+        consecutive_hindrances_data = self._collect_consecutive_hindrances_data()
+        return consecutive_hindrances_data.get('avg', 0.0)
+
+    def get_agent_time_series_data(self) -> pd.DataFrame:
+        """
+        Get time series data for agent-level metrics.
+
+        Returns:
+            DataFrame with agent-level time series data
+        """
+        if not hasattr(self, 'datacollector') or self.datacollector is None:
+            return pd.DataFrame()
+
+        # Get agent data from DataCollector
+        agent_data = self.datacollector.get_agent_vars_dataframe()
+        if agent_data.empty:
+            return pd.DataFrame()
+
+        return agent_data
+
+    def get_model_vars_dataframe(self) -> pd.DataFrame:
+        """
+        Get model variables dataframe from DataCollector.
+
+        Returns:
+            DataFrame with model variables
+        """
+        if not hasattr(self, 'datacollector') or self.datacollector is None:
+            return pd.DataFrame()
+
+        return self.datacollector.get_model_vars_dataframe()
+
+    def get_agent_vars_dataframe(self) -> pd.DataFrame:
+        """
+        Get agent variables dataframe from DataCollector.
+
+        Returns:
+            DataFrame with agent variables
+        """
+        if not hasattr(self, 'datacollector') or self.datacollector is None:
+            return pd.DataFrame()
+
+        return self.datacollector.get_agent_vars_dataframe()
+
 
