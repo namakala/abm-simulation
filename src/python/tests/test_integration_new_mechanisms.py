@@ -260,6 +260,7 @@ class TestEndToEndWorkflows:
 
             # Execute one step (one day)
             agent.step()
+            agent._daily_reset(model.current_day)
 
             # Verify that daily reset was called
             mock_affect_reset.assert_called()
