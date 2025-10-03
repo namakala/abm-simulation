@@ -225,6 +225,10 @@ class Config:
         self.pss10_load_overload = self._get_env_array('PSS10_LOAD_OVERLOAD', float, [0.7, 0.3, 0.8, 0.2, 0.4, 0.9, 0.2, 0.3, 0.4, 0.9], expected_length=10)
         self.pss10_bifactor_correlation = self._get_env_value('PSS10_BIFACTOR_COR', float, 0.3)
 
+        # PSS-10 standard deviations for controllability and overload factors
+        self.pss10_controllability_sd = self._get_env_value('PSS10_CONTROLLABILITY_SD', float, 1.0)
+        self.pss10_overload_sd = self._get_env_value('PSS10_OVERLOAD_SD', float, 1.0)
+
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value('COPING_BASE_PROBABILITY', float, 0.5)
         self.coping_social_influence = self._get_env_value('COPING_SOCIAL_INFLUENCE', float, 0.1)
@@ -277,7 +281,7 @@ class Config:
         # ==============================================
         # OUTPUT AND LOGGING CONFIGURATION
         # ==============================================
-        self.log_level = self._get_env_value('LOG_LEVEL', str, 'INFO').upper()
+        self.log_level = self._get_env_value('LOG_LEVEL', str, 'INFO')
 
         self.output_results_dir = self._get_env_value('OUTPUT_RESULTS_DIR', str, 'data/processed')
         self.output_raw_dir = self._get_env_value('OUTPUT_RAW_DIR', str, 'data/raw')
@@ -343,6 +347,8 @@ class Config:
                 'load_controllability': self.pss10_load_controllability,
                 'load_overload': self.pss10_load_overload,
                 'bifactor_correlation': self.pss10_bifactor_correlation,
+                'controllability_sd': self.pss10_controllability_sd,
+                'overload_sd': self.pss10_overload_sd,
             },
             'interaction': {
                 'influence_rate': self.interaction_influence_rate,
@@ -477,6 +483,12 @@ class Config:
 
         if not (-1 <= self.pss10_bifactor_correlation <= 1):
             raise ConfigurationError(f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}")
+
+        # PSS-10 standard deviation validation
+        if self.pss10_controllability_sd <= 0:
+            raise ConfigurationError(f"PSS-10 controllability SD must be positive, got {self.pss10_controllability_sd}")
+        if self.pss10_overload_sd <= 0:
+            raise ConfigurationError(f"PSS-10 overload SD must be positive, got {self.pss10_overload_sd}")
 
         # PSS-10 bifactor model validation
         if len(self.pss10_load_controllability) != 10:

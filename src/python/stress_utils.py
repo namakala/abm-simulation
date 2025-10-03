@@ -412,8 +412,9 @@ def interpret_pss10_score(score: int) -> str:
 def generate_pss10_dimension_scores(
     controllability: float,
     overload: float,
-    correlation: float,
-    rng: Optional[np.random.Generator] = None
+    correlation: Optional[float] = None,
+    rng: Optional[np.random.Generator] = None,
+    deterministic: bool = False
 ) -> Tuple[float, float]:
     """
     Generate correlated controllability and overload dimension scores using multivariate normal distribution.
@@ -421,19 +422,39 @@ def generate_pss10_dimension_scores(
     Args:
         controllability: Base controllability level ∈ [0,1]
         overload: Base overload level ∈ [0,1]
-        correlation: Correlation coefficient between dimensions ∈ [-1,1]
+        correlation: Correlation coefficient between dimensions ∈ [-1,1] (if None, uses config default)
         rng: Random number generator for reproducible testing
+        deterministic: If True, use deterministic seed generation for reproducible results
 
     Returns:
         Tuple of (correlated_controllability, correlated_overload) ∈ [0,1]²
     """
-    if rng is None:
-        rng = np.random.default_rng()
+    # Get fresh config instance to avoid global config issues
+    cfg = get_config()
+
+    # Use config correlation if not provided
+    if correlation is None:
+        correlation = cfg.get('pss10', 'bifactor_correlation')
+
+    # Get regularized standard deviations from config
+    controllability_sd = cfg.get('pss10', 'controllability_sd') / 4
+    overload_sd = cfg.get('pss10', 'overload_sd') / 4
+
+    if deterministic:
+        # Create a deterministic seed from input parameters
+        import hashlib
+        input_str = f"{controllability:.10f}_{overload:.10f}_{correlation:.10f}"
+        seed = int(hashlib.md5(input_str.encode()).hexdigest(), 16) % (2**32)
+        local_rng = np.random.default_rng(seed)
+    else:
+        if rng is None:
+            rng = np.random.default_rng()
+        local_rng = rng
 
     # Create covariance matrix for bivariate normal distribution
-    # Variances are set to preserve the general magnitude of input dimensions
-    var_c = 0.1  # Variance for controllability dimension
-    var_o = 0.1  # Variance for overload dimension
+    # Use regularized standard deviations from config
+    var_c = controllability_sd ** 2  # Variance for controllability dimension
+    var_o = overload_sd ** 2         # Variance for overload dimension
     cov = correlation * np.sqrt(var_c * var_o)  # Covariance term
 
     # Mean vector for the bivariate distribution
@@ -446,7 +467,7 @@ def generate_pss10_dimension_scores(
     ])
 
     # Sample from multivariate normal distribution
-    correlated_scores = rng.multivariate_normal(mean_vector, cov_matrix)
+    correlated_scores = local_rng.multivariate_normal(mean_vector, cov_matrix)
 
     # Clamp to [0,1] range to maintain valid dimension scores
     correlated_controllability = max(0.0, min(1.0, correlated_scores[0]))
@@ -463,7 +484,8 @@ def generate_pss10_item_response(
     controllability_score: float,
     overload_score: float,
     reverse_scored: bool,
-    rng: Optional[np.random.Generator] = None
+    rng: Optional[np.random.Generator] = None,
+    deterministic: bool = False
 ) -> int:
     """
     Generate a single PSS-10 item response using empirically grounded factor loadings.
@@ -481,8 +503,16 @@ def generate_pss10_item_response(
     Returns:
         PSS-10 item response ∈ [0,4]
     """
-    if rng is None:
-        rng = np.random.default_rng()
+    if deterministic:
+        # Create a deterministic seed from input parameters
+        import hashlib
+        input_str = f"{item_mean:.10f}_{item_sd:.10f}_{controllability_loading:.10f}_{overload_loading:.10f}_{controllability_score:.10f}_{overload_score:.10f}_{reverse_scored}"
+        seed = int(hashlib.md5(input_str.encode()).hexdigest(), 16) % (2**32)
+        local_rng = np.random.default_rng(seed)
+    else:
+        if rng is None:
+            rng = np.random.default_rng()
+        local_rng = rng
 
     # Linear combination of dimension scores weighted by factor loadings
     # Higher controllability → lower stress response (unless reverse scored)
@@ -501,11 +531,11 @@ def generate_pss10_item_response(
     adjusted_mean = item_mean + (normalized_stress - 0.5) * 0.5  # Scale stress effect
     adjusted_mean = max(0.0, min(4.0, adjusted_mean))  # Keep within valid range
 
-    # Sample from normal distribution
-    raw_response = rng.normal(adjusted_mean, item_sd)
+    # Sample from normal distribution using local RNG
+    raw_response = local_rng.normal(adjusted_mean, item_sd)
 
-    # Add small amount of measurement error
-    measurement_error = rng.normal(0, 0.1)
+    # Add small amount of measurement error using local RNG
+    measurement_error = local_rng.normal(0, 0.1)
     final_response = raw_response + measurement_error
 
     # Apply reverse scoring if needed
@@ -523,7 +553,8 @@ def generate_pss10_responses(
     controllability: float,
     overload: float,
     rng: Optional[np.random.Generator] = None,
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[Dict[str, Any]] = None,
+    deterministic: bool = False
 ) -> Dict[int, int]:
     """
     Generate complete PSS-10 responses for an agent using empirically grounded bifactor model.
@@ -533,6 +564,7 @@ def generate_pss10_responses(
         overload: Agent's overload level ∈ [0,1]
         rng: Random number generator for reproducible testing
         config: Configuration parameters (if None, uses global config)
+        deterministic: If True, use deterministic seed generation for reproducible results
 
     Returns:
         Dictionary mapping item numbers (1-10) to response values (0-4)
@@ -552,16 +584,16 @@ def generate_pss10_responses(
             'bifactor_correlation': cfg.get('pss10', 'bifactor_correlation')
         }
 
-    # Generate correlated dimension scores
+    # Generate correlated dimension scores using merged function with deterministic behavior
     correlated_controllability, correlated_overload = generate_pss10_dimension_scores(
-        controllability, overload, config['bifactor_correlation'], rng
+        controllability, overload, config['bifactor_correlation'], rng, deterministic
     )
 
     # Get PSS-10 item mapping
     pss10_items = create_pss10_mapping()
     responses = {}
 
-    # Generate response for each item
+    # Generate response for each item using deterministic version
     for item_num in range(1, 11):
         item = pss10_items[item_num]
 
@@ -573,7 +605,8 @@ def generate_pss10_responses(
             controllability_score=correlated_controllability,
             overload_score=correlated_overload,
             reverse_scored=item.reverse_scored,
-            rng=rng
+            rng=rng,
+            deterministic=deterministic
         )
 
         responses[item_num] = response
