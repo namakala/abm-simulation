@@ -13,7 +13,7 @@ import mesa
 from src.python.stress_utils import (
     generate_stress_event, process_stress_event,
     StressEvent, AppraisalWeights, ThresholdParams,
-    generate_pss10_responses, compute_pss10_score
+    generate_pss10_responses, compute_pss10_score, generate_pss10_item_response
 )
 
 from src.python.affect_utils import (
@@ -96,10 +96,10 @@ class Person(mesa.Agent):
         self.last_reset_day = 0  # Track when last daily reset occurred
 
         # Initialize PSS-10 state variables
+        self.pss10_responses = {}  # Individual PSS-10 item responses
         self.stress_controllability = 0.5  # Controllability stress level ∈ [0,1]
         self.stress_overload = 0.5  # Overload stress level ∈ [0,1]
         self.pss10 = 10  # Total PSS-10 score (0-40)
-        self.pss10_responses = {}  # Individual PSS-10 item responses
 
         # Configuration for utility functions
         self.stress_config = {
@@ -113,8 +113,80 @@ class Person(mesa.Agent):
         # Note: Mesa Agent base class has 'rng' property, so we use '_rng'
         self._rng = create_rng(getattr(model, 'seed', None))
 
-        # Initialize PSS-10 scores and map to stress levels
-        self._initialize_pss10_scores()
+        # Initialize PSS-10 scores using generate_pss10_item_response
+        self._initialize_pss10_from_items()
+
+    def _initialize_pss10_from_items(self):
+        """
+        Initialize PSS-10 responses using generate_pss10_item_response for each item.
+
+        Uses configuration parameters and generates individual item responses
+        with proper reverse scoring for items 4, 5, 7, 8.
+        """
+        # Get configuration values
+        cfg = get_config()
+
+        # Generate controllability and overload scores from normal distributions
+        controllability_score = self._rng.normal(
+            cfg.get('stress', 'controllability_mean'),
+            cfg.get('pss10', 'controllability_sd') / 4
+        )
+        overload_score = self._rng.normal(
+            cfg.get('stress', 'overload_mean'),
+            cfg.get('pss10', 'overload_sd') / 4
+        )
+
+        # Clamp to [0,1] range
+        controllability_score = max(0.0, min(1.0, controllability_score))
+        overload_score = max(0.0, min(1.0, overload_score))
+
+        # Generate each PSS-10 item response
+        for item_num in range(1, 11):
+            # Determine if item is reverse scored
+            reverse_scored = item_num in [4, 5, 7, 8]
+
+            # Get item parameters from configuration
+            item_mean = cfg.get('pss10', 'item_means')[item_num - 1]
+            item_sd = cfg.get('pss10', 'item_sds')[item_num - 1]
+            controllability_loading = cfg.get('pss10', 'load_controllability')[item_num - 1]
+            overload_loading = cfg.get('pss10', 'load_overload')[item_num - 1]
+
+            # Generate item response
+            response = generate_pss10_item_response(
+                item_mean=item_mean,
+                item_sd=item_sd,
+                controllability_loading=controllability_loading,
+                overload_loading=overload_loading,
+                controllability_score=controllability_score,
+                overload_score=overload_score,
+                reverse_scored=reverse_scored,
+                rng=self._rng
+            )
+
+            self.pss10_responses[item_num] = response
+
+        # Initialize stress_controllability by averaging items 4, 5, 7, 8, then dividing by 4
+        controllability_items = [4, 5, 7, 8]
+        controllability_scores = []
+        for item_num in controllability_items:
+            if item_num in self.pss10_responses:
+                # Without reversing the item score, higher PSS-10 response = higher controllability
+                response = self.pss10_responses[item_num]
+                controllability_scores.append(response / 4.0)  # Normalize to [0,1]
+        self.stress_controllability = np.mean(controllability_scores) if controllability_scores else 0.5
+
+        # Initialize stress_overload by averaging items 1, 2, 3, 6, 9, 10, then dividing by 6
+        overload_items = [1, 2, 3, 6, 9, 10]
+        overload_scores = []
+        for item_num in overload_items:
+            if item_num in self.pss10_responses:
+                # Higher PSS-10 response = higher overload
+                response = self.pss10_responses[item_num]
+                overload_scores.append(response / 4.0)  # Normalize to [0,1]
+        self.stress_overload = np.mean(overload_scores) if overload_scores else 0.5
+
+        # Initialize pss10_score by summing items 1-10
+        self.pss10 = compute_pss10_score(self.pss10_responses)
 
     def step(self):
         """
@@ -493,12 +565,31 @@ class Person(mesa.Agent):
             rng=self._rng
         )
 
-        # Store PSS-10 responses and total score
+        # Initialize pss10_responses by generating PSS10 item scores
         self.pss10_responses = initial_responses
-        self.pss10 = compute_pss10_score(initial_responses)
 
-        # Map PSS-10 responses to stress levels (controllability and overload)
-        self._update_stress_levels_from_pss10()
+        # Initialize stress_controllability by averaging items 4, 5, 7, 8, then dividing by 4
+        controllability_items = [4, 5, 7, 8]
+        controllability_scores = []
+        for item_num in controllability_items:
+            if item_num in self.pss10_responses:
+                # For reverse scored items, lower PSS-10 response = higher controllability
+                response = self.pss10_responses[item_num]
+                controllability_scores.append(1.0 - (response / 4.0))  # Normalize to [0,1]
+        self.stress_controllability = np.mean(controllability_scores) if controllability_scores else 0.5
+
+        # Initialize stress_overload by averaging items 1, 2, 3, 6, 9, 10, then dividing by 6
+        overload_items = [1, 2, 3, 6, 9, 10]
+        overload_scores = []
+        for item_num in overload_items:
+            if item_num in self.pss10_responses:
+                # Higher PSS-10 response = higher overload
+                response = self.pss10_responses[item_num]
+                overload_scores.append(response / 4.0)  # Normalize to [0,1]
+        self.stress_overload = np.mean(overload_scores) if overload_scores else 0.5
+
+        # Initialize pss10_score by summing items 1-10
+        self.pss10 = compute_pss10_score(initial_responses)
 
     def _update_stress_levels_from_pss10(self):
         """
@@ -545,7 +636,7 @@ class Person(mesa.Agent):
         2. Update pss10_responses and pss10 score
         3. Update stress levels based on new PSS-10 responses
         """
-        # Generate new PSS-10 responses from current stress levels
+        # Use generate_pss10_responses with controllability and overload from the end of the current iteration
         new_responses = generate_pss10_responses(
             controllability=self.stress_controllability,
             overload=self.stress_overload,
@@ -554,6 +645,8 @@ class Person(mesa.Agent):
 
         # Update PSS-10 state
         self.pss10_responses = new_responses
+
+        # Use generate_pss10_responses to obtain the pss10_score
         self.pss10 = compute_pss10_score(new_responses)
 
         # Update stress levels based on new PSS-10 responses

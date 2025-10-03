@@ -11,15 +11,19 @@
 
 ## Recent Changes
 
-- **Comprehensive Testing Suite** - 18 test files covering: integration testing, configuration validation, environment variable validation, dataclass validation, dependency testing, stress processing mechanisms, affect dynamics, resilience mechanisms, homeostatic adjustment, and new mechanism validation
-- **Advanced Configuration System** - Complete `.env`-based parameter system with 50+ configurable parameters, organized into logical categories (simulation, agent behavior, stress events, appraisal, social interactions, affect dynamics, resilience dynamics, resource dynamics, mathematical utilities, output/logging)
+- **PSS-10 Integration Framework** - Complete implementation of Perceived Stress Scale-10 functionality with bifactor model, dimension score generation, and comprehensive testing (4 specialized PSS-10 test files)
+- **Advanced Configuration System** - Complete `.env`-based parameter system with 50+ configurable parameters, including full PSS-10 parameter support with bracket notation parsing and backward compatibility
+- **Comprehensive Testing Suite** - 22 test files covering: integration testing, configuration validation, environment variable validation, dataclass validation, dependency testing, stress processing mechanisms, affect dynamics, resilience mechanisms, homeostatic adjustment, new mechanism validation, and comprehensive PSS-10 testing
 - **Configuration Documentation** - Comprehensive CONFIGURATION.md with detailed parameter descriptions, usage scenarios, best practices, troubleshooting guides, and integration examples
 - **Shell Utilities** - Configuration management scripts (`extract_env.sh`, `update_env_example.sh`) for automated parameter extraction and environment file synchronization
 - **CI/CD Infrastructure** - GitHub Actions workflow for automated testing, coverage reporting, and continuous integration with 80% minimum coverage threshold
-- **Coverage Reporting** - Codecov integration with HTML report generation for comprehensive test coverage analysis
+- **Coverage Reporting** - Codecov integration with HTML report generation and automated coverage tracking (`.coverage`, `coverage.xml` files)
+- **Test Results Integration** - Automated test result reporting with XML output (`test-results.xml`) for CI/CD pipeline integration
 - **Debug Tools** - Specialized debugging utilities for threshold evaluation (`debug_threshold.py`) and stress processing troubleshooting (`simple_threshold_test.py`)
 - **Enhanced Documentation** - Detailed configuration guide with 4 usage scenarios, programmatic examples, parameter sweep workflows, and research pipeline integration
-- **Environment Management** - Multiple configuration files for different deployment scenarios (development, production, research scenarios) with environment-specific optimization
+- **Environment Management** - Multiple configuration files (`.env`, `.env.example`) for different deployment scenarios with environment-specific optimization
+- **PSS-10 Test Coverage** - Comprehensive testing including `test_pss10_comprehensive.py`, `test_pss10_config.py`, `test_pss10_empirical.py`, and `test_generate_pss10_dimension_scores.py`
+- **Manuscript Infrastructure** - Quarto manuscript setup with `article.qmd`, LaTeX compilation (`article.tex`), and bibliography management (`ref.bib`)
 
 ## Immediate Next Steps
 
@@ -32,15 +36,17 @@
 ## Current State
 
 - **Core ABM:** Fully functional Python implementation using Mesa framework with all theoretical components (stress events, challenge/hindrance appraisal, resource dynamics, social interactions, affect dynamics, resilience mechanisms)
+- **PSS-10 Integration:** Complete Perceived Stress Scale-10 implementation with bifactor model, dimension score generation, and empirical validation testing
 - **Configuration System:** Production-ready `.env`-based parameter management with 50+ configurable parameters, type conversion, validation, and comprehensive documentation
 - **Agent Model:** Complete Person class with all specified state variables (resources, distress, stress threshold, network position, protective factors) and behaviors
 - **Network Structure:** Watts-Strogatz small-world network with configurable parameters via environment variables (mean degree, rewiring probability)
-- **Testing:** Comprehensive test suite with 18 specialized test files, 80%+ coverage requirement, CI/CD pipeline integration, and automated reporting
+- **Testing:** Comprehensive test suite with 22 specialized test files, 80%+ coverage requirement, CI/CD pipeline integration, and automated reporting
 - **Debug Tools:** Threshold evaluation and stress processing debugging utilities for development and troubleshooting
-- **Coverage Reporting:** Automated test coverage tracking with Codecov integration and HTML report generation
+- **Coverage Reporting:** Automated test coverage tracking with Codecov integration and HTML report generation (`.coverage`, `coverage.xml` files)
+- **Test Results:** Automated test result reporting with XML output (`test-results.xml`) for CI/CD pipeline integration
 - **Dependencies:** Mesa, NetworkX, NumPy, pandas, python-dotenv, pytest fully implemented; R environment (renv) configured and ready for integration
 - **Data Storage:** Directory structure established (data/raw, data/processed); SQL integration pending
-- **Documentation:** Complete configuration system documentation with usage scenarios and research workflow integration; protocol development preparation complete
+- **Documentation:** Complete configuration system documentation with usage scenarios and research workflow integration; Quarto manuscript setup with `article.qmd`, LaTeX compilation (`article.tex`), and bibliography management (`ref.bib`)
 - **Shell Utilities:** Configuration extraction and management scripts operational for research workflows
 - **CI/CD Pipeline:** GitHub Actions workflow operational with automated testing and coverage reporting
 

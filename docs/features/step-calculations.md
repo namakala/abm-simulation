@@ -386,6 +386,257 @@ def compute_stress_decay(current_stress, config):
 **Parameters**:
 - `stress_decay_rate`: 0.05 (daily stress decay rate)
 
+### Step 10: PSS-10 Score Computation and Agent State Integration
+
+**PSS-10 Integration Steps**:
+
+The PSS-10 integration occurs at the end of each simulation step and serves as both a measurement tool and a validation mechanism:
+
+```python
+def compute_pss10_score(self):
+    """
+    Recompute and update PSS-10 scores based on current stress levels.
+
+    This function should be called at the end of each iteration step to:
+    1. Generate new PSS-10 responses from current stress_controllability and stress_overload
+    2. Update pss10_responses and pss10 score
+    3. Update stress levels based on new PSS-10 responses
+    4. Enable empirical validation and pattern matching
+    """
+    # Generate new PSS-10 responses from current stress levels
+    new_responses = generate_pss10_responses(
+        controllability=self.stress_controllability,
+        overload=self.stress_overload,
+        rng=self._rng
+    )
+
+    # Update PSS-10 state
+    self.pss10_responses = new_responses
+    self.pss10 = compute_pss10_score(new_responses)
+
+    # Update stress levels based on new PSS-10 responses
+    self._update_stress_levels_from_pss10()
+
+    # Track PSS-10 history for analysis
+    self.pss10_history.append({
+        'step': self.model.schedule.steps,
+        'pss10_total': self.pss10,
+        'controllability': self.stress_controllability,
+        'overload': self.stress_overload
+    })
+```
+
+**Detailed PSS-10 Update Process**:
+
+1. **Stress Dimension Input**: Current `stress_controllability` and `stress_overload` values
+2. **Dimension Score Generation**: Create correlated dimension scores using bifactor model
+3. **Item Response Generation**: Generate individual PSS-10 item responses (0-4 scale)
+4. **Total Score Calculation**: Sum all 10 items to get total PSS-10 score (0-40)
+5. **Reverse Mapping**: Update stress dimensions based on PSS-10 responses
+6. **History Tracking**: Store PSS-10 trajectory for analysis and validation
+
+**PSS-10 Dimension Score Generation**:
+```python
+def generate_pss10_dimension_scores(controllability, overload, correlation, rng, deterministic=False):
+    """
+    Generate correlated controllability and overload dimension scores.
+
+    This implements the bifactor model where controllability and overload
+    are correlated dimensions underlying PSS-10 responses.
+    """
+    # Create covariance matrix for bivariate normal distribution
+    var_c = controllability_sd ** 2  # Variance of controllability dimension
+    var_o = overload_sd ** 2         # Variance of overload dimension
+    cov = correlation * np.sqrt(var_c * var_o)  # Covariance between dimensions
+
+    # Mean vector and covariance matrix for multivariate normal
+    mean_vector = np.array([controllability, overload])
+    cov_matrix = np.array([[var_c, cov], [cov, var_o]])
+
+    # Sample from multivariate normal distribution
+    correlated_scores = rng.multivariate_normal(mean_vector, cov_matrix)
+
+    # Clamp to [0,1] bounds
+    controllability_score = max(0.0, min(1.0, correlated_scores[0]))
+    overload_score = max(0.0, min(1.0, correlated_scores[1]))
+
+    return controllability_score, overload_score
+```
+
+**Example Dimension Score Generation**:
+```python
+# Agent with moderate stress levels
+controllability = 0.6  # Moderate perceived control
+overload = 0.4         # Low-moderate overload
+correlation = 0.3      # Moderate correlation between dimensions
+
+# Generate correlated dimension scores
+controllability_score, overload_score = generate_pss10_dimension_scores(
+    controllability, overload, correlation, rng
+)
+
+# Example output: (0.58, 0.42) - slightly correlated as expected
+```
+
+**PSS-10 Item Response Generation**:
+```python
+def generate_pss10_item_response(item_mean, item_sd, controllability_loading, overload_loading,
+                                controllability_score, overload_score, reverse_scored, rng, deterministic=False):
+    """
+    Generate a single PSS-10 item response based on dimension scores and factor loadings.
+
+    This implements the bifactor model where each item loads on both controllability
+    and overload dimensions with specified factor loadings.
+    """
+    # Linear combination of dimension scores weighted by factor loadings
+    # Note: controllability is reverse-coded in the stress component
+    stress_component = (controllability_loading * (1.0 - controllability_score) +
+                       overload_loading * overload_score)
+
+    # Normalize by total loading to get stress contribution
+    total_loading = max(controllability_loading + overload_loading, 1e-10)
+    normalized_stress = stress_component / total_loading
+
+    # Adjust empirical mean based on stress level
+    # Higher stress → Higher PSS-10 responses
+    adjusted_mean = item_mean + (normalized_stress - 0.5) * 0.5
+    raw_response = rng.normal(adjusted_mean, item_sd)
+
+    # Apply reverse scoring if needed (for controllability items)
+    if reverse_scored:
+        raw_response = 4.0 - raw_response
+
+    return int(round(clamp(raw_response, 0.0, 4.0)))
+
+def generate_pss10_responses(controllability, overload, rng, deterministic=False):
+    """
+    Generate complete set of PSS-10 responses for an agent.
+
+    Returns dictionary mapping item numbers (1-10) to response values (0-4).
+    """
+    responses = {}
+
+    # PSS-10 item parameters (empirically derived)
+    pss10_items = [
+        {'item_num': 1, 'mean': 2.1, 'sd': 1.1, 'controllability_loading': 0.2, 'overload_loading': 0.7, 'reverse_scored': False},
+        {'item_num': 2, 'mean': 1.8, 'sd': 0.9, 'controllability_loading': 0.8, 'overload_loading': 0.3, 'reverse_scored': False},
+        {'item_num': 3, 'mean': 2.3, 'sd': 1.2, 'controllability_loading': 0.1, 'overload_loading': 0.8, 'reverse_scored': False},
+        {'item_num': 4, 'mean': 1.9, 'sd': 1.0, 'controllability_loading': 0.7, 'overload_loading': 0.2, 'reverse_scored': True},
+        {'item_num': 5, 'mean': 2.2, 'sd': 1.1, 'controllability_loading': 0.6, 'overload_loading': 0.4, 'reverse_scored': True},
+        {'item_num': 6, 'mean': 1.7, 'sd': 0.8, 'controllability_loading': 0.1, 'overload_loading': 0.9, 'reverse_scored': False},
+        {'item_num': 7, 'mean': 2.0, 'sd': 1.0, 'controllability_loading': 0.8, 'overload_loading': 0.2, 'reverse_scored': True},
+        {'item_num': 8, 'mean': 1.6, 'sd': 0.9, 'controllability_loading': 0.6, 'overload_loading': 0.3, 'reverse_scored': True},
+        {'item_num': 9, 'mean': 2.4, 'sd': 1.3, 'controllability_loading': 0.7, 'overload_loading': 0.4, 'reverse_scored': False},
+        {'item_num': 10, 'mean': 1.5, 'sd': 0.8, 'controllability_loading': 0.1, 'overload_loading': 0.9, 'reverse_scored': False}
+    ]
+
+    # Generate response for each item
+    for item in pss10_items:
+        response = generate_pss10_item_response(
+            item_mean=item['mean'],
+            item_sd=item['sd'],
+            controllability_loading=item['controllability_loading'],
+            overload_loading=item['overload_loading'],
+            controllability_score=controllability,
+            overload_score=overload,
+            reverse_scored=item['reverse_scored'],
+            rng=rng,
+            deterministic=deterministic
+        )
+        responses[item['item_num']] = response
+
+    return responses
+```
+
+**Stress Level Update from PSS-10**:
+```python
+def _update_stress_levels_from_pss10(self):
+    """Update stress levels based on current PSS-10 responses.
+
+    This creates a feedback loop where PSS-10 measurements influence
+    the underlying stress dimensions, enabling empirical calibration.
+    """
+    if not self.pss10_responses:
+        return
+
+    # Calculate controllability stress from relevant PSS-10 items
+    # Items 4, 5, 7, 8 are reverse scored (higher response = lower controllability stress)
+    controllability_items = [4, 5, 7, 8]
+    controllability_scores = []
+    for item_num in controllability_items:
+        if item_num in self.pss10_responses:
+            response = self.pss10_responses[item_num]
+            # Reverse scoring: high PSS-10 response = low controllability stress
+            controllability_stress = 1.0 - (response / 4.0)  # Normalize to [0,1]
+            controllability_scores.append(controllability_stress)
+
+    self.stress_controllability = np.mean(controllability_scores) if controllability_scores else 0.5
+
+    # Calculate overload stress from relevant PSS-10 items
+    # Items 1, 2, 3, 6, 9, 10 are regularly scored (higher response = higher overload stress)
+    overload_items = [1, 2, 3, 6, 9, 10]
+    overload_scores = []
+    for item_num in overload_items:
+        if item_num in self.pss10_responses:
+            response = self.pss10_responses[item_num]
+            # Normal scoring: high PSS-10 response = high overload stress
+            overload_stress = response / 4.0  # Normalize to [0,1]
+            overload_scores.append(overload_stress)
+
+    self.stress_overload = np.mean(overload_scores) if overload_scores else 0.5
+
+    # Update dimension scores for tracking
+    self.pss10_dimension_scores = {
+        'controllability': self.stress_controllability,
+        'overload': self.stress_overload
+    }
+```
+
+**Example PSS-10 Integration in Agent Step**:
+```python
+def step(self):
+    """Complete agent step with integrated PSS-10 processing."""
+
+    # 1. Initialize daily tracking
+    initial_pss10 = self.pss10
+    initial_stress_controllability = self.stress_controllability
+    initial_stress_overload = self.stress_overload
+
+    # 2. Process daily events (stress events, social interactions)
+    for _ in range(self.daily_subevents):
+        if self._rng.random() < 0.5:
+            # Process stress event
+            challenge, hindrance = self.stressful_event()
+            # ... stress processing logic
+        else:
+            # Process social interaction
+            self.interact()
+            # ... interaction logic
+
+    # 3. Update PSS-10 based on new stress state
+    old_pss10 = self.pss10
+    self.update_pss10_integration()
+
+    # 4. Track PSS-10 changes for analysis
+    pss10_change = self.pss10 - old_pss10
+    if abs(pss10_change) > 0:
+        self.pss10_changes.append({
+            'step': self.model.schedule.steps,
+            'pss10_before': old_pss10,
+            'pss10_after': self.pss10,
+            'change': pss10_change,
+            'primary_stressor': self._identify_primary_stressor()
+        })
+
+    # 5. Apply PSS-10 influence on agent behavior
+    self._apply_pss10_behavioral_effects()
+```
+
+**Parameters**:
+- `bifactor_correlation`: 0.3 (correlation between controllability and overload dimensions)
+- `controllability_sd`: 1.0 (standard deviation for controllability dimension)
+- `overload_sd`: 1.0 (standard deviation for overload dimension)
+
 ## Complete Integration Example
 
 ### Example: High-Challenge Event Day
@@ -395,18 +646,17 @@ def compute_stress_decay(current_stress, config):
 **Step-by-Step Calculations**:
 
 1. **Event Generation**:
-   - Controllability: 0.8, Predictability: 0.7, Overload: 0.2
-   - Magnitude: 0.6
+   - Controllability: 0.8, Overload: 0.2
 
 2. **Appraisal**:
-   - z = 1.0×0.8 + 1.0×0.7 - 1.0×0.2 + 0.0 = 1.3
-   - challenge = σ(6.0×1.3) = σ(7.8) ≈ 0.9996
-   - hindrance = 1 - 0.9996 ≈ 0.0004
+   - z = 1.0×0.8 - 1.0×0.2 + 0.0 = 0.6
+   - challenge = σ(6.0×0.6) = σ(3.6) ≈ 0.973
+   - hindrance = 1 - 0.973 ≈ 0.027
 
 3. **Threshold Evaluation**:
-   - L = 0.6 × (1 + 0.3×(0.0004 - 0.9996)) ≈ 0.6 × (1 - 0.3) ≈ 0.42
-   - T_eff = 0.5 + 0.15×0.9996 - 0.25×0.0004 ≈ 0.5 + 0.15 ≈ 0.65
-   - Stressed? 0.42 > 0.65? No
+   - L = 1 + 0.3×(0.027 - 0.973) ≈ 1 - 0.283 ≈ 0.717
+   - T_eff = 0.5 + 0.15×0.973 - 0.25×0.027 ≈ 0.5 + 0.146 - 0.007 ≈ 0.639
+   - Stressed? 0.717 > 0.639? Yes
 
 4. **Social Interaction**:
    - Neighbor affects: [0.2, 0.1, 0.3] (avg: 0.2)
@@ -438,18 +688,17 @@ def compute_stress_decay(current_stress, config):
 **Step-by-Step Calculations**:
 
 1. **Event Generation**:
-   - Controllability: 0.1, Predictability: 0.2, Overload: 0.9
-   - Magnitude: 0.8
+   - Controllability: 0.1, Overload: 0.9
 
 2. **Appraisal**:
-   - z = 1.0×0.1 + 1.0×0.2 - 1.0×0.9 + 0.0 = -0.6
-   - challenge = σ(6.0×-0.6) = σ(-3.6) ≈ 0.0266
-   - hindrance = 1 - 0.0266 ≈ 0.9734
+   - z = 1.0×0.1 - 1.0×0.9 + 0.0 = -0.8
+   - challenge = σ(6.0×-0.8) = σ(-4.8) ≈ 0.008
+   - hindrance = 1 - 0.008 ≈ 0.992
 
 3. **Threshold Evaluation**:
-   - L = 0.8 × (1 + 0.3×(0.9734 - 0.0266)) ≈ 0.8 × (1 + 0.283) ≈ 1.026 (capped at 1.0)
-   - T_eff = 0.5 + 0.15×0.0266 - 0.25×0.9734 ≈ 0.5 + 0.004 - 0.243 ≈ 0.261
-   - Stressed? 1.0 > 0.261? Yes
+   - L = 1 + 0.3×(0.992 - 0.008) ≈ 1 + 0.296 ≈ 1.296 (capped at 1.0)
+   - T_eff = 0.5 + 0.15×0.008 - 0.25×0.992 ≈ 0.5 + 0.001 - 0.248 ≈ 0.253
+   - Stressed? 1.0 > 0.253? Yes
 
 4. **Coping Determination**:
    - Base probability: 0.6

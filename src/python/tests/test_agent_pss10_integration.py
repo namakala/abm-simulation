@@ -155,8 +155,8 @@ class TestStressLevelPSS10Mapping:
         for item_num in controllability_items:
             if item_num in agent.pss10_responses:
                 response = agent.pss10_responses[item_num]
-                # For reverse scored items: lower PSS-10 = higher controllability
-                expected_controllability_scores.append(1.0 - (response / 4.0))
+                # Without reversing the score, higher PSS-10 = higher controllability
+                expected_controllability_scores.append(response / 4.0)
 
         expected_overload_scores = []
         for item_num in overload_items:

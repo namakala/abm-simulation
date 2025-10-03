@@ -26,6 +26,11 @@
   - Testing: pytest (implemented)
   - Coverage reporting: coverage.py (implemented)
   - Debug utilities: Custom debugging tools for threshold evaluation and stress processing
+  - PSS-10 integration: Complete Perceived Stress Scale-10 implementation with bifactor model
+- **Generated Files:**
+  - `.coverage` - Coverage data file
+  - `coverage.xml` - Coverage XML report
+  - `test-results.xml` - Test results XML
 
 ### Shell Environment (Configuration Management)
 - **Shell Scripts:** POSIX-compliant shell utilities for configuration management
@@ -57,6 +62,12 @@
 
 /docs/
 ├── _source/      # Source documentation (protocols, manuscripts)
+├── _author.yml   # Author metadata for documentation
+├── _header.tex   # LaTeX header configuration
+├── _knitr-bib.yml # Knitr bibliography configuration
+├── article.qmd   # Quarto manuscript source
+├── article.tex   # Compiled LaTeX manuscript
+├── features/     # Feature documentation
 ├── results/      # Generated outputs, figures, tables
 └── ref.bib       # Bibliography (empty, ready for references)
 
@@ -123,9 +134,10 @@
 - **Configuration validation** with type checking and range validation
 - **Parameter validation routines** with comprehensive error handling
 - **CI/CD Pipeline** - GitHub Actions workflow for automated testing and coverage reporting
-- **Coverage Reporting** - Automated test coverage tracking with 80% minimum threshold and HTML report generation
+- **Coverage Reporting** - Automated test coverage tracking with 80% minimum threshold and HTML report generation (`.coverage`, `coverage.xml` files)
 - **Codecov Integration** - External coverage analysis and reporting service
+- **Test Results Integration** - Automated test result reporting with XML output (`test-results.xml`) for CI/CD pipeline integration
 - **Debug Tools** - Threshold evaluation and stress processing debugging utilities for troubleshooting
-- **Comprehensive Testing Suite** - 18 specialized test files covering unit tests, integration tests, configuration validation, environment variable validation, dataclass validation, dependency testing, stress processing mechanisms, affect dynamics, resilience mechanisms, homeostatic adjustment, and new mechanism validation
+- **Comprehensive Testing Suite** - 22 specialized test files covering unit tests, integration tests, configuration validation, environment variable validation, dataclass validation, dependency testing, stress processing mechanisms, affect dynamics, resilience mechanisms, homeostatic adjustment, new mechanism validation, and comprehensive PSS-10 testing
 - **Sensitivity analysis** for robustness checks (planned)
 - **Pattern matching** for model validation (planned)
