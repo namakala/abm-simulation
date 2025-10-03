@@ -378,9 +378,7 @@ def demonstrate_daily_reset_mechanisms():
     event = generate_stress_event(rng=np.random.default_rng(42))
     print(f"Generated stress event:")
     print(f"  Controllability: {event.controllability:.3f}")
-    print(f"  Predictability: {event.predictability:.3f}")
     print(f"  Overload: {event.overload:.3f}")
-    print(f"  Magnitude: {event.magnitude:.3f}")
 
     # Apply appraisal weights
     challenge, hindrance = apply_weights(event)

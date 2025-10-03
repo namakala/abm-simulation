@@ -29,9 +29,7 @@ class TestStressEventGeneration:
 
         # Should be identical with same seed
         assert event1.controllability == event2.controllability
-        assert event1.predictability == event2.predictability
         assert event1.overload == event2.overload
-        assert event1.magnitude == event2.magnitude
 
     def test_generate_stress_event_bounds(self):
         """Test that generated events have values in valid [0,1] range."""
@@ -41,33 +39,25 @@ class TestStressEventGeneration:
             event = generate_stress_event(rng=rng)
 
             assert 0.0 <= event.controllability <= 1.0
-            assert 0.0 <= event.predictability <= 1.0
             assert 0.0 <= event.overload <= 1.0
-            assert 0.0 <= event.magnitude <= 1.0
 
     def test_generate_stress_event_with_config(self):
         """Test stress event generation with custom configuration."""
         rng = np.random.default_rng(456)
         config = {
             'controllability_mean': 0.8,
-            'predictability_mean': 0.2,
-            'overload_mean': 0.6,
-            'magnitude_scale': 0.1
+            'overload_mean': 0.6
         }
 
         # Generate multiple events and check statistical properties
         events = [generate_stress_event(rng=rng, config=config) for _ in range(1000)]
 
         controllability_values = [e.controllability for e in events]
-        predictability_values = [e.predictability for e in events]
         overload_values = [e.overload for e in events]
-        magnitude_values = [e.magnitude for e in events]
 
         # Check that means are roughly in expected ranges (allowing for variance)
         assert 0.3 < np.mean(controllability_values) < 0.9  # Beta(2,2) ≈ 0.5
-        assert 0.3 < np.mean(predictability_values) < 0.9
         assert 0.3 < np.mean(overload_values) < 0.9
-        assert np.mean(magnitude_values) < 0.5  # Exponential with scale 0.1
 
 
 class TestStressAppraisal:
@@ -77,16 +67,14 @@ class TestStressAppraisal:
         """Test basic weight application for challenge/hindrance mapping."""
         event = StressEvent(
             controllability=1.0,  # High controllability
-            predictability=1.0,   # High predictability
-            overload=0.0,         # Low overload
-            magnitude=0.5
+            overload=0.0         # Low overload
         )
 
-        weights = AppraisalWeights(omega_c=1.0, omega_p=1.0, omega_o=1.0, bias=0.0, gamma=6.0)
+        weights = AppraisalWeights(omega_c=1.0, omega_o=1.0, bias=0.0, gamma=6.0)
 
         challenge, hindrance = apply_weights(event, weights)
 
-        # High controllability + predictability - low overload should give high challenge
+        # High controllability - low overload should give high challenge
         assert challenge > 0.8  # Should be close to 1.0
         assert hindrance < 0.2  # Should be close to 0.0
         assert abs(challenge + hindrance - 1.0) < 1e-10  # Should sum to 1.0
@@ -94,14 +82,14 @@ class TestStressAppraisal:
     def test_apply_weights_extreme_cases(self):
         """Test weight application at extreme values."""
         # Case 1: Maximum challenge scenario
-        event_max_challenge = StressEvent(1.0, 1.0, 0.0, 1.0)
+        event_max_challenge = StressEvent(1.0, 0.0)
         challenge, hindrance = apply_weights(event_max_challenge)
 
         assert challenge > 0.99  # Should be very close to 1.0
         assert hindrance < 0.01  # Should be very close to 0.0
 
         # Case 2: Maximum hindrance scenario
-        event_max_hindrance = StressEvent(0.0, 0.0, 1.0, 1.0)
+        event_max_hindrance = StressEvent(0.0, 1.0)
         challenge, hindrance = apply_weights(event_max_hindrance)
 
         assert challenge < 0.01  # Should be very close to 0.0
@@ -202,9 +190,7 @@ class TestCompleteStressProcessing:
         # Create a specific stress event
         event = StressEvent(
             controllability=0.8,
-            predictability=0.7,
-            overload=0.2,
-            magnitude=0.6
+            overload=0.2
         )
 
         threshold_params = ThresholdParams(
@@ -214,7 +200,7 @@ class TestCompleteStressProcessing:
         )
 
         weights = AppraisalWeights(
-            omega_c=1.0, omega_p=1.0, omega_o=1.0,
+            omega_c=1.0, omega_o=1.0,
             bias=0.0, gamma=6.0
         )
 
@@ -236,9 +222,9 @@ class TestCompleteStressProcessing:
 
     def test_process_stress_event_deterministic(self):
         """Test that stress processing is deterministic with fixed parameters."""
-        event = StressEvent(0.5, 0.5, 0.5, 0.5)
+        event = StressEvent(0.5, 0.5)
         threshold_params = ThresholdParams(0.5, 0.1, 0.2)
-        weights = AppraisalWeights(1.0, 1.0, 1.0, 0.0, 6.0)
+        weights = AppraisalWeights(1.0, 1.0, 0.0, 6.0)
 
         # Process twice with same parameters
         result1 = process_stress_event(event, threshold_params, weights)
@@ -293,10 +279,10 @@ class TestPSS10Mapping:
     def test_map_agent_stress_to_pss10_deterministic(self):
         """Test that PSS-10 mapping is deterministic with fixed seed."""
         rng = np.random.default_rng(42)
+        responses1 = map_agent_stress_to_pss10(0.5, 0.5, rng)
 
-        responses1 = map_agent_stress_to_pss10(0.5, 0.5, 0.5, 0.5, rng)
         rng = np.random.default_rng(42)  # Reset seed
-        responses2 = map_agent_stress_to_pss10(0.5, 0.5, 0.5, 0.5, rng)
+        responses2 = map_agent_stress_to_pss10(0.5, 0.5, rng)
 
         assert responses1 == responses2
 
@@ -306,14 +292,14 @@ class TestPSS10Mapping:
 
         # Test with various stress levels
         test_cases = [
-            (0.0, 0.0, 0.0, 0.0),  # No stress
-            (1.0, 1.0, 1.0, 1.0),  # Maximum stress
-            (0.5, 0.5, 0.5, 0.5),  # Moderate stress
-            (0.2, 0.8, 0.3, 0.6),  # Mixed stress
+            (0.0, 0.0),  # No stress
+            (1.0, 1.0),  # Maximum stress
+            (0.5, 0.5),  # Moderate stress
+            (0.2, 0.3),  # Mixed stress
         ]
 
-        for c, p, o, d in test_cases:
-            responses = map_agent_stress_to_pss10(c, p, o, d, rng)
+        for c, o in test_cases:
+            responses = map_agent_stress_to_pss10(c, o, rng)
 
             for item_num, response in responses.items():
                 assert 0 <= response <= 4, f"Item {item_num} response {response} out of range [0,4]"
@@ -322,11 +308,11 @@ class TestPSS10Mapping:
         """Test PSS-10 mapping with extreme stress conditions."""
         rng = np.random.default_rng(456)
 
-        # High controllability, predictability; low overload, distress
-        responses_low_stress = map_agent_stress_to_pss10(0.9, 0.9, 0.1, 0.1, rng)
+        # High controllability, low overload
+        responses_low_stress = map_agent_stress_to_pss10(0.9, 0.1, rng)
 
-        # Low controllability, predictability; high overload, distress
-        responses_high_stress = map_agent_stress_to_pss10(0.1, 0.1, 0.9, 0.9, rng)
+        # Low controllability, high overload
+        responses_high_stress = map_agent_stress_to_pss10(0.1, 0.9, rng)
 
         # High stress should generally have higher scores than low stress
         # (though not guaranteed for every item due to variability)
@@ -404,10 +390,10 @@ class TestPSS10Mapping:
         rng = np.random.default_rng(789)
 
         # Test with moderate stress agent
-        c, p, o, d = 0.3, 0.4, 0.6, 0.5
+        c, o = 0.3, 0.6
 
         # Map to PSS-10 responses
-        responses = map_agent_stress_to_pss10(c, p, o, d, rng)
+        responses = map_agent_stress_to_pss10(c, o, rng)
 
         # Compute total score
         total_score = compute_pss10_score(responses)

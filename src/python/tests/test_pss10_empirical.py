@@ -12,6 +12,7 @@ Tests the new bifactor model implementation including:
 
 import numpy as np
 import pytest
+import os
 from unittest.mock import patch
 
 from src.python.stress_utils import (
@@ -23,7 +24,8 @@ from src.python.stress_utils import (
     map_agent_stress_to_pss10,
     compute_pss10_score
 )
-from config import Config, ConfigurationError
+
+from src.python.config import Config, ConfigurationError
 
 
 class TestPSS10Item:
@@ -318,7 +320,7 @@ class TestPSS10Integration:
         """Test that map_agent_stress_to_pss10 uses new implementation."""
         rng = np.random.default_rng(42)
 
-        responses = map_agent_stress_to_pss10(0.5, 0.5, 0.5, 0.5, rng)
+        responses = map_agent_stress_to_pss10(0.5, 0.5, rng)
 
         # Should return properly formatted responses
         assert len(responses) == 10
@@ -360,11 +362,13 @@ class TestPSS10Integration:
             compute_pss10_score(invalid_responses)
 
 
+@pytest.mark.config
 class TestPSS10Configuration:
     """Test PSS-10 configuration parameters."""
 
     def test_pss10_config_loading(self):
         """Test that new PSS-10 configuration parameters load correctly."""
+        os.environ.clear()
         config = Config()
 
         # Test new bifactor model parameters
@@ -384,6 +388,7 @@ class TestPSS10Configuration:
 
     def test_pss10_config_validation(self):
         """Test PSS-10 configuration validation."""
+        os.environ.clear()
         config = Config()
 
         # Should validate without errors
@@ -396,6 +401,7 @@ class TestPSS10Configuration:
 
     def test_pss10_config_defaults(self):
         """Test PSS-10 configuration default values."""
+        os.environ.clear()
         config = Config()
 
         # Check that defaults match expected empirical values

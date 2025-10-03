@@ -101,7 +101,7 @@ class TestFunctionalityAfterImports:
         config = get_config()
         interaction_config = InteractionConfig()
         protective_factors = ProtectiveFactors()
-        stress_event = StressEvent(0.5, 0.5, 0.5, 0.5)
+        stress_event = StressEvent(0.5, 0.5)
         appraisal_weights = AppraisalWeights()
         rng = create_rng(42)
 

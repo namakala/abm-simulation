@@ -37,6 +37,13 @@ from src.python.stress_utils import StressEvent, generate_stress_event
 from src.python.config import get_config
 
 
+def mock_pss10_responses_func(*args, **kwargs):
+    return {
+        1: 2, 2: 2, 3: 2, 4: 2, 5: 2,
+        6: 2, 7: 2, 8: 2, 9: 2, 10: 2
+    }  # Return valid PSS-10 responses (0-4)
+
+
 class MockModel:
     """Mock Mesa model for testing."""
 
@@ -256,30 +263,36 @@ class TestStressEventScenario:
         initial_affect = agent.affect
         initial_resilience = agent.resilience
 
-        # Create challenge event (high controllability, predictability; low overload)
-        challenge_event = StressEvent(
-            controllability=0.9,  # High controllability
-            predictability=0.8,   # High predictability
-            overload=0.1,         # Low overload
-            magnitude=0.6         # Moderate magnitude
-        )
-
         # Process challenge event
         with patch('src.python.agent.generate_stress_event') as mock_generate:
+            challenge_event = StressEvent(controllability=0.9, overload=0.1)
             mock_generate.return_value = challenge_event
 
-            # Mock successful coping
             with patch.object(agent, '_rng') as mock_rng:
-                mock_rng.random.return_value = 0.3  # Less than resilience, so coping succeeds
+                mock_rng.random.return_value = 0.3  # Coping succeeds
 
-                agent.stressful_event()
+                # Mock all the nested function calls comprehensively
+                with patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dim_scores, \
+                     patch('src.python.stress_utils.generate_pss10_item_response') as mock_item_response, \
+                     patch('src.python.stress_utils.generate_pss10_responses') as mock_pss10_responses:
+                    
+                    # Mock dimension scores
+                    mock_dim_scores.return_value = (0.8, 0.2)
+                    
+                    # Mock item response to return consistent values
+                    mock_item_response.return_value = 2  # Neutral response
+                    
+                    # Mock full responses
+                    mock_pss10_responses.return_value = {
+                        1: 2, 2: 2, 3: 2, 4: 3, 5: 3,
+                        6: 2, 7: 3, 8: 3, 9: 2, 10: 2
+                    }
 
-        # Challenge should tend to improve affect
-        # (exact change depends on multiple factors, but should be non-negative)
+                    agent.stressful_event()
+
+        # Verify the test behavior
         affect_change = agent.affect - initial_affect
-
-        # Challenge events should not worsen affect significantly
-        assert affect_change > -0.1  # Allow small negative change but not large
+        assert affect_change > -0.1
 
     def test_hindrance_events_worsen_affect(self):
         """
@@ -301,23 +314,37 @@ class TestStressEventScenario:
 
         initial_affect = agent.affect
 
-        # Create hindrance event (low controllability, predictability; high overload)
-        hindrance_event = StressEvent(
-            controllability=0.1,  # Low controllability
-            predictability=0.2,   # Low predictability
-            overload=0.9,         # High overload
-            magnitude=0.7         # High magnitude
-        )
-
         # Process hindrance event
         with patch('src.python.agent.generate_stress_event') as mock_generate:
+            # Create a proper StressEvent with actual float values
+            hindrance_event = StressEvent(controllability=0.1, overload=0.9)
+            # Ensure the attributes are actual floats, not MagicMock objects
+            hindrance_event.controllability = 0.1
+            hindrance_event.overload = 0.9
             mock_generate.return_value = hindrance_event
 
-            # Mock failed coping
+            # Mock failed coping and PSS-10 generation
             with patch.object(agent, '_rng') as mock_rng:
                 mock_rng.random.return_value = 0.7  # Greater than resilience, so coping fails
 
-                agent.stressful_event()
+                # Mock the entire generate_pss10_responses function to avoid complex rng mocking
+                with patch('src.python.stress_utils.generate_pss10_responses') as mock_pss10_responses, \
+                     patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dimension_scores, \
+                     patch('src.python.stress_utils.generate_pss10_item_response') as mock_item_response:
+                    
+                    # Mock dimension scores to return valid float tuples
+                    mock_dimension_scores.return_value = (0.2, 0.8)  # Valid controllability, overload
+                    
+                    # Mock item response to return consistent values
+                    mock_item_response.return_value = 2  # Neutral response
+                    
+                    # Mock full responses
+                    mock_pss10_responses.return_value = {
+                        1: 2, 2: 2, 3: 2, 4: 3, 5: 3,
+                        6: 2, 7: 3, 8: 3, 9: 2, 10: 2
+                    }
+
+                    agent.stressful_event()
 
         # Hindrance should tend to worsen affect
         affect_change = agent.affect - initial_affect
@@ -531,23 +558,44 @@ class TestCumulativeOverloadScenario:
         initial_resilience = agent.resilience
 
         # Simulate multiple hindrance events
+        # Simulate multiple hindrance events
         for i in range(5):
-            # Create hindrance event
-            hindrance_event = StressEvent(
-                controllability=0.1,  # Low controllability
-                predictability=0.2,   # Low predictability
-                overload=0.9,         # High overload
-                magnitude=0.6
-            )
-
             with patch('src.python.agent.generate_stress_event') as mock_generate:
+                # Create a proper StressEvent with actual float values
+                hindrance_event = StressEvent(controllability=0.1, overload=0.9)
+                # Ensure the attributes are actual floats, not MagicMock objects
+                hindrance_event.controllability = 0.1
+                hindrance_event.overload = 0.9
                 mock_generate.return_value = hindrance_event
 
-                # Mock coping failure to simulate stress
+                # Mock coping failure to simulate stress and PSS-10 generation
                 with patch.object(agent, '_rng') as mock_rng:
                     mock_rng.random.return_value = 0.9  # Greater than resilience, coping fails
 
-                    agent.stressful_event()
+                    # Mock the entire generate_pss10_responses function to avoid complex rng mocking
+                    with patch('src.python.stress_utils.generate_pss10_responses') as mock_pss10_responses, \
+                         patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dimension_scores, \
+                         patch('src.python.stress_utils.generate_pss10_item_response') as mock_item_response:
+                        
+                        # Mock dimension scores to return valid float tuples
+                        mock_dimension_scores.return_value = (0.8, 0.2)  # Valid controllability, overload
+                        
+                        # Mock item response to return consistent values
+                        mock_item_response.return_value = 2  # Neutral response
+                        
+                        # Mock full responses
+                        mock_pss10_responses.return_value = {
+                            1: 2, 2: 2, 3: 2, 4: 2, 5: 2,
+                            6: 2, 7: 2, 8: 2, 9: 2, 10: 2
+                        }  # Return valid PSS-10 responses (0-4)
+
+                        agent.stressful_event()
+                        mock_pss10_responses.side_effect = mock_pss10_responses_func
+
+                        # Also need to mock the generate_pss10_dimension_scores function directly
+                        with patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dimension_scores:
+                            mock_dimension_scores.return_value = (0.8, 0.2)  # Return valid float values
+                            agent.stressful_event()
 
         # After multiple hindrance events, resilience should be reduced
         resilience_loss = initial_resilience - agent.resilience
@@ -575,15 +623,33 @@ class TestCumulativeOverloadScenario:
 
         # Simulate overload condition (multiple consecutive hindrances)
         for i in range(4):
-            hindrance_event = StressEvent(0.1, 0.2, 0.9, 0.5)
-
             with patch('src.python.agent.generate_stress_event') as mock_generate:
+                # Create a proper StressEvent with actual float values
+                hindrance_event = StressEvent(controllability=0.1, overload=0.9)
+                # Ensure the attributes are actual floats, not MagicMock objects
+                hindrance_event.controllability = 0.1
+                hindrance_event.overload = 0.9
                 mock_generate.return_value = hindrance_event
 
                 with patch.object(agent, '_rng') as mock_rng:
                     mock_rng.random.return_value = 0.8  # Coping fails
 
-                    agent.stressful_event()
+                    # Mock ALL nested functions called by generate_pss10_responses
+                    with patch('src.python.stress_utils.generate_pss10_responses') as mock_pss10_responses, \
+                         patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dimension_scores, \
+                         patch('src.python.stress_utils.generate_pss10_item_response') as mock_item_response:
+                        
+                        # Create a side_effect function that returns valid PSS-10 responses
+                        def mock_pss10_responses_func(*args, **kwargs):
+                            return {
+                                1: 2, 2: 2, 3: 2, 4: 2, 5: 2,
+                                6: 2, 7: 2, 8: 2, 9: 2, 10: 2
+                            }  # Return valid PSS-10 responses (0-4)
+                        mock_pss10_responses.side_effect = mock_pss10_responses_func
+                        mock_dimension_scores.return_value = (0.2, 0.8)  # Valid controllability, overload
+                        mock_item_response.return_value = 2  # Valid PSS-10 response (0-4)
+
+                        agent.stressful_event()
 
         resilience_after_overload = agent.resilience
 
