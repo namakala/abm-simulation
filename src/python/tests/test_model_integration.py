@@ -6,10 +6,9 @@ Test script to verify the model properly integrates with new stress processing m
 import numpy as np
 import sys
 import os
-sys.path.append('.')
 
-from model import StressModel
-from config import get_config
+from src.python.model import StressModel
+from src.python.config import get_config
 
 def test_model_integration():
     """Test that the model works with new stress processing mechanisms."""

@@ -41,7 +41,8 @@ jobs:
         echo "Python version: $(python --version)"
         echo "Conda environment: $(conda env list)"
         python -c "import pytest; print('pytest version:', pytest.__version__)"
-        python -m pytest --cov=src/python --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v
+        python -m pytest -m "not config" --cov=src/python --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v
+        python -m pytest -m "config" --cov=src/python --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -58,7 +59,8 @@ jobs:
         conda activate ABM
         echo "Python path: $(which python)"
         python -c "import pytest; print('pytest available in environment')"
-        python -m pytest --cov=src/python --cov-report=html --cov-report=term-missing
+        python -m pytest -m "not config" --cov=src/python --cov-report=html --cov-report=term-missing
+        python -m pytest -m "config" --cov=src/python --cov-report=html --cov-report=term-missing
 
     - name: Upload coverage HTML report
       uses: actions/upload-artifact@v4

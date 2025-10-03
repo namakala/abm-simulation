@@ -4,7 +4,6 @@ Debug script to check threshold evaluation function.
 """
 
 import sys
-sys.path.append('.')
 from src.python.config import get_config
 from src.python.stress_utils import StressEvent, ThresholdParams, evaluate_stress_threshold
 
