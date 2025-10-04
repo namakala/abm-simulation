@@ -466,7 +466,7 @@ class TestDataCollectorTimeSeriesAnalysis:
         assert abs(manual_avg_affect - collected_avg_affect) < 1e-10, "Affect aggregation should match"
 
         # Test stress prevalence calculation
-        manual_stress_prevalence = (final_day_agent_data['affect'] < -0.3).sum() / len(final_day_agent_data)
+        manual_stress_prevalence = (final_day_agent_data['pss10'] >= 27).sum() / len(final_day_agent_data)
         collected_stress_prevalence = model_data.loc[final_day - 1, 'stress_prevalence']
 
         assert abs(manual_stress_prevalence - collected_stress_prevalence) < 1e-10, "Stress prevalence should match"
