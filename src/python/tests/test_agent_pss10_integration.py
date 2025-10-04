@@ -15,7 +15,10 @@ from unittest.mock import Mock, patch
 
 from src.python.agent import Person
 from src.python.model import StressModel
-from src.python.stress_utils import generate_pss10_responses, compute_pss10_score
+from src.python.stress_utils import (
+    generate_pss10_responses, compute_pss10_score, generate_stress_event,
+    apply_weights, StressEvent, AppraisalWeights
+)
 
 
 class TestAgentPSS10Initialization:
@@ -205,8 +208,6 @@ class TestPSS10StressMechanismIntegration:
 
     def test_stress_event_without_predictability(self):
         """Test that stress events work correctly without predictability."""
-        from src.python.stress_utils import generate_stress_event
-
         rng = np.random.default_rng(42)
 
         # Generate stress event
@@ -226,7 +227,6 @@ class TestPSS10StressMechanismIntegration:
 
     def test_apply_weights_without_predictability(self):
         """Test that apply_weights function works without predictability."""
-        from src.python.stress_utils import apply_weights, StressEvent, AppraisalWeights
 
         # Create stress event without predictability or magnitude
         event = StressEvent(

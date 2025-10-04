@@ -11,10 +11,11 @@ This script specifically tests:
 6. Daily reset mechanism works correctly
 """
 
+import os
+import sys
+import traceback
 import numpy as np
 import pandas as pd
-import sys
-import os
 
 # Add src/python to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src', 'python'))
@@ -308,7 +309,6 @@ def test_comprehensive_integration():
 
     except Exception as e:
         print(f"\n❌ TEST FAILED: {e}")
-        import traceback
         traceback.print_exc()
         return False
 

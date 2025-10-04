@@ -9,6 +9,7 @@ import os
 import logging
 from typing import Optional, Union
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -45,7 +46,6 @@ class Config:
         if env_path.exists():
             try:
                 # Load environment variables from file
-                from dotenv import load_dotenv
                 load_dotenv(env_path)
                 logger.info(f"Loaded environment from {env_path.absolute()}")
             except ImportError:

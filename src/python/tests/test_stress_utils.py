@@ -12,7 +12,7 @@ from src.python.stress_utils import (
     compute_appraised_stress, evaluate_stress_threshold,
     StressEvent, AppraisalWeights, ThresholdParams,
     create_pss10_mapping, map_agent_stress_to_pss10, compute_pss10_score,
-    interpret_pss10_score, PSS10Item
+    interpret_pss10_score, PSS10Item, sigmoid
 )
 
 
@@ -97,8 +97,6 @@ class TestStressAppraisal:
 
     def test_sigmoid_function(self):
         """Test the sigmoid function used in challenge/hindrance mapping."""
-        from src.python.stress_utils import sigmoid
-
         # Test basic properties
         assert sigmoid(0.0) == 0.5  # Sigmoid(0) = 0.5
         assert sigmoid(10.0) > 0.99  # Large positive → close to 1.0

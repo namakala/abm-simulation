@@ -17,10 +17,12 @@ These tests verify:
 - Backward compatibility
 """
 
-import pytest
 import os
+import pytest
 import numpy as np
 from src.python.config import get_config, reload_config, ConfigurationError
+from src.python.agent import Person
+from src.python.model import StressModel
 
 
 class TestNewEnvironmentVariables:
@@ -147,9 +149,6 @@ class TestNewEnvironmentVariables:
     @pytest.mark.config
     def test_agent_initialization_uses_config_values(self, config):
         """Test that agent initialization uses the configuration values correctly."""
-        from src.python.agent import Person
-        from src.python.model import StressModel
-
         # Create a simple model for testing
         model = StressModel(N=config.num_agents, max_days=1, seed=config.seed)
 
@@ -183,8 +182,6 @@ class TestNewEnvironmentVariables:
         assert 0 <= config.network_homophily_strength <= 1
 
         # Test that a simple model can be created and run with these parameters
-        from src.python.model import StressModel
-
         model = StressModel(
             N=5,  # Small number for quick test
             max_days=config.max_days,
@@ -263,9 +260,6 @@ class TestNewEnvironmentVariables:
     @pytest.mark.integration
     def test_agent_parameter_integration(self, config):
         """Test that agent parameters integrate correctly with the new configuration values."""
-        from src.python.agent import Person
-        from src.python.model import StressModel
-
         # Create model and agent
         model = StressModel(N=5, max_days=config.max_days, seed=config.seed)
         agent = Person(model)
@@ -332,9 +326,6 @@ class TestNewParameterIntegration:
     @pytest.mark.integration
     def test_stress_decay_integration(self, config):
         """Test that stress decay rate integrates properly with agent stress processing."""
-        from src.python.agent import Person
-        from src.python.model import StressModel
-
         # Create agent and manually set stress
         model = StressModel(N=5, max_days=config.max_days, seed=config.seed)  # Use N=5 to avoid k>n error
         agent = Person(model)
@@ -354,9 +345,6 @@ class TestNewParameterIntegration:
     @pytest.mark.integration
     def test_protective_improvement_integration(self, config):
         """Test that protective improvement rate works with resource allocation."""
-        from src.python.agent import Person
-        from src.python.model import StressModel
-
         # Create agent
         model = StressModel(N=5, max_days=config.max_days, seed=config.seed)  # Use N=5 to avoid k>n error
         agent = Person(model)
@@ -377,9 +365,6 @@ class TestNewParameterIntegration:
     @pytest.mark.integration
     def test_network_adaptation_integration(self, config):
         """Test that network adaptation parameters work with agent network adaptation."""
-        from src.python.agent import Person
-        from src.python.model import StressModel
-
         # Create agent
         model = StressModel(N=5, max_days=config.max_days, seed=config.seed)
         agent = Person(model)

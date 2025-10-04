@@ -20,7 +20,12 @@ from src.python.affect_utils import (
     process_interaction, compute_stress_impact_on_affect,
     compute_stress_impact_on_resilience, clamp, InteractionConfig,
     update_affect_dynamics, update_resilience_dynamics,
-    AffectDynamicsConfig, ResilienceDynamicsConfig
+    AffectDynamicsConfig, ResilienceDynamicsConfig,
+    compute_resource_regeneration, ResourceParams,
+    compute_homeostatic_adjustment,
+    process_stress_event_with_new_mechanism, StressProcessingConfig,
+    allocate_protective_resources, ProtectiveFactors,
+    compute_daily_affect_reset, compute_stress_decay
 )
 
 from src.python.math_utils import sample_poisson, create_rng
@@ -298,7 +303,6 @@ class Person(mesa.Agent):
         self.resilience = min(1.0, self.resilience + protective_boost)
 
         # Apply enhanced resource regeneration with affect influence
-        from .affect_utils import compute_resource_regeneration, ResourceParams
         regen_params = ResourceParams(
             base_regeneration=config.get('resource', 'base_regeneration')
         )
@@ -316,7 +320,6 @@ class Person(mesa.Agent):
 
         # Apply homeostatic adjustment to both affect and resilience
         # This pulls values back toward their FIXED baseline (natural equilibrium point)
-        from .affect_utils import compute_homeostatic_adjustment
 
         # Get homeostatic rates from configuration
         cfg = get_config()
@@ -483,8 +486,6 @@ class Person(mesa.Agent):
         neighbor_affects = self._get_neighbor_affects()
 
         # Use new stress processing mechanism with social interaction effects
-        from .affect_utils import process_stress_event_with_new_mechanism, StressProcessingConfig
-
         stress_config = StressProcessingConfig()
         new_affect, new_resilience, new_stress, coped_successfully = process_stress_event_with_new_mechanism(
             current_affect=self.affect,
@@ -540,8 +541,6 @@ class Person(mesa.Agent):
 
         Uses current stress state and resilience to determine optimal allocation.
         """
-        from .affect_utils import allocate_protective_resources, ProtectiveFactors, ResourceParams
-
         # Create protective factors object with current efficacy levels
         protective_factors = ProtectiveFactors(
             social_support=self.protective_factors['social_support'],
@@ -792,8 +791,6 @@ class Person(mesa.Agent):
         Args:
             current_day: Current simulation day for tracking reset timing
         """
-        from .affect_utils import compute_daily_affect_reset, compute_stress_decay, StressProcessingConfig
-
         # Update last reset day
         self.last_reset_day = current_day
 
