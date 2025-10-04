@@ -229,6 +229,9 @@ class Config:
         self.pss10_controllability_sd = self._get_env_value('PSS10_CONTROLLABILITY_SD', float, 1.0)
         self.pss10_overload_sd = self._get_env_value('PSS10_OVERLOAD_SD', float, 1.0)
 
+        # PSS-10 threshold for stress classification
+        self.pss10_threshold = self._get_env_value('PSS10_THRESHOLD', int, 27)
+
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value('COPING_BASE_PROBABILITY', float, 0.5)
         self.coping_social_influence = self._get_env_value('COPING_SOCIAL_INFLUENCE', float, 0.1)
@@ -349,6 +352,7 @@ class Config:
                 'bifactor_correlation': self.pss10_bifactor_correlation,
                 'controllability_sd': self.pss10_controllability_sd,
                 'overload_sd': self.pss10_overload_sd,
+                'threshold': self.pss10_threshold,
             },
             'interaction': {
                 'influence_rate': self.interaction_influence_rate,

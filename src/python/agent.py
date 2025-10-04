@@ -105,7 +105,8 @@ class Person(mesa.Agent):
         self.pss10_responses = {}  # Individual PSS-10 item responses
         self.stress_controllability = 0.5  # Controllability stress level ∈ [0,1]
         self.stress_overload = 0.5  # Overload stress level ∈ [0,1]
-        self.pss10 = 10  # Total PSS-10 score (0-40)
+        self.pss10 = 0  # Total PSS-10 score (0-40)
+        self.stressed = False  # Stress classification based on PSS-10 threshold
 
         # Configuration for utility functions
         self.stress_config = {
@@ -193,6 +194,11 @@ class Person(mesa.Agent):
 
         # Initialize pss10_score by summing items 1-10
         self.pss10 = compute_pss10_score(self.pss10_responses)
+
+        # Set initial stressed status based on PSS-10 threshold
+        cfg = get_config()
+        pss10_threshold = cfg.get('pss10', 'threshold')
+        self.stressed = (self.pss10 >= pss10_threshold)
 
     def step(self):
         """
@@ -647,6 +653,11 @@ class Person(mesa.Agent):
         # Initialize pss10_score by summing items 1-10
         self.pss10 = compute_pss10_score(initial_responses)
 
+        # Set initial stressed status based on PSS-10 threshold
+        cfg = get_config()
+        pss10_threshold = cfg.get('pss10', 'threshold')
+        self.stressed = (self.pss10 >= pss10_threshold)
+
     def _update_stress_levels_from_pss10(self):
         """
         Update stress levels based on current PSS-10 responses.
@@ -707,6 +718,11 @@ class Person(mesa.Agent):
 
         # Update stress levels based on new PSS-10 responses
         self._update_stress_levels_from_pss10()
+
+        # Update stressed status based on PSS-10 threshold
+        cfg = get_config()
+        pss10_threshold = cfg.get('pss10', 'threshold')
+        self.stressed = (self.pss10 >= pss10_threshold)
 
     def _adapt_network(self):
         """
