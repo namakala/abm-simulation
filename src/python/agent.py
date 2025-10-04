@@ -570,7 +570,7 @@ class Person(mesa.Agent):
                         # Current efficacy influences how effectively resources are used
                         current_efficacy = self.protective_factors[factor]
                         # Investment return is higher when current efficacy is lower (more room for improvement)
-                        improvement_rate = config.get('agent_parameters', 'protective_improvement_rate')
+                        improvement_rate = config.get('resource', 'protective_improvement_rate')
                         investment_effectiveness = 1.0 - current_efficacy  # Higher return when efficacy is low
 
                         efficacy_increase = allocation * improvement_rate * investment_effectiveness
@@ -586,14 +586,16 @@ class Person(mesa.Agent):
         Returns:
             Float indicating resilience boost from protective factors
         """
-        total_boost = 0.0
+        config = get_config()
+        boost_rate = config.get('resilience_dynamics', 'boost_rate')
+
+        total_boost = boost_rate
 
         # Each protective factor provides boost based on efficacy and current resilience need
         for factor, efficacy in self.protective_factors.items():
             if efficacy > 0:
                 # Boost is higher when resilience is low (more needed)
                 need_multiplier = max(0.1, 1.0 - self.resilience)
-                boost_rate = config.get('agent_parameters', 'resilience_boost_rate')
                 total_boost += efficacy * need_multiplier * boost_rate
 
         return total_boost
@@ -737,7 +739,7 @@ class Person(mesa.Agent):
 
         # Check if agent should consider network adaptation
         stress_breach_count = getattr(self, 'stress_breach_count', 0)
-        adaptation_threshold = config.get('agent_parameters', 'network_adaptation_threshold')
+        adaptation_threshold = config.get('network', 'adaptation_threshold')
 
         if stress_breach_count < adaptation_threshold:
             return
@@ -753,8 +755,8 @@ class Person(mesa.Agent):
             return
 
         # Calculate adaptation metrics
-        rewire_prob = config.get('agent_parameters', 'network_rewire_probability')
-        homophily_strength = config.get('agent_parameters', 'network_homophily_strength')
+        rewire_prob = config.get('network', 'rewire_probability')
+        homophily_strength = config.get('network', 'homophily_strength')
 
         # Check each neighbor for potential rewiring
         for neighbor in current_neighbors:

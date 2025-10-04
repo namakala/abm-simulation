@@ -273,16 +273,6 @@ class Config:
         self.daily_reset_rate = self._get_env_value('DAILY_RESET_RATE', float, 0.1)
 
         # ==============================================
-        # AGENT PARAMETERS SECTION
-        # ==============================================
-        # Consolidated agent-specific parameters for easy access
-        self.agent_protective_improvement_rate = self._get_env_value('AGENT_PROTECTIVE_IMPROVEMENT_RATE', float, 0.5)
-        self.agent_resilience_boost_rate = self._get_env_value('AGENT_RESILIENCE_BOOST_RATE', float, 0.1)
-        self.agent_network_adaptation_threshold = self._get_env_value('AGENT_NETWORK_ADAPTATION_THRESHOLD', int, 3)
-        self.agent_network_rewire_probability = self._get_env_value('AGENT_NETWORK_REWIRE_PROBABILITY', float, 0.01)
-        self.agent_network_homophily_strength = self._get_env_value('AGENT_NETWORK_HOMOPHILY_STRENGTH', float, 0.7)
-
-        # ==============================================
         # RESOURCE DYNAMICS PARAMETERS
         # ==============================================
         self.protective_social_support = self._get_env_value('PROTECTIVE_SOCIAL_SUPPORT', float, 0.5)
@@ -402,13 +392,6 @@ class Config:
             'dynamics': {
                 'stress_decay_rate': self.stress_decay_rate,
                 'daily_reset_rate': self.daily_reset_rate,
-            },
-            'agent_parameters': {
-                'protective_improvement_rate': self.agent_protective_improvement_rate,
-                'resilience_boost_rate': self.agent_resilience_boost_rate,
-                'network_adaptation_threshold': self.agent_network_adaptation_threshold,
-                'network_rewire_probability': self.agent_network_rewire_probability,
-                'network_homophily_strength': self.agent_network_homophily_strength,
             },
             'protective': {
                 'social_support': self.protective_social_support,
