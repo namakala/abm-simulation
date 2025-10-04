@@ -151,7 +151,7 @@ class TestNewEnvironmentVariables:
         from src.python.model import StressModel
 
         # Create a simple model for testing
-        model = StressModel(config.num_agents, config.network_watts_k, config.network_watts_p, seed=config.seed)
+        model = StressModel(N=config.num_agents, max_days=1, seed=config.seed)
 
         # Create an agent with default config
         agent = Person(model)
@@ -275,9 +275,9 @@ class TestNewEnvironmentVariables:
 
         # Test that agent can access network adaptation parameters
         # These are used in the _adapt_network method
-        adaptation_threshold = config.get('agent_parameters', 'network_adaptation_threshold')
-        rewire_probability = config.get('agent_parameters', 'network_rewire_probability')
-        homophily_strength = config.get('agent_parameters', 'network_homophily_strength')
+        adaptation_threshold = config.get('network', 'adaptation_threshold')
+        rewire_probability = config.get('network', 'rewire_probability')
+        homophily_strength = config.get('network', 'homophily_strength')
 
         assert isinstance(adaptation_threshold, int)
         assert isinstance(rewire_probability, float)
@@ -397,14 +397,14 @@ class TestNewParameterIntegration:
         # Test that agent can access these parameters (used in _adapt_network)
         # The agent should be able to use these values without errors
         # Note: stress_breach_count is only set after stressful events, so we test the config access instead
-        threshold = config.get('agent_parameters', 'network_adaptation_threshold')
+        threshold = config.get('network', 'adaptation_threshold')
         assert threshold == adaptation_threshold
 
         # This should not raise an error
         try:
             # Simulate calling _adapt_network (without actually calling it to avoid complexity)
             # Just verify the parameters are accessible
-            threshold = config.get('agent_parameters', 'network_adaptation_threshold')
+            threshold = config.get('network', 'adaptation_threshold')
             assert threshold == adaptation_threshold
         except Exception as e:
             pytest.fail(f"Network adaptation parameter access failed: {e}")
@@ -412,6 +412,15 @@ class TestNewParameterIntegration:
 
 class TestConfigurationPersistence:
     """Test that configuration changes persist correctly."""
+
+    NEW_VARIABLES = {
+        'STRESS_DECAY_RATE': 0.05,
+        'PROTECTIVE_IMPROVEMENT_RATE': 0.5,
+        'RESILIENCE_BOOST_RATE': 0.1,
+        'NETWORK_ADAPTATION_THRESHOLD': 3,
+        'NETWORK_REWIRE_PROBABILITY': 0.01,
+        'NETWORK_HOMOPHILY_STRENGTH': 0.7
+    }
 
     @pytest.mark.config
     def test_config_persistence_across_instances(self, clean_env, reload_config_fixture):
