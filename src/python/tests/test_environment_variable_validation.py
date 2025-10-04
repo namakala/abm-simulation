@@ -5,8 +5,10 @@ These tests verify that dataclasses properly use environment variables
 and handle various edge cases correctly.
 """
 
-import pytest
 import os
+import pytest
+from src.python.affect_utils import InteractionConfig, ProtectiveFactors, ResourceParams
+from src.python.stress_utils import AppraisalWeights, ThresholdParams
 
 
 class TestDataclassEnvironmentVariableUsage:
@@ -15,9 +17,6 @@ class TestDataclassEnvironmentVariableUsage:
     @pytest.mark.config
     def test_current_environment_variable_usage(self, config):
         """Test that dataclasses use current environment variable values."""
-        from src.python.affect_utils import InteractionConfig, ProtectiveFactors, ResourceParams
-        from src.python.stress_utils import AppraisalWeights, ThresholdParams
-
         # Create dataclass instances
         interaction_config = InteractionConfig()
         protective_factors = ProtectiveFactors()
@@ -54,9 +53,6 @@ class TestDataclassEnvironmentVariableUsage:
             new_config = reload_config_fixture()
 
             # Create new dataclass instances
-            from src.python.affect_utils import InteractionConfig, ProtectiveFactors, ResourceParams
-            from src.python.stress_utils import AppraisalWeights, ThresholdParams
-
             new_interaction_config = InteractionConfig()
             new_protective_factors = ProtectiveFactors()
             new_resource_params = ResourceParams()
@@ -101,8 +97,6 @@ class TestDataclassEnvironmentVariableUsage:
             default_config = reload_config_fixture()
 
             # Create dataclass instances (should use defaults)
-            from src.python.affect_utils import InteractionConfig, ProtectiveFactors
-
             default_interaction_config = InteractionConfig()
             default_protective_factors = ProtectiveFactors()
 

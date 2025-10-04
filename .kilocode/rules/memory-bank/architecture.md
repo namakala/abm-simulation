@@ -18,7 +18,7 @@ Each agent represents an individual with the following state variables:
 
 2. **Appraisal Mechanism** - Challenge/Hindrance mapping:
    ```
-   z = ωc*c + ωp*p - ωo*o + b
+   z = ωc*c - ωo*o + b
    challenge = σ(γ*z)  [sigmoid function]
    hindrance = 1 - challenge
    ```
@@ -39,9 +39,10 @@ Each agent represents an individual with the following state variables:
 - `config.py` - Centralized configuration management with environment variable loading and validation
 - `simulate.py` - Main simulation runner (in project root)
 - `debug/` - Debugging utilities for threshold evaluation (`debug_threshold.py`) and stress processing troubleshooting (`simple_threshold_test.py`)
+- `demos/` - Demonstration scripts (`stress-processing-mechanism.py`, `track_daily_stress.py`) for understanding model mechanisms
 - **PSS-10 Integration** - Complete Perceived Stress Scale-10 implementation with bifactor model, dimension score generation, and empirical validation testing
 - **DataCollector Integration** - Comprehensive Mesa DataCollector implementation with 20+ model-level metrics and 8+ agent-level variables for research analysis
-- `test_*.py` - Comprehensive test suite with 22 specialized test files:
+- `test_*.py` - Comprehensive test suite with 30 specialized test files:
   - Unit tests: `test_math_utils.py`, `test_stress_utils.py`, `test_affect_utils.py`
   - Integration tests: `test_agent_integration.py`, `test_model_integration.py`, `test_affect_resilience_integration.py`, `test_agent_pss10_integration.py`, `test_datacollector_integration_comprehensive.py`
   - Configuration tests: `test_config_integration.py`, `test_dataclass_config.py`, `test_environment_variable_validation.py`, `test_pss10_config.py`
@@ -129,7 +130,7 @@ Agents adapt connections based on:
    - Apply network adaptation rules
    - Record state variables and metrics
 
-### Validation Pipeline  
+### Validation Pipeline
 1. Define pattern targets from literature review
 2. Run parameter sweeps with multiple replicates
 3. Compute distance metrics between simulated and target patterns
@@ -138,6 +139,6 @@ Agents adapt connections based on:
 
 ### Output Generation
 - **Time series** of agent states and population metrics
-- **Network snapshots** at key time points  
+- **Network snapshots** at key time points
 - **Resilience metrics** - recovery time, basin stability, FTLE
 - **Cost-effectiveness ratios** for intervention scenarios

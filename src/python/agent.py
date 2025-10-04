@@ -20,7 +20,12 @@ from src.python.affect_utils import (
     process_interaction, compute_stress_impact_on_affect,
     compute_stress_impact_on_resilience, clamp, InteractionConfig,
     update_affect_dynamics, update_resilience_dynamics,
-    AffectDynamicsConfig, ResilienceDynamicsConfig
+    AffectDynamicsConfig, ResilienceDynamicsConfig,
+    compute_resource_regeneration, ResourceParams,
+    compute_homeostatic_adjustment,
+    process_stress_event_with_new_mechanism, StressProcessingConfig,
+    allocate_protective_resources, ProtectiveFactors,
+    compute_daily_affect_reset, compute_stress_decay
 )
 
 from src.python.math_utils import sample_poisson, create_rng
@@ -298,7 +303,6 @@ class Person(mesa.Agent):
         self.resilience = min(1.0, self.resilience + protective_boost)
 
         # Apply enhanced resource regeneration with affect influence
-        from .affect_utils import compute_resource_regeneration, ResourceParams
         regen_params = ResourceParams(
             base_regeneration=config.get('resource', 'base_regeneration')
         )
@@ -311,12 +315,11 @@ class Person(mesa.Agent):
         # Decay consecutive hindrances over time if no new hindrance events
         if hasattr(self, 'consecutive_hindrances') and self.consecutive_hindrances > 0:
             # Slowly decay consecutive hindrances when no new hindrance events occur
-            decay_rate = 0.1
+            decay_rate = config.get('dynamics', 'stress_decay_rate')
             self.consecutive_hindrances = max(0, self.consecutive_hindrances - decay_rate)
 
         # Apply homeostatic adjustment to both affect and resilience
         # This pulls values back toward their FIXED baseline (natural equilibrium point)
-        from .affect_utils import compute_homeostatic_adjustment
 
         # Get homeostatic rates from configuration
         cfg = get_config()
@@ -483,8 +486,6 @@ class Person(mesa.Agent):
         neighbor_affects = self._get_neighbor_affects()
 
         # Use new stress processing mechanism with social interaction effects
-        from .affect_utils import process_stress_event_with_new_mechanism, StressProcessingConfig
-
         stress_config = StressProcessingConfig()
         new_affect, new_resilience, new_stress, coped_successfully = process_stress_event_with_new_mechanism(
             current_affect=self.affect,
@@ -515,9 +516,9 @@ class Person(mesa.Agent):
 
         # Track consecutive hindrances for overload effects
         if hindrance > challenge:  # More hindrance than challenge
-            self.consecutive_hindrances = getattr(self, 'consecutive_hindrances', 0) + 1
+            self.consecutive_hindrances = getattr(self, 'consecutive_hindrances', 0.0) + 1.0
         else:
-            self.consecutive_hindrances = 0  # Reset if not predominantly hindrance
+            self.consecutive_hindrances = 0.0  # Reset if not predominantly hindrance
 
         # Track stress breach count for network adaptation
         self.stress_breach_count = getattr(self, 'stress_breach_count', 0) + 1
@@ -540,8 +541,6 @@ class Person(mesa.Agent):
 
         Uses current stress state and resilience to determine optimal allocation.
         """
-        from .affect_utils import allocate_protective_resources, ProtectiveFactors, ResourceParams
-
         # Create protective factors object with current efficacy levels
         protective_factors = ProtectiveFactors(
             social_support=self.protective_factors['social_support'],
@@ -570,7 +569,7 @@ class Person(mesa.Agent):
                         # Current efficacy influences how effectively resources are used
                         current_efficacy = self.protective_factors[factor]
                         # Investment return is higher when current efficacy is lower (more room for improvement)
-                        improvement_rate = 0.5  # Fixed improvement rate for now
+                        improvement_rate = config.get('resource', 'protective_improvement_rate')
                         investment_effectiveness = 1.0 - current_efficacy  # Higher return when efficacy is low
 
                         efficacy_increase = allocation * improvement_rate * investment_effectiveness
@@ -586,15 +585,22 @@ class Person(mesa.Agent):
         Returns:
             Float indicating resilience boost from protective factors
         """
+        config = get_config()
+        boost_rate = config.get('resilience_dynamics', 'boost_rate')
+
+        # Only apply boost when resilience is low
+        current_need = self.baseline_resilience - self.resilience
+
+        if current_need < 0:
+            return 0.0
+
         total_boost = 0.0
 
         # Each protective factor provides boost based on efficacy and current resilience need
         for factor, efficacy in self.protective_factors.items():
             if efficacy > 0:
                 # Boost is higher when resilience is low (more needed)
-                need_multiplier = max(0.1, 1.0 - self.resilience)
-                boost_rate = 0.1  # Fixed boost rate for now
-                total_boost += efficacy * need_multiplier * boost_rate
+                total_boost += efficacy * current_need * boost_rate
 
         return total_boost
 
@@ -737,7 +743,7 @@ class Person(mesa.Agent):
 
         # Check if agent should consider network adaptation
         stress_breach_count = getattr(self, 'stress_breach_count', 0)
-        adaptation_threshold = 3  # Fixed adaptation threshold for now
+        adaptation_threshold = config.get('network', 'adaptation_threshold')
 
         if stress_breach_count < adaptation_threshold:
             return
@@ -753,8 +759,8 @@ class Person(mesa.Agent):
             return
 
         # Calculate adaptation metrics
-        rewire_prob = 0.01  # Fixed rewire probability for now
-        homophily_strength = 0.7  # Fixed homophily strength for now
+        rewire_prob = config.get('network', 'rewire_probability')
+        homophily_strength = config.get('network', 'homophily_strength')
 
         # Check each neighbor for potential rewiring
         for neighbor in current_neighbors:
@@ -790,8 +796,6 @@ class Person(mesa.Agent):
         Args:
             current_day: Current simulation day for tracking reset timing
         """
-        from .affect_utils import compute_daily_affect_reset, compute_stress_decay, StressProcessingConfig
-
         # Update last reset day
         self.last_reset_day = current_day
 
@@ -845,7 +849,7 @@ class Person(mesa.Agent):
         if hasattr(self, 'consecutive_hindrances') and self.consecutive_hindrances > 0:
             # Slowly decay consecutive hindrances over days when no new hindrance events
             daily_decay_rate = 0.05  # Small daily decay rate
-            self.consecutive_hindrances = max(0, self.consecutive_hindrances - daily_decay_rate)
+            self.consecutive_hindrances = max(0.0, self.consecutive_hindrances - daily_decay_rate)
 
     def _rewire_to_similar_agent(self, exclude_agents):
         """

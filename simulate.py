@@ -10,5 +10,12 @@ while True:
         break
 
 tbl = model.get_time_series_data()
+tbl_agent = model.get_agent_time_series_data()
 
 print(tbl)
+
+agg = tbl_agent.groupby('AgentID') \
+        [['resilience', 'affect', 'pss10', 'current_stress']] \
+        .agg(['mean', 'std'])
+
+print(agg)

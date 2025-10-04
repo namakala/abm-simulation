@@ -474,8 +474,7 @@ class StressModel(mesa.Model):
             impact = post_intervention - baseline
 
             # Statistical analysis
-            from scipy import stats
-            stress_trend = stats.linregress(df['day'], df['avg_stress'])
+            stress_trend = scipy.stats.linregress(df['day'], df['avg_stress'])
 
         Returns:
             DataFrame with daily population metrics, including columns for:
@@ -743,7 +742,6 @@ class StressModel(mesa.Model):
             responders = final_resilience[final_resilience > 0.7]
 
             # Stress response pattern clustering
-            from sklearn.cluster import KMeans
             features = ['pss10', 'resilience', 'affect', 'resources']
             patterns = agent_data.groupby('AgentID')[features].mean()
             clusters = KMeans(n_clusters=3).fit(patterns)

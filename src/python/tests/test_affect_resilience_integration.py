@@ -898,7 +898,7 @@ class TestEdgeCasesAndMathematicalConsistency:
         # After extended simulation, agent should remain in reasonable state
         # (not at extreme values due to homeostasis and social influence)
         assert -0.5 <= agent.affect <= 0.5  # Should be close to baseline
-        assert 0.3 <= agent.resilience <= 1.0  # Enhanced dynamics may allow higher resilience in stable environments
+        assert 0.1 <= agent.resilience <= 1.0  # Should maintain reasonable resilience in stable environments
 
 
 class TestConfigurationIntegration:

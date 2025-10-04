@@ -23,8 +23,9 @@ import os
 # Add the src/python directory to the path so we can import modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from stress_utils import generate_pss10_dimension_scores
+from stress_utils import generate_pss10_dimension_scores, generate_pss10_responses
 from config import Config, ConfigurationError
+import traceback
 
 
 class TestPSS10DimensionScoresBackwardCompatibility:
@@ -353,8 +354,6 @@ class TestPSS10DimensionScoresIntegration:
 
     def test_integration_with_pss10_responses(self):
         """Test that dimension scores work correctly with PSS-10 response generation."""
-        from stress_utils import generate_pss10_responses
-
         rng = np.random.default_rng(42)
 
         # Generate dimension scores
@@ -424,7 +423,6 @@ def run_comprehensive_tests():
                 passed_tests += 1
             except Exception as e:
                 print(f"  ✗ {test_method}: {e}")
-                import traceback
                 traceback.print_exc()
 
     print(f"\n{'=' * 65}")

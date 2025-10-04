@@ -5,8 +5,12 @@ These tests verify that dataclasses properly use configuration values
 and respond correctly to environment variable changes.
 """
 
-import pytest
 import os
+import pytest
+from src.python.affect_utils import InteractionConfig, ProtectiveFactors, ResourceParams
+from src.python.stress_utils import AppraisalWeights, ThresholdParams, StressEvent
+from src.python.math_utils import RNGConfig
+from src.python.config import get_config
 
 
 class TestDataclassConfigIntegration:
@@ -15,8 +19,6 @@ class TestDataclassConfigIntegration:
     @pytest.mark.config
     def test_interaction_config_uses_config_values(self, config):
         """Test that InteractionConfig uses config values correctly."""
-        from src.python.affect_utils import InteractionConfig
-
         interaction_config = InteractionConfig()
         expected_influence_rate = config.get('interaction', 'influence_rate')
         expected_resilience_influence = config.get('interaction', 'resilience_influence')
@@ -29,8 +31,6 @@ class TestDataclassConfigIntegration:
     @pytest.mark.config
     def test_protective_factors_uses_config_values(self, config):
         """Test that ProtectiveFactors uses config values correctly."""
-        from src.python.affect_utils import ProtectiveFactors
-
         protective_factors = ProtectiveFactors()
         expected_social = config.get('protective', 'social_support')
         expected_family = config.get('protective', 'family_support')
@@ -45,8 +45,6 @@ class TestDataclassConfigIntegration:
     @pytest.mark.config
     def test_resource_params_uses_config_values(self, config):
         """Test that ResourceParams uses config values correctly."""
-        from src.python.affect_utils import ResourceParams
-
         resource_params = ResourceParams()
         expected_regeneration = config.get('resource', 'base_regeneration')
         expected_cost = config.get('resource', 'allocation_cost')
@@ -59,8 +57,6 @@ class TestDataclassConfigIntegration:
     @pytest.mark.config
     def test_appraisal_weights_uses_config_values(self, config):
         """Test that AppraisalWeights uses config values correctly."""
-        from src.python.stress_utils import AppraisalWeights
-
         appraisal_weights = AppraisalWeights()
         expected_omega_c = config.get('appraisal', 'omega_c')
         expected_omega_o = config.get('appraisal', 'omega_o')
@@ -75,8 +71,6 @@ class TestDataclassConfigIntegration:
     @pytest.mark.config
     def test_threshold_params_uses_config_values(self, config):
         """Test that ThresholdParams uses config values correctly."""
-        from src.python.stress_utils import ThresholdParams
-
         threshold_params = ThresholdParams()
         expected_base = config.get('threshold', 'base_threshold')
         expected_challenge = config.get('threshold', 'challenge_scale')
@@ -89,8 +83,6 @@ class TestDataclassConfigIntegration:
     @pytest.mark.config
     def test_rng_config_no_config_dependency(self):
         """Test that RNGConfig correctly doesn't use config values."""
-        from src.python.math_utils import RNGConfig
-
         rng_config = RNGConfig()
         assert rng_config.seed is None
         assert rng_config.generator is None
@@ -129,11 +121,6 @@ class TestModuleImports:
     @pytest.mark.unit
     def test_no_circular_dependencies(self):
         """Test for circular import dependencies."""
-        # This should not cause any circular import issues
-        from src.python.config import get_config
-        from src.python.affect_utils import InteractionConfig, ProtectiveFactors
-        from src.python.stress_utils import StressEvent, AppraisalWeights
-        from src.python.math_utils import RNGConfig
 
         # Try to use the dataclasses
         config = get_config()

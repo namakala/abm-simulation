@@ -16,13 +16,16 @@ Tests cover:
 8. Cross-validation between different data access methods
 """
 
+import json
+import os
+import tempfile
+import time
+import unittest.mock
+import pytest
 import numpy as np
 import pandas as pd
-import pytest
-import tempfile
-import os
-import json
 import networkx as nx
+import psutil
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -577,7 +580,6 @@ class TestDataCollectorPerformanceValidation:
         model = StressModel(N=100, max_days=10, seed=42)
 
         # Measure collection performance
-        import time
         start_time = time.time()
 
         while model.running:
@@ -604,9 +606,6 @@ class TestDataCollectorPerformanceValidation:
 
     def test_memory_usage_stability(self):
         """Test that memory usage remains stable during data collection."""
-        import psutil
-        import os
-
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 

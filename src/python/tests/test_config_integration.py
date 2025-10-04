@@ -5,9 +5,18 @@ These tests verify that the configuration system works correctly across
 all modules and that environment variables propagate properly.
 """
 
+import os
 import pytest
 import numpy as np
-import os
+from src.python.affect_utils import (
+    InteractionConfig, ProtectiveFactors, ResourceParams,
+    compute_social_influence
+)
+from src.python.stress_utils import (
+    StressEvent, AppraisalWeights, ThresholdParams,
+    generate_stress_event, apply_weights, evaluate_stress_threshold
+)
+from src.python.math_utils import RNGConfig, clamp
 
 
 class TestModuleIntegration:
@@ -16,14 +25,6 @@ class TestModuleIntegration:
     @pytest.mark.integration
     def test_dataclass_instantiation(self, config):
         """Test that all dataclasses can be instantiated with config values."""
-        from src.python.affect_utils import (
-            InteractionConfig, ProtectiveFactors, ResourceParams
-        )
-        from src.python.stress_utils import (
-            StressEvent, AppraisalWeights, ThresholdParams
-        )
-        from src.python.math_utils import RNGConfig
-
         # Test instantiation
         interaction_config = InteractionConfig()
         protective_factors = ProtectiveFactors()
@@ -43,12 +44,6 @@ class TestModuleIntegration:
     @pytest.mark.integration
     def test_utility_functions_with_config(self, config, sample_rng, sample_stress_event):
         """Test that utility functions work with configuration values."""
-        from src.python.affect_utils import compute_social_influence, InteractionConfig
-        from src.python.stress_utils import (
-            generate_stress_event, apply_weights, evaluate_stress_threshold, StressEvent, ThresholdParams, AppraisalWeights
-        )
-        from src.python.math_utils import clamp
-
         # Test social influence computation
         influence = compute_social_influence(0.5, 0.3, InteractionConfig())
         assert isinstance(influence, (int, float))
@@ -101,12 +96,6 @@ class TestModuleIntegration:
     @pytest.mark.integration
     def test_cross_module_data_flow(self, config, sample_rng):
         """Test data flow between different modules."""
-        from src.python.stress_utils import (
-            generate_stress_event, apply_weights, evaluate_stress_threshold, AppraisalWeights, ThresholdParams
-        )
-        from src.python.affect_utils import compute_social_influence, InteractionConfig
-        from src.python.math_utils import clamp
-
         # Generate a stress event
         stress_event = generate_stress_event(sample_rng)
         appraisal_weights = AppraisalWeights()
@@ -169,7 +158,6 @@ class TestEnvironmentVariablePropagation:
             assert new_config.network_watts_k == 6
 
             # Test that dataclasses pick up new values
-            from src.python.affect_utils import InteractionConfig
             interaction_config = InteractionConfig()
             assert interaction_config.influence_rate == new_config.get('interaction', 'influence_rate')
 

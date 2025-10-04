@@ -386,6 +386,44 @@ def compute_stress_decay(current_stress, config):
 **Parameters**:
 - `stress_decay_rate`: 0.05 (daily stress decay rate)
 
+### Stress Decay Rate (`STRESS_DECAY_RATE`)
+
+**Parameter**: `STRESS_DECAY_RATE` (default: 0.05, range: 0.0-1.0)
+
+**Description**: Controls the rate at which an agent's current stress level decays over time when no new stress events occur. This parameter represents natural stress recovery processes, forgetting of past stressors, and psychological adaptation to ongoing stress.
+
+**Mathematical Effect**:
+```
+new_stress = current_stress × (1.0 - STRESS_DECAY_RATE)
+```
+
+**Interpretation**:
+- **High values (0.1-1.0)**: Rapid stress decay, representing effective natural recovery mechanisms or high stress tolerance
+- **Low values (0.0-0.05)**: Slow stress decay, representing persistent stress effects or difficulty recovering from stressors
+- **Research context**: This parameter can be calibrated against psychological research on stress recovery times and resilience patterns
+
+**Usage in Model**:
+```python
+# In daily reset process
+def compute_stress_decay(current_stress, config):
+    # Exponential decay toward zero
+    decayed_stress = current_stress * (1.0 - config.stress_decay_rate)
+    return clamp(decayed_stress, 0.0, 1.0)
+
+# Apply during daily reset
+self.current_stress = compute_stress_decay(self.current_stress, config)
+```
+
+**Theoretical Foundation**:
+- **Natural Recovery**: Represents the psychological tendency to return to baseline stress levels over time
+- **Adaptation Process**: Models how individuals habituate to ongoing stressors
+- **Memory Effects**: Accounts for the fading of stressful memories and their emotional impact
+
+**Integration with Other Systems**:
+- **Stress Events**: New stress events add to current stress before decay is applied
+- **Consecutive Hindrances**: Decay also affects the consecutive hindrances counter
+- **Network Adaptation**: Persistent high stress (despite decay) may still trigger network changes
+
 ### Step 10: PSS-10 Score Computation and Agent State Integration
 
 **PSS-10 Integration Steps**:
