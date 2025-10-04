@@ -516,9 +516,9 @@ class Person(mesa.Agent):
 
         # Track consecutive hindrances for overload effects
         if hindrance > challenge:  # More hindrance than challenge
-            self.consecutive_hindrances = getattr(self, 'consecutive_hindrances', 0) + 1
+            self.consecutive_hindrances = getattr(self, 'consecutive_hindrances', 0.0) + 1.0
         else:
-            self.consecutive_hindrances = 0  # Reset if not predominantly hindrance
+            self.consecutive_hindrances = 0.0  # Reset if not predominantly hindrance
 
         # Track stress breach count for network adaptation
         self.stress_breach_count = getattr(self, 'stress_breach_count', 0) + 1
@@ -588,14 +588,19 @@ class Person(mesa.Agent):
         config = get_config()
         boost_rate = config.get('resilience_dynamics', 'boost_rate')
 
-        total_boost = boost_rate
+        # Only apply boost when resilience is low
+        current_need = self.baseline_resilience - self.resilience
+
+        if current_need < 0:
+            return 0.0
+
+        total_boost = 0.0
 
         # Each protective factor provides boost based on efficacy and current resilience need
         for factor, efficacy in self.protective_factors.items():
             if efficacy > 0:
                 # Boost is higher when resilience is low (more needed)
-                need_multiplier = max(0.1, 1.0 - self.resilience)
-                total_boost += efficacy * need_multiplier * boost_rate
+                total_boost += efficacy * current_need * boost_rate
 
         return total_boost
 
@@ -844,7 +849,7 @@ class Person(mesa.Agent):
         if hasattr(self, 'consecutive_hindrances') and self.consecutive_hindrances > 0:
             # Slowly decay consecutive hindrances over days when no new hindrance events
             daily_decay_rate = 0.05  # Small daily decay rate
-            self.consecutive_hindrances = max(0, self.consecutive_hindrances - daily_decay_rate)
+            self.consecutive_hindrances = max(0.0, self.consecutive_hindrances - daily_decay_rate)
 
     def _rewire_to_similar_agent(self, exclude_agents):
         """

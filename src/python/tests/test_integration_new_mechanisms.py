@@ -82,8 +82,8 @@ class TestAgentIntegration:
         agent.consecutive_hindrances = 2
 
         # Mock the _daily_reset method call
-        with patch('src.python.affect_utils.compute_daily_affect_reset') as mock_reset, \
-             patch('src.python.affect_utils.compute_stress_decay') as mock_decay:
+        with patch('src.python.agent.compute_daily_affect_reset') as mock_reset, \
+             patch('src.python.agent.compute_stress_decay') as mock_decay:
 
             mock_reset.return_value = 0.4
             mock_decay.return_value = 0.3
@@ -254,8 +254,8 @@ class TestEndToEndWorkflows:
 
         # Mock stress event generation and processing
         with patch.object(agent, 'stressful_event', return_value=(0.5, 0.5)) as mock_stress, \
-             patch('src.python.affect_utils.compute_daily_affect_reset', return_value=0.3) as mock_affect_reset, \
-             patch('src.python.affect_utils.compute_stress_decay', return_value=0.2) as mock_stress_decay, \
+             patch('src.python.agent.compute_daily_affect_reset', return_value=0.3) as mock_affect_reset, \
+             patch('src.python.agent.compute_stress_decay', return_value=0.2) as mock_stress_decay, \
              patch('numpy.random.random', return_value=0.5):
 
             # Execute one step (one day)

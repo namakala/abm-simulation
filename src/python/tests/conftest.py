@@ -8,6 +8,7 @@ import unittest.mock
 import pytest
 import numpy as np
 import networkx as nx
+from src.python import config
 from src.python.config import get_config, reload_config
 from src.python.math_utils import create_rng
 from src.python.stress_utils import generate_stress_event
@@ -214,3 +215,25 @@ def setup_test_logging():
 
     # Clean up logging after test
     logging.getLogger().handlers.clear()
+
+# Start with a clean env vars for each run
+@pytest.fixture(autouse=True)
+def complete_env_isolation():
+    """Complete environment isolation for each test."""
+    
+    # SETUP: Save current environment and reset to clean state
+    current_env = dict(os.environ)
+    
+    # Clear all environment variables and restore to pristine state
+    os.environ.clear()
+    
+    # Reset global config cache objects
+    config.config = None
+    
+    # Run the test
+    yield
+    
+    # TEARDOWN: Restore environment to pre-test state
+    os.environ.clear()
+    os.environ.update(current_env)
+    config.config = None
