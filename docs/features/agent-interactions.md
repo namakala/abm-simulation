@@ -362,7 +362,10 @@ adaptation_config = {
     'rewire_probability': 0.01,         # Probability of considering rewiring
     'adaptation_threshold': 3,          # Stress events before adaptation
     'homophily_strength': 0.7,          # Weight of similarity in connections
-    'support_memory_length': 10         # Historical support tracking length
+    'support_memory_length': 10,        # Historical support tracking length
+    'network_adaptation_threshold': 3,  # Threshold for triggering network adaptation
+    'network_rewire_probability': 0.01, # Probability of rewiring connections
+    'network_homophily_strength': 0.7   # Strength of homophily in connection preferences
 }
 ```
 
@@ -374,6 +377,96 @@ support_config = {
     'support_effectiveness_base': 0.2,  # Base support quality
     'social_cost': 0.05                 # Resource cost of social interaction
 }
+```
+
+### Network Adaptation Threshold (`NETWORK_ADAPTATION_THRESHOLD`)
+
+**Parameter**: `NETWORK_ADAPTATION_THRESHOLD` (default: 3, range: 1-20)
+
+**Description**: Controls how many stress events an agent must experience before triggering network adaptation mechanisms. This parameter determines the sensitivity of agents to stress-induced network changes.
+
+**Mathematical Effect**:
+```
+if stress_breach_count >= NETWORK_ADAPTATION_THRESHOLD:
+    trigger_network_adaptation()
+```
+
+**Interpretation**:
+- **Low values (1-2)**: Agents quickly adapt their networks after minimal stress, representing high behavioral flexibility
+- **High values (5-20)**: Agents maintain stable networks despite stress, representing behavioral inertia or satisfaction with current connections
+- **Research context**: This parameter can be calibrated against psychological research on coping flexibility and social network stability
+
+**Usage in Model**:
+```python
+# In network adaptation trigger
+stress_breach_count = getattr(agent, 'stress_breach_count', 0)
+adaptation_threshold = config.get('agent_parameters', 'network_adaptation_threshold')
+
+if stress_breach_count >= adaptation_threshold:
+    agent.adapt_network()
+```
+
+### Network Rewire Probability (`NETWORK_REWIRE_PROBABILITY`)
+
+**Parameter**: `NETWORK_REWIRE_PROBABILITY` (default: 0.01, range: 0.0-1.0)
+
+**Description**: Controls the probability that an agent will consider rewiring each existing connection during network adaptation. This parameter determines how aggressively agents modify their social networks in response to stress.
+
+**Mathematical Effect**:
+```
+for each neighbor in current_neighbors:
+    if random() < NETWORK_REWIRE_PROBABILITY:
+        consider_rewiring_connection(neighbor)
+```
+
+**Interpretation**:
+- **Low values (0.0-0.05)**: Conservative network adaptation, only essential connections are reconsidered
+- **High values (0.1-1.0)**: Aggressive network adaptation, most connections are potentially rewired
+- **Research context**: This parameter relates to social network turnover and relationship maintenance behaviors
+
+**Usage in Model**:
+```python
+# In network adaptation process
+rewire_prob = config.get('agent_parameters', 'network_rewire_probability')
+
+for neighbor in current_neighbors:
+    if self._rng.random() < rewire_prob:
+        # Evaluate connection quality and potentially rewire
+        self._evaluate_and_rewire_connection(neighbor)
+```
+
+### Network Homophily Strength (`NETWORK_HOMOPHILY_STRENGTH`)
+
+**Parameter**: `NETWORK_HOMOPHILY_STRENGTH` (default: 0.7, range: 0.0-1.0)
+
+**Description**: Controls the weight given to similarity (homophily) versus support effectiveness when making network adaptation decisions. This parameter determines the balance between connecting to similar agents versus connecting to helpful agents.
+
+**Mathematical Effect**:
+```
+keep_probability = (affect_similarity × NETWORK_HOMOPHILY_STRENGTH +
+                   support_effectiveness × (1.0 - NETWORK_HOMOPHILY_STRENGTH))
+```
+
+**Interpretation**:
+- **Low values (0.0-0.3)**: Prioritize support effectiveness over similarity, creating diverse but functional networks
+- **High values (0.7-1.0)**: Prioritize similarity over effectiveness, creating homogeneous but potentially less supportive networks
+- **Research context**: This parameter relates to social psychology research on homophily versus instrumental social ties
+
+**Usage in Model**:
+```python
+# In connection evaluation during adaptation
+homophily_strength = config.get('agent_parameters', 'network_homophily_strength')
+
+# Calculate similarity and effectiveness
+affect_similarity = 1.0 - abs(self.affect - neighbor.affect)
+support_effectiveness = self.get_support_effectiveness(neighbor)
+
+# Weighted decision
+keep_prob = (affect_similarity * homophily_strength +
+            support_effectiveness * (1.0 - homophily_strength))
+
+if self._rng.random() > keep_prob:
+    self.rewire_to_similar_agent()
 ```
 
 ## Impact Assessment

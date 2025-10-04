@@ -13,13 +13,14 @@
 
 - **PSS-10 Integration Framework** - Complete implementation of Perceived Stress Scale-10 functionality with bifactor model, dimension score generation, and comprehensive testing (4 specialized PSS-10 test files)
 - **Advanced Configuration System** - Complete `.env`-based parameter system with 50+ configurable parameters, including full PSS-10 parameter support with bracket notation parsing and backward compatibility
-- **Comprehensive Testing Suite** - 22 test files covering: integration testing, configuration validation, environment variable validation, dataclass validation, dependency testing, stress processing mechanisms, affect dynamics, resilience mechanisms, homeostatic adjustment, new mechanism validation, and comprehensive PSS-10 testing
+- **Comprehensive Testing Suite** - 30 test files covering: integration testing, configuration validation, environment variable validation, dataclass validation, dependency testing, stress processing mechanisms, affect dynamics, resilience mechanisms, homeostatic adjustment, new mechanism validation, and comprehensive PSS-10 testing
 - **Configuration Documentation** - Comprehensive CONFIGURATION.md with detailed parameter descriptions, usage scenarios, best practices, troubleshooting guides, and integration examples
 - **Shell Utilities** - Configuration management scripts (`extract_env.sh`, `update_env_example.sh`) for automated parameter extraction and environment file synchronization
 - **CI/CD Infrastructure** - GitHub Actions workflow for automated testing, coverage reporting, and continuous integration with 80% minimum coverage threshold
 - **Coverage Reporting** - Codecov integration with HTML report generation and automated coverage tracking (`.coverage`, `coverage.xml` files)
 - **Test Results Integration** - Automated test result reporting with XML output (`test-results.xml`) for CI/CD pipeline integration
 - **Debug Tools** - Specialized debugging utilities for threshold evaluation (`debug_threshold.py`) and stress processing troubleshooting (`simple_threshold_test.py`)
+- **Demo Scripts** - Demonstration scripts (`stress-processing-mechanism.py`, `track_daily_stress.py`) for understanding model mechanisms
 - **Enhanced Documentation** - Detailed configuration guide with 4 usage scenarios, programmatic examples, parameter sweep workflows, and research pipeline integration
 - **Environment Management** - Multiple configuration files (`.env`, `.env.example`) for different deployment scenarios with environment-specific optimization
 - **PSS-10 Test Coverage** - Comprehensive testing including `test_pss10_comprehensive.py`, `test_pss10_config.py`, `test_pss10_empirical.py`, and `test_generate_pss10_dimension_scores.py`

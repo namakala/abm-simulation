@@ -284,6 +284,7 @@ resilience_config = {
     'baseline_resilience': 0.6,          # Natural equilibrium point
     'coping_success_rate': 0.1,          # Base resilience gain from success
     'social_support_rate': 0.1,          # Resilience gain from social support
+    'resilience_boost_rate': 0.1,        # Rate of resilience boost from protective factors
     'overload_threshold': 3,             # Events needed for overload
     'homeostatic_rate': 0.05             # Rate of return to baseline
 }
@@ -306,6 +307,30 @@ resource_config = {
     'resource_cost': 0.1,                # Cost per successful coping
     'allocation_rate': 0.3               # Fraction allocated to protective factors
 }
+```
+
+### Resilience Boost Rate (`RESILIENCE_BOOST_RATE`)
+
+**Parameter**: `RESILIENCE_BOOST_RATE` (default: 0.1, range: 0.0-1.0)
+
+**Description**: Controls the rate at which protective factors contribute to resilience building. This parameter determines how effectively an agent's investment in protective factors (social support, family support, formal interventions, psychological capital) translates into increased resilience capacity.
+
+**Mathematical Effect**:
+```
+resilience_boost = efficacy × need_multiplier × RESILIENCE_BOOST_RATE
+```
+
+**Interpretation**:
+- **High values (0.2-0.5)**: Protective factors quickly build resilience, representing highly effective interventions
+- **Low values (0.0-0.1)**: Protective factors have minimal impact on resilience, representing less effective interventions
+- **Research context**: This parameter can be calibrated against intervention effect sizes from mental health program evaluations
+
+**Usage in Model**:
+```python
+# In resource allocation and resilience update
+need_multiplier = max(0.1, 1.0 - current_resilience)
+boost_rate = config.get('agent_parameters', 'resilience_boost_rate')
+total_boost = efficacy * need_multiplier * boost_rate
 ```
 
 ## Integration with Other Systems

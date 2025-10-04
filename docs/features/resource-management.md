@@ -371,7 +371,8 @@ resource_config = {
     'resource_cost': 0.1,               # Base cost per coping
     'allocation_rate': 0.3,             # Fraction allocated to protection
     'cost_scalar': 0.15,                # Cost function scalar
-    'cost_exponent': 1.5                # Cost function convexity
+    'cost_exponent': 1.5,               # Cost function convexity
+    'protective_improvement_rate': 0.5  # Rate of protective factor improvement
 }
 ```
 
@@ -399,6 +400,39 @@ allocation_config = {
     'max_allocation_per_factor': 0.5    # Maximum single factor allocation
 }
 ```
+
+### Protective Improvement Rate (`PROTECTIVE_IMPROVEMENT_RATE`)
+
+**Parameter**: `PROTECTIVE_IMPROVEMENT_RATE` (default: 0.5, range: 0.0-1.0)
+
+**Description**: Controls the rate at which resource investment translates into improved protective factor efficacy. This parameter determines how efficiently agents can develop and enhance their protective factors through resource allocation.
+
+**Mathematical Effect**:
+```
+efficacy_increase = allocation × PROTECTIVE_IMPROVEMENT_RATE × investment_effectiveness × need_multiplier
+```
+
+**Interpretation**:
+- **High values (0.3-1.0)**: Rapid improvement in protective factors, representing effective skill-building and relationship development
+- **Low values (0.0-0.3)**: Slow improvement in protective factors, representing difficulty in developing coping resources
+- **Research context**: This parameter can be calibrated against learning rates and skill acquisition in mental health interventions
+
+**Usage in Model**:
+```python
+# In protective factor allocation and efficacy update
+current_efficacy = self.protective_factors[factor]
+improvement_rate = config.get('agent_parameters', 'protective_improvement_rate')
+investment_effectiveness = 1.0 - current_efficacy  # Higher return when efficacy low
+need_multiplier = max(0.1, 1.0 - agent_resilience)  # Higher need when resilience low
+
+efficacy_increase = allocation * improvement_rate * investment_effectiveness * need_multiplier
+new_efficacy = min(1.0, current_efficacy + efficacy_increase)
+```
+
+**Theoretical Foundation**:
+- **Skill Acquisition**: Based on learning theory where practice and investment lead to improved capabilities
+- **Relationship Building**: Social support efficacy improves with investment in relationship maintenance
+- **Intervention Response**: Formal interventions become more effective as individuals engage with treatment
 
 ## Validation and Calibration
 
