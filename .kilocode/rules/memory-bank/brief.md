@@ -128,10 +128,11 @@ PSS-10 creates three composite scores per agent from item responses:
 - **Research Integration:** Support for parameter sweeps, sensitivity analysis, and calibration workflows
 
 ## Testing Infrastructure
-- **Test Suite:** 30 specialized test files covering unit tests, integration tests, configuration validation, and mechanism testing
+- **Test Suite:** 30 specialized test files covering unit tests, integration tests, configuration validation, mechanism testing, and PSS-10 validation
 - **CI/CD Pipeline:** GitHub Actions workflow with automated testing and coverage reporting
 - **Coverage Requirements:** 80% minimum test coverage with HTML report generation and Codecov integration
 - **Debug Tools:** Specialized debugging utilities for threshold evaluation and stress processing troubleshooting
+- **Test Categories:** Unit tests (`test_math_utils.py`, `test_stress_utils.py`, `test_affect_utils.py`), Integration tests (7 files), Configuration tests (5 files), Mechanism tests (4 files), Validation tests (5 files), PSS-10 tests (4 files)
 
 # Parameterization Plan
 

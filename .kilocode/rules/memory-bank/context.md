@@ -42,7 +42,7 @@
 - **Configuration System:** Production-ready `.env`-based parameter management with 50+ configurable parameters, type conversion, validation, and comprehensive documentation
 - **Agent Model:** Complete Person class with all specified state variables (resources, distress, stress threshold, network position, protective factors) and behaviors
 - **Network Structure:** Watts-Strogatz small-world network with configurable parameters via environment variables (mean degree, rewiring probability)
-- **Testing:** Comprehensive test suite with 22 specialized test files, 80%+ coverage requirement, CI/CD pipeline integration, and automated reporting
+- **Testing:** Comprehensive test suite with 30 specialized test files including unit tests, integration tests, configuration validation, mechanism testing, and PSS-10 validation; 80%+ coverage requirement with CI/CD pipeline integration and automated reporting
 - **Debug Tools:** Threshold evaluation and stress processing debugging utilities for development and troubleshooting
 - **Coverage Reporting:** Automated test coverage tracking with Codecov integration and HTML report generation (`.coverage`, `coverage.xml` files)
 - **Test Results:** Automated test result reporting with XML output (`test-results.xml`) for CI/CD pipeline integration

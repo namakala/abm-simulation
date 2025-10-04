@@ -44,11 +44,11 @@ Each agent represents an individual with the following state variables:
 - **DataCollector Integration** - Comprehensive Mesa DataCollector implementation with 20+ model-level metrics and 8+ agent-level variables for research analysis
 - `test_*.py` - Comprehensive test suite with 30 specialized test files:
   - Unit tests: `test_math_utils.py`, `test_stress_utils.py`, `test_affect_utils.py`
-  - Integration tests: `test_agent_integration.py`, `test_model_integration.py`, `test_affect_resilience_integration.py`, `test_agent_pss10_integration.py`, `test_datacollector_integration_comprehensive.py`
-  - Configuration tests: `test_config_integration.py`, `test_dataclass_config.py`, `test_environment_variable_validation.py`, `test_pss10_config.py`
+  - Integration tests: `test_agent_integration.py`, `test_model_integration.py`, `test_affect_resilience_integration.py`, `test_agent_pss10_integration.py`, `test_datacollector_integration_comprehensive.py`, `test_datacollector_integration.py`, `test_datacollector_social_integration.py`
+  - Configuration tests: `test_config_integration.py`, `test_dataclass_config.py`, `test_environment_variable_validation.py`, `test_pss10_config.py`, `test_agent_parameters_config.py`
   - Mechanism tests: `test_stress_processing_mechanisms.py`, `test_affect_resilience_dynamics.py`, `test_homeostatic_adjustment.py`, `test_homeostatic_stabilization_integration.py`
-  - Validation tests: `test_imports_and_dependencies.py`, `test_integration_new_mechanisms.py`, `test_new_mechanisms.py`
-  - PSS-10 tests: `test_pss10_comprehensive.py`, `test_pss10_empirical.py`, `test_generate_pss10_dimension_scores.py`
+  - Validation tests: `test_imports_and_dependencies.py`, `test_integration_new_mechanisms.py`, `test_new_mechanisms.py`, `test_daily_reset_functionality.py`, `test_interaction_tracking.py`
+  - PSS-10 tests: `test_pss10_comprehensive.py`, `test_pss10_empirical.py`, `test_generate_pss10_dimension_scores.py`, `test_pss10_threshold.py`
 
 ### [`src/shell/`](src/shell/) - Configuration Management Utilities
 - `extract_env.sh` - Shell script for extracting default parameter values from configuration files
