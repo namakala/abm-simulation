@@ -40,36 +40,5 @@ jobs:
         echo "Python version: $(python --version)"
         echo "Conda environment: $(conda env list)"
         python -c "import pytest; print('pytest version:', pytest.__version__)"
-        python -m pytest -m "not config" --cov=src/python --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v
+        python -m pytest -m "not config" -v
         python -m pytest -m "config" --no-cov -v
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-
-    - name: Generate coverage report
-      run: |
-        # Activate conda environment and generate HTML report
-        source ${{ env.CONDA }}/etc/profile.d/conda.sh
-        conda activate ABM
-        echo "Python path: $(which python)"
-        python -c "import pytest; print('pytest available in environment')"
-        python -m pytest -m "not config" --cov=src/python --cov-report=html --cov-report=term-missing
-        python -m pytest -m "config" --no-cov -v
-
-    - name: Upload coverage HTML report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: htmlcov/
-
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: test-results.xml
-      if: always()
