@@ -88,8 +88,8 @@ class Person(mesa.Agent):
             'psychological_capital': 0.5
         }
 
-        # Initialize consecutive hindrances tracking for overload effects
-        self.consecutive_hindrances = 0
+        # Track hindrances as float to preserve data consistency when decaying
+        self.consecutive_hindrances = 0.0
 
         # Initialize new stress tracking state variables
         self.current_stress = 0.0  # Current stress level ∈ [0,1]
