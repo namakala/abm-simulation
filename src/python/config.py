@@ -176,6 +176,11 @@ class Config:
         self.network_watts_k = self._get_env_value('NETWORK_WATTS_K', int, 4)
         self.network_watts_p = self._get_env_value('NETWORK_WATTS_P', float, 0.1)
 
+        # New network adaptation parameters
+        self.network_adaptation_threshold = self._get_env_value('NETWORK_ADAPTATION_THRESHOLD', int, 3)
+        self.network_rewire_probability = self._get_env_value('NETWORK_REWIRE_PROBABILITY', float, 0.01)
+        self.network_homophily_strength = self._get_env_value('NETWORK_HOMOPHILY_STRENGTH', float, 0.7)
+
         # ==============================================
         # AGENT STATE AND BEHAVIOR PARAMETERS
         # ==============================================
@@ -257,12 +262,25 @@ class Config:
         self.resilience_social_support_rate = self._get_env_value('RESILIENCE_SOCIAL_SUPPORT_RATE', float, 0.08)
         self.resilience_overload_threshold = self._get_env_value('RESILIENCE_OVERLOAD_THRESHOLD', int, 3)
 
+        # New resilience boost rate
+        self.resilience_boost_rate = self._get_env_value('RESILIENCE_BOOST_RATE', float, 0.1)
+
         self.influencing_neighbors = self._get_env_value('N_INFLUENCING_NEIGHBORS', int, 5)
         self.influencing_hindrance = self._get_env_value('N_INFLUENCING_HINDRANCE', int, 3)
 
         # Stress and affect dynamics parameters
         self.stress_decay_rate = self._get_env_value('STRESS_DECAY_RATE', float, 0.05)
         self.daily_reset_rate = self._get_env_value('DAILY_RESET_RATE', float, 0.1)
+
+        # ==============================================
+        # AGENT PARAMETERS SECTION
+        # ==============================================
+        # Consolidated agent-specific parameters for easy access
+        self.agent_protective_improvement_rate = self._get_env_value('AGENT_PROTECTIVE_IMPROVEMENT_RATE', float, 0.5)
+        self.agent_resilience_boost_rate = self._get_env_value('AGENT_RESILIENCE_BOOST_RATE', float, 0.1)
+        self.agent_network_adaptation_threshold = self._get_env_value('AGENT_NETWORK_ADAPTATION_THRESHOLD', int, 3)
+        self.agent_network_rewire_probability = self._get_env_value('AGENT_NETWORK_REWIRE_PROBABILITY', float, 0.01)
+        self.agent_network_homophily_strength = self._get_env_value('AGENT_NETWORK_HOMOPHILY_STRENGTH', float, 0.7)
 
         # ==============================================
         # RESOURCE DYNAMICS PARAMETERS
@@ -275,6 +293,9 @@ class Config:
         self.resource_base_regeneration = self._get_env_value('RESOURCE_BASE_REGENERATION', float, 0.05)
         self.resource_allocation_cost = self._get_env_value('RESOURCE_ALLOCATION_COST', float, 0.15)
         self.resource_cost_exponent = self._get_env_value('RESOURCE_COST_EXPONENT', float, 1.5)
+
+        # New protective factor improvement rate
+        self.protective_improvement_rate = self._get_env_value('PROTECTIVE_IMPROVEMENT_RATE', float, 0.5)
 
         # ==============================================
         # MATHEMATICAL UTILITY PARAMETERS
@@ -304,6 +325,9 @@ class Config:
             'network': {
                 'watts_k': self.network_watts_k,
                 'watts_p': self.network_watts_p,
+                'adaptation_threshold': self.network_adaptation_threshold,
+                'rewire_probability': self.network_rewire_probability,
+                'homophily_strength': self.network_homophily_strength,
             },
             'agent': {
                 'initial_resilience': self.agent_initial_resilience,
@@ -369,6 +393,7 @@ class Config:
                 'social_support_rate': self.resilience_social_support_rate,
                 'overload_threshold': self.resilience_overload_threshold,
                 'homeostatic_rate': self.resilience_homeostatic_rate,
+                'boost_rate': self.resilience_boost_rate,
             },
             'influence': {
                 'influencing_neighbors': self.influencing_neighbors,
@@ -377,6 +402,13 @@ class Config:
             'dynamics': {
                 'stress_decay_rate': self.stress_decay_rate,
                 'daily_reset_rate': self.daily_reset_rate,
+            },
+            'agent_parameters': {
+                'protective_improvement_rate': self.agent_protective_improvement_rate,
+                'resilience_boost_rate': self.agent_resilience_boost_rate,
+                'network_adaptation_threshold': self.agent_network_adaptation_threshold,
+                'network_rewire_probability': self.agent_network_rewire_probability,
+                'network_homophily_strength': self.agent_network_homophily_strength,
             },
             'protective': {
                 'social_support': self.protective_social_support,
@@ -388,6 +420,7 @@ class Config:
                 'base_regeneration': self.resource_base_regeneration,
                 'allocation_cost': self.resource_allocation_cost,
                 'cost_exponent': self.resource_cost_exponent,
+                'protective_improvement_rate': self.protective_improvement_rate,
             },
             'utility': {
                 'softmax_temperature': self.utility_softmax_temperature,
@@ -440,6 +473,12 @@ class Config:
             raise ConfigurationError("Network k parameter must be >= 2")
         if not (0 <= self.network_watts_p <= 1):
             raise ConfigurationError("Network p parameter must be in [0, 1]")
+        if self.network_adaptation_threshold < 1:
+            raise ConfigurationError("Network adaptation threshold must be >= 1")
+        if not (0 <= self.network_rewire_probability <= 1):
+            raise ConfigurationError("Network rewiring probability must be in [0, 1]")
+        if not (0 <= self.network_homophily_strength <= 1):
+            raise ConfigurationError("Network homophily strength must be in [0, 1]")
 
         # Agent validation
         if not (0 <= self.agent_initial_resilience <= 1):
@@ -549,6 +588,8 @@ class Config:
             raise ConfigurationError("Resource allocation cost must be >= 0")
         if self.resource_cost_exponent < 1:
             raise ConfigurationError("Resource cost exponent must be >= 1")
+        if not (0 <= self.protective_improvement_rate <= 1):
+            raise ConfigurationError("Protective improvement rate must be in [0, 1]")
 
         # Utility validation
         if self.utility_softmax_temperature <= 0:

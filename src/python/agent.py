@@ -311,7 +311,7 @@ class Person(mesa.Agent):
         # Decay consecutive hindrances over time if no new hindrance events
         if hasattr(self, 'consecutive_hindrances') and self.consecutive_hindrances > 0:
             # Slowly decay consecutive hindrances when no new hindrance events occur
-            decay_rate = 0.1
+            decay_rate = config.get('dynamics', 'stress_decay_rate')
             self.consecutive_hindrances = max(0, self.consecutive_hindrances - decay_rate)
 
         # Apply homeostatic adjustment to both affect and resilience
@@ -570,7 +570,7 @@ class Person(mesa.Agent):
                         # Current efficacy influences how effectively resources are used
                         current_efficacy = self.protective_factors[factor]
                         # Investment return is higher when current efficacy is lower (more room for improvement)
-                        improvement_rate = 0.5  # Fixed improvement rate for now
+                        improvement_rate = config.get('agent_parameters', 'protective_improvement_rate')
                         investment_effectiveness = 1.0 - current_efficacy  # Higher return when efficacy is low
 
                         efficacy_increase = allocation * improvement_rate * investment_effectiveness
@@ -593,7 +593,7 @@ class Person(mesa.Agent):
             if efficacy > 0:
                 # Boost is higher when resilience is low (more needed)
                 need_multiplier = max(0.1, 1.0 - self.resilience)
-                boost_rate = 0.1  # Fixed boost rate for now
+                boost_rate = config.get('agent_parameters', 'resilience_boost_rate')
                 total_boost += efficacy * need_multiplier * boost_rate
 
         return total_boost
@@ -737,7 +737,7 @@ class Person(mesa.Agent):
 
         # Check if agent should consider network adaptation
         stress_breach_count = getattr(self, 'stress_breach_count', 0)
-        adaptation_threshold = 3  # Fixed adaptation threshold for now
+        adaptation_threshold = config.get('agent_parameters', 'network_adaptation_threshold')
 
         if stress_breach_count < adaptation_threshold:
             return
@@ -753,8 +753,8 @@ class Person(mesa.Agent):
             return
 
         # Calculate adaptation metrics
-        rewire_prob = 0.01  # Fixed rewire probability for now
-        homophily_strength = 0.7  # Fixed homophily strength for now
+        rewire_prob = config.get('agent_parameters', 'network_rewire_probability')
+        homophily_strength = config.get('agent_parameters', 'network_homophily_strength')
 
         # Check each neighbor for potential rewiring
         for neighbor in current_neighbors:
