@@ -142,7 +142,7 @@ class StressModel(mesa.Model):
             'network_density': lambda m: m._calculate_network_density(),  # Network connectivity measure
 
             # Population health categories (for cost-effectiveness analysis)
-            'stress_prevalence': lambda m: sum(1 for agent in m.agents if agent.affect < -0.3) / len(m.agents) if m.agents else 0.0,  # Proportion with high stress
+            'stress_prevalence': lambda m: sum(1 for agent in m.agents if getattr(agent, 'stressed', False)) / len(m.agents) if m.agents else 0.0,  # Proportion with high stress (PSS-10 based)
             'low_resilience': lambda m: sum(1 for agent in m.agents if agent.resilience < 0.3) if m.agents else 0,  # Count with low resilience
             'high_resilience': lambda m: sum(1 for agent in m.agents if agent.resilience > 0.7) if m.agents else 0,  # Count with high resilience
 
