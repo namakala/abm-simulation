@@ -1,4 +1,5 @@
 % Options for packages loaded elsewhere
+% Options for packages loaded elsewhere
 \PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
@@ -7,21 +8,22 @@
   letterpaper,
   DIV=11,
   numbers=noendperiod]{scrartcl}
-
+\usepackage{xcolor}
 \usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math}
+  \usepackage{unicode-math} % this also loads fontspec
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
 \fi
 \usepackage{lmodern}
-\ifPDFTeX\else  
-    % xetex/luatex font selection
+\ifPDFTeX\else
+  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -39,9 +41,6 @@
 }{% if KOMA class
   \KOMAoptions{parskip=half}}
 \makeatother
-\usepackage{xcolor}
-\setlength{\emergencystretch}{3em} % prevent overfull lines
-\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 % Make \paragraph and \subparagraph free-standing
 \makeatletter
 \ifx\paragraph\undefined\else
@@ -67,8 +66,7 @@
 \makeatother
 
 
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{longtable,booktabs,array}
 \usepackage{calc} % for calculating minipage widths
 % Correct order of tables after \paragraph or \subparagraph
 \usepackage{etoolbox}
@@ -80,17 +78,21 @@
 \makesavenoteenv{longtable}
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
+
+
 % definitions for citeproc citations
 \NewDocumentCommand\citeproctext{}{}
 \NewDocumentCommand\citeproc{mm}{%
@@ -124,6 +126,18 @@
 \newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+
+
+
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+ 
+
 
 \usepackage{longtable}
 \usepackage{amsmath}
@@ -185,14 +199,9 @@
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
 \makeatother
-
-\ifLuaTeX
-  \usepackage{selnolig}  % disable illegal ligatures
-\fi
 \usepackage{bookmark}
-
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same} % disable monospaced font for URLs
+\urlstyle{same}
 \hypersetup{
   pdftitle={An agent-based simulation of psychological resilience},
   pdfauthor={Aly Lamuri},
@@ -207,7 +216,6 @@
 \title{An agent-based simulation of psychological resilience}
 \author{Aly Lamuri}
 \date{}
-
 \begin{document}
 \maketitle
 
@@ -325,6 +333,456 @@ social support, family support, and psychological capital, with the
 latter encompassing personality traits such as openness,
 conscientiousness, and extraversion (Hobfoll 1989; Klaver et al. 2021;
 Zager Kocjan, Kavčič, and Avsec 2021).
+
+\section{Methods}\label{methods}
+
+\subsection{Affect}\label{affect}
+
+Affect represents an individual's current emotional state, ranging from
+very negative to very positive. The model examines how various factors
+influence these emotional states, including social connections, stress
+events, and natural tendencies to return to an individual's baseline
+emotional level.
+
+\subsubsection{Social Influence on
+Affect}\label{social-influence-on-affect}
+
+The affect of agent \(i\) at time \(t+1\) is influenced by the affect of
+neighboring agents \(j \in N_i\):
+
+\[\Delta a_{i,t+1}^{social} = \alpha \sum_{j \in N_i} (a_{j,t} - a_{i,t})\]
+
+where \(\alpha\) represents the peer influence rate and \(N_i\) is the
+set of neighboring agents.
+
+\subsubsection{Stress Event Impact}\label{stress-event-impact}
+
+Stress events modify affect based on challenge-hindrance appraisal and
+coping outcomes:
+
+\[\Delta a_{i,t+1}^{stress} = \beta \cdot (c_i \cdot s_i - h_i \cdot f_i)\]
+
+where \(\beta\) is the event appraisal rate, \(c_i\) and \(h_i\)
+represent challenge and hindrance components, \(s_i\) is coping success
+(1 for success, 0 for failure), and \(f_i\) is coping failure (1 for
+failure, 0 for success).
+
+\subsubsection{Homeostatic Regulation}\label{homeostatic-regulation}
+
+Affect naturally returns to baseline through homeostatic processes:
+
+\[a_{i,t+1} = a_{i,t} + \gamma (a_{i,0} - a_{i,t}) + \Delta a_{i,t+1}^{social} + \Delta a_{i,t+1}^{stress}\]
+
+where \(\gamma\) is the homeostatic rate and \(a_{i,0}\) is the baseline
+affect level.
+
+\subsubsection{Resilience-Affect
+Integration}\label{resilience-affect-integration}
+
+Positive affect enhances resource regeneration, while high resilience
+provides emotional buffering:
+
+\[r_{i,t+1} = r_{i,t} + \delta \cdot \max(0, a_{i,t}) \cdot R_{max} - \epsilon \cdot \max(0, -a_{i,t})\]
+
+where \(r_i\) represents resources, \(\delta\) is the positive affect
+regeneration bonus, \(\epsilon\) is the negative affect regeneration
+penalty, and \(R_{max}\) is maximum resource capacity.
+
+\subsection{Stress Perception}\label{stress-perception}
+
+Stress perception follows a comprehensive pipeline that transforms life
+events into psychological stress responses using the challenge-hindrance
+framework.
+
+\subsubsection{Challenge-Hindrance
+Appraisal}\label{challenge-hindrance-appraisal}
+
+Each stress event \(e_i\) is characterized by controllability
+\(c_i \in [0,1]\) and overload \(o_i \in [0,1]\):
+
+\[z_i = \omega_c c_i - \omega_o o_i + b\]
+
+\[challenge_i = \sigma(\gamma z_i) = \frac{1}{1 + e^{-\gamma z_i}}\]
+
+\[hindrance_i = 1 - challenge_i\]
+
+where \(\omega_c\) and \(\omega_o\) are weight parameters, \(b\) is a
+bias term, and \(\gamma\) controls sigmoid steepness.
+
+\subsubsection{PSS-10 Bifactor Model}\label{pss-10-bifactor-model}
+
+The PSS-10 integrates controllability and overload dimensions using a
+bifactor model:
+
+\[PSS_{10_{total}} = \sum_{k=1}^{10} item_k\]
+
+\[item_k = \mu_k + \lambda_k^c \cdot C + \lambda_k^o \cdot O + \epsilon_k\]
+
+where \(C \sim N(0,1)\) and \(O \sim N(0,1)\) are latent factors with
+correlation \(\rho\), \(\lambda_k^c\) and \(\lambda_k^o\) are factor
+loadings, \(\mu_k\) are item means, and \(\epsilon_k\) are residuals.
+
+\subsubsection{Stress Threshold
+Evaluation}\label{stress-threshold-evaluation}
+
+An agent becomes stressed when appraised stress load exceeds their
+dynamic threshold:
+
+\[L_i = s_i \cdot (1 + \delta \cdot (hindrance_i - challenge_i))\]
+
+\[T_{i,effective} = T_{base} + \lambda_C \cdot challenge_i - \lambda_H \cdot hindrance_i\]
+
+\[stressed_i = \begin{cases} 1 & \text{if } L_i > T_{i,effective} \\ 0 & \text{otherwise} \end{cases}\]
+
+where \(s_i\) is event magnitude, \(\delta\) controls
+challenge-hindrance polarity, \(\lambda_C\) and \(\lambda_H\) are
+threshold scaling parameters, and \(T_{base}\) is the baseline
+threshold.
+
+\subsection{Resilience}\label{resilience}
+
+Resilience represents an individual's capacity to adapt and recover from
+stress events, with state variables including current resilience level,
+baseline resilience, consecutive hindrances, and stress breach count.
+
+\subsubsection{Resilience Changes from Coping
+Outcomes}\label{resilience-changes-from-coping-outcomes}
+
+Resilience updates based on challenge-hindrance appraisal and coping
+success:
+
+\[\Delta r_i = \begin{cases}
+\rho_{success} \cdot challenge_i & \text{if coping successful} \\
+\rho_{minor} \cdot hindrance_i & \text{if coping successful} \\
+-\rho_{failure} \cdot hindrance_i & \text{if coping failed} \\
+-\rho_{minor} \cdot challenge_i & \text{if coping failed}
+\end{cases}\]
+
+where \(\rho_{success}\), \(\rho_{minor}\), \(\rho_{failure}\) are rate
+parameters for different outcomes.
+
+\subsubsection{Social Support Boost}\label{social-support-boost}
+
+Social support provides resilience enhancement:
+
+\[r_{i,t+1} = r_{i,t} + \sigma_{support} \cdot \sum_{j \in supporters} q_j\]
+
+where \(\sigma_{support}\) is the social support rate and \(q_j\) is the
+quality of support from agent \(j\).
+
+\subsubsection{Overload Effects}\label{overload-effects}
+
+Cumulative hindrance events create overload when exceeding threshold:
+
+\[overload_i = \begin{cases} 1 & \text{if } h_i^{consecutive} > \theta_{overload} \\ 0 & \text{otherwise} \end{cases}\]
+
+\[\Delta r_{i,overload} = -\nu \cdot overload_i\]
+
+where \(\theta_{overload}\) is the overload threshold and \(\nu\) is the
+overload penalty rate.
+
+\subsubsection{Homeostatic Adjustment}\label{homeostatic-adjustment}
+
+Resilience returns to baseline over time:
+
+\[r_{i,t+1} = r_{i,t} + \eta (r_{i,0} - r_{i,t}) + \Delta r_i + \Delta r_{i,overload}\]
+
+where \(\eta\) is the homeostatic rate and \(r_{i,0}\) is baseline
+resilience.
+
+\subsubsection{Coping Success
+Determination}\label{coping-success-determination}
+
+Coping probability integrates challenge-hindrance effects and social
+influence:
+
+\[p_{coping_i} = p_{base} + \phi_C \cdot challenge_i - \phi_H \cdot hindrance_i + \psi \cdot \bar{a}_{N_i}\]
+
+where \(p_{base}\) is base coping probability, \(\phi_C\) and \(\phi_H\)
+are challenge and hindrance modifiers, \(\psi\) is social influence
+strength, and \(\bar{a}_{N_i}\) is average neighbor affect.
+
+\subsection{Agent Interaction}\label{agent-interaction}
+
+Agent interactions form the core social dynamics through a grid-based
+social network reflecting real-world spatial relationships.
+
+\subsubsection{Network Structure}\label{network-structure}
+
+Agents are positioned on a 2D grid with connections to Moore neighbors:
+
+\[N_i = \{j \mid \max(|x_i - x_j|, |y_i - y_j|) \leq 1, j \neq i\}\]
+
+where \((x_i, y_i)\) are grid coordinates of agent \(i\).
+
+\subsubsection{Social Influence
+Dynamics}\label{social-influence-dynamics}
+
+Social interactions create bidirectional affect changes with asymmetric
+effects:
+
+\[\Delta a_{i,t+1} = \mu \sum_{j \in N_i} (a_{j,t} - a_{i,t})\]
+
+\[\Delta a_{j,t+1} = \mu \sum_{i \in N_j} (a_{i,t} - a_{j,t})\]
+
+where \(\mu\) is the interaction influence rate.
+
+\subsubsection{Network Adaptation}\label{network-adaptation}
+
+Stress triggers network rewiring based on homophily and support
+effectiveness:
+
+\[p_{rewire_i} = \begin{cases}
+\pi & \text{if } stress_i^{breaches} > \theta_{adapt} \\ 0 & \text{otherwise} \end{cases}\]
+
+\subsubsection{Homophily-Based
+Connection}\label{homophily-based-connection}
+
+Connection probability considers stress and affect similarity:
+
+\[p_{connect_{ij}} = \frac{1}{1 + e^{-\kappa (similarity_{ij} - 0.5)}}\]
+
+\[similarity_{ij} = 1 - \frac{|stress_i - stress_j| + |a_i - a_j|}{2}\]
+
+where \(\kappa\) controls homophily strength.
+
+\subsubsection{Social Support Dynamics}\label{social-support-dynamics}
+
+Support provision depends on neighbor affect and resilience:
+
+\[support_{ij} = \begin{cases}
+q_j \cdot r_j & \text{if } a_j > \theta_{support} \\ 0 & \text{otherwise} \end{cases}\]
+
+where \(q_j\) is support quality and \(\theta_{support}\) is the support
+threshold.
+
+\subsection{Psychological Resource
+Management}\label{psychological-resource-management}
+
+Resource management implements conservation of resources theory, where
+individuals have limited psychological and physical resources to
+allocate across protective strategies.
+
+\subsubsection{Resource Regeneration}\label{resource-regeneration}
+
+Resources regenerate toward maximum capacity with affect modulation:
+
+\[R_{i,t+1} = R_{i,t} + \rho (R_{max} - R_{i,t}) + \delta \cdot \max(0, a_{i,t}) \cdot R_{max}\]
+
+where \(\rho\) is the base regeneration rate, \(R_{max}\) is maximum
+resource capacity, and \(\delta\) is the positive affect bonus.
+
+\subsubsection{Resource Consumption}\label{resource-consumption}
+
+Successful coping consumes resources proportional to event hindrance:
+
+\[R_{i,t+1} = R_{i,t} - \kappa \cdot hindrance_i \cdot s_i\]
+
+where \(\kappa\) is the resource cost parameter and \(s_i\) indicates
+coping success.
+
+\subsubsection{Softmax Resource
+Allocation}\label{softmax-resource-allocation}
+
+Resources are allocated across protective factors using softmax
+decision-making:
+
+\[allocation_{i,k} = \frac{e^{u_{i,k}/\tau}}{\sum_{m=1}^4 e^{u_{i,m}/\tau}} \cdot R_{i,t}\]
+
+\[u_{i,k} = \alpha_k \cdot (1 - p_{i,k}) + \beta \cdot (1 - resilience_i)\]
+
+where \(\tau\) is the softmax temperature, \(u_{i,k}\) is the utility of
+protective factor \(k\), \(\alpha_k\) is the efficacy of factor \(k\),
+\(p_{i,k}\) is the current protection level, and \(\beta\) controls
+need-based allocation.
+
+\subsubsection{Protective Factor
+Dynamics}\label{protective-factor-dynamics}
+
+Protective factors improve based on resource investment:
+
+\[\Delta p_{i,k} = \gamma_k \cdot allocation_{i,k} \cdot (1 - p_{i,k})\]
+
+where \(\gamma_k\) is the improvement rate for protective factor \(k\).
+
+\textbf{Gain/Loss Spirals:} The model captures resource spirals through
+coupled dynamics:
+
+\textbf{Gain Spiral:}
+\(R \uparrow \rightarrow allocation \uparrow \rightarrow p \uparrow \rightarrow coping \uparrow \rightarrow a \uparrow \rightarrow regeneration \uparrow\)
+
+\textbf{Loss Spiral:}
+\(R \downarrow \rightarrow allocation \downarrow \rightarrow p \downarrow \rightarrow coping \downarrow \rightarrow a \downarrow \rightarrow regeneration \downarrow\)
+
+\subsection{Parameters}\label{parameters}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3390}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1864}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2542}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2203}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Parameter Category
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Parameter
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Default Value
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Simulation} & \texttt{SIMULATION\_NUM\_AGENTS} & 20 & Number of
+agents in the simulation population \\
+& \texttt{SIMULATION\_MAX\_DAYS} & 100 & Maximum simulation duration in
+days \\
+& \texttt{SIMULATION\_SEED} & 42 & Random seed for reproducible
+results \\
+\textbf{Network} & \texttt{NETWORK\_WATTS\_K} & 4 & Watts-Strogatz
+network: neighbors per node \\
+& \texttt{NETWORK\_WATTS\_P} & 0.1 & Watts-Strogatz network: rewiring
+probability \\
+& \texttt{NETWORK\_ADAPTATION\_THRESHOLD} & 3 & Threshold for network
+adaptation when stress threshold breached \\
+\textbf{Agent State} & \texttt{AGENT\_INITIAL\_RESILIENCE} & 0.5 &
+Starting resilience level for all agents \\
+& \texttt{AGENT\_INITIAL\_AFFECT} & 0.0 & Initial emotional state
+(-1=negative, 1=positive) \\
+& \texttt{AGENT\_INITIAL\_RESOURCES} & 0.6 & Starting psychological
+resources \\
+& \texttt{AGENT\_STRESS\_PROBABILITY} & 0.5 & Daily probability of
+experiencing stress events \\
+\textbf{Stress Events} & \texttt{STRESS\_CONTROLLABILITY\_MEAN} & 0.5 &
+Mean controllability of stress events \\
+& \texttt{STRESS\_OVERLOAD\_MEAN} & 0.5 & Mean overload intensity of
+stress events \\
+& \texttt{STRESS\_BETA\_ALPHA} & 2.0 & Beta distribution shape parameter
+for controllability \\
+& \texttt{STRESS\_BETA\_BETA} & 2.0 & Beta distribution shape parameter
+for overload \\
+\textbf{PSS-10} & \texttt{PSS10\_THRESHOLD} & 27 & Threshold score for
+determining stressed state \\
+& \texttt{PSS10\_BIFACTOR\_COR} & 0.3 & Correlation between
+controllability and overload dimensions \\
+\textbf{Appraisal} & \texttt{APPRAISAL\_OMEGA\_C} & 1.0 & Weight for
+controllability in challenge/hindrance appraisal \\
+& \texttt{APPRAISAL\_OMEGA\_O} & 1.0 & Weight for overload in
+appraisal \\
+& \texttt{APPRAISAL\_GAMMA} & 6.0 & Sigmoid steepness for
+challenge/hindrance classification \\
+\textbf{Thresholds} & \texttt{THRESHOLD\_BASE\_THRESHOLD} & 0.5 & Base
+stress threshold for becoming stressed \\
+& \texttt{THRESHOLD\_CHALLENGE\_SCALE} & 0.15 & Challenge threshold
+modifier \\
+& \texttt{THRESHOLD\_HINDRANCE\_SCALE} & 0.25 & Hindrance threshold
+modifier \\
+\textbf{Coping} & \texttt{COPING\_BASE\_PROBABILITY} & 0.5 & Base coping
+probability before situational modifiers \\
+& \texttt{COPING\_CHALLENGE\_BONUS} & 0.2 & Bonus to coping success for
+challenge events \\
+& \texttt{COPING\_HINDRANCE\_PENALTY} & 0.3 & Penalty to coping success
+for hindrance events \\
+\textbf{Interactions} & \texttt{INTERACTION\_INFLUENCE\_RATE} & 0.05 &
+Base rate of affect influence between agents \\
+& \texttt{INTERACTION\_MAX\_NEIGHBORS} & 10 & Maximum neighbors
+considered for interactions \\
+\textbf{Affect} & \texttt{AFFECT\_PEER\_INFLUENCE\_RATE} & 0.1 &
+Strength of peer influence on affect \\
+& \texttt{AFFECT\_EVENT\_APPRAISAL\_RATE} & 0.15 & How events affect
+baseline affect through appraisal \\
+& \texttt{AFFECT\_HOMEOSTATIC\_RATE} & 0.5 & Tendency for affect to
+return to baseline \\
+\textbf{Resilience} & \texttt{RESILIENCE\_COPING\_SUCCESS\_RATE} & 0.1 &
+Resilience change from successful coping \\
+& \texttt{RESILIENCE\_SOCIAL\_SUPPORT\_RATE} & 0.08 & Resilience boost
+from social support \\
+& \texttt{RESILIENCE\_OVERLOAD\_THRESHOLD} & 3 & Minimum consecutive
+hindrances for overload effect \\
+\textbf{Resources} & \texttt{PROTECTIVE\_SOCIAL\_SUPPORT} & 0.5 &
+Efficacy of social support in reducing distress \\
+& \texttt{PROTECTIVE\_FAMILY\_SUPPORT} & 0.5 & Efficacy of family
+support \\
+& \texttt{PROTECTIVE\_FORMAL\_INTERVENTION} & 0.5 & Efficacy of
+professional interventions \\
+& \texttt{RESOURCE\_BASE\_REGENERATION} & 0.05 & Daily resource
+regeneration rate \\
+\end{longtable}
+
+\subsection{Model Integration}\label{model-integration}
+
+The agent-based model integrates six core mechanism groups that work
+together to simulate realistic mental health dynamics through a
+comprehensive state transition framework.
+
+\subsubsection{Agent State Vector}\label{agent-state-vector}
+
+Each agent \(i\) maintains a complete state vector updated daily:
+
+\[\mathbf{s}_{i,t+1} = f(\mathbf{s}_{i,t}, \mathbf{e}_{i,t}, \mathbf{n}_{i,t}, \mathbf{\theta})\]
+
+where
+\(\mathbf{s}_i = [a_i, r_i, stress_i, \mathbf{p}_i, R_i, pss10_i]\)
+represents affect, resilience, stress level, protective factors,
+resources, and PSS-10 scores; \(\mathbf{e}_i\) are external events;
+\(\mathbf{n}_i\) are network influences; and \(\mathbf{\theta}\) are
+model parameters.
+
+\subsubsection{Daily Step Integration}\label{daily-step-integration}
+
+Each simulation day follows a structured sequence:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Initialization:}
+  \(\mathbf{s}_{i,t}^{init} = initialize(\mathbf{s}_{i,t-1})\)
+\item
+  \textbf{Event Processing:}
+  \(\mathbf{e}_{i,t} \sim P(\mathbf{e}|\mathbf{s}_{i,t}^{init}, \mathbf{\theta})\)
+\item
+  \textbf{Social Interaction:}
+  \(\Delta \mathbf{s}_{i,t}^{social} = g(\mathbf{s}_{N_i,t}, \mathbf{\theta}_{social})\)
+\item
+  \textbf{Stress Appraisal:}
+  \(stress_{i,t} = appraise(\mathbf{e}_{i,t}, \mathbf{\theta}_{stress})\)
+\item
+  \textbf{Coping Determination:}
+  \(coping_i = h(stress_{i,t}, r_{i,t}, \mathbf{s}_{N_i,t})\)
+\item
+  \textbf{State Updates:}
+  \(\mathbf{s}_{i,t+1} = update(\mathbf{s}_{i,t}, \Delta \mathbf{s}_{i,t}^{social}, stress_{i,t}, coping_i)\)
+\item
+  \textbf{Homeostasis:}
+  \(\mathbf{s}_{i,t+1} = homeostasis(\mathbf{s}_{i,t+1}, \mathbf{s}_{i,0})\)
+\end{enumerate}
+
+\subsubsection{Feedback Loops}\label{feedback-loops}
+
+\textbf{Positive Reinforcement Loop:}
+\[r_{t+1} = r_t + \phi_{success} \cdot challenge \cdot coping_{success}\]
+\[a_{t+1} = a_t + \beta \cdot coping_{success} \cdot challenge\]
+\[R_{t+1} = R_t + \delta \cdot \max(0, a_{t+1})\]
+
+\textbf{Negative Degradation Loop:}
+\[r_{t+1} = r_t - \phi_{failure} \cdot hindrance \cdot coping_{failure}\]
+\[a_{t+1} = a_t - \beta \cdot coping_{failure} \cdot hindrance\]
+\[R_{t+1} = R_t - \epsilon \cdot \max(0, -a_{t+1})\]
+
+\textbf{Social Amplification Loop:}
+\[\Delta a_i = \mu \sum_{j \in N_i} (a_j - a_i)\]
+\[p_{connect_{ij}} = \frac{1}{1 + e^{-\kappa |a_i - a_j|}}\]
+
+\textbf{Homeostatic Equilibria:} The system tends toward equilibrium
+points where all mechanisms balance:
+
+\[\frac{d\mathbf{s}}{dt} = 0 \implies \mathbf{s}^* = equilibrium(\mathbf{\theta})\]
+
+where \(\mathbf{s}^*\) represents stable mental health states depending
+on parameter configurations and social network structure.
 
 \section*{References}\label{references}
 \addcontentsline{toc}{section}{References}

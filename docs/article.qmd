@@ -36,6 +36,277 @@ The following five articles were selected for their relevance to the development
 
 This study aims to simulate stress perception using an ABM approach. Stress perception is operationalized as a generalization of the Perceived Stress Scale-10, following the guidance provided in its interpretation manual [@cohen1988perceived]. Modeling stress perception is essential for capturing the activation of psychological resilience [@parsons2016cognitive]. Under equivalent stress exposure, agents with higher resilience are less likely to develop psychological disorders, whereas less resilient agents are more vulnerable. The simulation incorporates multiple psychological resources, including social support, family support, and psychological capital, with the latter encompassing personality traits such as openness, conscientiousness, and extraversion [@Hobfoll1989; @klaver2021exposure; @ZagerKocjan2021].
 
+# Methods
+
+## Affect
+
+Affect represents an individual's current emotional state, ranging from very negative to very positive. The model examines how various factors influence these emotional states, including social connections, stress events, and natural tendencies to return to an individual's baseline emotional level.
+
+### Social Influence on Affect
+
+The affect of agent $i$ at time $t+1$ is influenced by the affect of neighboring agents $j \in N_i$:
+
+$$\Delta a_{i,t+1}^{social} = \alpha \sum_{j \in N_i} (a_{j,t} - a_{i,t})$$
+
+where $\alpha$ represents the peer influence rate and $N_i$ is the set of neighboring agents.
+
+### Stress Event Impact
+
+Stress events modify affect based on challenge-hindrance appraisal and coping outcomes:
+
+$$\Delta a_{i,t+1}^{stress} = \beta \cdot (c_i \cdot s_i - h_i \cdot f_i)$$
+
+where $\beta$ is the event appraisal rate, $c_i$ and $h_i$ represent challenge and hindrance components, $s_i$ is coping success (1 for success, 0 for failure), and $f_i$ is coping failure (1 for failure, 0 for success).
+
+### Homeostatic Regulation
+
+Affect naturally returns to baseline through homeostatic processes:
+
+$$a_{i,t+1} = a_{i,t} + \gamma (a_{i,0} - a_{i,t}) + \Delta a_{i,t+1}^{social} + \Delta a_{i,t+1}^{stress}$$
+
+where $\gamma$ is the homeostatic rate and $a_{i,0}$ is the baseline affect level.
+
+### Resilience-Affect Integration
+
+Positive affect enhances resource regeneration, while high resilience provides emotional buffering:
+
+$$r_{i,t+1} = r_{i,t} + \delta \cdot \max(0, a_{i,t}) \cdot R_{max} - \epsilon \cdot \max(0, -a_{i,t})$$
+
+where $r_i$ represents resources, $\delta$ is the positive affect regeneration bonus, $\epsilon$ is the negative affect regeneration penalty, and $R_{max}$ is maximum resource capacity.
+
+## Stress Perception
+
+Stress perception follows a comprehensive pipeline that transforms life events into psychological stress responses using the challenge-hindrance framework.
+
+### Challenge-Hindrance Appraisal
+
+Each stress event $e_i$ is characterized by controllability $c_i \in [0,1]$ and overload $o_i \in [0,1]$:
+
+$$z_i = \omega_c c_i - \omega_o o_i + b$$
+
+$$challenge_i = \sigma(\gamma z_i) = \frac{1}{1 + e^{-\gamma z_i}}$$
+
+$$hindrance_i = 1 - challenge_i$$
+
+where $\omega_c$ and $\omega_o$ are weight parameters, $b$ is a bias term, and $\gamma$ controls sigmoid steepness.
+
+### PSS-10 Bifactor Model
+
+The PSS-10 integrates controllability and overload dimensions using a bifactor model:
+
+$$PSS_{10_{total}} = \sum_{k=1}^{10} item_k$$
+
+$$item_k = \mu_k + \lambda_k^c \cdot C + \lambda_k^o \cdot O + \epsilon_k$$
+
+where $C \sim N(0,1)$ and $O \sim N(0,1)$ are latent factors with correlation $\rho$, $\lambda_k^c$ and $\lambda_k^o$ are factor loadings, $\mu_k$ are item means, and $\epsilon_k$ are residuals.
+
+### Stress Threshold Evaluation
+
+An agent becomes stressed when appraised stress load exceeds their dynamic threshold:
+
+$$L_i = s_i \cdot (1 + \delta \cdot (hindrance_i - challenge_i))$$
+
+$$T_{i,effective} = T_{base} + \lambda_C \cdot challenge_i - \lambda_H \cdot hindrance_i$$
+
+$$stressed_i = \begin{cases} 1 & \text{if } L_i > T_{i,effective} \\ 0 & \text{otherwise} \end{cases}$$
+
+where $s_i$ is event magnitude, $\delta$ controls challenge-hindrance polarity, $\lambda_C$ and $\lambda_H$ are threshold scaling parameters, and $T_{base}$ is the baseline threshold.
+
+## Resilience
+
+Resilience represents an individual's capacity to adapt and recover from stress events, with state variables including current resilience level, baseline resilience, consecutive hindrances, and stress breach count.
+
+### Resilience Changes from Coping Outcomes
+
+Resilience updates based on challenge-hindrance appraisal and coping success:
+
+$$\Delta r_i = \begin{cases}
+\rho_{success} \cdot challenge_i & \text{if coping successful} \\
+\rho_{minor} \cdot hindrance_i & \text{if coping successful} \\
+-\rho_{failure} \cdot hindrance_i & \text{if coping failed} \\
+-\rho_{minor} \cdot challenge_i & \text{if coping failed}
+\end{cases}$$
+
+where $\rho_{success}$, $\rho_{minor}$, $\rho_{failure}$ are rate parameters for different outcomes.
+
+### Social Support Boost
+
+Social support provides resilience enhancement:
+
+$$r_{i,t+1} = r_{i,t} + \sigma_{support} \cdot \sum_{j \in supporters} q_j$$
+
+where $\sigma_{support}$ is the social support rate and $q_j$ is the quality of support from agent $j$.
+
+### Overload Effects
+
+Cumulative hindrance events create overload when exceeding threshold:
+
+$$overload_i = \begin{cases} 1 & \text{if } h_i^{consecutive} > \theta_{overload} \\ 0 & \text{otherwise} \end{cases}$$
+
+$$\Delta r_{i,overload} = -\nu \cdot overload_i$$
+
+where $\theta_{overload}$ is the overload threshold and $\nu$ is the overload penalty rate.
+
+### Homeostatic Adjustment
+
+Resilience returns to baseline over time:
+
+$$r_{i,t+1} = r_{i,t} + \eta (r_{i,0} - r_{i,t}) + \Delta r_i + \Delta r_{i,overload}$$
+
+where $\eta$ is the homeostatic rate and $r_{i,0}$ is baseline resilience.
+
+### Coping Success Determination
+
+Coping probability integrates challenge-hindrance effects and social influence:
+
+$$p_{coping_i} = p_{base} + \phi_C \cdot challenge_i - \phi_H \cdot hindrance_i + \psi \cdot \bar{a}_{N_i}$$
+
+where $p_{base}$ is base coping probability, $\phi_C$ and $\phi_H$ are challenge and hindrance modifiers, $\psi$ is social influence strength, and $\bar{a}_{N_i}$ is average neighbor affect.
+
+## Agent Interaction
+
+Agent interactions form the core social dynamics through a grid-based social network reflecting real-world spatial relationships.
+
+### Network Structure
+
+Agents are positioned on a 2D grid with connections to Moore neighbors:
+
+$$N_i = \{j \mid \max(|x_i - x_j|, |y_i - y_j|) \leq 1, j \neq i\}$$
+
+where $(x_i, y_i)$ are grid coordinates of agent $i$.
+
+### Social Influence Dynamics
+
+Social interactions create bidirectional affect changes with asymmetric effects:
+
+$$\Delta a_{i,t+1} = \mu \sum_{j \in N_i} (a_{j,t} - a_{i,t})$$
+
+$$\Delta a_{j,t+1} = \mu \sum_{i \in N_j} (a_{i,t} - a_{j,t})$$
+
+where $\mu$ is the interaction influence rate.
+
+### Network Adaptation
+
+Stress triggers network rewiring based on homophily and support effectiveness:
+
+$$p_{rewire_i} = \begin{cases}
+\pi & \text{if } stress_i^{breaches} > \theta_{adapt} \\ 0 & \text{otherwise} \end{cases}$$
+
+### Homophily-Based Connection
+
+Connection probability considers stress and affect similarity:
+
+$$p_{connect_{ij}} = \frac{1}{1 + e^{-\kappa (similarity_{ij} - 0.5)}}$$
+
+$$similarity_{ij} = 1 - \frac{|stress_i - stress_j| + |a_i - a_j|}{2}$$
+
+where $\kappa$ controls homophily strength.
+
+### Social Support Dynamics
+
+Support provision depends on neighbor affect and resilience:
+
+$$support_{ij} = \begin{cases}
+q_j \cdot r_j & \text{if } a_j > \theta_{support} \\ 0 & \text{otherwise} \end{cases}$$
+
+where $q_j$ is support quality and $\theta_{support}$ is the support threshold.
+
+## Psychological Resource Management
+
+Resource management implements conservation of resources theory, where individuals have limited psychological and physical resources to allocate across protective strategies.
+
+### Resource Regeneration
+
+Resources regenerate toward maximum capacity with affect modulation:
+
+$$R_{i,t+1} = R_{i,t} + \rho (R_{max} - R_{i,t}) + \delta \cdot \max(0, a_{i,t}) \cdot R_{max}$$
+
+where $\rho$ is the base regeneration rate, $R_{max}$ is maximum resource capacity, and $\delta$ is the positive affect bonus.
+
+### Resource Consumption
+
+Successful coping consumes resources proportional to event hindrance:
+
+$$R_{i,t+1} = R_{i,t} - \kappa \cdot hindrance_i \cdot s_i$$
+
+where $\kappa$ is the resource cost parameter and $s_i$ indicates coping success.
+
+### Softmax Resource Allocation
+
+Resources are allocated across protective factors using softmax decision-making:
+
+$$allocation_{i,k} = \frac{e^{u_{i,k}/\tau}}{\sum_{m=1}^4 e^{u_{i,m}/\tau}} \cdot R_{i,t}$$
+
+$$u_{i,k} = \alpha_k \cdot (1 - p_{i,k}) + \beta \cdot (1 - resilience_i)$$
+
+where $\tau$ is the softmax temperature, $u_{i,k}$ is the utility of protective factor $k$, $\alpha_k$ is the efficacy of factor $k$, $p_{i,k}$ is the current protection level, and $\beta$ controls need-based allocation.
+
+### Protective Factor Dynamics
+
+Protective factors improve based on resource investment:
+
+$$\Delta p_{i,k} = \gamma_k \cdot allocation_{i,k} \cdot (1 - p_{i,k})$$
+
+where $\gamma_k$ is the improvement rate for protective factor $k$.
+
+**Gain/Loss Spirals:**
+The model captures resource spirals through coupled dynamics:
+
+**Gain Spiral:** $R \uparrow \rightarrow allocation \uparrow \rightarrow p \uparrow \rightarrow coping \uparrow \rightarrow a \uparrow \rightarrow regeneration \uparrow$
+
+**Loss Spiral:** $R \downarrow \rightarrow allocation \downarrow \rightarrow p \downarrow \rightarrow coping \downarrow \rightarrow a \downarrow \rightarrow regeneration \downarrow$
+
+## Model Integration
+
+The agent-based model integrates six core mechanism groups that work together to simulate realistic mental health dynamics through a comprehensive state transition framework.
+
+### Agent State Vector
+
+Each agent $i$ maintains a complete state vector updated daily:
+
+$$\mathbf{s}_{i,t+1} = f(\mathbf{s}_{i,t}, \mathbf{e}_{i,t}, \mathbf{n}_{i,t}, \mathbf{\theta})$$
+
+where $\mathbf{s}_i = [a_i, r_i, stress_i, \mathbf{p}_i, R_i, pss10_i]$ represents affect, resilience, stress level, protective factors, resources, and PSS-10 scores; $\mathbf{e}_i$ are external events; $\mathbf{n}_i$ are network influences; and $\mathbf{\theta}$ are model parameters.
+
+### Daily Step Integration
+
+Each simulation day follows a structured sequence:
+
+1. **Initialization:** $\mathbf{s}_{i,t}^{init} = initialize(\mathbf{s}_{i,t-1})$
+2. **Event Processing:** $\mathbf{e}_{i,t} \sim P(\mathbf{e}|\mathbf{s}_{i,t}^{init}, \mathbf{\theta})$
+3. **Social Interaction:** $\Delta \mathbf{s}_{i,t}^{social} = g(\mathbf{s}_{N_i,t}, \mathbf{\theta}_{social})$
+4. **Stress Appraisal:** $stress_{i,t} = appraise(\mathbf{e}_{i,t}, \mathbf{\theta}_{stress})$
+5. **Coping Determination:** $coping_i = h(stress_{i,t}, r_{i,t}, \mathbf{s}_{N_i,t})$
+6. **State Updates:** $\mathbf{s}_{i,t+1} = update(\mathbf{s}_{i,t}, \Delta \mathbf{s}_{i,t}^{social}, stress_{i,t}, coping_i)$
+7. **Homeostasis:** $\mathbf{s}_{i,t+1} = homeostasis(\mathbf{s}_{i,t+1}, \mathbf{s}_{i,0})$
+
+### Feedback Loops
+
+**Positive Reinforcement Loop:**
+$$r_{t+1} = r_t + \phi_{success} \cdot challenge \cdot coping_{success}$$
+$$a_{t+1} = a_t + \beta \cdot coping_{success} \cdot challenge$$
+$$R_{t+1} = R_t + \delta \cdot \max(0, a_{t+1})$$
+
+**Negative Degradation Loop:**
+$$r_{t+1} = r_t - \phi_{failure} \cdot hindrance \cdot coping_{failure}$$
+$$a_{t+1} = a_t - \beta \cdot coping_{failure} \cdot hindrance$$
+$$R_{t+1} = R_t - \epsilon \cdot \max(0, -a_{t+1})$$
+
+**Social Amplification Loop:**
+$$\Delta a_i = \mu \sum_{j \in N_i} (a_j - a_i)$$
+$$p_{connect_{ij}} = \frac{1}{1 + e^{-\kappa |a_i - a_j|}}$$
+
+**Homeostatic Equilibria:**
+The system tends toward equilibrium points where all mechanisms balance:
+
+$$\frac{d\mathbf{s}}{dt} = 0 \implies \mathbf{s}^* = equilibrium(\mathbf{\theta})$$
+
+where $\mathbf{s}^*$ represents stable mental health states depending on parameter configurations and social network structure.
+
+# Results
+
+# Discussion
+
 # References {-}
 
 \multicols{2}
