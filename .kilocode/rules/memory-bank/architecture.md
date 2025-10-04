@@ -130,7 +130,7 @@ Agents adapt connections based on:
    - Apply network adaptation rules
    - Record state variables and metrics
 
-### Validation Pipeline  
+### Validation Pipeline
 1. Define pattern targets from literature review
 2. Run parameter sweeps with multiple replicates
 3. Compute distance metrics between simulated and target patterns
@@ -139,6 +139,6 @@ Agents adapt connections based on:
 
 ### Output Generation
 - **Time series** of agent states and population metrics
-- **Network snapshots** at key time points  
+- **Network snapshots** at key time points
 - **Resilience metrics** - recovery time, basin stability, FTLE
 - **Cost-effectiveness ratios** for intervention scenarios

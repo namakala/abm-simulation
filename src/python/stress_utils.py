@@ -21,6 +21,7 @@ This module contains stateless functions for:
 - All functions are pure and support dependency injection for testability
 """
 
+import hashlib
 import numpy as np
 from typing import Tuple, Optional, Dict, Any, List
 from dataclasses import dataclass, field
@@ -442,7 +443,6 @@ def generate_pss10_dimension_scores(
 
     if deterministic:
         # Create a deterministic seed from input parameters
-        import hashlib
         input_str = f"{controllability:.10f}_{overload:.10f}_{correlation:.10f}"
         seed = int(hashlib.md5(input_str.encode()).hexdigest(), 16) % (2**32)
         local_rng = np.random.default_rng(seed)
@@ -505,7 +505,6 @@ def generate_pss10_item_response(
     """
     if deterministic:
         # Create a deterministic seed from input parameters
-        import hashlib
         input_str = f"{item_mean:.10f}_{item_sd:.10f}_{controllability_loading:.10f}_{overload_loading:.10f}_{controllability_score:.10f}_{overload_score:.10f}_{reverse_scored}"
         seed = int(hashlib.md5(input_str.encode()).hexdigest(), 16) % (2**32)
         local_rng = np.random.default_rng(seed)

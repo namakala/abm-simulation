@@ -5,10 +5,21 @@ These tests verify that all modules can be imported correctly and
 that there are no circular dependencies or other import issues.
 """
 
-import pytest
 import importlib
-import traceback
 import os
+import pytest
+import traceback
+from src.python.config import get_config
+
+from src.python.affect_utils import (
+    InteractionConfig, ProtectiveFactors, ResourceParams
+)
+
+from src.python.stress_utils import (
+    StressEvent, ThresholdParams, AppraisalWeights
+)
+
+from src.python.math_utils import create_rng
 
 
 class TestModuleImports:
@@ -92,11 +103,6 @@ class TestFunctionalityAfterImports:
     @pytest.mark.integration
     def test_module_functionality(self):
         """Test that modules work correctly after all imports."""
-        from src.python.config import get_config
-        from src.python.affect_utils import InteractionConfig, ProtectiveFactors
-        from src.python.stress_utils import StressEvent, AppraisalWeights
-        from src.python.math_utils import create_rng
-
         # Test that we can create instances and use functions
         config = get_config()
         interaction_config = InteractionConfig()
@@ -128,7 +134,6 @@ class TestEnvironmentVariableConsistency:
         assert new_config.num_agents == 25
 
         # Test that dataclasses pick up the new value
-        from src.python.affect_utils import InteractionConfig
         interaction_config = InteractionConfig()
         # The dataclass should use the config value, but since config is a global,
         # we need to check that the config system is working
@@ -141,9 +146,6 @@ class TestNoHardcodedValues:
     @pytest.mark.config
     def test_dataclass_values_from_config(self, config):
         """Test that dataclass defaults come from config, not hardcoded values."""
-        from src.python.affect_utils import InteractionConfig, ProtectiveFactors, ResourceParams
-        from src.python.stress_utils import AppraisalWeights, ThresholdParams
-
         # Test that dataclass defaults come from config, not hardcoded values
         interaction_config = InteractionConfig()
         protective_factors = ProtectiveFactors()

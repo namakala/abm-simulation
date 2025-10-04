@@ -2,9 +2,19 @@
 Pytest configuration and shared fixtures for ABM simulation tests.
 """
 
+import logging
 import os
+import unittest.mock
 import pytest
+import numpy as np
+import networkx as nx
+from src.python import config
 from src.python.config import get_config, reload_config
+from src.python.math_utils import create_rng
+from src.python.stress_utils import generate_stress_event
+from src.python.agent import Person
+from src.python.affect_utils import ProtectiveFactors, InteractionConfig, ResourceParams
+from src.python.stress_utils import ThresholdParams, AppraisalWeights
 
 
 @pytest.fixture
@@ -16,14 +26,12 @@ def config():
 @pytest.fixture
 def sample_rng():
     """Provide a seeded random number generator for reproducible tests."""
-    from src.python.math_utils import create_rng
     return create_rng(42)
 
 
 @pytest.fixture
 def sample_stress_event(sample_rng):
     """Provide a sample stress event for testing."""
-    from src.python.stress_utils import generate_stress_event
     return generate_stress_event(sample_rng)
 
 
@@ -64,9 +72,6 @@ def reload_config_fixture():
 @pytest.fixture
 def sample_agents():
     """Provide sample agent instances for testing."""
-    from src.python.agent import Person
-    from unittest.mock import Mock
-
     # Create mock model
     model = Mock()
     model.seed = 42
@@ -87,8 +92,6 @@ def sample_agents():
 @pytest.fixture
 def sample_protective_factors():
     """Provide sample protective factors for testing."""
-    from src.python.affect_utils import ProtectiveFactors
-
     return ProtectiveFactors(
         social_support=0.7,
         family_support=0.5,
@@ -100,8 +103,6 @@ def sample_protective_factors():
 @pytest.fixture
 def sample_interaction_config():
     """Provide sample interaction configuration for testing."""
-    from src.python.affect_utils import InteractionConfig
-
     return InteractionConfig(
         influence_rate=0.1,
         resilience_influence=0.05,
@@ -112,8 +113,6 @@ def sample_interaction_config():
 @pytest.fixture
 def sample_threshold_params():
     """Provide sample threshold parameters for testing."""
-    from src.python.stress_utils import ThresholdParams
-
     return ThresholdParams(
         base_threshold=0.5,
         challenge_scale=0.15,
@@ -124,8 +123,6 @@ def sample_threshold_params():
 @pytest.fixture
 def sample_appraisal_weights():
     """Provide sample appraisal weights for testing."""
-    from src.python.stress_utils import AppraisalWeights
-
     return AppraisalWeights(
         omega_c=1.0,
         omega_p=1.0,
@@ -138,8 +135,6 @@ def sample_appraisal_weights():
 @pytest.fixture
 def sample_resource_params():
     """Provide sample resource parameters for testing."""
-    from src.python.affect_utils import ResourceParams
-
     return ResourceParams(
         base_regeneration=0.1,
         allocation_cost=0.15,
@@ -183,8 +178,6 @@ def sample_time_series_data():
 @pytest.fixture
 def sample_network_data():
     """Provide sample network data for testing."""
-    import networkx as nx
-
     # Create a small test network
     G = nx.watts_strogatz_graph(20, k=4, p=0.1, seed=42)
 
@@ -212,8 +205,6 @@ def benchmark_config():
 @pytest.fixture(autouse=True)
 def setup_test_logging():
     """Automatically set up test logging for all tests."""
-    import logging
-
     # Configure logging for tests
     logging.basicConfig(
         level=logging.WARNING,  # Only show warnings and errors during tests
@@ -224,3 +215,25 @@ def setup_test_logging():
 
     # Clean up logging after test
     logging.getLogger().handlers.clear()
+
+# Start with a clean env vars for each run
+@pytest.fixture(autouse=True)
+def complete_env_isolation():
+    """Complete environment isolation for each test."""
+    
+    # SETUP: Save current environment and reset to clean state
+    current_env = dict(os.environ)
+    
+    # Clear all environment variables and restore to pristine state
+    os.environ.clear()
+    
+    # Reset global config cache objects
+    config.config = None
+    
+    # Run the test
+    yield
+    
+    # TEARDOWN: Restore environment to pre-test state
+    os.environ.clear()
+    os.environ.update(current_env)
+    config.config = None

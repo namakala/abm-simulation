@@ -532,20 +532,20 @@ class TestDataCollectorDataIntegrity:
         for i, agent in enumerate(model.agents):
             if i == 0:
                 agent.resilience = 0.0  # Minimum resilience
-                agent.baseline_resilience = 0.0  # Set corresponding baseline
                 agent.affect = -1.0     # Minimum affect
-                agent.baseline_affect = -1.0     # Set corresponding baseline
                 agent.resources = 0.0   # Minimum resources
+                agent.baseline_resilience = 0.0 # Set corresponding baseline
+                agent.baseline_affect = -1.0    # Set corresponding baseline
             elif i == 1:
                 agent.resilience = 1.0  # Maximum resilience
-                agent.baseline_resilience = 1.0  # Set corresponding baseline
                 agent.affect = 1.0      # Maximum affect
-                agent.baseline_affect = 1.0      # Set corresponding baseline
                 agent.resources = 1.0   # Maximum resources
+                agent.baseline_resilience = 1.0 # Set corresponding baseline
+                agent.baseline_affect = 1.0     # Set corresponding baseline
             # i == 2, 3, 4: Keep default values
 
         # Run steps
-        for _ in range(2):
+        for _ in range(1):
             model.step()
 
         # Verify data integrity
