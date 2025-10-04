@@ -24,6 +24,7 @@
 - **Environment Management** - Multiple configuration files (`.env`, `.env.example`) for different deployment scenarios with environment-specific optimization
 - **PSS-10 Test Coverage** - Comprehensive testing including `test_pss10_comprehensive.py`, `test_pss10_config.py`, `test_pss10_empirical.py`, and `test_generate_pss10_dimension_scores.py`
 - **Manuscript Infrastructure** - Quarto manuscript setup with `article.qmd`, LaTeX compilation (`article.tex`), and bibliography management (`ref.bib`)
+- **Data Collection Documentation** - Comprehensive `data-collection.md` with detailed explanation of all 28 agent-level and model-level variables, operational definitions, measurement methods, and research applications
 
 ## Immediate Next Steps
 
@@ -46,7 +47,7 @@
 - **Test Results:** Automated test result reporting with XML output (`test-results.xml`) for CI/CD pipeline integration
 - **Dependencies:** Mesa, NetworkX, NumPy, pandas, python-dotenv, pytest fully implemented; R environment (renv) configured and ready for integration
 - **Data Storage:** Directory structure established (data/raw, data/processed); SQL integration pending
-- **Documentation:** Complete configuration system documentation with usage scenarios and research workflow integration; Quarto manuscript setup with `article.qmd`, LaTeX compilation (`article.tex`), and bibliography management (`ref.bib`)
+- **Documentation:** Complete configuration system documentation with usage scenarios and research workflow integration; comprehensive data collection documentation with 28 variable definitions and research applications; Quarto manuscript setup with `article.qmd`, LaTeX compilation (`article.tex`), and bibliography management (`ref.bib`)
 - **Shell Utilities:** Configuration extraction and management scripts operational for research workflows
 - **CI/CD Pipeline:** GitHub Actions workflow operational with automated testing and coverage reporting
 

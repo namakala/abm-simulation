@@ -32,7 +32,7 @@ Each agent represents an individual with the following state variables:
 
 ### [`src/python/`](src/python/) - Core ABM Implementation
 - `agent.py` - Person class with stress events, social interactions, and resource dynamics
-- `model.py` - StressModel class using Mesa framework with NetworkGrid
+- `model.py` - StressModel class using Mesa framework with NetworkGrid and comprehensive DataCollector integration
 - `stress_utils.py` - Stress event generation and appraisal processing utilities
 - `affect_utils.py` - Social interaction and resilience computation utilities
 - `math_utils.py` - Mathematical utilities for random sampling and clamping
@@ -40,9 +40,10 @@ Each agent represents an individual with the following state variables:
 - `simulate.py` - Main simulation runner (in project root)
 - `debug/` - Debugging utilities for threshold evaluation (`debug_threshold.py`) and stress processing troubleshooting (`simple_threshold_test.py`)
 - **PSS-10 Integration** - Complete Perceived Stress Scale-10 implementation with bifactor model, dimension score generation, and empirical validation testing
+- **DataCollector Integration** - Comprehensive Mesa DataCollector implementation with 20+ model-level metrics and 8+ agent-level variables for research analysis
 - `test_*.py` - Comprehensive test suite with 22 specialized test files:
   - Unit tests: `test_math_utils.py`, `test_stress_utils.py`, `test_affect_utils.py`
-  - Integration tests: `test_agent_integration.py`, `test_model_integration.py`, `test_affect_resilience_integration.py`, `test_agent_pss10_integration.py`
+  - Integration tests: `test_agent_integration.py`, `test_model_integration.py`, `test_affect_resilience_integration.py`, `test_agent_pss10_integration.py`, `test_datacollector_integration_comprehensive.py`
   - Configuration tests: `test_config_integration.py`, `test_dataclass_config.py`, `test_environment_variable_validation.py`, `test_pss10_config.py`
   - Mechanism tests: `test_stress_processing_mechanisms.py`, `test_affect_resilience_dynamics.py`, `test_homeostatic_adjustment.py`, `test_homeostatic_stabilization_integration.py`
   - Validation tests: `test_imports_and_dependencies.py`, `test_integration_new_mechanisms.py`, `test_new_mechanisms.py`
@@ -61,6 +62,16 @@ Each agent represents an individual with the following state variables:
 - **Environment Management** - Conda-based environment with automated setup and caching
 - **Configuration Management** - Comprehensive `.env`-based parameter system with validation and documentation
 - **Shell Utilities** - Configuration management scripts (`extract_env.sh`, `update_env_example.sh`) for automated parameter extraction and environment file synchronization
+
+### [`docs/features/`](docs/features/) - Feature Documentation
+- `affect-dynamics.md` - Emotional state changes and social influence mechanisms
+- `agent-interactions.md` - Social network effects and support systems
+- `integration-overview.md` - System integration and cross-mechanism interactions
+- `resilience-dynamics.md` - Coping responses and resilience mechanisms
+- `resource-management.md` - Protective factors and resource allocation
+- `step-calculations.md` - Detailed step-by-step calculation procedures
+- `stress-perception.md` - Event appraisal and challenge/hindrance determination
+- `data-collection.md` - Comprehensive data collection system with 28 variable definitions and research applications
 
 ### [`src/r/`](src/r/) - Analysis and Visualization
 - `analysis/` - Statistical analysis and sensitivity analysis (planned)

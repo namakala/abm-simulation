@@ -42,6 +42,8 @@ class Person(mesa.Agent):
     - affect: Current affect level ∈ [-1,1]
     - resources: Available psychological/physical resources ∈ [0,1]
     - protective_factors: Current levels of protective mechanisms
+    - daily_interactions: Count of daily social interactions ∈ [0,∞)
+    - daily_support_exchanges: Count of daily support exchanges ∈ [0,∞)
     """
 
     def __init__(self, model, config=None):
@@ -94,6 +96,10 @@ class Person(mesa.Agent):
         self.daily_stress_events = []  # Track stress events within current day
         self.stress_history = []  # Historical stress levels for analysis
         self.last_reset_day = 0  # Track when last daily reset occurred
+
+        # Initialize daily interaction tracking attributes
+        self.daily_interactions = 0  # Count of daily social interactions
+        self.daily_support_exchanges = 0  # Count of daily support exchanges
 
         # Initialize PSS-10 state variables
         self.pss10_responses = {}  # Individual PSS-10 item responses
@@ -210,7 +216,6 @@ class Person(mesa.Agent):
         daily_challenge = 0.0
         daily_hindrance = 0.0
         stress_events_count = 0
-        social_interactions_count = 0
 
         # Determine number of subevents using utility function
         n_subevents = sample_poisson(
@@ -229,10 +234,21 @@ class Person(mesa.Agent):
         self._rng.shuffle(actions)
 
         # Execute actions and accumulate daily challenge/hindrance
+        # Each action represents a subevent within the day, simulating realistic timing
         for action in actions:
             if action == "interact":
-                self.interact()
-                social_interactions_count += 1
+                # Track social interaction and check for meaningful support exchange
+                # The interact() method returns detailed information about the interaction outcome
+                interaction_result = self.interact()
+                self.daily_interactions += 1
+
+                # Check if this was a meaningful support exchange
+                # A support exchange occurs when interaction results in positive affect change
+                # and/or resilience improvement for either agent (threshold = 0.05)
+                # This tracks when social connections provide genuine emotional or psychological support
+                if interaction_result and interaction_result.get('support_exchange', False):
+                    self.daily_support_exchanges += 1
+
             elif action == "stress":
                 challenge, hindrance = self.stressful_event()
                 daily_challenge += challenge
@@ -259,7 +275,7 @@ class Person(mesa.Agent):
         # and incorporates social interaction effects on coping probability
 
         # Check if agent received social support during interactions (for resilience boost)
-        received_social_support = social_interactions_count > 0 and self._rng.random() < 0.3
+        received_social_support = self.daily_interactions > 0 and self._rng.random() < 0.3
 
         # Use new resilience dynamics that work with the updated stress processing
         # The coping success is now determined within each stress event using social influence
@@ -320,11 +336,6 @@ class Person(mesa.Agent):
         # NOTE: baseline_affect and baseline_resilience remain FIXED (not updated daily)
         # This ensures homeostasis pulls toward the agent's natural equilibrium point
 
-        # Apply daily stress decay and affect reset if it's a new day
-        current_day = getattr(self.model, 'day', 0)
-        if current_day != self.last_reset_day:
-            self._daily_reset(current_day)
-
         # Update PSS-10 scores based on current stress levels
         self.compute_pss10_score()
 
@@ -341,6 +352,9 @@ class Person(mesa.Agent):
         Interact with a random neighbor using utility functions.
 
         Delegates all domain logic to utility functions for modularity and testability.
+
+        Returns:
+            Dictionary with interaction results including support exchange detection
         """
         # Get neighbors using Mesa's grid
         neighbors = list(
@@ -350,10 +364,18 @@ class Person(mesa.Agent):
         )
 
         if not neighbors:
-            return
+            return {'support_exchange': False, 'affect_change': 0.0, 'resilience_change': 0.0}
+
+        # Store original values for change calculation
+        original_self_affect = self.affect
+        original_self_resilience = self.resilience
 
         # Select random interaction partner
         partner = self._rng.choice(neighbors)
+
+        # Store original partner values for change calculation
+        original_partner_affect = partner.affect
+        original_partner_resilience = partner.resilience
 
         # Use utility function for interaction processing
         new_self_affect, new_partner_affect, new_self_resilience, new_partner_resilience = (
@@ -371,6 +393,33 @@ class Person(mesa.Agent):
         partner.affect = clamp(new_partner_affect, -1.0, 1.0)
         self.resilience = clamp(new_self_resilience, 0.0, 1.0)
         partner.resilience = clamp(new_partner_resilience, 0.0, 1.0)
+
+        # Calculate changes for support exchange detection
+        # Track how much each agent's state improved (or declined) during interaction
+        self_affect_change = self.affect - original_self_affect
+        self_resilience_change = self.resilience - original_self_resilience
+        partner_affect_change = partner.affect - original_partner_affect
+        partner_resilience_change = partner.resilience - original_partner_resilience
+
+        # Detect support exchange: when at least one agent benefits significantly
+        # Support exchange occurs when there's meaningful positive change in affect or resilience
+        # This captures when social interaction provides genuine emotional or psychological benefit
+        # Threshold of 0.05 ensures we only count meaningful improvements, not minor fluctuations
+        support_threshold = 0.05  # Minimum change to count as support
+        support_exchange = (
+            self_affect_change > support_threshold or
+            self_resilience_change > support_threshold or
+            partner_affect_change > support_threshold or
+            partner_resilience_change > support_threshold
+        )
+
+        return {
+            'support_exchange': support_exchange,
+            'affect_change': self_affect_change,
+            'resilience_change': self_resilience_change,
+            'partner_affect_change': partner_affect_change,
+            'partner_resilience_change': partner_resilience_change
+        }
 
     def stressful_event(self):
         """
@@ -412,8 +461,17 @@ class Person(mesa.Agent):
             rng=self._rng
         )
 
+        # Track ALL stress events, not just stressful ones
+        self.daily_stress_events.append({
+            'challenge': challenge,
+            'hindrance': hindrance,
+            'is_stressed': is_stressed,
+            'stress_level': 0.0,  # Will be updated below if actually stressed
+            'coped_successfully': False  # Will be updated below if actually stressed
+        })
+
         if not is_stressed:
-            return 0.0, 0.0  # No challenge/hindrance if not stressed
+            return challenge, hindrance  # No stress processing if not stressed
 
         # Get neighbor affects for social influence on coping
         neighbor_affects = self._get_neighbor_affects()
@@ -437,13 +495,12 @@ class Person(mesa.Agent):
         self.resilience = new_resilience
         self.current_stress = new_stress
 
-        # Track the stress event for daily reset
-        self.daily_stress_events.append({
-            'challenge': challenge,
-            'hindrance': hindrance,
-            'coped_successfully': coped_successfully,
-            'stress_level': new_stress
-        })
+        # Update the tracked event with actual stress processing results
+        if self.daily_stress_events:
+            self.daily_stress_events[-1].update({
+                'stress_level': new_stress,
+                'coped_successfully': coped_successfully
+            })
 
         # Use resources for coping if successful
         if coped_successfully:
@@ -471,7 +528,6 @@ class Person(mesa.Agent):
             self.compute_pss10_score()
 
         return challenge, hindrance
-
     def _allocate_protective_factors(self):
         """
         Allocate available resources across protective factors using enhanced dynamics.
@@ -711,7 +767,9 @@ class Person(mesa.Agent):
         Perform daily reset of stress tracking variables and apply stress decay.
 
         This method implements the daily affect reset to baseline and stress decay
-        mechanisms as specified in the new stress processing flow.
+        mechanisms as specified in the new stress processing flow. It also handles
+        the reset of daily interaction and support exchange counters to ensure
+        accurate daily tracking for DataCollector analysis.
 
         Args:
             current_day: Current simulation day for tracking reset timing
@@ -720,6 +778,24 @@ class Person(mesa.Agent):
 
         # Update last reset day
         self.last_reset_day = current_day
+
+        # Reset daily interaction tracking counters
+        # These counters track social interactions and meaningful support exchanges per day
+        # Resetting ensures DataCollector gets accurate daily totals, not cumulative counts
+        previous_interactions = self.daily_interactions
+        previous_support_exchanges = self.daily_support_exchanges
+
+        self.daily_interactions = 0
+        self.daily_support_exchanges = 0
+
+        # Validate that counters were properly reset
+        # This ensures data integrity for daily tracking and analysis
+        if self.daily_interactions != 0 or self.daily_support_exchanges != 0:
+            raise ValueError(
+                f"Failed to reset daily counters for agent {self.unique_id}. "
+                f"Expected: interactions=0, support_exchanges=0. "
+                f"Got: interactions={self.daily_interactions}, support_exchanges={self.daily_support_exchanges}"
+            )
 
         # Apply daily affect reset to baseline
         stress_config = StressProcessingConfig()
