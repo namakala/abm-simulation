@@ -2,324 +2,220 @@
 
 ## Overview
 
-This document provides a comprehensive overview of the data collection system implemented using Mesa's DataCollector framework. The system collects both **agent-level variables** (individual agent states and behaviors) and **model-level variables** (population statistics and aggregated metrics) for research analysis and validation.
+This document provides an overview of the data collection system that tracks both individual experiences and population patterns. The system captures detailed information about how individuals respond to stress and social influences, as well as broader trends across the entire population.
 
 ## Data Collection Architecture
 
-### Mesa DataCollector Framework
+### Collection Framework
 
-The implementation uses Mesa's built-in `DataCollector` class for efficient, standardized data collection:
-
-```python
-self.datacollector = DataCollector(
-    model_reporters=model_reporters,  # Population-level metrics (20+ indicators)
-    agent_reporters=agent_reporters   # Individual-level metrics (8+ per agent)
-)
-```
+The system uses a structured approach to collect data efficiently, focusing on key indicators of mental health and social dynamics. Data is gathered once per day during the simulation process.
 
 **Key Benefits:**
-- **Performance Optimized**: Leverages Mesa's optimized data collection mechanisms
-- **Memory Efficient**: Reduced memory footprint through optimized storage
-- **Research-Ready**: Comprehensive metrics for mental health research and analysis
-- **Standardized Access**: Consistent data access patterns via DataFrame outputs
+- **Performance Optimized**: Efficient data collection methods
+- **Memory Efficient**: Streamlined storage approach
+- **Research-Ready**: Comprehensive metrics for mental health research
+- **Standardized Access**: Consistent data access patterns
 
 ### Collection Frequency
 
-Data is collected **once per simulation day** during the `model.step()` method:
-
-```python
-def step(self):
-    # Execute all agent steps
-    self.agents.shuffle_do("step")
-
-    # Single line collection of all metrics
-    self.datacollector.collect(self)
-
-    # Continue with network adaptation and other model-level processes
-```
+Data is collected once per simulation day, capturing the state of all individuals and population-level patterns at regular intervals.
 
 ## Agent-Level Variables
 
-Agent-level variables capture individual agent states, behaviors, and trajectories. Each agent is recorded once per time step, enabling longitudinal analysis of individual differences.
+Agent-level variables capture individual experiences, emotional states, and coping patterns. Each person is recorded once per time step, enabling analysis of individual differences and personal trajectories.
 
 ### Core State Variables
 
-| Variable | Data Type | Range | Description | Measurement Method |
-|----------|-----------|-------|-------------|-------------------|
-| **pss10** | Float | [0, 40] | Individual Perceived Stress Scale-10 score | Sum of 10 PSS-10 item responses (0-4 scale each) |
-| **resilience** | Float | [0, 1] | Current resilience capacity | Agent's internal resilience state variable |
-| **affect** | Float | [-1, 1] | Current emotional state | Agent's internal affect state variable (-1=very negative, +1=very positive) |
-| **resources** | Float | [0, 1] | Available psychological/physical resources | Agent's internal resource state variable |
+| Variable | Range | Description |
+|----------|-------|-------------|
+| **Perceived Stress** | 0-40 | Individual stress scale score |
+| **Resilience** | 0-1 | Current capacity to adapt and recover |
+| **Affect** | -1 to +1 | Current emotional state |
+| **Resources** | 0-1 | Available psychological and physical resources |
 
 ### Stress Processing Variables
 
-| Variable | Data Type | Range | Description | Measurement Method |
-|----------|-----------|-------|-------------|-------------------|
-| **current_stress** | Float | [0, 1] | Current stress level | Agent's internal stress state variable |
-| **stress_controllability** | Float | [0, 1] | Perceived controllability of stress | Agent's controllability dimension from PSS-10 |
-| **stress_overload** | Float | [0, 1] | Perceived overload from stress | Agent's overload dimension from PSS-10 |
-| **consecutive_hindrances** | Integer | [0, ∞) | Count of consecutive hindrance events | Cumulative count of predominantly hindrance stress events |
+| Variable | Range | Description |
+|----------|-------|-------------|
+| **Current Stress** | 0-1 | Current stress level |
+| **Stress Controllability** | 0-1 | Perceived control over stress |
+| **Stress Overload** | 0-1 | Perceived burden from stress |
+| **Consecutive Hindrances** | 0+ | Count of ongoing hindrance events |
 
 ### Operational Definitions
 
-#### PSS-10 Score (`pss10`)
-**Operational Definition**: The Perceived Stress Scale-10 total score representing an individual's subjective perception of stress over the past month.
+#### Perceived Stress
+**Definition**: An individual's subjective experience of stress as measured by a standard scale.
 
 **Measurement**:
-- **Scale**: 0-40 (sum of 10 items)
-- **Items**: 10 statements rated 0-4 (0=Never, 4=Very Often)
-- **Components**:
-  - Items 1, 2, 3, 6, 9, 10: Overload dimension (direct scoring)
-  - Items 4, 5, 7, 8: Controllability dimension (reverse scored)
-- **Integration**: Updated daily based on current stress state using bifactor model
+- **Scale**: 0-40 based on responses to 10 statements
+- **Components**: Includes both controllability and overload dimensions
+- **Integration**: Updated daily based on current stress experiences
 
-#### Resilience (`resilience`)
-**Operational Definition**: An agent's capacity to adapt and recover from stress events, representing psychological resilience resources.
+#### Resilience
+**Definition**: An individual's capacity to adapt and recover from stress events.
 
 **Measurement**:
-- **Scale**: 0-1 (normalized)
-- **Baseline**: Agent-specific natural equilibrium point
-- **Dynamics**: Changes based on coping outcomes, social support, and protective factors
-- **Homeostasis**: Pulls toward baseline level over time
+- **Scale**: 0-1 representing capacity level
+- **Baseline**: Individual's natural equilibrium point
+- **Dynamics**: Changes based on coping outcomes and social support
+- **Homeostasis**: Natural tendency to return to baseline level
 
-#### Affect (`affect`)
-**Operational Definition**: Current emotional state on a valence continuum from negative to positive emotions.
-
-**Measurement**:
-- **Scale**: -1 to +1 (-1=very negative, +1=very positive)
-- **Baseline**: Agent-specific natural equilibrium point
-- **Influences**: Peer influence, stress events, homeostasis
-- **Social Effects**: Neighbor affect influences daily dynamics
-
-#### Resources (`resources`)
-**Operational Definition**: Available psychological and physical resources for coping with stress and maintaining protective factors.
+#### Affect
+**Definition**: Current emotional state ranging from negative to positive.
 
 **Measurement**:
-- **Scale**: 0-1 (normalized)
-- **Regeneration**: Passive regeneration toward maximum capacity
-- **Consumption**: Used for successful coping and protective factor maintenance
-- **Affect Influence**: Positive affect enhances regeneration rate
+- **Scale**: -1 to +1 representing emotional valence
+- **Baseline**: Individual's natural equilibrium point
+- **Influences**: Social connections, stress events, and natural regulation
+- **Social Effects**: Neighbor emotions influence daily emotional patterns
+
+#### Resources
+**Definition**: Available psychological and physical resources for coping with stress.
+
+**Measurement**:
+- **Scale**: 0-1 representing available resources
+- **Regeneration**: Natural rebuilding toward maximum capacity
+- **Consumption**: Used for coping and maintaining protective factors
+- **Affect Influence**: Positive emotions enhance rebuilding rate
 
 ## Model-Level Variables
 
-Model-level variables capture population statistics, aggregated metrics, and system-wide patterns. These are computed once per time step from agent data.
+Model-level variables capture population patterns, aggregated statistics, and system-wide trends. These are calculated once per time step from individual data.
 
 ### Primary Outcome Measures
 
-| Variable | Data Type | Range | Description | Measurement Method |
-|----------|-----------|-------|-------------|-------------------|
-| **avg_pss10** | Float | [0, 40] | Population average PSS-10 score | Mean of all agents' PSS-10 scores |
-| **avg_resilience** | Float | [0, 1] | Population average resilience | Mean of all agents' resilience levels |
-| **avg_affect** | Float | [-1, 1] | Population average affect | Mean of all agents' affect levels |
-| **coping_success_rate** | Float | [0, 1] | Population coping success rate | Proportion of successful coping attempts across all agents |
+| Variable | Range | Description |
+|----------|-------|-------------|
+| **Average Perceived Stress** | 0-40 | Population average stress score |
+| **Average Resilience** | 0-1 | Population average resilience capacity |
+| **Average Affect** | -1 to +1 | Population average emotional state |
+| **Coping Success Rate** | 0-1 | Population success rate in coping with stress |
 
 ### Resource and Stress Metrics
 
-| Variable | Data Type | Range | Description | Measurement Method |
-|----------|-----------|-------|-------------|-------------------|
-| **avg_resources** | Float | [0, 1] | Population average resources | Mean of all agents' resource levels |
-| **avg_stress** | Float | [0, 1] | Population average stress | Mean of all agents' current stress levels |
-| **social_support_rate** | Float | [0, 1] | Rate of social support exchanges | Social support exchanges divided by total interactions |
-| **stress_events** | Integer | [0, ∞) | Total stress events per day | Count of stress events across all agents |
+| Variable | Range | Description |
+|----------|-------|-------------|
+| **Average Resources** | 0-1 | Population average resource levels |
+| **Average Stress** | 0-1 | Population average stress levels |
+| **Social Support Rate** | 0-1 | Rate of supportive interactions |
+| **Stress Events** | 0+ | Total stress events per day |
 
 ### Network and Social Metrics
 
-| Variable | Data Type | Range | Description | Measurement Method |
-|----------|-----------|-------|-------------|-------------------|
-| **network_density** | Float | [0, 1] | Network connectivity measure | Actual connections divided by possible connections |
-| **stress_prevalence** | Float | [0, 1] | Proportion with high stress | Agents with affect < -0.3 divided by total agents |
-| **low_resilience** | Integer | [0, N] | Count with low resilience | Agents with resilience < 0.3 |
-| **high_resilience** | Integer | [0, N] | Count with high resilience | Agents with resilience > 0.7 |
+| Variable | Range | Description |
+|----------|-------|-------------|
+| **Network Density** | 0-1 | Social network connectivity |
+| **Stress Prevalence** | 0-1 | Proportion experiencing high stress |
+| **Low Resilience Count** | 0+ | Number with low resilience |
+| **High Resilience Count** | 0+ | Number with high resilience |
 
 ### Challenge-Hindrance Appraisal Metrics
 
-| Variable | Data Type | Range | Description | Measurement Method |
-|----------|-----------|-------|-------------|-------------------|
-| **avg_challenge** | Float | [0, 1] | Average challenge appraisal | Mean challenge values from all stress events |
-| **avg_hindrance** | Float | [0, 1] | Average hindrance appraisal | Mean hindrance values from all stress events |
-| **challenge_hindrance_ratio** | Float | [-1, 1] | Balance between challenge and hindrance | (challenge - hindrance) / (challenge + hindrance) |
-| **avg_consecutive_hindrances** | Float | [0, ∞) | Average consecutive hindrance events | Mean consecutive hindrance count across agents |
+| Variable | Range | Description |
+|----------|-------|-------------|
+| **Average Challenge** | 0-1 | Average challenge appraisal |
+| **Average Hindrance** | 0-1 | Average hindrance appraisal |
+| **Challenge-Hindrance Ratio** | -1 to +1 | Balance between challenge and hindrance |
+| **Average Consecutive Hindrances** | 0+ | Average ongoing hindrance events |
 
 ### Daily Activity Statistics
 
-| Variable | Data Type | Range | Description | Measurement Method |
-|----------|-----------|-------|-------------|-------------------|
-| **total_stress_events** | Integer | [0, ∞) | Total stress events across population | Sum of stress events from all agents |
-| **successful_coping** | Integer | [0, ∞) | Total successful coping instances | Count of successful coping across all agents |
-| **social_interactions** | Integer | [0, ∞) | Total social interactions | Sum of daily interactions from all agents |
-| **support_exchanges** | Integer | [0, ∞) | Total support exchanges | Sum of daily support exchanges from all agents |
+| Variable | Range | Description |
+|----------|-------|-------------|
+| **Total Stress Events** | 0+ | Total stress events across population |
+| **Successful Coping** | 0+ | Total successful coping instances |
+| **Social Interactions** | 0+ | Total social interactions |
+| **Support Exchanges** | 0+ | Total supportive exchanges |
 
 ## Operational Definitions and Measurement Details
 
 ### Population Averages
 
-**avg_pss10**:
-- **Definition**: Population-level perceived stress as measured by PSS-10
-- **Calculation**: `mean([agent.pss10 for agent in model.agents])`
-- **Interpretation**: Higher values indicate greater population stress levels
-- **Research Use**: Primary outcome measure for intervention effectiveness
+**Average Perceived Stress**:
+- **Definition**: Population-level stress as measured by standard scale
+- **Interpretation**: Higher values indicate greater population stress
+- **Research Use**: Primary measure for evaluating intervention effectiveness
 
-**avg_resilience**:
+**Average Resilience**:
 - **Definition**: Average resilience capacity across the population
-- **Calculation**: `mean([agent.resilience for agent in model.agents])`
 - **Interpretation**: Higher values indicate greater population resilience
 - **Research Use**: Key indicator of mental health promotion success
 
-**avg_affect**:
+**Average Affect**:
 - **Definition**: Average emotional state across the population
-- **Calculation**: `mean([agent.affect for agent in model.agents])`
 - **Interpretation**: Positive values indicate generally positive population mood
 - **Research Use**: Indicator of overall population mental health
 
 ### Stress Processing Metrics
 
-**coping_success_rate**:
-- **Definition**: Proportion of stress events successfully coped with
-- **Calculation**: Total successful coping events divided by total stress events
+**Coping Success Rate**:
+- **Definition**: Proportion of stress events successfully managed
 - **Interpretation**: Higher rates indicate better population coping capacity
 - **Research Use**: Measure of stress management effectiveness
 
-**stress_prevalence**:
+**Stress Prevalence**:
 - **Definition**: Proportion of population experiencing high stress
-- **Calculation**: Count of agents with `affect < -0.3` divided by total agents
-- **Interpretation**: Higher values indicate greater stress burden in population
-- **Research Use**: Public health indicator for intervention targeting
+- **Interpretation**: Higher values indicate greater stress burden
+- **Research Use**: Public health indicator for targeting interventions
 
 ### Social Network Metrics
 
-**social_support_rate**:
-- **Definition**: Rate of meaningful social support exchanges
-- **Calculation**: Number of support exchanges divided by total interactions
+**Social Support Rate**:
+- **Definition**: Rate of meaningful supportive interactions
 - **Interpretation**: Higher rates indicate more effective social support networks
 - **Research Use**: Measure of social capital and support system effectiveness
 
-**network_density**:
+**Network Density**:
 - **Definition**: Connectivity of the social network
-- **Calculation**: Actual connections divided by possible connections in NetworkX graph
 - **Interpretation**: Higher values indicate more interconnected social network
 - **Research Use**: Indicator of social cohesion and information flow
 
 ### Challenge-Hindrance Metrics
 
-**challenge_hindrance_ratio**:
+**Challenge-Hindrance Ratio**:
 - **Definition**: Balance between challenge and hindrance stress events
-- **Calculation**: `(avg_challenge - avg_hindrance) / (avg_challenge + avg_hindrance)`
 - **Interpretation**: Positive values indicate more challenge-dominant stress, negative values indicate more hindrance-dominant stress
 - **Research Use**: Indicator of stress type distribution in population
 
 ## Data Access Patterns
 
-### Direct DataCollector Access
+### Direct Access
 
-```python
-# Get model-level time series data
-model_data = model.datacollector.get_model_vars_dataframe()
-
-# Get agent-level time series data
-agent_data = model.datacollector.get_agent_vars_dataframe()
-
-# Get latest model data point
-latest_data = model_data.iloc[-1]
-current_stress = latest_data['avg_pss10']
-```
+Researchers can access both individual and population data through standardized methods that provide time series information for analysis.
 
 ### Convenience Methods
 
-```python
-# Get current population summary
-summary = model.get_population_summary()
+The system provides simplified access methods for common research tasks, including population summaries and individual trajectories.
 
-# Get time series data (same as direct access)
-time_series = model.get_time_series_data()
+### Data Structure
 
-# Get agent trajectories
-agent_trajectories = model.get_agent_time_series_data()
-```
-
-### DataFrame Structure
-
-**Model DataFrame Columns**:
-- Day index and metadata
-- All 20+ model-level metrics
-- Time series suitable for plotting and statistical analysis
-
-**Agent DataFrame Structure**:
-```python
-# MultiIndex DataFrame with:
-# Level 0: Step (time step)
-# Level 1: AgentID (unique agent identifier)
-# Columns: All 8+ agent-level variables
-```
+**Population Data**: Organized by time with all population-level metrics
+**Individual Data**: Organized by time and individual identifier with personal metrics
 
 ## Research Applications
 
 ### Individual-Level Analysis
 
-```python
-# Analyze individual resilience trajectories
-agent_data = model.get_agent_time_series_data()
-resilience_trajectories = agent_data.pivot(
-    index='Step', columns='AgentID', values='resilience'
-)
-
-# Identify at-risk individuals
-final_state = agent_data.groupby('AgentID').last()
-at_risk = final_state[final_state['resilience'] < 0.3]
-```
+Researchers can track individual patterns over time, identify at-risk individuals, and analyze personal trajectories of resilience and stress management.
 
 ### Population-Level Analysis
 
-```python
-# Analyze population trends
-model_data = model.get_time_series_data()
-stress_trends = model_data[['avg_pss10', 'avg_resilience']].rolling(window=7).mean()
-
-# Statistical analysis
-from scipy import stats
-correlation = stats.pearsonr(model_data['avg_stress'], model_data['avg_affect'])
-```
+The data enables analysis of population trends, statistical relationships between different factors, and evaluation of overall system behavior.
 
 ### Intervention Evaluation
 
-```python
-# Compare baseline vs intervention
-baseline_data = baseline_model.get_time_series_data()
-intervention_data = intervention_model.get_time_series_data()
-
-# Calculate effect sizes
-effect_size = (intervention_data['avg_pss10'].mean() - baseline_data['avg_pss10'].mean()) / baseline_data['avg_pss10'].std()
-```
+Data can be used to compare different scenarios, calculate effect sizes, and evaluate the impact of various intervention approaches.
 
 ## Data Export and Persistence
 
-### CSV Export
+### Export Options
 
-```python
-# Export model data
-model.export_results("simulation_results.csv")
-
-# Export agent data
-model.export_agent_data("agent_trajectories.csv")
-
-# Custom filenames
-model.export_results("custom_model_data.csv")
-model.export_agent_data("custom_agent_data.csv")
-```
+Data can be exported in standard formats for further analysis, with options for both population and individual-level data.
 
 ### Export Verification
 
-```python
-# Verify export integrity
-original_model_data = model.datacollector.get_model_vars_dataframe()
-exported_model_data = pd.read_csv("simulation_results.csv")
-
-# Data should match exactly (allowing for minor dtype differences)
-pd.testing.assert_frame_equal(
-    original_model_data.reset_index(drop=True),
-    exported_model_data.reset_index(drop=True),
-    check_dtype=False
-)
-```
+The system includes checks to ensure data integrity during export and storage processes.
 
 ## Validation and Quality Assurance
 
@@ -327,60 +223,41 @@ pd.testing.assert_frame_equal(
 
 The system includes comprehensive validation:
 
-1. **Null Value Detection**: All metrics checked for null/invalid values
-2. **Range Validation**: Variables verified to be within expected ranges
-3. **Cross-Validation**: Consistency between different calculation methods
-4. **Time Series Continuity**: Sequential data collection verification
+1. **Completeness Checks**: Ensuring all data points are captured
+2. **Range Validation**: Verifying data falls within expected ranges
+3. **Consistency Checks**: Ensuring different calculation methods agree
+4. **Continuity Validation**: Verifying sequential data collection
 
 ### Performance Validation
 
-- **Large Scale Testing**: Validated with 100+ agents and 20+ day simulations
-- **Memory Stability**: Memory usage monitoring during extended runs
-- **Export Performance**: Large dataset export functionality verified
+- **Scale Testing**: Validated with various population sizes and time periods
+- **Stability Monitoring**: Memory and performance tracking during extended runs
+- **Export Testing**: Large dataset export functionality verified
 
 ### Integration Testing
 
-Comprehensive test suite covers:
-- End-to-end simulation runs with data collection
-- Multi-day scenarios with different configurations
-- Export and persistence functionality
+Comprehensive testing covers:
+- Complete simulation runs with data collection
+- Multiple scenarios with different configurations
+- Export and storage functionality
 - Error handling and edge cases
 - Performance validation for large-scale simulations
 
 ## Configuration Integration
 
-All data collection metrics use the unified configuration system:
-
-```python
-# DataCollector configuration is integrated with main config
-config = get_config()
-
-# Model reporters use config values for thresholds and parameters
-'stress_prevalence': lambda m: sum(1 for agent in m.agents if agent.affect < -0.3) / len(m.agents)
-'network_density': lambda m: m._calculate_network_density()
-```
-
-This ensures consistent parameter usage across all metrics and maintains research reproducibility requirements.
+All data collection uses the unified configuration system, ensuring consistent parameters across all metrics and maintaining research reproducibility.
 
 ## Future Extensions
 
 ### Planned Enhancements
 
-1. **R Integration**: Statistical analysis and visualization in R
-2. **SQL Storage**: Large-scale parameter sweep storage and querying
+1. **Advanced Analysis**: Integration with statistical software for deeper analysis
+2. **Enhanced Storage**: Large-scale data storage and querying capabilities
 3. **Advanced Network Metrics**: Temporal network evolution tracking
-4. **Custom Metric Registration**: User-defined research metrics
+4. **Custom Metrics**: User-defined research indicators
 
 ### Extension Points
 
-The DataCollector system is designed for extensibility:
+The system is designed to be expandable, allowing researchers to add custom metrics as research needs evolve.
 
-```python
-# Add custom model metric
-model_reporters['custom_metric'] = lambda m: m.calculate_custom_metric()
-
-# Add custom agent metric
-agent_reporters['custom_agent_metric'] = lambda a: a.custom_agent_calculation()
-```
-
-This modular design supports the evolving research needs of the mental health promotion cost-effectiveness study.
+This data collection system supports comprehensive research into mental health promotion and cost-effectiveness by providing detailed, validated metrics at both individual and population levels.

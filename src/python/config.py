@@ -255,7 +255,7 @@ class Config:
         # ==============================================
         self.affect_peer_influence_rate = self._get_env_value('AFFECT_PEER_INFLUENCE_RATE', float, 0.1)
         self.affect_event_appraisal_rate = self._get_env_value('AFFECT_EVENT_APPRAISAL_RATE', float, 0.15)
-        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.1)
+        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.5)
         self.resilience_homeostatic_rate = self._get_env_value('RESILIENCE_HOMEOSTATIC_RATE', float, 0.05)
 
         self.resilience_coping_success_rate = self._get_env_value('RESILIENCE_COPING_SUCCESS_RATE', float, 0.1)
@@ -270,7 +270,6 @@ class Config:
 
         # Stress and affect dynamics parameters
         self.stress_decay_rate = self._get_env_value('STRESS_DECAY_RATE', float, 0.05)
-        self.daily_reset_rate = self._get_env_value('DAILY_RESET_RATE', float, 0.1)
 
         # ==============================================
         # RESOURCE DYNAMICS PARAMETERS
@@ -391,7 +390,6 @@ class Config:
             },
             'dynamics': {
                 'stress_decay_rate': self.stress_decay_rate,
-                'daily_reset_rate': self.daily_reset_rate,
             },
             'protective': {
                 'social_support': self.protective_social_support,
@@ -555,8 +553,6 @@ class Config:
         # Dynamics validation
         if not (0 <= self.stress_decay_rate <= 1):
             raise ConfigurationError("Stress decay rate must be in [0, 1]")
-        if not (0 <= self.daily_reset_rate <= 1):
-            raise ConfigurationError("Daily reset rate must be in [0, 1]")
 
         # Protective factors validation
         for param in [self.protective_social_support, self.protective_family_support,

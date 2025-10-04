@@ -2,7 +2,7 @@
 
 ## Overview
 
-Stress perception in the agent-based model follows a comprehensive pipeline that transforms life events into psychological stress responses. The system implements the theoretical challenge-hindrance framework, where events are appraised based on their controllability and overload characteristics, with full PSS-10 integration for empirical grounding.
+Stress perception in the agent-based model follows a comprehensive pipeline that transforms life events into psychological stress responses. The system implements the theoretical challenge-hindrance framework, where events are appraised based on their controllability and overload characteristics.
 
 ## Event Generation
 
@@ -10,102 +10,58 @@ Stress perception in the agent-based model follows a comprehensive pipeline that
 
 Each stress event is characterized by two fundamental attributes:
 
-- **Controllability (c ∈ [0,1])**: Degree to which the agent can influence the event outcome
-- **Overload (o ∈ [0,1])**: Perceived burden relative to the agent's capacity
+- **Controllability**: Degree to which the individual can influence the event outcome
+- **Overload**: Perceived burden relative to the individual's capacity
 
 ### Event Generation Process
 
-Events are generated using a Poisson process with the following characteristics:
-
-```python
-# Event generation uses beta distribution for bounded [0,1] values
-controllability = rng.beta(alpha, beta)
-overload = rng.beta(alpha, beta)
-```
-
-**Key Parameters:**
-- `alpha, beta`: Shape parameters for beta distribution (default: 2.0, 2.0)
+Events are generated using a process that creates realistic combinations of controllability and overload, representing the varied nature of real-life stressors.
 
 ## Challenge-Hindrance Appraisal
 
 ### Weight Function Application
 
-The core appraisal mechanism maps the two event attributes to challenge and hindrance components:
-
-**Mathematical Foundation:**
-```
-z = ω_c × c - ω_o × o + b
-challenge = σ(γ × z)
-hindrance = 1 - challenge
-```
-
-Where:
-- `σ(x) = 1/(1+e^(-x))` is the sigmoid function
-- `ω_c, ω_o`: Weight coefficients for controllability and overload
-- `b`: Bias term
-- `γ`: Sigmoid steepness parameter
+The core appraisal mechanism maps the two event attributes to challenge and hindrance components using a mathematical function that transforms controllability and overload into psychological impact measures.
 
 ### Parameter Configuration
 
-| Parameter | Default | Range | Description |
-|-----------|---------|-------|-------------|
-| `ω_c` | 1.0 | 0.2-2.0 | Controllability weight |
-| `ω_o` | 1.0 | 0.2-2.0 | Overload weight |
-| `b` | 0.0 | -1.0-1.0 | Bias term |
-| `γ` | 6.0 | 1.0-12.0 | Sigmoid steepness |
+The appraisal system uses several parameters that control how events are interpreted:
+
+- **Controllability weight**: How much controllability influences the appraisal
+- **Overload weight**: How much overload influences the appraisal
+- **Bias term**: Baseline shift in the appraisal function
+- **Sigmoid steepness**: How decisively events are classified as challenge or hindrance
 
 ### Challenge-Hindrance Mapping Logic
 
 The appraisal system implements specific mapping rules:
 
-- **High Challenge Events**: High controllability + Low overload
+- **High Challenge Events**: High controllability combined with low overload
   - Example: "A challenging project at work that I can control"
-  - Results in: challenge ≈ 1.0, hindrance ≈ 0.0
+  - Results in predominantly challenge appraisal
 
-- **High Hindrance Events**: Low controllability + High overload
+- **High Hindrance Events**: Low controllability combined with high overload
   - Example: "Unexpected financial crisis that overwhelms me"
-  - Results in: challenge ≈ 0.0, hindrance ≈ 1.0
+  - Results in predominantly hindrance appraisal
 
 ## Stress Threshold Evaluation
 
 ### Effective Threshold Calculation
 
-The decision to become stressed uses a dynamic threshold mechanism:
-
-**Mathematical Foundation:**
-```
-T_eff = T_base + λ_C × challenge - λ_H × hindrance
-stressed = (L > T_eff)
-```
-
-Where:
-- `T_base`: Baseline stress threshold (default: 0.5)
-- `λ_C`: Challenge scaling parameter (default: 0.15)
-- `λ_H`: Hindrance scaling parameter (default: 0.25)
-- `L`: Appraised stress load
+The decision to become stressed uses a dynamic threshold mechanism that adjusts based on the challenge and hindrance characteristics of events.
 
 ### Appraised Stress Load
 
-The overall stress load is computed from challenge-hindrance polarity:
-
-**Mathematical Foundation:**
-```
-L = 1 + δ × (hindrance - challenge)
-```
-
-Where:
-- `δ`: Polarity effect parameter (default: 0.3)
+The overall stress load is computed from challenge-hindrance polarity, representing how the balance between challenge and hindrance influences the overall stress impact.
 
 ## Threshold Dynamics
 
 ### Challenge Effects
-- **Increases effective threshold**: Challenge events make agents more resilient to stress
-- **Mathematical effect**: `+λ_C × challenge` to threshold
+- **Increases effective threshold**: Challenge events make individuals more resilient to stress
 - **Interpretation**: Challenging events build coping capacity
 
 ### Hindrance Effects
 - **Decreases effective threshold**: Hindrance events reduce coping capacity
-- **Mathematical effect**: `-λ_H × hindrance` from threshold
 - **Interpretation**: Hindrance events deplete psychological resources
 
 ## PSS-10 Integration

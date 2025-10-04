@@ -94,6 +94,9 @@ All configuration parameters are organized into logical categories. Each paramet
 | `SIMULATION_SEED` | 42 | Any integer | Random seed for reproducible results (null for random) |
 | `NETWORK_WATTS_K` | 4 | Even numbers ≥2 | Watts-Strogatz network: neighbors per node |
 | `NETWORK_WATTS_P` | 0.1 | 0.0-1.0 | Watts-Strogatz network: rewiring probability |
+| `NETWORK_ADAPTATION_THRESHOLD` | 3 | ≥1 | Threshold for network adaptation when stress threshold breached |
+| `NETWORK_HOMOPHILY_STRENGTH` | 0.7 | 0.0-1.0 | Strength of homophily in network connections |
+| `NETWORK_REWIRE_PROBABILITY` | 0.01 | 0.0-1.0 | Probability of rewiring network connections |
 
 ### Agent State and Behavior Parameters
 
@@ -107,30 +110,54 @@ All configuration parameters are organized into logical categories. Each paramet
 | `AGENT_SUBEVENTS_PER_DAY` | 3 | 1-10 | Average social interactions + stress events per day |
 | `AGENT_RESOURCE_COST` | 0.1 | 0.0-1.0 | Resource consumption for successful coping |
 
+### Coping Mechanism Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `COPING_BASE_PROBABILITY` | 0.5 | 0.0-1.0 | Base coping probability before situational modifiers |
+| `COPING_SOCIAL_INFLUENCE` | 0.1 | 0.0-1.0 | Social network influence on coping outcomes |
+| `COPING_CHALLENGE_BONUS` | 0.2 | 0.0-1.0 | Bonus to coping success when facing challenge events |
+| `COPING_HINDRANCE_PENALTY` | 0.3 | 0.0-1.0 | Penalty to coping success when facing hindrance events |
+
 ### Stress Event Parameters
 
 | Parameter | Default | Range | Description |
 |-----------|---------|-------|-------------|
 | `STRESS_CONTROLLABILITY_MEAN` | 0.5 | 0.0-1.0 | Mean controllability of stress events (Beta distribution) |
-| `STRESS_PREDICTABILITY_MEAN` | 0.5 | 0.0-1.0 | Mean predictability of stress events |
 | `STRESS_OVERLOAD_MEAN` | 0.5 | 0.0-1.0 | Mean overload intensity of stress events |
-| `STRESS_MAGNITUDE_SCALE` | 0.4 | 0.0-2.0 | Scale parameter for event magnitude distribution |
+| `STRESS_BETA_ALPHA` | 2.0 | >0 | Alpha parameter for Beta distribution of stress events |
+| `STRESS_BETA_BETA` | 2.0 | >0 | Beta parameter for Beta distribution of stress events |
+
+### PSS-10 Integration Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `PSS10_ITEM_MEAN` | [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5] | 0.0-4.0 | Mean values for PSS-10 items (10 values) |
+| `PSS10_ITEM_SD` | [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8] | >0 | Standard deviations for PSS-10 items (10 values) |
+| `PSS10_LOAD_CONTROLLABILITY` | [0.2, 0.8, 0.1, 0.7, 0.6, 0.1, 0.8, 0.6, 0.7, 0.1] | 0.0-1.0 | Factor loadings for controllability dimension (10 values) |
+| `PSS10_LOAD_OVERLOAD` | [0.7, 0.3, 0.8, 0.2, 0.4, 0.9, 0.2, 0.3, 0.4, 0.9] | 0.0-1.0 | Factor loadings for overload dimension (10 values) |
+| `PSS10_CONTROLLABILITY_SD` | 1.0 | >0 | Standard deviation for controllability factor |
+| `PSS10_OVERLOAD_SD` | 1.0 | >0 | Standard deviation for overload factor |
+| `PSS10_BIFACTOR_COR` | 0.3 | -1.0 to 1.0 | Correlation between bifactor dimensions |
+| `PSS10_THRESHOLD` | 27 | Any integer | Threshold score for determining stressed state |
 
 ### Appraisal and Threshold Parameters
 
 | Parameter | Default | Range | Description |
 |-----------|---------|-------|-------------|
 | `APPRAISAL_OMEGA_C` | 1.0 | 0.0-5.0 | Weight for controllability in challenge/hindrance appraisal |
-| `APPRAISAL_OMEGA_P` | 1.0 | 0.0-5.0 | Weight for predictability in appraisal |
 | `APPRAISAL_OMEGA_O` | 1.0 | 0.0-5.0 | Weight for overload in appraisal |
 | `APPRAISAL_BIAS` | 0.0 | -2.0 to 2.0 | Bias term in appraisal function |
 | `APPRAISAL_GAMMA` | 6.0 | 1.0-20.0 | Sigmoid steepness for challenge/hindrance classification |
 | `THRESHOLD_BASE_THRESHOLD` | 0.5 | 0.0-1.0 | Base stress threshold for becoming stressed |
 | `THRESHOLD_CHALLENGE_SCALE` | 0.15 | 0.0-1.0 | How much challenge increases stress threshold |
 | `THRESHOLD_HINDRANCE_SCALE` | 0.25 | 0.0-1.0 | How much hindrance decreases stress threshold |
+| `THRESHOLD_STRESS_THRESHOLD` | 0.3 | 0.0-1.0 | Minimum stress level to trigger coping |
+| `THRESHOLD_AFFECT_THRESHOLD` | 0.3 | 0.0-1.0 | Minimum emotional change for resilience adjustment |
 | `STRESS_ALPHA_CHALLENGE` | 0.8 | 0.0-2.0 | Challenge stress multiplier |
 | `STRESS_ALPHA_HINDRANCE` | 1.2 | 0.0-2.0 | Hindrance stress multiplier |
 | `STRESS_DELTA` | 0.2 | 0.0-1.0 | Stress computation parameter |
+| `STRESS_DECAY_RATE` | 0.05 | 0.0-1.0 | Natural stress recovery rate over time |
 
 ### Social Interaction Parameters
 
@@ -139,6 +166,26 @@ All configuration parameters are organized into logical categories. Each paramet
 | `INTERACTION_INFLUENCE_RATE` | 0.05 | 0.0-0.5 | Base rate of affect influence between agents |
 | `INTERACTION_RESILIENCE_INFLUENCE` | 0.05 | 0.0-0.5 | How partner affect influences agent resilience |
 | `INTERACTION_MAX_NEIGHBORS` | 10 | 1-50 | Maximum neighbors considered for interactions |
+
+### Affect Dynamics Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `AFFECT_PEER_INFLUENCE_RATE` | 0.1 | 0.0-1.0 | Strength of peer influence on affect |
+| `AFFECT_EVENT_APPRAISAL_RATE` | 0.15 | 0.0-1.0 | How events affect baseline affect through appraisal |
+| `AFFECT_HOMEOSTATIC_RATE` | 0.5 | 0.0-1.0 | Tendency for affect to return to baseline |
+| `N_INFLUENCING_NEIGHBORS` | 5 | 1-20 | Number of neighbors that can influence affect |
+
+### Resilience Dynamics Parameters
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| `RESILIENCE_COPING_SUCCESS_RATE` | 0.1 | 0.0-0.5 | Resilience change from successful coping |
+| `RESILIENCE_SOCIAL_SUPPORT_RATE` | 0.08 | 0.0-0.5 | Resilience boost from social support |
+| `RESILIENCE_OVERLOAD_THRESHOLD` | 3 | 1-10 | Minimum consecutive hindrances for overload effect |
+| `RESILIENCE_HOMEOSTATIC_RATE` | 0.05 | 0.0-1.0 | Tendency for resilience to return to baseline |
+| `RESILIENCE_BOOST_RATE` | 0.1 | 0.0-1.0 | Boost rate from protective factors |
+| `N_INFLUENCING_HINDRANCE` | 3 | 1-10 | Consecutive hindrances for overload effect |
 
 ### Affect and Resilience Dynamics Parameters
 
@@ -168,7 +215,6 @@ All configuration parameters are organized into logical categories. Each paramet
 | `COPING_HINDRANCE_PENALTY` | 0.3 | 0.0-0.5 | Penalty to coping success when facing hindrance events | 
 | `COPING_BASE_PROBABILITY` | 0.5 | 0.0-1.0 | Base coping ability before situational modifiers |
 | `COPING_SOCIAL_INFLUENCE` | 0.1 | 0.0-0.5 | Social network influence on coping outcomes |
-| `DAILY_RESET_RATE` | 0.1 | 0.0-0.5 | Rate at which coping modifiers reset to baseline |
 | `STRESS_DECAY_RATE` | 0.05 | 0.0-0.5 | Natural stress recovery rate over time |
 | `THRESHOLD_STRESS_THRESHOLD` | 0.3 | 0.0-0.5 | Minimum stress level to trigger coping |
 | `THRESHOLD_AFFECT_THRESHOLD` | 0.3 | 0.0-0.5 | Minimum emotional change for resilience adjustment |
@@ -181,7 +227,7 @@ All configuration parameters are organized into logical categories. Each paramet
 
 - **`AFFECT_EVENT_APPRAISAL_RATE`**: Determines how strongly stress events impact an agent's emotional state through cognitive appraisal. Challenge events tend to have positive emotional effects while hindrance events have negative effects. This parameter modulates the emotional sensitivity to life events.
 
-- **`AFFECT_HOMEOSTASIS_RATE`**: Models emotional regulation and the tendency to return to baseline emotional states. Higher values create more emotionally stable agents who recover quickly from emotional extremes. Lower values allow emotions to persist longer.
+- **`AFFECT_HOMEOSTATIC_RATE`**: Models emotional regulation and the tendency to return to baseline emotional states. Higher values create more emotionally stable agents who recover quickly from emotional extremes. Lower values allow emotions to persist longer.
 
 - **`N_INFLUENCING_NEIGHBORS`**: Limits the scope of social influence by specifying how many network neighbors can affect an agent's emotional state. This creates more realistic local influence patterns rather than global network effects.
 
@@ -193,7 +239,37 @@ All configuration parameters are organized into logical categories. Each paramet
 
 - **`RESILIENCE_OVERLOAD_THRESHOLD`**: Sets the minimum number of consecutive hindrance events needed to trigger overload effects. This represents the cumulative burden threshold before resilience begins to significantly decline.
 
+- **`RESILIENCE_HOMEOSTATIC_RATE`**: Controls the tendency for resilience to return to baseline levels over time, modeling natural recovery processes.
+
+- **`RESILIENCE_BOOST_RATE`**: Determines how quickly protective factors can improve resilience when resources are allocated to them.
+
 - **`N_INFLUENCING_HINDRANCE`**: Specifies the number of consecutive hindrance events that amplify overload effects. This parameter controls how cumulative stress experiences compound to affect resilience.
+
+**Coping Mechanism Parameters:**
+
+- **`COPING_BASE_PROBABILITY`**: Base probability of successful coping before any situational modifiers are applied.
+
+- **`COPING_SOCIAL_INFLUENCE`**: How much social connections and support affect coping success rates.
+
+- **`COPING_CHALLENGE_BONUS`**: Additional success probability when coping with challenge-type stressors.
+
+- **`COPING_HINDRANCE_PENALTY`**: Reduced success probability when coping with hindrance-type stressors.
+
+**PSS-10 Integration Parameters:**
+
+- **`PSS10_ITEM_MEAN`**: Mean values for the 10 PSS-10 questionnaire items, used to generate realistic stress scores.
+
+- **`PSS10_ITEM_SD`**: Standard deviations for PSS-10 items, controlling the variability of stress responses.
+
+- **`PSS10_LOAD_CONTROLLABILITY`**: Factor loadings determining how each PSS-10 item contributes to the controllability dimension.
+
+- **`PSS10_LOAD_OVERLOAD`**: Factor loadings determining how each PSS-10 item contributes to the overload dimension.
+
+- **`PSS10_CONTROLLABILITY_SD`** and **`PSS10_OVERLOAD_SD`**: Standard deviations for the latent factors in the bifactor model.
+
+- **`PSS10_BIFACTOR_COR`**: Correlation between the controllability and overload factors in the bifactor model.
+
+- **`PSS10_THRESHOLD`**: Score threshold above which an agent is considered to be experiencing significant stress.
 
 #### Usage Scenarios
 
@@ -201,7 +277,7 @@ All configuration parameters are organized into logical categories. Each paramet
 ```
 AFFECT_PEER_INFLUENCE_RATE=0.3
 N_INFLUENCING_NEIGHBORS=10
-AFFECT_HOMEOSTASIS_RATE=0.02
+AFFECT_HOMEOSTATIC_RATE=0.02
 ```
 *Use case:* Modeling workplace environments where emotional states spread rapidly through social networks, with persistent emotional effects.
 
@@ -210,13 +286,14 @@ AFFECT_HOMEOSTASIS_RATE=0.02
 RESILIENCE_OVERLOAD_THRESHOLD=5
 RESILIENCE_COPING_SUCCESS_RATE=0.2
 RESILIENCE_SOCIAL_SUPPORT_RATE=0.15
+PSS10_THRESHOLD=30
 ```
 *Use case:* Studying recovery from traumatic events where agents need multiple successful coping experiences to build resilience.
 
 **Scenario 3: Emotional Regulation Study**
 ```
 AFFECT_EVENT_APPRAISAL_RATE=0.3
-AFFECT_HOMEOSTASIS_RATE=0.1
+AFFECT_HOMEOSTATIC_RATE=0.1
 RESILIENCE_COPING_SUCCESS_RATE=0.05
 ```
 *Use case:* Investigating how different emotional regulation strategies affect mental health outcomes over time.
@@ -229,6 +306,24 @@ RESILIENCE_SOCIAL_SUPPORT_RATE=0.02
 ```
 *Use case:* Modeling the impact of limited social connections on emotional well-being and resilience development.
 
+**Scenario 5: PSS-10 Validation Study**
+```
+PSS10_THRESHOLD=27
+PSS10_BIFACTOR_COR=0.5
+STRESS_CONTROLLABILITY_MEAN=0.3
+STRESS_OVERLOAD_MEAN=0.7
+```
+*Use case:* Validating the PSS-10 integration by simulating populations with different stress profiles and comparing against empirical benchmarks.
+
+**Scenario 6: Network Adaptation Research**
+```
+NETWORK_ADAPTATION_THRESHOLD=2
+NETWORK_REWIRE_PROBABILITY=0.05
+NETWORK_HOMOPHILY_STRENGTH=0.8
+RESILIENCE_SOCIAL_SUPPORT_RATE=0.12
+```
+*Use case:* Studying how agents adapt their social networks in response to stress and how this affects resilience outcomes.
+
 ### Resource Dynamics Parameters
 
 | Parameter | Default | Range | Description |
@@ -237,27 +332,28 @@ RESILIENCE_SOCIAL_SUPPORT_RATE=0.02
 | `PROTECTIVE_FAMILY_SUPPORT` | 0.5 | 0.0-1.0 | Efficacy of family support |
 | `PROTECTIVE_FORMAL_INTERVENTION` | 0.5 | 0.0-1.0 | Efficacy of professional interventions |
 | `PROTECTIVE_PSYCHOLOGICAL_CAPITAL` | 0.5 | 0.0-1.0 | Efficacy of personal psychological resources |
-| `RESOURCE_BASE_REGENERATION` | 0.05 | 0.0-0.5 | Daily resource regeneration rate |
-| `RESOURCE_ALLOCATION_COST` | 0.15 | 0.0-1.0 | Base cost of allocating resources |
-| `RESOURCE_COST_EXPONENT` | 1.5 | 1.0-5.0 | Convexity of resource allocation cost function |
+| `PROTECTIVE_IMPROVEMENT_RATE` | 0.5 | 0.0-1.0 | Rate at which protective factors improve |
+| `RESOURCE_BASE_REGENERATION` | 0.05 | ≥0 | Daily resource regeneration rate |
+| `RESOURCE_ALLOCATION_COST` | 0.15 | ≥0 | Base cost of allocating resources |
+| `RESOURCE_COST_EXPONENT` | 1.5 | ≥1.0 | Convexity of resource allocation cost function |
 
 ### Mathematical Utility Parameters
 
 | Parameter | Default | Range | Description |
 |-----------|---------|-------|-------------|
-| `UTILITY_SOFTMAX_TEMPERATURE` | 1.0 | 0.01-50.0 | Temperature for softmax decision making (lower = more deterministic) |
+| `UTILITY_SOFTMAX_TEMPERATURE` | 1.0 | >0 | Temperature for softmax decision making (lower = more deterministic) |
 
 ### Output and Logging Configuration
 
 | Parameter | Default | Range | Description |
 |-----------|---------|-------|-------------|
-| `LOG_LEVEL` | INFO | DEBUG, INFO, WARNING, ERROR, CRITICAL | Logging verbosity level |
-| `OUTPUT_RESULTS_DIR` | data/processed | Any valid path | Directory for processed simulation results |
-| `OUTPUT_RAW_DIR` | data/raw | Any valid path | Directory for raw simulation data |
-| `OUTPUT_LOGS_DIR` | logs | Any valid path | Directory for log files |
-| `OUTPUT_SAVE_TIME_SERIES` | true | true/false | Whether to save detailed time series data |
-| `OUTPUT_SAVE_NETWORK_SNAPSHOTS` | true | true/false | Whether to save network structure snapshots |
-| `OUTPUT_SAVE_SUMMARY_STATISTICS` | true | true/false | Whether to save aggregated statistics |
+| `LOG_LEVEL` | 'INFO' | DEBUG, INFO, WARNING, ERROR, CRITICAL | Logging verbosity level |
+| `OUTPUT_RESULTS_DIR` | 'data/processed' | Any valid path | Directory for processed simulation results |
+| `OUTPUT_RAW_DIR` | 'data/raw' | Any valid path | Directory for raw simulation data |
+| `OUTPUT_LOGS_DIR` | 'logs' | Any valid path | Directory for log files |
+| `OUTPUT_SAVE_TIME_SERIES` | True | true/false | Whether to save detailed time series data |
+| `OUTPUT_SAVE_NETWORK_SNAPSHOTS` | True | true/false | Whether to save network structure snapshots |
+| `OUTPUT_SAVE_SUMMARY_STATISTICS` | True | true/false | Whether to save aggregated statistics |
 
 ## Usage Examples
 
@@ -270,6 +366,7 @@ SIMULATION_MAX_DAYS=30
 SIMULATION_SEED=12345
 LOG_LEVEL=DEBUG
 OUTPUT_SAVE_TIME_SERIES=true
+PSS10_THRESHOLD=27
 ```
 
 ### Scenario 2: Large-Scale Parameter Sweep
@@ -289,9 +386,10 @@ OUTPUT_SAVE_SUMMARY_STATISTICS=true
 ```bash
 # .env.high_stress
 AGENT_STRESS_PROBABILITY=0.8
-STRESS_MAGNITUDE_SCALE=0.8
+STRESS_OVERLOAD_MEAN=0.8
 THRESHOLD_BASE_THRESHOLD=0.3
 PROTECTIVE_FORMAL_INTERVENTION=0.8
+PSS10_THRESHOLD=30
 ```
 
 ### Scenario 4: Social Network Focus
@@ -300,8 +398,35 @@ PROTECTIVE_FORMAL_INTERVENTION=0.8
 # .env.social_network
 NETWORK_WATTS_K=12
 NETWORK_WATTS_P=0.05
+NETWORK_ADAPTATION_THRESHOLD=2
 INTERACTION_INFLUENCE_RATE=0.15
 INTERACTION_MAX_NEIGHBORS=20
+```
+
+### Scenario 5: PSS-10 Integration Testing
+
+```bash
+# .env.pss10_test
+SIMULATION_NUM_AGENTS=100
+SIMULATION_MAX_DAYS=50
+PSS10_THRESHOLD=25
+PSS10_BIFACTOR_COR=0.4
+STRESS_CONTROLLABILITY_MEAN=0.4
+STRESS_OVERLOAD_MEAN=0.6
+OUTPUT_SAVE_TIME_SERIES=true
+```
+
+### Scenario 6: Resilience Intervention Study
+
+```bash
+# .env.intervention_study
+SIMULATION_NUM_AGENTS=200
+SIMULATION_MAX_DAYS=180
+RESILIENCE_COPING_SUCCESS_RATE=0.15
+RESILIENCE_SOCIAL_SUPPORT_RATE=0.12
+PROTECTIVE_FORMAL_INTERVENTION=0.7
+PROTECTIVE_IMPROVEMENT_RATE=0.3
+NETWORK_ADAPTATION_THRESHOLD=3
 ```
 
 ## Advanced Usage
@@ -397,9 +522,11 @@ print(f"All stress parameters in [0,1]: OK")
 ### Research Workflow
 
 1. **Hypothesis-driven configuration** - Set parameters based on research hypotheses
-2. **Sensitivity analysis** - Systematically vary key parameters
-3. **Validation against literature** - Use parameter ranges from published studies
+2. **Sensitivity analysis** - Systematically vary key parameters including PSS-10 thresholds
+3. **Validation against literature** - Use parameter ranges from published studies and PSS-10 benchmarks
 4. **Reproducibility** - Use fixed seeds for important results
+5. **PSS-10 calibration** - Validate stress measurements against empirical PSS-10 data
+6. **Network adaptation studies** - Use network parameters to study social support dynamics
 
 ## Troubleshooting
 
@@ -440,6 +567,9 @@ print(config.num_agents)
 - Check parameter ranges in this documentation
 - Verify network parameters: `NETWORK_WATTS_K` should be even
 - Ensure all probability parameters are in [0,1] range
+- Check PSS-10 array parameters have exactly 10 values each
+- Verify PSS-10 factor loadings are in [0,1] range
+- Ensure PSS-10 standard deviations are positive
 
 #### 4. Missing Dependencies
 
@@ -498,12 +628,33 @@ print(f"Environment file exists: {Path('.env').exists()}")
 ```python
 # Example: Systematic parameter variation
 parameters_to_study = {
-    'stress_probability': [0.1, 0.3, 0.5, 0.7, 0.9],
-    'social_support': [0.2, 0.4, 0.6, 0.8],
-    'network_density': [4, 8, 12, 16]
+    'agent_stress_probability': [0.1, 0.3, 0.5, 0.7, 0.9],
+    'protective_social_support': [0.2, 0.4, 0.6, 0.8],
+    'network_watts_k': [4, 8, 12, 16],
+    'pss10_threshold': [25, 27, 30],
+    'resilience_coping_success_rate': [0.05, 0.1, 0.15, 0.2]
 }
 
 results = run_parameter_study(parameters_to_study)
+```
+
+### PSS-10 Sensitivity Analysis
+
+```python
+# Example: PSS-10 parameter sensitivity
+pss10_parameters = {
+    'pss10_threshold': [20, 25, 27, 30, 35],
+    'pss10_bifactor_cor': [0.1, 0.3, 0.5, 0.7],
+    'stress_controllability_mean': [0.2, 0.4, 0.6, 0.8],
+    'stress_overload_mean': [0.2, 0.4, 0.6, 0.8]
+}
+
+# Run analysis with multiple replicates
+for params in generate_parameter_combinations(pss10_parameters):
+    for replicate in range(10):
+        config = update_config_with_params(params)
+        results = run_simulation(config)
+        save_results(results, f"pss10_study_rep_{replicate}")
 ```
 
 ### Batch Processing
@@ -544,8 +695,10 @@ When adding new configuration parameters:
 1. Add to `.env.example` with comprehensive documentation
 2. Update `src/python/config.py` with type conversion and validation
 3. Add parameter to appropriate category in this documentation
-4. Update validation rules if needed
-5. Test with various parameter values
+4. Update validation rules if needed (including PSS-10 array validation)
+5. Test with various parameter values and edge cases
+6. Update shell utilities if parameter extraction logic needs changes
+7. Add integration tests for new parameter categories
 
 ## Support
 

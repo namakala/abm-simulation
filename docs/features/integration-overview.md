@@ -4,251 +4,131 @@
 
 The agent-based model integrates six core mechanism groups that work together to simulate realistic mental health dynamics:
 
-1. **Stress Perception** - Event appraisal and challenge/hindrance determination with PSS-10 integration
+1. **Stress Perception** - Event appraisal and challenge/hindrance determination
 2. **Resilience Dynamics** - Coping responses and resilience changes
 3. **Affect Dynamics** - Emotional state changes and social influence
 4. **Agent Interactions** - Social network effects and support systems
 5. **Resource Management** - Protective factors and resource allocation
-6. **PSS-10 Assessment** - Empirical stress measurement, agent initialization, and feedback loops
+6. **Stress Assessment** - Empirical stress measurement and validation
 
 ## Core Integration Pathways
 
 ### Stress Event Processing Pipeline
 
-```mermaid
-graph TD
-    A[Life Event Occurs] --> B[Generate Event Attributes]
-    B --> C[Apply Appraisal Weights]
-    C --> D[Compute Challenge/Hindrance]
-    D --> E[Evaluate Stress Threshold]
-    E --> F{Stressed?}
-    F -->|Yes| G[Determine Coping Success]
-    F -->|No| H[No State Changes]
-    G --> I[Update Affect, Resilience, Stress]
-    I --> J[Consume Resources]
-    J --> K[Update Protective Factors]
-    K --> L[Network Adaptation Check]
-```
+Stress events flow through a comprehensive processing pipeline that transforms life events into psychological responses. The process begins with event occurrence and moves through appraisal, threshold evaluation, coping determination, and state updates.
 
 **Integration Points**:
-- **Stress → Affect**: Challenge/hindrance directly influence affect
+- **Stress → Affect**: Event interpretations directly influence emotional states
 - **Stress → Resilience**: Coping outcomes determine resilience changes
-- **Stress → Resources**: Successful coping consumes resources
-- **Stress → Network**: High stress triggers network adaptation
-- **Stress ↔ PSS-10**: Bidirectional feedback between stress levels and PSS-10 scores
-- **PSS-10 → Agent Initialization**: PSS-10 scores influence initial agent stress thresholds
-- **PSS-10 → Behavioral Effects**: High PSS-10 scores may modify agent behavior patterns
-- **PSS-10 → Validation**: Empirical stress measurements enable pattern matching with literature
+- **Stress → Resources**: Successful coping requires resource investment
+- **Stress → Network**: High stress triggers social network adaptation
+- **Stress ↔ Assessment**: Bidirectional feedback between stress levels and measurement scores
+- **Assessment → Agent Initialization**: Assessment scores influence initial stress thresholds
+- **Assessment → Behavioral Effects**: High assessment scores may modify behavior patterns
+- **Assessment → Validation**: Empirical measurements enable pattern matching with research literature
 
 ### Daily Step Integration
 
-```mermaid
-graph TD
-    A[Day Initialization] --> B[Get Neighbor States]
-    B --> C[Generate Subevents]
-    C --> D[Process Actions]
-    D --> E[Integrate Daily Effects]
-    E --> F[Update Affect Dynamics]
-    F --> G[Update Resilience Dynamics]
-    G --> H[Resource Management]
-    H --> I[Homeostatic Adjustment]
-    I --> J[Daily Reset]
-```
+Each day follows a structured sequence that integrates all mechanisms:
+
+1. **Initialization**: Set starting conditions and gather social context
+2. **Event Processing**: Generate and process daily events and interactions
+3. **Effect Integration**: Combine daily challenge and hindrance effects
+4. **Dynamics Update**: Apply emotional and resilience changes
+5. **Resource Management**: Update resource levels and protective factors
+6. **Homeostasis**: Apply natural regulatory adjustments
+7. **Daily Reset**: Reset tracking variables for next day
 
 ## Cross-System Feedback Loops
 
 ### Positive Feedback Loop: Success Reinforcement
 
-```
-High Resilience → Better Coping → Positive Affect → Resource Regeneration → Higher Resilience
-     ↑                                                                      ↓
-     └── Social Support ← Network Effects ← Challenge Events ← Stress Events ───┘
-```
+High resilience creates a positive cycle that reinforces successful coping and positive emotional states. This virtuous cycle shows how initial success can build momentum toward better mental health outcomes.
 
 **Mechanism**:
 1. High resilience improves coping success probability
-2. Successful coping with challenge events boosts affect positively
-3. Positive affect accelerates resource regeneration
+2. Successful coping boosts emotional state positively
+3. Positive emotions accelerate resource rebuilding
 4. More resources enable better protective factor investment
 5. Strong protective factors enhance resilience
 
 ### Negative Feedback Loop: Stress Degradation
 
-```
-Low Resilience → Poor Coping → Negative Affect → Resource Depletion → Lower Resilience
-     ↑                                                                             ↓
-     └── Social Withdrawal ← Network Effects ← Hindrance Events ← Stress Events ───┘
-```
+Low resilience creates a negative cycle that reinforces poor coping and negative emotional states. This vicious cycle shows how initial difficulties can create momentum toward poorer mental health outcomes.
 
 **Mechanism**:
 1. Low resilience reduces coping success probability
-2. Failed coping with hindrance events creates negative affect
-3. Negative affect slows resource regeneration
+2. Failed coping creates negative emotional states
+3. Negative emotions slow resource rebuilding
 4. Resource depletion limits protective factor investment
 5. Weak protective factors further reduce resilience
 
 ### Social Amplification Loop
 
-```
-Positive Neighbors → Social Support → Better Coping → Positive Affect → Better Neighbors
-     ↑                                                                              ↓
-     └── Network Adaptation ← Similar Agents ← Homophily ← Stress Patterns ─────────┘
-```
+Positive social connections create a self-reinforcing cycle where supportive relationships enhance coping success and emotional well-being, leading to stronger social connections.
 
 **Mechanism**:
-1. Positive neighbor affect provides social support
+1. Positive social connections provide support
 2. Social support improves coping success
-3. Successful coping creates positive affect
-4. Similar affect patterns drive homophily in network adaptation
-5. Network adaptation connects agents with similar stress experiences
+3. Successful coping creates positive emotional states
+4. Similar emotional patterns drive social network adaptation
+5. Network adaptation connects people with similar experiences
 
 ## Temporal Integration Patterns
 
 ### Within-Day Dynamics
 
-**Subevent Sequencing**:
-```python
-# Each day: 5-10 random subevents
-actions = random_mixture(["interact", "stress"], n_subevents)
-
-# Order matters: social interactions can buffer stress effects
-if social_interaction_before_stress:
-    coping_probability += social_buffering_effect
-```
+**Event Sequencing**:
+Each day includes multiple events that can be either social interactions or stress events. The order of events matters, as social interactions can buffer the effects of subsequent stress events.
 
 **Accumulation Effects**:
-- **Daily Challenge/Hindrance**: Averaged across all stress events
-- **Social Influence**: Accumulated from all interactions
-- **Resource Consumption**: Summed across coping attempts
+- **Daily Challenge/Hindrance**: Averaged across all stress events in the day
+- **Social Influence**: Accumulated from all social interactions
+- **Resource Consumption**: Summed across all coping attempts
 
 ### Day-to-Day Dynamics
 
 **Carryover Effects**:
-```python
-# Consecutive hindrance tracking
-if hindrance_dominant_event:
-    consecutive_hindrances += 1
-else:
-    consecutive_hindrances = 0
-
-# Overload triggers after threshold
-if consecutive_hindrances >= overload_threshold:
-    resilience_penalty = 0.2 * (consecutive_hindrances / 10)
-```
+Ongoing hindrance events are tracked across days, with cumulative effects when hindrances persist over time. This represents how chronic stress can build up and create overload effects.
 
 **Homeostatic Regulation**:
-```python
-# Daily pull toward baseline
-affect_adjustment = homeostatic_rate * (baseline_affect - current_affect)
-resilience_adjustment = homeostatic_rate * (baseline_resilience - current_resilience)
-
-# Stress decay over time
-stress_level *= (1 - daily_decay_rate)
-```
+All systems have a natural tendency to return to baseline equilibrium levels over time, representing psychological adaptation and recovery processes.
 
 ## Network Integration Effects
 
 ### Spatial Stress Propagation
 
-**Grid-Based Contagion**:
-```python
-# Stress spreads through local neighborhoods
-for neighbor in grid_neighbors:
-    if neighbor.stress_level > threshold:
-        contagion_probability = distance_decay * neighbor.stress_level
-        if random() < contagion_probability:
-            self.stress_level += contagion_effect
-```
-
-**Clustering Emergence**:
-- **High-Stress Clusters**: Form around agents with chronic hindrance events
-- **Low-Stress Clusters**: Form around agents with effective coping strategies
-- **Mixed Areas**: Show gradient effects between different stress levels
+Stress can spread through local social networks, creating geographic patterns of stress clustering. High-stress areas tend to form around people experiencing chronic difficulties, while low-stress areas form around those with effective coping strategies.
 
 ### Support Network Formation
 
-**Preferential Attachment**:
-```python
-# Effective supporters attract more connections
-if support_effectiveness > threshold:
-    connection_probability += effectiveness_bonus
-
-# Network adaptation based on support history
-if historical_support_success > 0.7:
-    strengthen_connection()
-elif historical_support_success < 0.3:
-    weaken_or_rewire_connection()
-```
+Effective supporters naturally attract more social connections, creating hubs of support within the network. Network adaptation based on support history helps maintain effective support relationships.
 
 ## Resource Allocation Integration
 
 ### Protective Factor Investment
 
-**Dynamic Allocation**:
-```python
-# Allocation based on current needs and efficacy
-allocation_weights = softmax(current_efficacy / temperature)
-
-# Investment return depends on current state
-improvement_rate = base_rate * (1 - current_efficacy) * need_multiplier
-new_efficacy = current_efficacy + investment * improvement_rate
-```
+Individuals allocate limited resources across different protective factors based on current needs and effectiveness. Investment returns depend on current state, with higher returns when protective factors are most needed.
 
 **Cross-System Resource Flow**:
-- **Stress Events**: Consume resources for coping
-- **Social Interactions**: May consume resources for support provision
-- **Regeneration**: Influenced by affect state
-- **Investment**: Allocates resources to protective factors
+- **Stress Events**: Require resource investment for coping
+- **Social Interactions**: May require resources for support provision
+- **Regeneration**: Influenced by emotional state
+- **Investment**: Allocates resources to build protective factors
 
 ## Configuration System Integration
 
 ### Unified Parameter Management
 
-**Centralized Configuration**:
-```python
-# All mechanisms use the same configuration system
-config = get_config()
-
-# Affect dynamics parameters
-affect_config = AffectDynamicsConfig()
-resilience_config = ResilienceDynamicsConfig()
-stress_config = StressProcessingConfig()
-interaction_config = InteractionConfig()
-```
-
-**Parameter Categories**:
-- **Agent Parameters**: Initial states, baseline levels, behavioral rates
-- **Stress Parameters**: Event generation, appraisal weights, threshold scaling
-- **Affect Parameters**: Influence rates, homeostatic rates, appraisal effects
-- **Resilience Parameters**: Coping rates, support effects, overload thresholds
-- **Network Parameters**: Grid size, neighbor limits, adaptation rates
-- **Resource Parameters**: Regeneration rates, allocation costs, protective efficacy
-- **PSS-10 Parameters**: Item means/SDs, factor loadings, bifactor correlations, dimension parameters
-
-**PSS-10 Configuration Integration**:
-```python
-# PSS-10 parameters integrated into unified configuration system
-pss10_config = {
-    'item_means': [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5],
-    'item_sds': [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8],
-    'factor_loadings': {
-        'controllability': [0.2, 0.8, 0.1, 0.7, 0.6, 0.1, 0.8, 0.6, 0.7, 0.1],
-        'overload': [0.7, 0.3, 0.8, 0.2, 0.4, 0.9, 0.2, 0.3, 0.4, 0.9]
-    },
-    'bifactor_correlation': 0.3,
-    'dimension_sds': {'controllability': 1.0, 'overload': 1.0},
-    'update_frequency': 'daily',  # How often to update PSS-10 scores
-    'initialization_method': 'stress_based'  # How to initialize PSS-10 for new agents
-}
-```
+All mechanisms use the same configuration system, ensuring consistency across all components. This includes parameters for agent behavior, stress processing, emotional dynamics, resilience processes, network structure, and resource management.
 
 ## Validation Integration
 
 ### Multi-Level Validation
 
 **Individual Agent Validation**:
-- **Stress Response**: Appropriate challenge/hindrance sensitivity
-- **Coping Success**: Realistic success rates given challenge/hindrance
+- **Stress Response**: Appropriate sensitivity to challenge and hindrance
+- **Coping Success**: Realistic success rates given event characteristics
 - **Affect Dynamics**: Proper response to social and stress influences
 - **Resource Management**: Sustainable resource levels over time
 
@@ -259,158 +139,68 @@ pss10_config = {
 - **Emergent Patterns**: Realistic mental health outcome distributions
 
 **Literature Alignment**:
-- **PSS-10 Scores**: Match empirical stress scale distributions
-- **Recovery Times**: Align with psychological recovery literature
-- **Social Effects**: Consistent with social influence research
-- **Intervention Efficacy**: Match mental health intervention studies
+- **Assessment Scores**: Match empirical stress scale distributions
+- **Recovery Times**: Align with psychological recovery research
+- **Social Effects**: Consistent with social influence studies
+- **Intervention Efficacy**: Match mental health intervention research
 
 ## Research Pipeline Integration
 
 ### Parameter Sweep Integration
 
-**Multi-Mechanism Sensitivity**:
-```python
-# Sensitivity analysis across integrated parameters
-sweep_parameters = {
-    'stress': ['omega_c', 'omega_p', 'omega_o', 'lambda_C', 'lambda_H'],
-    'affect': ['peer_influence_rate', 'homeostatic_rate', 'event_appraisal_rate'],
-    'resilience': ['coping_success_rate', 'social_support_rate', 'challenge_bonus'],
-    'network': ['rewire_probability', 'homophily_strength', 'adaptation_threshold']
-}
-
-# Integrated sensitivity analysis
-for param_set in parameter_combinations:
-    run_simulation_with_parameters(param_set)
-    validate_against_pattern_targets()
-    compute_sensitivity_indices()
-```
+The system supports comprehensive sensitivity analysis across all integrated parameters, enabling researchers to understand which factors most influence outcomes and validate against research targets.
 
 ### Output Integration
 
-**Multi-Level Metrics**:
-```python
-# Individual agent metrics
-agent_metrics = {
-    'stress_history': daily_stress_levels,
-    'affect_trajectory': daily_affect_values,
-    'resilience_path': daily_resilience_values,
-    'coping_success_rate': overall_coping_success,
-    'social_integration': network_connections
-}
-
-# Population metrics
-population_metrics = {
-    'stress_distribution': population_stress_levels,
-    'affect_clusters': spatial_affect_patterns,
-    'resilience_distribution': population_resilience_levels,
-    'network_structure': clustering_coefficients,
-    'intervention_effects': pre_post_comparisons
-}
-```
+The system provides both individual and population-level metrics for comprehensive analysis, including stress patterns, emotional clusters, resilience distributions, network structures, and intervention effects.
 
 ## Intervention Integration
 
 ### Multi-Tiered Intervention Effects
 
 **Universal Interventions**:
-- **Population-wide**: Affect all agents equally
-- **Mechanism**: Modify base parameters (e.g., increase coping_success_rate)
-- **Integration**: Applied through configuration system
+- **Population-wide**: Affect all individuals equally
+- **Mechanism**: Modify base parameters for the entire population
+- **Integration**: Applied through the configuration system
 
 **Selective Interventions**:
-- **Targeted Groups**: Applied to specific agent subgroups
+- **Targeted Groups**: Applied to specific subgroups
 - **Mechanism**: Condition-based parameter modification
-- **Integration**: Runtime parameter adjustment based on agent characteristics
+- **Integration**: Runtime parameter adjustment based on individual characteristics
 
 **Indicated Interventions**:
-- **Individual Treatment**: Applied to agents meeting clinical criteria
+- **Individual Treatment**: Applied to individuals meeting specific criteria
 - **Mechanism**: State-based intervention triggering
-- **Integration**: Real-time intervention based on stress/resilience thresholds
+- **Integration**: Real-time intervention based on current stress or resilience levels
 
 ## Mathematical Integration Framework
 
 ### State Vector Integration
 
 **Complete Agent State**:
-```
-S_t = [A_t, R_t, S_t, P_t, N_t, R_t, PSS_t]
-```
-
-Where:
-- `A_t`: Affect state at time t
-- `R_t`: Resilience state at time t
-- `S_t`: Stress state at time t
-- `P_t`: Protective factors state at time t
-- `N_t`: Network state at time t
-- `R_t`: Resources state at time t
-- `PSS_t`: PSS-10 state at time t (controllability, overload, responses, total score, dimension scores)
-
-**PSS-10 State Integration**:
-```python
-# PSS-10 state is fully integrated into agent state management
-pss10_state = {
-    'total_score': self.pss10,                    # Overall PSS-10 score (0-40)
-    'responses': self.pss10_responses,            # Individual item responses (0-4)
-    'controllability': self.stress_controllability,  # Controllability dimension (0-1)
-    'overload': self.stress_overload,             # Overload dimension (0-1)
-    'dimension_scores': self.pss10_dimension_scores,  # Raw dimension scores
-    'history': self.pss10_history,                # Historical PSS-10 trajectory
-    'changes': self.pss10_changes                 # Step-by-step PSS-10 changes
-}
-```
+The model tracks a comprehensive state for each individual including emotional state, resilience capacity, stress level, protective factors, network connections, available resources, and stress assessment scores.
 
 **State Transition Function**:
-```
-S_{t+1} = F(S_t, E_t, I_t, C_t)
-```
-
-Where:
-- `F`: Integration function combining all mechanisms
-- `E_t`: External events at time t
-- `I_t`: Interaction events at time t
-- `C_t`: Configuration parameters
+All mechanisms work together through an integrated function that combines external events, social interactions, and configuration parameters to determine state changes.
 
 ### Equilibrium Analysis
 
 **Homeostatic Equilibria**:
-```python
-# System tends toward equilibrium points
-equilibrium_affect = baseline_affect
-equilibrium_resilience = baseline_resilience
-equilibrium_stress = 0
-
-# Stability depends on parameter settings
-if social_influence_rate > homeostatic_rate:
-    # Social effects dominate, multiple equilibria possible
-    multiple_equilibria = true
-else:
-    # Homeostasis dominates, single equilibrium
-    single_equilibrium = true
-```
+The system tends toward equilibrium points where all mechanisms balance each other. The nature of these equilibria depends on parameter settings, with social effects potentially creating multiple possible equilibrium states.
 
 ## Implementation Integration
 
 ### Code Organization Integration
 
 **Modular Design**:
-- **`stress_utils.py`**: Stress perception and appraisal mechanisms
-- **`affect_utils.py`**: Affect dynamics and social influence
-- **`agent.py`**: Integration orchestration and state management
-- **`model.py`**: Population-level coordination and grid management
-- **`config.py`**: Unified parameter management across all systems
+- **Stress Processing**: Event perception and appraisal mechanisms
+- **Affect Processing**: Emotional dynamics and social influence
+- **Agent Coordination**: Integration orchestration and state management
+- **Population Management**: Group-level coordination and network management
+- **Configuration Management**: Unified parameter management across all systems
 
 **Dependency Flow**:
-```python
-# Agent step() method integrates all mechanisms
-def step(self):
-    # 1. Initialize and get social context
-    # 2. Process stress and social events
-    # 3. Update affect dynamics
-    # 4. Update resilience dynamics
-    # 5. Manage resources and protective factors
-    # 6. Apply homeostatic adjustments
-    # 7. Reset daily tracking
-```
+The main agent process integrates all mechanisms in sequence, ensuring proper coordination and state consistency across all systems.
 
 ### Testing Integration
 
@@ -425,18 +215,18 @@ def step(self):
 
 ### Planned Enhancements
 
-**R Analysis Integration**:
+**Advanced Analysis Integration**:
 - **Statistical Analysis**: Population-level pattern analysis
 - **Visualization**: Dynamic network and state visualization
-- **Calibration**: ABC/SMM parameter calibration routines
+- **Calibration**: Parameter calibration routines
 
-**SQL Database Integration**:
+**Enhanced Storage Integration**:
 - **Large-Scale Storage**: Parameter sweep results and simulation outputs
 - **Query Interface**: Efficient data extraction for analysis
 - **Performance Optimization**: Batch processing capabilities
 
 **Advanced Network Features**:
-- **Dynamic Network Growth**: Agent population changes over time
+- **Dynamic Network Growth**: Population changes over time
 - **Multi-Scale Networks**: Hierarchical social structures
 - **Temporal Network Evolution**: Time-varying connection patterns
 
