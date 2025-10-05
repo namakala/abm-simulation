@@ -74,7 +74,7 @@ Some resilience effects only occur when emotional states exceed certain threshol
 
 ### Neighbor Selection
 
-Individuals interact with others in their immediate social network, creating local clusters of similar emotional states and patterns of emotional contagion.
+Individuals interact with others in their social network based on Watts-Strogatz small-world connections, creating clusters of similar emotional states and patterns of emotional contagion.
 
 ### Interaction Frequency
 
