@@ -6,18 +6,19 @@ Agent interactions form the core social dynamics of the mental health model. Ind
 
 ## Network Structure
 
-### Grid-Based Social Network
+### Watts-Strogatz Small-World Network
 
-Individuals are positioned on a grid-based social network that reflects real-world spatial relationships. The network uses a grid layout where each person connects with their immediate neighbors, creating a realistic pattern of local social connections.
+Individuals are connected through a Watts-Strogatz small-world network that reflects realistic social relationships. The network uses a ring lattice base topology with random rewiring, creating realistic patterns of social clustering and connectivity.
 
 **Network Properties**:
-- **Topology**: Two-dimensional grid with connections to immediate neighbors
-- **Boundary Conditions**: Fixed boundaries that don't wrap around
-- **Connection Type**: Based on physical or social proximity
+- **Topology**: Watts-Strogatz small-world network with configurable rewiring probability
+- **Clustering**: High clustering coefficient reflecting social circles
+- **Path Length**: Short average path length enabling distant connections
+- **Connection Type**: Based on social relationships and random opportunities
 
 ### Neighbor Relationships
 
-Individuals discover and interact with others in their immediate social circle. The network naturally creates clusters of similar individuals and enables the spread of social influence through local connections.
+Individuals discover and interact with others through their network connections. The small-world structure naturally creates clusters of similar individuals while allowing connections across the entire population, enabling realistic patterns of social influence and information flow.
 
 ## Interaction Process
 
@@ -82,20 +83,20 @@ Receiving social support provides a direct boost to resilience, representing how
 ### Affect Contagion Patterns
 
 **Emergent Phenomena**:
-1. **Emotional Clustering**: Similar emotional states naturally group together spatially
-2. **Contagion Waves**: Negative emotions can spread through neighborhoods
-3. **Resilience Pockets**: Areas with high resilience resist negative emotional contagion
+1. **Emotional Clustering**: Similar emotional states naturally group together through social connections
+2. **Contagion Patterns**: Negative emotions can spread through both local clusters and global shortcuts
+3. **Resilience Hubs**: Well-connected, high-resilience individuals resist and buffer negative emotional contagion
 
 ### Network Structure Effects
 
-**Grid Topology Impact**:
-- **Local Influence**: Interactions limited to immediate social circles
-- **Spatial Correlation**: Emotional patterns show geographic clustering
-- **Boundary Effects**: People at the edges of social networks have fewer connections
+**Small-World Topology Impact**:
+- **Local Clustering**: Strong local connections within social circles
+- **Global Connectivity**: Short paths enable influence across the entire population
+- **Clustering Effects**: High clustering coefficient creates emotional clusters
 
 **Network Density Effects**:
-- **High Density**: Faster emotional spread, more social support opportunities
-- **Low Density**: Slower contagion, fewer support resources
+- **High Density**: More connections per person, faster emotional spread
+- **Low Density**: Fewer connections, slower but more selective influence
 
 ## Coping Social Influence
 
@@ -127,31 +128,31 @@ Individuals track the effectiveness of their social connections over time and ad
 ### Population-Level Effects
 
 **Emergent Patterns**:
-1. **Emotional Clustering**: Similar emotional states form geographic clusters
-2. **Support Networks**: Effective supporters become central community members
-3. **Stress Gradients**: Stress levels show geographic patterns
-4. **Resilience Communities**: High-resilience areas emerge and persist
+1. **Emotional Clustering**: Similar emotional states form connected clusters through small-world structure
+2. **Support Networks**: Effective supporters become central hubs in the social network
+3. **Stress Propagation**: Stress can spread through both local clusters and global shortcuts
+4. **Resilience Communities**: High-resilience groups emerge and persist through network connections
 
 ### Intervention Effects
 
 **Network-Based Interventions**:
-- **Targeted Support**: Programs focused on low-resilience areas
-- **Connection Enhancement**: Programs that improve social connectivity
-- **Support Training**: Programs that improve support effectiveness
+- **Targeted Support**: Programs focused on low-resilience clusters
+- **Connection Enhancement**: Programs that improve social network connectivity
+- **Support Training**: Programs that improve support effectiveness within social circles
 
 ### Validation Metrics
 
 **Network Metrics**:
-- **Clustering Coefficient**: Measure of local social grouping
-- **Average Path Length**: Measure of social connectivity
-- **Homophily Index**: Measure of connection preferences
-- **Support Network Density**: Measure of support availability
+- **Clustering Coefficient**: Measure of local social grouping in small-world structure
+- **Average Path Length**: Measure of global connectivity in small-world network
+- **Homophily Index**: Measure of connection preferences for similar individuals
+- **Support Network Density**: Measure of support availability through social connections
 
 **Behavioral Metrics**:
-- **Interaction Frequency**: Rate of social interactions
-- **Support Success Rate**: Effectiveness of provided support
-- **Network Adaptation Rate**: Frequency of connection changes
-- **Emotional Contagion Speed**: Rate of emotional spread through network
+- **Interaction Frequency**: Rate of social interactions within network structure
+- **Support Success Rate**: Effectiveness of provided support through social connections
+- **Network Adaptation Rate**: Frequency of connection changes in response to stress
+- **Emotional Contagion Speed**: Rate of emotional spread through small-world network
 
 ## Integration with Other Systems
 
@@ -165,7 +166,7 @@ Individuals track the effectiveness of their social connections over time and ad
 **Network → Stress**:
 - Social support improves coping success
 - Neighbor emotions influence stress response
-- Network structure affects stress propagation
+- Small-world network structure affects stress propagation patterns
 
 ### Resilience System Integration
 
@@ -182,11 +183,11 @@ Individuals track the effectiveness of their social connections over time and ad
 ### Affect System Integration
 
 **Affect → Network**:
-- Similar emotional states drive homophily
+- Similar emotional states drive homophily in small-world structure
 - Extreme emotions may trigger network adaptation
 - Emotional state influences support effectiveness
 
 **Network → Affect**:
-- Social contagion spreads emotions through network
+- Social contagion spreads emotions through small-world connections
 - Support interactions change emotional states
-- Network structure influences emotional dynamics
+- Small-world network structure influences emotional dynamics and clustering
