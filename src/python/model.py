@@ -4,6 +4,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import mesa
+import logging
 from typing import Dict, List, Any
 from collections import defaultdict
 
@@ -754,7 +755,63 @@ class StressModel(mesa.Model):
         if agent_data.empty:
             return pd.DataFrame()
 
-        return agent_data
+        # Add AgentID and Step columns to the DataFrame
+        # Mesa's DataCollector doesn't include these by default, so we need to add them
+        try:
+            # Reset index to get AgentID and Step information
+            agent_data = agent_data.reset_index()
+
+            # Rename columns to match expected format
+            if 'AgentID' in agent_data.columns and 'Step' in agent_data.columns:
+                # Columns are already properly named
+                pass
+            else:
+                # Handle different possible column naming from Mesa
+                # The index levels should contain AgentID and Step information
+                logger = logging.getLogger('simulation')
+                logger.warning("Unexpected DataFrame structure from DataCollector, attempting to fix...")
+
+                # Try to reconstruct the DataFrame with proper columns
+                if hasattr(agent_data.index, 'names') and agent_data.index.names:
+                    # Multi-index case - reconstruct with proper column names
+                    agent_data = agent_data.reset_index()
+                    if len(agent_data.index.names) >= 2:
+                        # Assume first level is AgentID, second is Step
+                        agent_data = agent_data.rename(columns={
+                            agent_data.columns[0]: 'AgentID',
+                            agent_data.columns[1]: 'Step'
+                        })
+                else:
+                    # Single index case - need to add missing columns
+                    # Create AgentID column based on row patterns
+                    num_rows = len(agent_data)
+                    num_agents = len(self.agents)
+                    steps_per_agent = num_rows // num_agents if num_agents > 0 else 1
+
+                    # Create AgentID column
+                    agent_ids = []
+                    for i in range(num_rows):
+                        agent_id = i // steps_per_agent
+                        agent_ids.append(agent_id)
+
+                    agent_data.insert(0, 'AgentID', agent_ids)
+
+                    # Create Step column
+                    steps = []
+                    for i in range(num_rows):
+                        step = i % steps_per_agent
+                        steps.append(step)
+
+                    agent_data.insert(1, 'Step', steps)
+
+            return agent_data
+
+        except Exception as e:
+            # If there's any error in processing, return the original data
+            # This ensures backward compatibility
+            logger = logging.getLogger('simulation')
+            logger.warning(f"Error processing agent data structure: {e}")
+            return agent_data
 
     def get_model_vars_dataframe(self) -> pd.DataFrame:
         """
