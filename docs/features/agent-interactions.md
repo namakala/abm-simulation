@@ -32,6 +32,30 @@ Individuals randomly select interaction partners from their neighbors and engage
 
 Social interactions create bidirectional changes where both individuals affect each other's emotional state. The model recognizes that negative emotional states tend to have stronger influence than positive ones.
 
+**Mutual Influence Equations:**
+
+**Basic Influence:**
+
+$$\Delta A_i = \alpha_i \cdot \mathrm{sign}(A_j)$$
+
+**Asymmetric Weighting:**
+
+$$\Delta A_i' = \Delta A_i \cdot \begin{cases}
+1.5 & \text{if } \Delta A_i < 0 \\
+1.0 & \text{if } \Delta A_i \geq 0
+\end{cases}$$
+
+**Mutual Updates:**
+
+$$A_i' = A_i + \Delta A_i'$$
+$$A_j' = A_j + \Delta A_j'$$
+
+Where:
+- $\Delta A_i$ is affect change for agent $i$
+- $\alpha_i \in [0,1]$ is influence rate
+- $A_i, A_j \in [-1,1]$ are affect values
+- $\mathrm{sign}(x)$ returns sign of $x$
+
 ## Social Influence Dynamics
 
 ### Affect Contagion
@@ -67,6 +91,41 @@ Individuals tend to form connections with others who have similar experiences an
 - **Similar Emotional States**: Emotional similarity drives connection preferences
 - **Support Effectiveness**: History of helpful interactions influences connection strength
 
+**Network Adaptation Trigger:**
+
+$$\mathrm{trigger\ adaptation} = \begin{cases}
+1 & \text{if } s_c \geq \eta_a \\
+0 & \text{otherwise}
+\end{cases}$$
+
+**Connection Similarity:**
+
+$$s_{ij} = 1 - \frac{|A_i - A_j| + |R_i - R_j|}{2}$$
+
+Where:
+- $s_c$ is stress breach count
+- $\eta_a \in \mathbb{N}$ is adaptation threshold
+- $s_{ij} \in [0,1]$ is similarity between agents $i,j$
+- $A_i, A_j \in [-1,1]$ are affect values
+- $R_i, R_j \in [0,1]$ are resilience values
+
+**Connection Retention Probability:**
+
+$$p_{\mathrm{keep}} = s_{ij} \cdot \alpha_h + e_s \cdot (1 - \alpha_h)$$
+
+**Rewiring Decision:**
+
+$$\mathrm{rewire} = \begin{cases}
+1 & \text{if } U \sim \mathcal{U}(0,1) > p_{\mathrm{keep}} \\
+0 & \text{otherwise}
+\end{cases}$$
+
+Where:
+- $p_{\mathrm{keep}} \in [0,1]$ is probability of keeping connection
+- $\alpha_h \in [0,1]$ is homophily strength
+- $e_s \in [0,1]$ is support effectiveness
+- $U$ is uniform random variable
+
 ## Social Support Dynamics
 
 ### Support Provision
@@ -76,9 +135,29 @@ Social support occurs when individuals provide emotional or practical help to ot
 **Support Effectiveness**:
 The quality of support depends on the current state and capabilities of the person providing help, with more resilient individuals generally being more effective supporters.
 
+**Support Effectiveness Calculation:**
+
+$$e_s = \frac{R_j + (1 + A_j)/2}{2} + 0.2$$
+
+Where:
+- $e_s \in [0,1]$ is support effectiveness
+- $R_j \in [0,1]$ is neighbor's resilience
+- $A_j \in [-1,1]$ is neighbor's affect
+
 ### Support Impact on Resilience
 
 Receiving social support provides a direct boost to resilience, representing how supportive relationships can help people better cope with stress.
+
+**Support Exchange Detection:**
+
+$$\mathrm{support\ exchange} = \begin{cases}
+1 & \text{if } |\Delta A_i| > 0.05 \lor |\Delta R_i| > 0.05 \lor |\Delta A_j| > 0.05 \lor |\Delta R_j| > 0.05 \\
+0 & \text{otherwise}
+\end{cases}$$
+
+Where:
+- $\Delta A_i, \Delta A_j$ are affect changes for agents $i,j$
+- $\Delta R_i, \Delta R_j$ are resilience changes for agents $i,j$
 
 ## Interaction Impact Analysis
 

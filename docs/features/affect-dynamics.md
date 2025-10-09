@@ -20,9 +20,34 @@ Affect represents an individual's current emotional state, ranging from very neg
 
 Individuals influence each other's emotional states through social interactions. When people interact, their emotional states can spread to others, with the extent of influence depending on the number of connections and the strength of the emotional states involved.
 
+**Social Influence Equation:**
+
+$$\Delta A_{ij} = \alpha_p \cdot (A_j - A_i)$$
+
+Where:
+- $\Delta A_{ij}$ is affect change for agent $i$ from neighbor $j$
+- $\alpha_p \in [0,1]$ is peer influence rate
+- $A_j, A_i \in [-1,1]$ are affect values
+
 ### Interaction Effects
 
 Social interactions create mutual influence where both individuals affect each other's emotional state. The model recognizes that negative emotional states tend to have a stronger impact than positive ones, reflecting how negative interactions can be more memorable and influential.
+
+**Mutual Influence with Asymmetric Effects:**
+
+$$\Delta A_i = \alpha_p \cdot (A_j - A_i) \cdot \begin{cases}
+1.5 & \text{if } A_j - A_i < 0 \\
+1.0 & \text{if } A_j - A_i \geq 0
+\end{cases}$$
+
+**Resilience Influence:**
+
+$$\Delta R_i = \beta_r \cdot A_j \cdot \mathbb{1}_{|A_j| > \theta_a}$$
+
+Where:
+- $\beta_r > 0$ is resilience influence rate
+- $\theta_a > 0$ is affect threshold for resilience influence
+- $\mathbb{1}$ is indicator function
 
 ## Stress Event Impact on Affect
 
@@ -43,9 +68,29 @@ The way individuals interpret stress events affects their emotional response. Ch
 
 Emotional states naturally tend to return to an individual's baseline level over time. This represents the psychological tendency for emotions to stabilize around a person's natural equilibrium point.
 
+**Homeostasis Effect:**
+
+$$\Delta A_h = \theta_a \cdot (A_b - A_c)$$
+
+Where:
+- $\Delta A_h$ is homeostatic affect change
+- $\theta_a \in [0,1]$ is homeostatic rate
+- $A_b \in [-1,1]$ is baseline affect
+- $A_c \in [-1,1]$ is current affect
+
 ### Baseline Affect Dynamics
 
 Each person has a stable baseline affect that represents their natural emotional balance. This baseline remains relatively constant and serves as the target that emotional dynamics pull toward.
+
+**Event Appraisal Effect:**
+
+$$\Delta A_e = \alpha_e \cdot \chi \cdot (1 - A_c) - \alpha_e \cdot \zeta \cdot \max(0.1, A_c + 1)$$
+
+Where:
+- $\Delta A_e$ is event appraisal affect change
+- $\alpha_e \in [0,1]$ is event appraisal rate
+- $\chi \in [0,1]$ is challenge component
+- $\zeta \in [0,1]$ is hindrance component
 
 ## Integrated Affect Dynamics
 
@@ -58,6 +103,28 @@ Daily emotional changes result from multiple factors working together:
 - Natural tendency to return to baseline
 
 These factors combine to determine how emotional state changes throughout each day.
+
+**Integrated Affect Update:**
+
+$$A_{t+1} = A_t + \Delta A_p + \Delta A_e + \Delta A_h$$
+
+**Final Affect Clamping:**
+
+$$A_{t+1} = \mathrm{clamp}(A_{t+1}, -1, 1)$$
+
+Where:
+- $A_t \in [-1,1]$ is current affect
+- $\Delta A_p$ is peer influence effect
+- $\Delta A_e$ is event appraisal effect
+- $\Delta A_h$ is homeostasis effect
+
+**Aggregated Peer Influence:**
+
+$$\Delta A_p = \frac{1}{n} \sum_{j=1}^{n} \alpha_p \cdot (A_j - A_t)$$
+
+Where:
+- $n$ is number of neighbors (limited by $\max(1, n_{\mathrm{influence}})$)
+- $A_j \in [-1,1]$ is neighbor $j$'s affect
 
 ## Resilience-Affect Interactions
 

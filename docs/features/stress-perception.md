@@ -25,26 +25,42 @@ Events are generated using a process that creates realistic combinations of cont
 
 The core appraisal mechanism maps the two event attributes to challenge and hindrance components using a mathematical function that transforms controllability and overload into psychological impact measures.
 
+**Challenge-Hindrance Appraisal Equation:**
+
+$$z = \omega_c \cdot c - \omega_o \cdot o + b$$
+
+$$\chi = \sigma(\gamma \cdot z)$$
+
+$$\zeta = 1 - \chi$$
+
+Where:
+- $c \in [0,1]$ is controllability
+- $o \in [0,1]$ is overload
+- $\omega_c, \omega_o \in \mathbb{R}$ are weight parameters
+- $b \in \mathbb{R}$ is bias term
+- $\gamma > 0$ controls sigmoid steepness
+- $\sigma(x) = \frac{1}{1+e^{-x}}$ is sigmoid function
+
 ### Parameter Configuration
 
 The appraisal system uses several parameters that control how events are interpreted:
 
-- **Controllability weight**: How much controllability influences the appraisal
-- **Overload weight**: How much overload influences the appraisal
-- **Bias term**: Baseline shift in the appraisal function
-- **Sigmoid steepness**: How decisively events are classified as challenge or hindrance
+- **Controllability weight** $\omega_c$: How much controllability influences the appraisal
+- **Overload weight** $\omega_o$: How much overload influences the appraisal
+- **Bias term** $b$: Baseline shift in the appraisal function
+- **Sigmoid steepness** $\gamma$: How decisively events are classified as challenge or hindrance
 
 ### Challenge-Hindrance Mapping Logic
 
 The appraisal system implements specific mapping rules:
 
 - **High Challenge Events**: High controllability combined with low overload
-  - Example: "A challenging project at work that I can control"
-  - Results in predominantly challenge appraisal
+   - Example: "A challenging project at work that I can control"
+   - Results in predominantly challenge appraisal
 
 - **High Hindrance Events**: Low controllability combined with high overload
-  - Example: "Unexpected financial crisis that overwhelms me"
-  - Results in predominantly hindrance appraisal
+   - Example: "Unexpected financial crisis that overwhelms me"
+   - Results in predominantly hindrance appraisal
 
 ## Stress Threshold Evaluation
 
@@ -52,9 +68,35 @@ The appraisal system implements specific mapping rules:
 
 The decision to become stressed uses a dynamic threshold mechanism that adjusts based on the challenge and hindrance characteristics of events.
 
+**Stress Threshold Evaluation:**
+
+$$\eta_{\mathrm{eff}} = \eta_{\mathrm{base}} + \lambda_C \cdot \chi - \lambda_H \cdot \zeta$$
+
+**Stress Classification:**
+
+$$\mathrm{stressed} = \begin{cases}
+1 & \text{if } L > \eta_{\mathrm{eff}} \\
+0 & \text{otherwise}
+\end{cases}$$
+
+Where:
+- $\eta_{\mathrm{base}} \in [0,1]$ is base stress threshold
+- $\lambda_C \in \mathbb{R}$ is challenge threshold modifier
+- $\lambda_H \in \mathbb{R}$ is hindrance threshold modifier
+- $\chi \in [0,1]$ is challenge component
+- $\zeta \in [0,1]$ is hindrance component
+
 ### Appraised Stress Load
 
 The overall stress load is computed from challenge-hindrance polarity, representing how the balance between challenge and hindrance influences the overall stress impact.
+
+**Appraised Stress Load:**
+
+$$L = 1 + \delta \cdot (\zeta - \chi)$$
+
+Where:
+- $\delta > 0$ controls polarity effect strength
+- $\zeta - \chi \in [-1,1]$ represents hindrance vs challenge balance
 
 ## Threshold Dynamics
 
@@ -71,6 +113,31 @@ The overall stress load is computed from challenge-hindrance polarity, represent
 ### Bifactor Model Implementation
 
 The model implements a comprehensive PSS-10 integration using an empirically grounded bifactor model that accurately represents the two-factor structure of perceived stress:
+
+**PSS-10 Bifactor Model:**
+
+**Dimension Score Generation:**
+
+$$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} c \\ o \end{bmatrix}, \begin{bmatrix} \sigma_c^2 & \rho_\Psi \sigma_c \sigma_o \\ \rho_\Psi \sigma_c \sigma_o & \sigma_o^2 \end{bmatrix}\right)$$
+
+**Item Response Generation:**
+
+$$\Psi_i = \mathrm{clamp}\left(\mathrm{round}\left(\mu_i + (\lambda_{ic}(1-c_\Psi) + \lambda_{io} o_\Psi - 0.5) \cdot 0.5 + \epsilon\right), 0, 4\right)$$
+
+**Total PSS-10 Score:**
+
+$$\Psi = \sum_{i=1}^{10} \begin{cases}
+\Psi_i & \text{if } i \notin \{4,5,7,8\} \\
+4 - \Psi_i & \text{if } i \in \{4,5,7,8\}
+\end{cases}$$
+
+Where:
+- $c_\Psi, o_\Psi \in [0,1]$ are PSS-10 dimension scores
+- $\rho_\Psi \in [-1,1]$ is dimension correlation
+- $\sigma_c, \sigma_o > 0$ are dimension standard deviations
+- $\mu_i \in [0,4]$ is empirical item mean
+- $\lambda_{ic}, \lambda_{io} \in [0,1]$ are factor loadings
+- $\epsilon \sim \mathcal{N}(0, 0.1)$ is measurement error
 
 **Core Components:**
 - **Controllability Dimension**: Items 4, 5, 7, 8 (reverse scored) - measures perceived control over life events

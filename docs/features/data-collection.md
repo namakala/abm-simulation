@@ -149,6 +149,21 @@ Model-level variables capture population patterns, aggregated statistics, and sy
 - **Interpretation**: Positive values indicate generally positive population mood
 - **Research Use**: Indicator of overall population mental health
 
+**Population Average Equations:**
+
+$$\bar{\Psi} = \frac{1}{N} \sum_{i=1}^N \Psi_i$$
+
+$$\bar{R} = \frac{1}{N} \sum_{i=1}^N R_i$$
+
+$$\bar{A} = \frac{1}{N} \sum_{i=1}^N A_i$$
+
+Where:
+- $\bar{\Psi}$ is average PSS-10 score
+- $\bar{R}$ is average resilience
+- $\bar{A}$ is average affect
+- $N$ is population size
+- $\Psi_i, R_i, A_i$ are individual agent values
+
 ### Stress Processing Metrics
 
 **Coping Success Rate**:
@@ -173,12 +188,74 @@ Model-level variables capture population patterns, aggregated statistics, and sy
 - **Interpretation**: Higher values indicate more interconnected social network
 - **Research Use**: Indicator of social cohesion and information flow
 
+**Network Metrics Equations:**
+
+**Social Support Rate:**
+
+$$r_s = \frac{n_{se}}{n_{si}}$$
+
+**Network Density:**
+
+$$\rho_n = \frac{2 \cdot n_e}{N \cdot (N-1)}$$
+
+Where:
+- $r_s \in [0,1]$ is social support rate
+- $n_{se}$ is number of support exchanges
+- $n_{si}$ is number of social interactions
+- $\rho_n \in [0,1]$ is network density
+- $n_e$ is number of edges in network
+- $N$ is number of nodes (agents)
+
+**Stress Prevalence:**
+
+$$p_s = \frac{1}{N} \sum_{i=1}^N \mathbb{1}_{\Psi_i \geq \theta_\Psi}$$
+
+Where:
+- $p_s \in [0,1]$ is stress prevalence
+- $\mathbb{1}$ is indicator function
+- $\Psi_i$ is PSS-10 score for agent $i$
+- $\theta_\Psi$ is PSS-10 stress threshold
+
 ### Challenge-Hindrance Metrics
 
 **Challenge-Hindrance Ratio**:
 - **Definition**: Balance between challenge and hindrance stress events
 - **Interpretation**: Positive values indicate more challenge-dominant stress, negative values indicate more hindrance-dominant stress
 - **Research Use**: Indicator of stress type distribution in population
+
+**Resilience Distribution:**
+
+**Low Resilience Count:**
+
+$$n_{R_l} = \sum_{i=1}^N \mathbb{1}_{R_i < 0.3}$$
+
+**High Resilience Count:**
+
+$$n_{R_h} = \sum_{i=1}^N \mathbb{1}_{R_i > 0.7}$$
+
+**Medium Resilience Count:**
+
+$$n_{R_m} = N - n_{R_l} - n_{R_h}$$
+
+Where:
+- $n_{R_l}, n_{R_m}, n_{R_h} \in \mathbb{N}$ are resilience category counts
+- $\mathbb{1}$ is indicator function
+- $R_i \in [0,1]$ is resilience for agent $i$
+
+**Challenge-Hindrance Metrics:**
+
+**Average Challenge:**
+
+$$\bar{\chi} = \frac{1}{N \cdot n_d} \sum_{i=1}^N \sum_{j=1}^{n_d} \chi_{ij}$$
+
+**Challenge-Hindrance Ratio:**
+
+$$r_{\chi\zeta} = \frac{\bar{\chi} - \bar{\zeta}}{\bar{\chi} + \bar{\zeta}} \quad \text{if } \bar{\chi} + \bar{\zeta} > 0 \text{ else } 0$$
+
+Where:
+- $\bar{\chi}, \bar{\zeta} \in [0,1]$ are average challenge/hindrance
+- $n_d$ is days in simulation
+- $\chi_{ij}, \zeta_{ij} \in [0,1]$ are challenge/hindrance for agent $i$ on day $j$
 
 ## Data Access Patterns
 
