@@ -1,6 +1,6 @@
 # Step-by-Step Calculations for Resilience, Stress, and Affect
 
-_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+_See [`.kilocode/rules/math/notation.md`](../../.kilocode/rules/math/notation.md) for symbol definitions and conventions._
 
 ## Overview
 

@@ -1,6 +1,6 @@
 # Integration Overview: How All Mechanisms Work Together
 
-_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+_See [`.kilocode/rules/math/notation.md`](../../.kilocode/rules/math/notation.md) for symbol definitions and conventions._
 
 ## System Architecture Overview
 

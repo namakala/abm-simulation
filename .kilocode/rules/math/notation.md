@@ -1,6 +1,6 @@
 # Mathematical Notation Reference
 
-_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+_See [`notation.md`](notation.md) for symbol definitions and conventions._
 
 ## Overview
 
@@ -113,8 +113,8 @@ This document provides the authoritative reference for all mathematical notation
 | $\omega_o$ | Overload weight | $\omega_o \in \mathbb{R}$ | 1.0 |
 | $b$ | Bias term | $b \in \mathbb{R}$ | 0.0 |
 | $\gamma$ | Sigmoid steepness | $\gamma > 0$ | 6.0 |
-| $\eta_{\chi}$ | Challenge threshold modifier | $\eta_{\chi} \in \mathbb{R}$ | - |
-| $\eta_{\zeta}$ | Hindrance threshold modifier | $\eta_{\zeta} \in \mathbb{R}$ | - |
+| $\eta_{\chi}$ | Challenge threshold modifier | $\eta_{\chi} > 0$ | 0.8 |
+| $\eta_{\zeta}$ | Hindrance threshold modifier | $\eta_{\zeta} > 0$ | 1.2 |
 
 ### Resource Dynamics Parameters
 
@@ -137,22 +137,48 @@ This document provides the authoritative reference for all mathematical notation
 | $\upsilon_{\text{int}}$ | Formal intervention replenishment | $\upsilon_{\text{int}} > 0$ | - |
 | $\upsilon_{\text{cap}}$ | Psychological capital replenishment | $\upsilon_{\text{cap}} > 0$ | - |
 
+### Simulation Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $T_{\max}$ | Maximum simulation days | $T_{\max} \in \mathbb{N}$ | 100 |
+| $S_{\text{seed}}$ | Random seed | $S_{\text{seed}} \in \mathbb{N}$ | 42 |
+
 ### Behavioral Parameters
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
 | $\beta$ | Softmax temperature | $\beta > 0$ | - |
 | $\eta_{\text{adapt}}$ | Adaptation threshold | $\eta_{\text{adapt}} > 0$ | - |
-| $\nu_{\text{adapt}}$ | Learning rate | $\nu_{\text{adapt}} \in [0,1]$ | - |
-| $p_{\text{rewire}}$ | Rewiring probability | $p_{\text{rewire}} \in [0,1]$ | - |
+| $\lambda_{\text{adapt}}$ | Learning rate | $\lambda_{\text{adapt}} \in [0,1]$ | - |
+| $p_{\text{rewire}}$ | Rewiring probability | $p_{\text{rewire}} \in [0,1]$ | 0.01 |
+| $p_b$ | Base coping probability | $p_b \in [0,1]$ | 0.5 |
+| $\theta_{\chi}$ | Challenge bonus parameter | $\theta_{\chi} > 0$ | 0.2 |
+| $\theta_{\zeta}$ | Hindrance penalty parameter | $\theta_{\zeta} > 0$ | 0.3 |
+| $\delta_{\text{soc}}$ | Social influence factor | $\delta_{\text{soc}} \in [0,1]$ | 0.1 |
+| $\lambda_{\text{appraise}}$ | Event appraisal rate | $\lambda_{\text{appraise}} \in [0,1]$ | 0.15 |
+| $\theta_{\text{boost}}$ | Boost rate parameter | $\theta_{\text{boost}} > 0$ | 0.1 |
+| $\theta_{\text{boost\|cope}}$ | Coping success boost | $\theta_{\text{boost\|cope}} > 0$ | 0.1 |
+
+### Output Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $L_{\text{level}}$ | Logging level | $L_{\text{level}} \in \{\text{DEBUG, INFO, WARNING, ERROR}\}$ | INFO |
+| $D_{\text{results}}$ | Results output directory | $D_{\text{results}} \in \mathbb{S}$ | data/processed |
+| $D_{\text{raw}}$ | Raw data output directory | $D_{\text{raw}} \in \mathbb{S}$ | data/raw |
+| $D_{\text{logs}}$ | Logs output directory | $D_{\text{logs}} \in \mathbb{S}$ | logs |
+| $F_{\text{ts}}$ | Save time series flag | $F_{\text{ts}} \in \{\text{true, false}\}$ | true |
+| $F_{\text{net}}$ | Save network snapshots flag | $F_{\text{net}} \in \{\text{true, false}\}$ | true |
+| $F_{\text{sum}}$ | Save summary statistics flag | $F_{\text{sum}} \in \{\text{true, false}\}$ | true |
 
 ### Network Parameters
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
 | $N$ | Network size | $N \in \mathbb{N}$ | - |
-| $k$ | Mean degree | $k \in \mathbb{N}$ | - |
-| $p_{\text{rewire}}$ | Rewiring probability | $p_{\text{rewire}} \in [0,1]$ | - |
+| $WS_k$ | Mean degree | $k \in \mathbb{N}$ | - |
+| $WS_p$ | Rewiring probability | $WS_p \in [0,1]$ | 0.1 |
 | $C$ | Clustering coefficient | $C \in [0,1]$ | - |
 | $L$ | Average path length | $L > 0$ | - |
 
@@ -160,8 +186,8 @@ This document provides the authoritative reference for all mathematical notation
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
-| $\theta_{\text{affect}}$ | Affect homeostasis rate | $\theta_{\text{affect}} \in [0,1]$ | - |
-| $\theta_{\text{resilience}}$ | Resilience homeostasis rate | $\theta_{\text{resilience}} \in [0,1]$ | - |
+| $\lambda_{\text{affect}}$ | Affect homeostasis rate | $\lambda_{\text{affect}} \in [0,1]$ | - |
+| $\lambda_{\text{resilience}}$ | Resilience homeostasis rate | $\lambda_{\text{resilience}} \in [0,1]$ | - |
 | $\delta_{\text{stress}}$ | Stress decay rate | $\delta_{\text{stress}} \in [0,1]$ | 0.05 |
 
 ## Model-Level Variables
@@ -207,7 +233,7 @@ This document provides the authoritative reference for all mathematical notation
 | Function | Definition | Description |
 |----------|------------|-------------|
 | $R'(t)$ | $R'(t) = \lambda_R (R_{\max} - R(t))$ | Resource regeneration |
-| $C(s)$ | $C(s) = \kappa s^{\gamma_c}$ | Coping cost function |
+| $\Kappa(s)$ | $\Kappa(s) = \kappa s^{\gamma_c}$ | Coping cost function |
 | $\mathrm{softmax}(\mathbf{x})$ | $\mathrm{softmax}(x_i) = \frac{e^{x_i / \beta}}{\sum_j e^{x_j / \beta}}$ | Softmax allocation |
 
 ### Network Functions
