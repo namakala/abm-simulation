@@ -164,6 +164,8 @@ Where:
 - $N$ is population size
 - $\Psi_i, R_i, A_i$ are individual agent values
 
+**Implementation**: [`get_avg_pss10()`](src/python/model.py:574), [`get_avg_resilience()`](src/python/model.py:597), [`get_avg_affect()`](src/python/model.py:610) in `model.py`
+
 ### Stress Processing Metrics
 
 **Coping Success Rate**:
@@ -205,6 +207,8 @@ Where:
 - $\rho_n \in [0,1]$ is network density
 - $n_e$ is number of edges in network
 - $N$ is number of nodes (agents)
+
+**Implementation**: [`_calculate_social_support_rate()`](src/python/model.py:263), [`_calculate_network_density()`](src/python/model.py:270) in `model.py`
 
 **Stress Prevalence:**
 

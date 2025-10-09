@@ -65,6 +65,8 @@ Where:
 - $\chi \in [0,1]$ is challenge component
 - $\zeta \in [0,1]$ is hindrance component
 
+**Implementation**: [`compute_challenge_hindrance_resilience_effect()`](src/python/affect_utils.py:452) in `affect_utils.py`
+
 - **Successful Coping**: Challenge events provide significant resilience building, while hindrance events offer minor benefits
 - **Failed Coping**: Hindrance events significantly deplete resilience, while challenge events have minimal negative impact
 
@@ -129,6 +131,8 @@ Where:
 - $\zeta \in [0,1]$ is hindrance component
 - $A_j \in [-1,1]$ is neighbor $j$'s affect
 - $U$ is uniform random variable
+
+**Implementation**: [`compute_coping_probability()`](src/python/affect_utils.py:405) in `affect_utils.py`
 
 ### Challenge-Hindrance Effects
 
@@ -249,6 +253,8 @@ Where:
 - $\Delta R_s$ is social support effect
 - $\theta_r \in [0,1]$ is homeostatic rate
 - $R_b \in [0,1]$ is baseline resilience
+
+**Implementation**: [`update_resilience_dynamics()`](src/python/affect_utils.py:870) in `affect_utils.py`
 
 ## Validation Metrics
 

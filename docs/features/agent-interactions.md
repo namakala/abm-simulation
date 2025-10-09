@@ -56,6 +56,8 @@ Where:
 - $A_i, A_j \in [-1,1]$ are affect values
 - $\mathrm{sign}(x)$ returns sign of $x$
 
+**Implementation**: [`process_interaction()`](src/python/affect_utils.py:120) in `affect_utils.py`
+
 ## Social Influence Dynamics
 
 ### Affect Contagion
@@ -158,6 +160,8 @@ $$\mathrm{support\ exchange} = \begin{cases}
 Where:
 - $\Delta A_i, \Delta A_j$ are affect changes for agents $i,j$
 - $\Delta R_i, \Delta R_j$ are resilience changes for agents $i,j$
+
+**Implementation**: [`interact()`](src/python/agent.py:359) method in `agent.py`
 
 ## Interaction Impact Analysis
 

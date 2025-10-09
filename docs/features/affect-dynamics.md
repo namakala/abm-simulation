@@ -29,6 +29,8 @@ Where:
 - $\alpha_p \in [0,1]$ is peer influence rate
 - $A_j, A_i \in [-1,1]$ are affect values
 
+**Implementation**: [`compute_social_influence()`](src/python/affect_utils.py:47) in `affect_utils.py`
+
 ### Interaction Effects
 
 Social interactions create mutual influence where both individuals affect each other's emotional state. The model recognizes that negative emotional states tend to have a stronger impact than positive ones, reflecting how negative interactions can be more memorable and influential.
@@ -48,6 +50,8 @@ Where:
 - $\beta_r > 0$ is resilience influence rate
 - $\theta_a > 0$ is affect threshold for resilience influence
 - $\mathbb{1}$ is indicator function
+
+**Implementation**: [`process_interaction()`](src/python/affect_utils.py:120) in `affect_utils.py`
 
 ## Stress Event Impact on Affect
 
@@ -77,6 +81,8 @@ Where:
 - $\theta_a \in [0,1]$ is homeostatic rate
 - $A_b \in [-1,1]$ is baseline affect
 - $A_c \in [-1,1]$ is current affect
+
+**Implementation**: [`compute_homeostasis_effect()`](src/python/affect_utils.py:711) in `affect_utils.py`
 
 ### Baseline Affect Dynamics
 
@@ -117,6 +123,8 @@ Where:
 - $\Delta A_p$ is peer influence effect
 - $\Delta A_e$ is event appraisal effect
 - $\Delta A_h$ is homeostasis effect
+
+**Implementation**: [`update_affect_dynamics()`](src/python/affect_utils.py:830) in `affect_utils.py`
 
 **Aggregated Peer Influence:**
 

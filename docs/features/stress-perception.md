@@ -41,6 +41,8 @@ Where:
 - $\gamma > 0$ controls sigmoid steepness
 - $\sigma(x) = \frac{1}{1+e^{-x}}$ is sigmoid function
 
+**Implementation**: [`apply_weights()`](src/python/stress_utils.py:110) in `stress_utils.py`
+
 ### Parameter Configuration
 
 The appraisal system uses several parameters that control how events are interpreted:
@@ -85,6 +87,8 @@ Where:
 - $\lambda_H \in \mathbb{R}$ is hindrance threshold modifier
 - $\chi \in [0,1]$ is challenge component
 - $\zeta \in [0,1]$ is hindrance component
+
+**Implementation**: [`evaluate_stress_threshold()`](src/python/stress_utils.py:173) in `stress_utils.py`
 
 ### Appraised Stress Load
 
@@ -138,6 +142,8 @@ Where:
 - $\mu_i \in [0,4]$ is empirical item mean
 - $\lambda_{ic}, \lambda_{io} \in [0,1]$ are factor loadings
 - $\epsilon \sim \mathcal{N}(0, 0.1)$ is measurement error
+
+**Implementation**: [`generate_pss10_dimension_scores()`](src/python/stress_utils.py:413), [`generate_pss10_item_response()`](src/python/stress_utils.py:479), [`compute_pss10_score()`](src/python/stress_utils.py:351) in `stress_utils.py`
 
 **Core Components:**
 - **Controllability Dimension**: Items 4, 5, 7, 8 (reverse scored) - measures perceived control over life events

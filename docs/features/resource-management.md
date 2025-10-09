@@ -66,6 +66,8 @@ Where:
 - $R_{\max} = 1$ is maximum resources
 - $R \in [0,1]$ is current resources
 
+**Implementation**: [`compute_resource_regeneration()`](src/python/affect_utils.py:341) in `affect_utils.py`
+
 ### Affect-Modulated Regeneration
 
 **Affect Influence**:
@@ -116,6 +118,8 @@ Where:
 - $r_f > 0$ is resources allocated to factor $f$
 - $R_a \in [0,1]$ is available resources
 
+**Implementation**: [`allocate_protective_resources()`](src/python/affect_utils.py:289) in `affect_utils.py`
+
 **Temperature Effects**:
 - **High Temperature**: More random allocation (exploration)
 - **Low Temperature**: More deterministic allocation (exploitation)
@@ -141,6 +145,8 @@ Where:
 - $\Delta e_f > 0$ is efficacy improvement
 - $\gamma_p > 0$ is improvement rate
 - $e_f \in [0,1]$ is current efficacy
+
+**Implementation**: [`_allocate_protective_factors()`](src/python/agent.py:538) method in `agent.py`
 
 ## Protective Factor Efficacy Dynamics
 
