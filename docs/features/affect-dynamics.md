@@ -1,5 +1,7 @@
 # Affect Dynamics and Influencing Factors
 
+_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+
 ## Overview
 
 Affect represents an individual's current emotional state, ranging from very negative to very positive. The model examines how various factors influence these emotional states, including social connections, stress events, and natural tendencies to return to an individual's baseline emotional level.

@@ -1,5 +1,7 @@
 # Resilience Dynamics and Triggering Events
 
+_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+
 ## Overview
 
 Resilience represents an individual's capacity to adapt and recover from stress events. The model examines multiple factors that influence resilience levels, including stress event outcomes, social support, protective factors, and natural tendencies to return to baseline equilibrium.

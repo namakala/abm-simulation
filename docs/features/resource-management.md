@@ -1,5 +1,7 @@
 # Resource Management: Protective Factors and Resource Allocation
 
+_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+
 ## Overview
 
 Resource management forms the core constraint mechanism in the agent-based mental health model, implementing the principle that individuals have limited psychological and physical resources to allocate across various protective strategies. This system draws from conservation of resources theory and realistic decision-making under constraints.

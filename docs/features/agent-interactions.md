@@ -1,5 +1,7 @@
 # Agent Interaction Mechanisms and Impact Analysis
 
+_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+
 ## Overview
 
 Agent interactions form the core social dynamics of the mental health model. Individuals interact through social networks, influencing each other's emotional states and resilience while creating emergent patterns of social support, emotional contagion, and network adaptation.

@@ -1,5 +1,7 @@
 # Step-by-Step Calculations for Resilience, Stress, and Affect
 
+_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+
 ## Overview
 
 This document provides detailed step-by-step calculations for how resilience, stress, and affect are computed in each simulation step. The calculations integrate multiple mechanisms including stress events, social interactions, resource dynamics, and homeostatic processes.

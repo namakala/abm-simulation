@@ -1,5 +1,7 @@
 # Integration Overview: How All Mechanisms Work Together
 
+_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+
 ## System Architecture Overview
 
 The agent-based model integrates six core mechanism groups that work together to simulate realistic mental health dynamics:

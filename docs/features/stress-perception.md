@@ -1,5 +1,7 @@
 # Stress Perception Mechanisms
 
+_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+
 ## Overview
 
 Stress perception in the agent-based model follows a comprehensive pipeline that transforms life events into psychological stress responses. The system implements the theoretical challenge-hindrance framework, where events are appraised based on their controllability and overload characteristics.

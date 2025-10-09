@@ -1,5 +1,7 @@
 # Data Collection Implementation: Agent and Model-Level Metrics
 
+_See [`_NOTATION.md`](./_NOTATION.md) for symbol definitions and conventions._
+
 ## Overview
 
 This document provides an overview of the data collection system that tracks both individual experiences and population patterns. The system captures detailed information about how individuals respond to stress and social influences, as well as broader trends across the entire population.
