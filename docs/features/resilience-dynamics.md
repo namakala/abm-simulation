@@ -1,5 +1,7 @@
 # Resilience Dynamics and Triggering Events
 
+_See [`.kilocode/rules/math/notation.md`](../../.kilocode/rules/math/notation.md) for symbol definitions and conventions._
+
 ## Overview
 
 Resilience represents an individual's capacity to adapt and recover from stress events. The model examines multiple factors that influence resilience levels, including stress event outcomes, social support, protective factors, and natural tendencies to return to baseline equilibrium.
@@ -51,12 +53,38 @@ When hindrance events accumulate beyond a threshold, they create an overload eff
 
 The core resilience update mechanism integrates challenge and hindrance effects, with different outcomes depending on coping success:
 
+**Challenge-Hindrance Resilience Effect:**
+
+$$\Delta R_{\chi\zeta} = \begin{cases}
+0.3 \cdot \chi + 0.1 \cdot \zeta & \text{if coping successful} \\
+-0.1 \cdot \chi - 0.4 \cdot \zeta & \text{if coping failed}
+\end{cases}$$
+
+Where:
+- $\Delta R_{\chi\zeta}$ is resilience change from challenge/hindrance
+- $\chi \in [0,1]$ is challenge component
+- $\zeta \in [0,1]$ is hindrance component
+
+**Implementation**: [`compute_challenge_hindrance_resilience_effect()`](src/python/affect_utils.py:452) in `affect_utils.py`
+
 - **Successful Coping**: Challenge events provide significant resilience building, while hindrance events offer minor benefits
 - **Failed Coping**: Hindrance events significantly deplete resilience, while challenge events have minimal negative impact
 
 ### Protective Factor Boost
 
 **Mechanism**: Resources allocated to protective factors provide resilience benefits, with greater benefits when resilience is low and most needed.
+
+**Protective Factor Resilience Boost:**
+
+$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_b - R_c) \cdot \beta_p$$
+
+Where:
+- $\Delta R_p$ is resilience boost from protective factors
+- $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
+- $e_f \in [0,1]$ is efficacy of factor $f$
+- $R_b \in [0,1]$ is baseline resilience
+- $R_c \in [0,1]$ is current resilience
+- $\beta_p > 0$ is boost rate parameter
 
 **Protective Factors**:
 - **Social Support**: Efficacy in providing emotional support
@@ -68,11 +96,43 @@ The core resilience update mechanism integrates challenge and hindrance effects,
 
 **Mechanism**: Resilience tends to return to baseline levels over time, representing natural psychological adaptation and recovery processes.
 
+**Homeostatic Resilience Adjustment:**
+
+$$R_{t+1} = R_t + \theta_r \cdot (R_b - R_t)$$
+
+Where:
+- $R_t \in [0,1]$ is current resilience
+- $\theta_r \in [0,1]$ is homeostatic rate
+- $R_b \in [0,1]$ is baseline resilience
+
 ## Coping Success Determination
 
 ### Base Coping Probability
 
 **Foundation**: Each individual has a baseline coping success probability that represents their inherent ability to manage stress.
+
+**Coping Probability Equation:**
+
+$$p_{\mathrm{coping}} = p_b + \beta_c \cdot \chi - \beta_h \cdot \zeta + \alpha_s \cdot \frac{1}{n} \sum_{j=1}^n A_j$$
+
+**Coping Success Determination:**
+
+$$\mathrm{coped\ successfully} = \begin{cases}
+1 & \text{if } U \sim \mathcal{U}(0,1) < p_{\mathrm{coping}} \\
+0 & \text{otherwise}
+\end{cases}$$
+
+Where:
+- $p_b \in [0,1]$ is base coping probability
+- $\beta_c > 0$ is challenge bonus parameter
+- $\beta_h > 0$ is hindrance penalty parameter
+- $\alpha_s \in [0,1]$ is social influence factor
+- $\chi \in [0,1]$ is challenge component
+- $\zeta \in [0,1]$ is hindrance component
+- $A_j \in [-1,1]$ is neighbor $j$'s affect
+- $U$ is uniform random variable
+
+**Implementation**: [`compute_coping_probability()`](src/python/affect_utils.py:405) in `affect_utils.py`
 
 ### Challenge-Hindrance Effects
 
@@ -118,6 +178,13 @@ When individuals experience repeated stress beyond a threshold, they begin adapt
 2. **Support Effectiveness**: Strengthen ties with effective supporters
 3. **Stress-Based Homophily**: Prefer connections with similar stress levels
 
+**Network Adaptation Condition:**
+
+$$\mathrm{adapt\ network} = \begin{cases}
+1 & \text{if stress breach count} \geq \eta_{\mathrm{adapt}} \\
+0 & \text{otherwise}
+\end{cases}$$
+
 ### Consecutive Hindrances Tracking
 
 **Mechanism**:
@@ -125,6 +192,18 @@ The system tracks consecutive hindrance events, with cumulative effects when hin
 
 **Overload Trigger**:
 When hindrance events accumulate beyond a threshold, they create an overload effect that reduces resilience.
+
+**Cumulative Overload Effect:**
+
+$$\Delta R_o = \begin{cases}
+-0.2 \cdot \min\left(\frac{h_c}{\eta_h}, 2.0\right) & \text{if } h_c \geq \eta_h \\
+0 & \text{otherwise}
+\end{cases}$$
+
+Where:
+- $\Delta R_o$ is overload resilience change
+- $h_c \in \mathbb{N}$ is consecutive hindrances count
+- $\eta_h \in \mathbb{N}$ is overload threshold
 
 ## Daily Reset Mechanisms
 
@@ -157,6 +236,25 @@ The system tracks daily stress events, including average stress levels, maximum 
 - Neighbor affect influences coping probability
 - Social support provides direct resilience boost
 - Network adaptation based on support effectiveness
+
+**Integrated Resilience Update:**
+
+$$R_{t+1} = R_t + \Delta R_{\chi\zeta} + \Delta R_p + \Delta R_o + \Delta R_s + \theta_r \cdot (R_b - R_t)$$
+
+**Final Resilience Clamping:**
+
+$$R_{t+1} = \mathrm{clamp}(R_{t+1}, 0, 1)$$
+
+Where:
+- $R_t \in [0,1]$ is current resilience
+- $\Delta R_{\chi\zeta}$ is challenge-hindrance effect
+- $\Delta R_p$ is protective factor boost
+- $\Delta R_o$ is overload effect
+- $\Delta R_s$ is social support effect
+- $\theta_r \in [0,1]$ is homeostatic rate
+- $R_b \in [0,1]$ is baseline resilience
+
+**Implementation**: [`update_resilience_dynamics()`](src/python/affect_utils.py:870) in `affect_utils.py`
 
 ## Validation Metrics
 

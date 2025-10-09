@@ -1,5 +1,7 @@
 # Step-by-Step Calculations for Resilience, Stress, and Affect
 
+_See [`.kilocode/rules/math/notation.md`](../../.kilocode/rules/math/notation.md) for symbol definitions and conventions._
+
 ## Overview
 
 This document provides detailed step-by-step calculations for how resilience, stress, and affect are computed in each simulation step. The calculations integrate multiple mechanisms including stress events, social interactions, resource dynamics, and homeostatic processes.
@@ -28,8 +30,30 @@ At the beginning of each day, the system captures initial values for affect and 
 **Subevent Count Determination**:
 Each day includes a variable number of subevents (typically 7-8) that can be either social interactions or stress events, with the sequence randomized for each day.
 
+**Daily Subevent Generation:**
+
+$$n_s \sim \max(\mathcal{P}(\lambda_s), 1)$$
+
+Where:
+- $n_s \in \mathbb{N}$ is number of subevents per day
+- $\lambda_s > 0$ is subevent rate parameter
+- $\mathcal{P}(\lambda)$ is Poisson distribution
+
+**Implementation**: [`sample_poisson()`](src/python/math_utils.py:126) in `math_utils.py`
+
 **Action Processing**:
 The system processes each subevent, tracking social interactions and accumulating challenge/hindrance effects from stress events.
+
+**Daily Challenge/Hindrance Integration:**
+
+$$\bar{\chi}_d = \frac{1}{n_e} \sum_{i=1}^{n_e} \chi_i$$
+
+$$\bar{\zeta}_d = \frac{1}{n_e} \sum_{i=1}^{n_e} \zeta_i$$
+
+Where:
+- $\bar{\chi}_d, \bar{\zeta}_d \in [0,1]$ are daily average challenge/hindrance
+- $n_e$ is number of stress events in day
+- $\chi_i, \zeta_i \in [0,1]$ are challenge/hindrance for event $i$
 
 ### Step 3: Daily Challenge/Hindrance Integration
 
@@ -48,6 +72,35 @@ Affect changes result from multiple components working together:
 - **Homeostasis**: Natural tendency to return to baseline
 
 These components combine to determine daily affect changes.
+
+**Integrated Affect Update:**
+
+$$A_{t+1} = A_t + \Delta A_p + \Delta A_e + \Delta A_h$$
+
+**Peer Influence:**
+
+$$\Delta A_p = \frac{1}{n} \sum_{j=1}^{n} \alpha_p \cdot (A_j - A_t) \cdot \mathbb{1}_{j \leq n_i}$$
+
+**Event Appraisal Effect:**
+
+$$\Delta A_e = \alpha_e \cdot \bar{\chi}_d \cdot (1 - A_t) - \alpha_e \cdot \bar{\zeta}_d \cdot \max(0.1, A_t + 1)$$
+
+**Homeostasis Effect:**
+
+$$\Delta A_h = \theta_a \cdot (A_b - A_t)$$
+
+Where:
+- $A_t \in [-1,1]$ is current affect
+- $\Delta A_p$ is peer influence effect
+- $\Delta A_e$ is event appraisal effect
+- $\Delta A_h$ is homeostasis effect
+- $n$ is number of neighbors
+- $n_i$ is number of influencing neighbors
+- $\alpha_p, \alpha_e \in [0,1]$ are influence rates
+- $\theta_a \in [0,1]$ is homeostatic rate
+- $A_b \in [-1,1]$ is baseline affect
+
+**Implementation**: [`update_affect_dynamics()`](src/python/affect_utils.py:830) in `affect_utils.py`
 
 **Detailed Component Calculations**:
 
@@ -70,6 +123,42 @@ Resilience changes result from multiple components working together:
 - **Overload Effect**: Consequences of cumulative hindrance events
 
 These components combine to determine daily resilience changes.
+
+**Integrated Resilience Update:**
+
+$$R_{t+1} = R_t + \Delta R_{\chi\zeta} + \Delta R_p + \Delta R_o + \Delta R_s + \theta_r \cdot (R_b - R_t)$$
+
+**Challenge-Hindrance Effect:**
+
+$$\Delta R_{\chi\zeta} = \begin{cases}
+0.3 \cdot \bar{\chi}_d + 0.1 \cdot \bar{\zeta}_d & \text{if coping successful} \\
+-0.1 \cdot \bar{\chi}_d - 0.4 \cdot \bar{\zeta}_d & \text{if coping failed}
+\end{cases}$$
+
+**Protective Factor Boost:**
+
+$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_b - R_t) \cdot \beta_p$$
+
+**Overload Effect:**
+
+$$\Delta R_o = \begin{cases}
+-0.2 \cdot \min\left(\frac{h_c}{\eta_h}, 2.0\right) & \text{if } h_c \geq \eta_h \\
+0 & \text{otherwise}
+\end{cases}$$
+
+Where:
+- $R_t \in [0,1]$ is current resilience
+- $\Delta R_{\chi\zeta}$ is challenge-hindrance effect
+- $\Delta R_p$ is protective factor boost
+- $\Delta R_o$ is overload effect
+- $\Delta R_s$ is social support effect
+- $\theta_r \in [0,1]$ is homeostatic rate
+- $R_b \in [0,1]$ is baseline resilience
+- $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
+- $e_f \in [0,1]$ is efficacy of factor $f$
+- $\beta_p > 0$ is boost rate parameter
+- $h_c \in \mathbb{N}$ is consecutive hindrances count
+- $\eta_h \in \mathbb{N}$ is overload threshold
 
 **Detailed Component Calculations**:
 
@@ -105,6 +194,32 @@ All systems have a natural tendency to return to baseline equilibrium levels, re
 
 **Application to Both Systems**:
 Both affect and resilience are adjusted toward their baseline levels, with the rate of adjustment determining how quickly equilibrium is restored.
+
+**Homeostatic Adjustment:**
+
+$$x_{t+1} = x_t + \theta_x \cdot (x_b - x_t)$$
+
+**Clamping:**
+
+$$x_{t+1} = \begin{cases}
+\mathrm{clamp}(x_{t+1}, -1, 1) & \text{if } x = A \\
+\mathrm{clamp}(x_{t+1}, 0, 1) & \text{if } x = R
+\end{cases}$$
+
+Where:
+- $x_t$ is current value (affect $A_t$ or resilience $R_t$)
+- $\theta_x \in [0,1]$ is homeostatic rate
+- $x_b$ is baseline value ($A_b$ or $R_b$)
+
+**Implementation**: [`compute_homeostatic_adjustment()`](src/python/affect_utils.py:744) in `affect_utils.py`
+
+**Stress Decay:**
+
+$$S_{t+1} = S_t \cdot (1 - \delta_s)$$
+
+Where:
+- $S_t \in [0,1]$ is current stress level
+- $\delta_s \in [0,1]$ is stress decay rate
 
 ### Step 9: Daily Reset and Tracking
 

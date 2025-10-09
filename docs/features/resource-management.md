@@ -1,5 +1,7 @@
 # Resource Management: Protective Factors and Resource Allocation
 
+_See [`.kilocode/rules/math/notation.md`](../../.kilocode/rules/math/notation.md) for symbol definitions and conventions._
+
 ## Overview
 
 Resource management forms the core constraint mechanism in the agent-based mental health model, implementing the principle that individuals have limited psychological and physical resources to allocate across various protective strategies. This system draws from conservation of resources theory and realistic decision-making under constraints.
@@ -54,12 +56,32 @@ Resource management forms the core constraint mechanism in the agent-based menta
 **Mathematical Foundation**:
 Resources naturally regenerate toward maximum capacity, representing rest, recovery, and natural healing processes.
 
+**Resource Regeneration Equation:**
+
+$$R' = \lambda_R \cdot (R_{\max} - R)$$
+
+Where:
+- $R' > 0$ is resource regeneration amount
+- $\lambda_R \in [0,1]$ is regeneration rate
+- $R_{\max} = 1$ is maximum resources
+- $R \in [0,1]$ is current resources
+
+**Implementation**: [`compute_resource_regeneration()`](src/python/affect_utils.py:341) in `affect_utils.py`
+
 ### Affect-Modulated Regeneration
 
 **Affect Influence**:
 Positive emotional states enhance recovery and resource rebuilding, while negative states may slow regeneration.
 
 **Psychological Foundation**: Positive affect broadens thought-action repertoires and builds personal resources.
+
+**Affect-Modulated Regeneration:**
+
+$$R' = \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A))$$
+
+Where:
+- $\beta_a > 0$ is affect influence parameter
+- $A \in [-1,1]$ is current affect
 
 ## Resource Consumption Patterns
 
@@ -80,6 +102,24 @@ Maintaining protective factors requires ongoing resource investment, with increa
 **Mathematical Foundation**:
 Individuals allocate resources across protective factors using a decision-making process that balances current efficacy levels with temperature-scaled randomness.
 
+**Softmax Allocation Equation:**
+
+$$w_f = \frac{\exp(e_f / \tau)}{\sum_{k \in F} \exp(e_k / \tau)}$$
+
+**Resource Allocation:**
+
+$$r_f = w_f \cdot R_a$$
+
+Where:
+- $w_f \in [0,1]$ is allocation weight for factor $f$
+- $e_f \in [0,1]$ is efficacy of factor $f$
+- $\tau > 0$ is softmax temperature
+- $F$ is set of protective factors
+- $r_f > 0$ is resources allocated to factor $f$
+- $R_a \in [0,1]$ is available resources
+
+**Implementation**: [`allocate_protective_resources()`](src/python/affect_utils.py:289) in `affect_utils.py`
+
 **Temperature Effects**:
 - **High Temperature**: More random allocation (exploration)
 - **Low Temperature**: More deterministic allocation (exploitation)
@@ -92,6 +132,21 @@ Individuals allocate more resources to factors with lower current efficacy and w
 
 **Investment Return Model**:
 Resource investment provides greater returns when current efficacy is lower and need is higher, reflecting realistic learning and development processes.
+
+**Protective Factor Efficacy Update:**
+
+$$\Delta e_f = r_f \cdot \gamma_p \cdot (1 - e_f)$$
+
+**New Efficacy:**
+
+$$e_f' = \min(1, e_f + \Delta e_f)$$
+
+Where:
+- $\Delta e_f > 0$ is efficacy improvement
+- $\gamma_p > 0$ is improvement rate
+- $e_f \in [0,1]$ is current efficacy
+
+**Implementation**: [`_allocate_protective_factors()`](src/python/agent.py:538) method in `agent.py`
 
 ## Protective Factor Efficacy Dynamics
 
@@ -135,6 +190,15 @@ Successful coping consumes resources, with higher costs for hindrance events. Fa
 **Protective Factor Buffering**:
 Protective factors work together to reduce the impact of stress events, providing multiple layers of protection.
 
+**Resource Consumption for Coping:**
+
+$$R' = R - \kappa \cdot \mathbb{1}_{\mathrm{coping\ successful}}$$
+
+Where:
+- $R' \in [0,1]$ is updated resources
+- $\kappa > 0$ is resource cost parameter
+- $\mathbb{1}_{\mathrm{coping\ successful}}$ is indicator for successful coping
+
 ### Affect System Integration
 
 **Affect Influence on Regeneration**:
@@ -142,6 +206,18 @@ Positive affect enhances resource recovery, while negative affect may increase m
 
 **Resource Scarcity Affect Impact**:
 Low resources may create negative affect, representing the psychological stress of resource depletion.
+
+**Protective Factor Resilience Boost:**
+
+$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_b - R_c) \cdot \beta_p$$
+
+Where:
+- $\Delta R_p$ is resilience boost from protective factors
+- $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
+- $e_f \in [0,1]$ is efficacy of factor $f$
+- $R_b \in [0,1]$ is baseline resilience
+- $R_c \in [0,1]$ is current resilience
+- $\beta_p > 0$ is boost rate parameter
 
 ### Resilience System Integration
 
