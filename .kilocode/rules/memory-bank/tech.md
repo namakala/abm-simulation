@@ -133,7 +133,7 @@
 - **Integration testing** for component interactions
 - **Configuration validation** with type checking and range validation
 - **Parameter validation routines** with comprehensive error handling
-- **CI/CD Pipeline** - GitHub Actions workflow for automated testing and coverage reporting
+- **CI/CD Pipeline** - GitHub Actions workflow (`coverage-test.yml`) for automated testing and coverage reporting
 - **Coverage Reporting** - Automated test coverage tracking with 80% minimum threshold and HTML report generation (`.coverage`, `coverage.xml` files)
 - **Codecov Integration** - External coverage analysis and reporting service
 - **Test Results Integration** - Automated test result reporting with XML output (`test-results.xml`) for CI/CD pipeline integration
