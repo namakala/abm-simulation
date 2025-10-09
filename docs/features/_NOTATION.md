@@ -53,8 +53,8 @@ This document provides the authoritative reference for all mathematical notation
 | $\mathcal{B}(\alpha,\beta)$ | Beta distribution | $X \sim \mathcal{B}(2,2)$ | - |
 | $\mathcal{P}(\lambda)$ | Poisson distribution | $X \sim \mathcal{P}(5)$ | - |
 | $\sigma(x)$ | Sigmoid function | $\sigma(x) = \frac{1}{1+e^{-x}}$ | - |
-| $\text{softmax}(x)$ | Softmax function | $\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}$ | - |
-| $\text{clamp}(x,a,b)$ | Clamping function | $\text{clamp}(x,0,1) = \max(0,\min(1,x))$ | - |
+| $\mathrm{softmax}(\mathbf{x})$ | Softmax function | $\mathrm{softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}$ | - |
+| $\mathrm{clamp}(x,a,b)$ | Clamping function | $\mathrm{clamp}(x,0,1) = \max(0,\min(1,x))$ | - |
 
 ## Core Model Variables
 
@@ -64,7 +64,7 @@ This document provides the authoritative reference for all mathematical notation
 |--------|-------------------|---------------|----------|
 | $R$ | Resources | $R \in [0,1]$ | - |
 | $D$ | Distress | $D \in [0,1]$ | - |
-| $T_{\text{stress}}$ | Stress threshold | $T_{\text{stress}} \in [0,1]$ | - |
+| $\eta_{\text{stress}}$ | Stress threshold | $\eta_{\text{stress}} \in [0,1]$ | - |
 | $A$ | Affect | $A \in [-1,1]$ | - |
 | $A_{\text{baseline}}$ | Baseline affect | $A_{\text{baseline}} \in [-1,1]$ | - |
 | $R_{\text{baseline}}$ | Baseline resilience | $R_{\text{baseline}} \in [0,1]$ | - |
@@ -78,21 +78,22 @@ This document provides the authoritative reference for all mathematical notation
 | $c$ | Controllability | $c \in [0,1]$ | - |
 | $o$ | Overload | $o \in [0,1]$ | - |
 | $z$ | Weighted combination | $z = \omega_c c - \omega_o o + b$ | - |
-| $\text{challenge}$ | Challenge component | $\text{challenge} \in [0,1]$ | - |
-| $\text{hindrance}$ | Hindrance component | $\text{hindrance} \in [0,1]$ | - |
+| $\chi$ | Challenge component | $\chi \in [0,1]$ | - |
+| $\zeta$ | Hindrance component | $\zeta \in [0,1]$ | - |
 | $s$ | Event magnitude | $s \in [0,1]$ | - |
-| $T^{\text{eff}}$ | Effective threshold | $T^{\text{eff}} = T_{\text{stress}} + \lambda_C \cdot \text{challenge} - \lambda_H \cdot \text{hindrance}$ | - |
+| $\eta$ | Threshold (general) | $\eta \in [0,1]$ | - |
+| $\eta_{\mathrm{eff}}$ | Effective threshold | $\eta_{\mathrm{eff}} = \eta_{\text{stress}} + \chi \cdot \eta_{\chi} - \zeta \cdot \eta_{\zeta}$ | - |
 
 ### PSS-10 Assessment Variables
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
-| $\text{PSS-10}$ | Total PSS-10 score | $\text{PSS-10} \in [0,40]$ | - |
-| $c_{\text{PSS}}$ | PSS-10 controllability dimension | $c_{\text{PSS}} \in [0,1]$ | - |
-| $o_{\text{PSS}}$ | PSS-10 overload dimension | $o_{\text{PSS}} \in [0,1]$ | - |
-| $r_{ij}$ | PSS-10 item response | $r_{ij} \in \{0,1,2,3,4\}$ | - |
+| $\Psi$ | Total PSS-10 score | $\Psi \in [0,40]$ | - |
+| $c_\Psi$ | PSS-10 controllability dimension | $c_\Psi \in [0,1]$ | - |
+| $o_\Psi$ | PSS-10 overload dimension | $o_\Psi \in [0,1]$ | - |
+| $\Psi_i$ | PSS-10 item response for item $i$ | $\Psi_i \in \{0,1,2,3,4\}$ | - |
 | $\lambda_{ij}$ | Factor loading for item $j$ on dimension $i$ | $\lambda_{ij} \in [0,1]$ | - |
-| $\rho_{\text{PSS}}$ | PSS-10 dimension correlation | $\rho_{\text{PSS}} \in [-1,1]$ | 0.3 |
+| $\rho_\Psi$ | PSS-10 dimension correlation | $\rho_\Psi \in [-1,1]$ | 0.3 |
 
 ## Parameter Constants
 
@@ -112,14 +113,14 @@ This document provides the authoritative reference for all mathematical notation
 | $\omega_o$ | Overload weight | $\omega_o \in \mathbb{R}$ | 1.0 |
 | $b$ | Bias term | $b \in \mathbb{R}$ | 0.0 |
 | $\gamma$ | Sigmoid steepness | $\gamma > 0$ | 6.0 |
-| $\lambda_C$ | Challenge threshold modifier | $\lambda_C \in \mathbb{R}$ | - |
-| $\lambda_H$ | Hindrance threshold modifier | $\lambda_H \in \mathbb{R}$ | - |
+| $\eta_{\chi}$ | Challenge threshold modifier | $\eta_{\chi} \in \mathbb{R}$ | - |
+| $\eta_{\zeta}$ | Hindrance threshold modifier | $\eta_{\zeta} \in \mathbb{R}$ | - |
 
 ### Resource Dynamics Parameters
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
-| $\gamma_R$ | Resource regeneration rate | $\gamma_R \in [0,1]$ | - |
+| $\lambda_R$ | Resource regeneration rate | $\lambda_R \in [0,1]$ | - |
 | $\kappa$ | Cost scalar | $\kappa > 0$ | - |
 | $\gamma_c$ | Cost function exponent | $\gamma_c > 0$ | - |
 
@@ -127,22 +128,22 @@ This document provides the authoritative reference for all mathematical notation
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
-| $\alpha_{\text{soc}}$ | Social support efficacy | $\alpha_{\text{soc}} > 0$ | - |
-| $\alpha_{\text{fam}}$ | Family support efficacy | $\alpha_{\text{fam}} > 0$ | - |
-| $\alpha_{\text{int}}$ | Formal intervention efficacy | $\alpha_{\text{int}} > 0$ | - |
-| $\alpha_{\text{cap}}$ | Psychological capital efficacy | $\alpha_{\text{cap}} > 0$ | - |
-| $\rho_{\text{soc}}$ | Social support replenishment | $\rho_{\text{soc}} > 0$ | - |
-| $\rho_{\text{fam}}$ | Family support replenishment | $\rho_{\text{fam}} > 0$ | - |
-| $\rho_{\text{int}}$ | Formal intervention replenishment | $\rho_{\text{int}} > 0$ | - |
-| $\rho_{\text{cap}}$ | Psychological capital replenishment | $\rho_{\text{cap}} > 0$ | - |
+| $\epsilon_{\text{soc}}$ | Social support efficacy | $\epsilon_{\text{soc}} > 0$ | - |
+| $\epsilon_{\text{fam}}$ | Family support efficacy | $\epsilon_{\text{fam}} > 0$ | - |
+| $\epsilon_{\text{int}}$ | Formal intervention efficacy | $\epsilon_{\text{int}} > 0$ | - |
+| $\epsilon_{\text{cap}}$ | Psychological capital efficacy | $\epsilon_{\text{cap}} > 0$ | - |
+| $\upsilon_{\text{soc}}$ | Social support replenishment | $\upsilon_{\text{soc}} > 0$ | - |
+| $\upsilon_{\text{fam}}$ | Family support replenishment | $\upsilon_{\text{fam}} > 0$ | - |
+| $\upsilon_{\text{int}}$ | Formal intervention replenishment | $\upsilon_{\text{int}} > 0$ | - |
+| $\upsilon_{\text{cap}}$ | Psychological capital replenishment | $\upsilon_{\text{cap}} > 0$ | - |
 
 ### Behavioral Parameters
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
 | $\beta$ | Softmax temperature | $\beta > 0$ | - |
-| $T^{\text{adapt}}$ | Adaptation threshold | $T^{\text{adapt}} > 0$ | - |
-| $\eta_{\text{adapt}}$ | Learning rate | $\eta_{\text{adapt}} \in [0,1]$ | - |
+| $\eta_{\text{adapt}}$ | Adaptation threshold | $\eta_{\text{adapt}} > 0$ | - |
+| $\nu_{\text{adapt}}$ | Learning rate | $\nu_{\text{adapt}} \in [0,1]$ | - |
 | $p_{\text{rewire}}$ | Rewiring probability | $p_{\text{rewire}} \in [0,1]$ | - |
 
 ### Network Parameters
@@ -159,9 +160,9 @@ This document provides the authoritative reference for all mathematical notation
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
-| $\gamma_{\text{affect}}$ | Affect homeostasis rate | $\gamma_{\text{affect}} \in [0,1]$ | - |
-| $\gamma_{\text{resilience}}$ | Resilience homeostasis rate | $\gamma_{\text{resilience}} \in [0,1]$ | - |
-| $\gamma_{\text{stress}}$ | Stress decay rate | $\gamma_{\text{stress}} \in [0,1]$ | 0.05 |
+| $\theta_{\text{affect}}$ | Affect homeostasis rate | $\theta_{\text{affect}} \in [0,1]$ | - |
+| $\theta_{\text{resilience}}$ | Resilience homeostasis rate | $\theta_{\text{resilience}} \in [0,1]$ | - |
+| $\delta_{\text{stress}}$ | Stress decay rate | $\delta_{\text{stress}} \in [0,1]$ | 0.05 |
 
 ## Model-Level Variables
 
@@ -173,7 +174,7 @@ This document provides the authoritative reference for all mathematical notation
 | $\bar{D}$ | Average distress | $\bar{D} \in [0,1]$ | - |
 | $\bar{A}$ | Average affect | $\bar{A} \in [-1,1]$ | - |
 | $\bar{S}$ | Average stress | $\bar{S} \in [0,1]$ | - |
-| $\text{PSS-10}_{\text{avg}}$ | Average PSS-10 score | $\text{PSS-10}_{\text{avg}} \in [0,40]$ | - |
+| $\bar{\Psi}$ | Average PSS-10 score | $\bar{\Psi} \in [0,40]$ | - |
 
 ### Network Statistics
 
@@ -199,15 +200,15 @@ This document provides the authoritative reference for all mathematical notation
 |----------|------------|-------------|
 | $W(c,o)$ | $W(c,o) = \omega_c c - \omega_o o + b$ | Weight function for event appraisal |
 | $\sigma(z)$ | $\sigma(z) = \frac{1}{1+e^{-z}}$ | Sigmoid activation function |
-| $L(s,c,o)$ | $L(s,c,o) = s \cdot (1 + \delta \cdot (\text{hindrance} - \text{challenge}))$ | Appraised stress load |
+| $L(s,c,o)$ | $L(s,c,o) = s \cdot (1 + \delta \cdot (\zeta - \chi))$ | Appraised stress load |
 
 ### Resource Dynamics Functions
 
 | Function | Definition | Description |
 |----------|------------|-------------|
-| $R'(t)$ | $R'(t) = \gamma_R (R_{\max} - R(t))$ | Resource regeneration |
+| $R'(t)$ | $R'(t) = \lambda_R (R_{\max} - R(t))$ | Resource regeneration |
 | $C(s)$ | $C(s) = \kappa s^{\gamma_c}$ | Coping cost function |
-| $\text{softmax}(\mathbf{x})$ | $\text{softmax}(x_i) = \frac{e^{x_i / \beta}}{\sum_j e^{x_j / \beta}}$ | Softmax allocation |
+| $\mathrm{softmax}(\mathbf{x})$ | $\mathrm{softmax}(x_i) = \frac{e^{x_i / \beta}}{\sum_j e^{x_j / \beta}}$ | Softmax allocation |
 
 ### Network Functions
 
@@ -247,7 +248,7 @@ This document provides the authoritative reference for all mathematical notation
 
 When referencing symbols in text, use the format: `$\symbol$ (see [_NOTATION.md](./_NOTATION.md))`
 
-Example: The stress threshold $T_{\text{stress}}$ (see [_NOTATION.md](./_NOTATION.md)) determines when agents become stressed.
+Example: The stress threshold $\eta_{\text{stress}}$ (see [_NOTATION.md](./_NOTATION.md)) determines when agents become stressed.
 
 ## Validation Metrics
 
