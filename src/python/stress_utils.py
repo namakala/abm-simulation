@@ -25,7 +25,7 @@ import hashlib
 import numpy as np
 from typing import Tuple, Optional, Dict, Any, List
 from dataclasses import dataclass, field
-from src.python.config import get_config
+from config import get_config
 
 # Load configuration
 config = get_config()
@@ -78,14 +78,19 @@ def generate_stress_event(
     if config is None:
         config = {
             'controllability_mean': cfg.get('stress', 'controllability_mean'),
-            'overload_mean': cfg.get('stress', 'overload_mean')
+            'controllability_sd': cfg.get('stress', 'controllability_sd'),
+            'overload_mean': cfg.get('stress', 'overload_mean'),
+            'overload_sd': cfg.get('stress', 'overload_sd')
         }
 
-    # Generate event attributes using beta distribution for bounded [0,1] values
-    alpha = cfg.get('stress', 'beta_alpha')
-    beta  = cfg.get('stress', 'beta_beta')
-    controllability = rng.beta(alpha, beta)
-    overload = rng.beta(alpha, beta)
+    # Generate event attributes using truncated normal distribution for bounded [0,1] values
+    # Use mean and SD from config instead of fixed beta distribution
+    controllability_raw = rng.normal(config['controllability_mean'], config['controllability_sd'])
+    overload_raw = rng.normal(config['overload_mean'], config['overload_sd'])
+
+    # Clamp to [0,1] range to ensure valid values
+    controllability = max(0.0, min(1.0, controllability_raw))
+    overload = max(0.0, min(1.0, overload_raw))
 
     return StressEvent(
         controllability=controllability,

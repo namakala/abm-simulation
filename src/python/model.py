@@ -10,8 +10,8 @@ from collections import defaultdict
 
 from mesa.space import NetworkGrid
 from mesa import DataCollector
-from src.python.agent import Person
-from src.python.config import get_config
+from agent import Person
+from config import get_config
 
 # Load configuration
 config = get_config()

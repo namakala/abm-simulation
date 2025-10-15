@@ -11,7 +11,7 @@ This module contains stateless mathematical functions for:
 import numpy as np
 from typing import Optional, List, Union, Tuple
 from dataclasses import dataclass
-from src.python.config import get_config
+from config import get_config
 
 # Load configuration
 config = get_config()
@@ -193,6 +193,41 @@ def sample_exponential(
 
     sample = rng.exponential(scale)
     return min(sample, max_value)
+
+
+def sample_normal(
+    mean: float = 0.0,
+    std: float = 1.0,
+    rng: Optional[np.random.Generator] = None,
+    min_value: float = None,
+    max_value: float = None
+) -> float:
+    """
+    Sample from normal distribution with optional clamping.
+
+    Args:
+        mean: Normal distribution mean parameter
+        std: Normal distribution standard deviation parameter
+        rng: Random number generator
+        min_value: Minimum allowed value (optional clamping)
+        max_value: Maximum allowed value (optional clamping)
+
+    Returns:
+        Sample from normal distribution, clamped to [min_value, max_value] if specified
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+
+    sample = rng.normal(mean, std)
+
+    # Apply clamping if bounds are specified
+    if min_value is not None or max_value is not None:
+        # Handle None values properly to avoid using 0.0 as -inf
+        clamp_min = min_value if min_value is not None else -np.inf
+        clamp_max = max_value if max_value is not None else np.inf
+        sample = clamp(sample, clamp_min, clamp_max)
+
+    return sample
 
 
 def compute_running_average(

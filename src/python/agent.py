@@ -10,13 +10,13 @@ import numpy as np
 import mesa
 
 # Import utility modules
-from src.python.stress_utils import (
+from stress_utils import (
     generate_stress_event, process_stress_event,
     StressEvent, AppraisalWeights, ThresholdParams,
     generate_pss10_responses, compute_pss10_score, generate_pss10_item_response
 )
 
-from src.python.affect_utils import (
+from affect_utils import (
     process_interaction, compute_stress_impact_on_affect,
     compute_stress_impact_on_resilience, clamp, InteractionConfig,
     update_affect_dynamics, update_resilience_dynamics,
@@ -28,8 +28,8 @@ from src.python.affect_utils import (
     compute_daily_affect_reset, compute_stress_decay
 )
 
-from src.python.math_utils import sample_poisson, create_rng
-from src.python.config import get_config
+from math_utils import sample_poisson, create_rng, sample_normal
+from config import get_config
 
 # Load configuration
 config = get_config()
@@ -66,24 +66,61 @@ class Person(mesa.Agent):
             # Use the global config object directly
             cfg = get_config()
             config = {
-                'initial_resilience': cfg.get('agent', 'initial_resilience'),
-                'initial_affect': cfg.get('agent', 'initial_affect'),
-                'initial_resources': cfg.get('agent', 'initial_resources'),
+                'initial_resilience_mean': cfg.get('agent', 'initial_resilience_mean'),
+                'initial_resilience_sd': cfg.get('agent', 'initial_resilience_sd'),
+                'initial_affect_mean': cfg.get('agent', 'initial_affect_mean'),
+                'initial_affect_sd': cfg.get('agent', 'initial_affect_sd'),
+                'initial_resources_mean': cfg.get('agent', 'initial_resources_mean'),
+                'initial_resources_sd': cfg.get('agent', 'initial_resources_sd'),
                 'stress_probability': cfg.get('agent', 'stress_probability'),
                 'coping_success_rate': cfg.get('agent', 'coping_success_rate'),
                 'subevents_per_day': cfg.get('agent', 'subevents_per_day')
             }
 
-        # Initialize state variables
-        self.resilience = config['initial_resilience']
-        self.affect = config['initial_affect']
-        self.resources = config['initial_resources']
+        # Random number generator for reproducible testing
+        # Note: Mesa Agent base class has 'rng' property, so we use '_rng'
+        self._rng = create_rng(getattr(model, 'seed', None))
 
-        # Initialize baseline affect for homeostasis
-        self.baseline_affect = config['initial_affect']
+        # Initialize state variables using normal distribution sampling
+        self.resilience = sample_normal(
+            mean=config['initial_resilience_mean'],
+            std=config['initial_resilience_sd'],
+            rng=self._rng,
+            min_value=0.0,
+            max_value=1.0
+        )
+        self.affect = sample_normal(
+            mean=config['initial_affect_mean'],
+            std=config['initial_affect_sd'],
+            rng=self._rng,
+            min_value=-1.0,
+            max_value=1.0
+        )
+        self.resources = sample_normal(
+            mean=config['initial_resources_mean'],
+            std=config['initial_resources_sd'],
+            rng=self._rng,
+            min_value=0.0,
+            max_value=1.0
+        )
 
-        # Initialize baseline resilience for homeostasis
-        self.baseline_resilience = config['initial_resilience']
+        # Initialize baseline affect for homeostasis (use same distribution as current affect)
+        self.baseline_affect = sample_normal(
+            mean=config['initial_affect_mean'],
+            std=config['initial_affect_sd'],
+            rng=self._rng,
+            min_value=-1.0,
+            max_value=1.0
+        )
+
+        # Initialize baseline resilience for homeostasis (use same distribution as current resilience)
+        self.baseline_resilience = sample_normal(
+            mean=config['initial_resilience_mean'],
+            std=config['initial_resilience_sd'],
+            rng=self._rng,
+            min_value=0.0,
+            max_value=1.0
+        )
 
         # Initialize protective factors
         self.protective_factors = {
@@ -120,10 +157,6 @@ class Person(mesa.Agent):
         }
 
         self.interaction_config = InteractionConfig()
-
-        # Random number generator for reproducible testing
-        # Note: Mesa Agent base class has 'rng' property, so we use '_rng'
-        self._rng = create_rng(getattr(model, 'seed', None))
 
         # Initialize PSS-10 scores using generate_pss10_item_response
         self._initialize_pss10_from_items()
