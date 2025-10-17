@@ -2,6 +2,7 @@
 *.pdf
 *.swp
 *.xml
+*outputs*
 
 # Environment variables and configuration
 .env

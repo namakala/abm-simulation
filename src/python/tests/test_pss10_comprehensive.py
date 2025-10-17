@@ -167,7 +167,7 @@ def test_integration():
     # Test that other config sections still work
     assert config.get('simulation', 'num_agents') > 0
     assert config.get('network', 'watts_k') >= 2
-    assert config.get('agent', 'initial_resilience') >= 0
+    assert config.get('agent', 'initial_resilience_mean') >= 0
 
     # Test validation
     config.validate()  # Should not raise any exceptions

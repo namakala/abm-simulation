@@ -74,9 +74,9 @@ class TestModuleIntegration:
     def test_agent_config_values(self, config):
         """Test that agent configuration values are in valid ranges."""
         # Test that agent config values match global config
-        expected_resilience = config.get('agent', 'initial_resilience')
-        expected_affect = config.get('agent', 'initial_affect')
-        expected_resources = config.get('agent', 'initial_resources')
+        expected_resilience = config.get('agent', 'initial_resilience_mean')
+        expected_affect = config.get('agent', 'initial_affect_mean')
+        expected_resources = config.get('agent', 'initial_resources_mean')
 
         assert 0 <= expected_resilience <= 1
         assert -1 <= expected_affect <= 1
@@ -127,9 +127,9 @@ class TestConfigConsistency:
         assert config.get('simulation', 'num_agents') > 0
         assert config.get('network', 'watts_k') >= 2
         assert 0 <= config.get('network', 'watts_p') <= 1
-        assert 0 <= config.get('agent', 'initial_resilience') <= 1
-        assert -1 <= config.get('agent', 'initial_affect') <= 1
-        assert 0 <= config.get('agent', 'initial_resources') <= 1
+        assert 0 <= config.get('agent', 'initial_resilience_mean') <= 1
+        assert -1 <= config.get('agent', 'initial_affect_mean') <= 1
+        assert 0 <= config.get('agent', 'initial_resources_mean') <= 1
 
 
 class TestEnvironmentVariablePropagation:
@@ -141,7 +141,7 @@ class TestEnvironmentVariablePropagation:
         # Set test environment variables
         test_env_vars = {
             'SIMULATION_NUM_AGENTS': '30',
-            'AGENT_INITIAL_RESILIENCE': '0.8',
+            'AGENT_INITIAL_RESILIENCE_MEAN': '0.8',
             'NETWORK_WATTS_K': '6'
         }
 
@@ -154,7 +154,7 @@ class TestEnvironmentVariablePropagation:
 
             # Test that new values are reflected
             assert new_config.num_agents == 30
-            assert new_config.agent_initial_resilience == 0.8
+            assert new_config.agent_initial_resilience_mean == 0.8
             assert new_config.network_watts_k == 6
 
             # Test that dataclasses pick up new values
