@@ -11,6 +11,7 @@ The script creates visualizations and statistical summaries to demonstrate
 the robustness and flexibility of the initialization system.
 """
 
+import sys
 import numpy as np
 from typing import List, Dict, Tuple
 import pandas as pd
@@ -25,14 +26,11 @@ except ImportError:
     HAS_PLOTTING = False
     print("Warning: matplotlib/seaborn not available. Running without visualizations.")
 
-# Import project modules
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append('.')
 
-from agent import Person
-from config import get_config
-from math_utils import create_rng
+from src.python.agent import Person
+from src.python.config import get_config
+from src.python.math_utils import create_rng
 
 
 class MockModel:
