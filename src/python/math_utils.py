@@ -11,7 +11,7 @@ This module contains stateless mathematical functions for:
 import numpy as np
 from typing import Optional, List, Union, Tuple
 from dataclasses import dataclass
-from config import get_config
+from src.python.config import get_config
 
 # Load configuration
 config = get_config()
@@ -370,6 +370,152 @@ def calculate_entropy(probabilities: np.ndarray) -> float:
         return 0.0
 
     return -np.sum(probs * np.log(probs))
+
+
+def tanh_transform(
+    mean: float = 0.0,
+    std: float = 1.0,
+    rng: Optional[np.random.Generator] = None
+) -> float:
+    """
+    Transform normal distribution sample to [-1,1] bounds using tanh.
+
+    The transformation pipeline:
+    1. Sample from normal distribution N(mean, std)
+    2. Transform to Z-scale ~ N(0,1) by subtracting mean and dividing by std
+    3. Normalize by dividing by 3 to confine to approximately [-1,1]
+    4. Apply tanh() for [-1,1] bounds
+
+    Args:
+        mean: Normal distribution mean parameter
+        std: Normal distribution standard deviation parameter
+        rng: Random number generator
+
+    Returns:
+        Transformed value in [-1,1]
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # Handle zero standard deviation case
+    if std == 0:
+        return 0.0  # Return 0 for zero std case
+
+    # Sample from normal distribution
+    sample = rng.normal(mean, std)
+
+    # Transform to Z-scale and normalize
+    z_score = (sample - mean) / std
+    normalized = z_score / 3.0  # Divide by 3 to confine to ~[-1,1]
+
+    # Apply tanh transformation for [-1,1] bounds
+    result = np.tanh(normalized)
+
+    return result
+
+
+def sigmoid_transform(
+    mean: float = 0.0,
+    std: float = 1.0,
+    rng: Optional[np.random.Generator] = None
+) -> float:
+    """
+    Transform normal distribution sample to [0,1] bounds using sigmoid.
+
+    The transformation pipeline:
+    1. Sample from normal distribution N(mean, std)
+    2. Transform to Z-scale ~ N(0,1) by subtracting mean and dividing by std
+    3. Normalize by dividing by 3 to confine to approximately [-1,1]
+    4. Apply sigmoid() for [0,1] bounds
+
+    Args:
+        mean: Normal distribution mean parameter
+        std: Normal distribution standard deviation parameter
+        rng: Random number generator
+
+    Returns:
+        Transformed value in [0,1]
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # Handle zero standard deviation case
+    if std == 0:
+        return sigmoid(0.0)  # Return sigmoid of 0 for zero std case
+
+    # Sample from normal distribution
+    sample = rng.normal(mean, std)
+
+    # Transform to Z-scale and normalize
+    z_score = (sample - mean) / std
+    normalized = z_score / 3.0  # Divide by 3 to confine to ~[-1,1]
+
+    # Apply sigmoid transformation for [0,1] bounds
+    result = sigmoid(normalized)
+
+    return result
+
+
+def inverse_tanh_transform(
+    value: float,
+    mean: float = 0.0,
+    std: float = 1.0
+) -> float:
+    """
+    Inverse transformation of tanh_transform.
+
+    Args:
+        value: Value in [-1,1] to transform back
+        mean: Original normal distribution mean parameter
+        std: Original normal distribution standard deviation parameter
+
+    Returns:
+        Value in original scale
+    """
+    if value == 0.0:
+        return mean  # Handle special case: 0.0 input → mean output
+
+    # Apply inverse tanh (artanh)
+    normalized = np.arctanh(value)
+
+    # Scale back from normalized range
+    z_score = normalized * 3.0
+
+    # Transform back to original scale
+    original = z_score * std + mean
+
+    return original
+
+
+def inverse_sigmoid_transform(
+    value: float,
+    mean: float = 0.0,
+    std: float = 1.0
+) -> float:
+    """
+    Inverse transformation of sigmoid_transform.
+
+    Args:
+        value: Value in [0,1] to transform back
+        mean: Original normal distribution mean parameter
+        std: Original normal distribution standard deviation parameter
+
+    Returns:
+        Value in original scale
+    """
+    if value == 0.5:
+        return mean  # Handle special case: 0.5 input → mean output
+
+    # Apply inverse sigmoid (logit)
+    normalized = -np.log(1.0 / value - 1.0)
+
+    # Scale back from normalized range
+    z_score = normalized * 3.0
+
+    # Transform back to original scale
+    original = z_score * std + mean
+
+    return original
 
 
 def normalize_probabilities(

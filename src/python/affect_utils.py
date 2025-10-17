@@ -12,8 +12,9 @@ This module contains stateless functions for:
 import numpy as np
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
-from config import get_config
-from math_utils import clamp, softmax
+
+from src.python.config import get_config
+from src.python.math_utils import clamp, softmax
 
 # Load configuration
 config = get_config()

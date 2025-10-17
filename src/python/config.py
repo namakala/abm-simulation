@@ -196,6 +196,11 @@ class Config:
         self.agent_subevents_per_day = self._get_env_value('AGENT_SUBEVENTS_PER_DAY', int, 3)
         self.agent_resource_cost = self._get_env_value('AGENT_RESOURCE_COST', float, 0.1)
 
+        # Additional agent attributes for backward compatibility
+        self.agent_initial_resilience = self.agent_initial_resilience_mean
+        self.agent_initial_affect = self.agent_initial_affect_mean
+        self.agent_initial_resources = self.agent_initial_resources_mean
+
         # ==============================================
         # STRESS EVENT PARAMETERS
         # ==============================================
@@ -260,7 +265,7 @@ class Config:
         # ==============================================
         self.affect_peer_influence_rate = self._get_env_value('AFFECT_PEER_INFLUENCE_RATE', float, 0.1)
         self.affect_event_appraisal_rate = self._get_env_value('AFFECT_EVENT_APPRAISAL_RATE', float, 0.15)
-        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.5)
+        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.1)
         self.resilience_homeostatic_rate = self._get_env_value('RESILIENCE_HOMEOSTATIC_RATE', float, 0.05)
 
         self.resilience_coping_success_rate = self._get_env_value('RESILIENCE_COPING_SUCCESS_RATE', float, 0.1)
@@ -324,10 +329,13 @@ class Config:
                 'homophily_strength': self.network_homophily_strength,
             },
             'agent': {
+                'initial_resilience': self.agent_initial_resilience_mean,
                 'initial_resilience_mean': self.agent_initial_resilience_mean,
                 'initial_resilience_sd': self.agent_initial_resilience_sd,
+                'initial_affect': self.agent_initial_affect_mean,
                 'initial_affect_mean': self.agent_initial_affect_mean,
                 'initial_affect_sd': self.agent_initial_affect_sd,
+                'initial_resources': self.agent_initial_resources_mean,
                 'initial_resources_mean': self.agent_initial_resources_mean,
                 'initial_resources_sd': self.agent_initial_resources_sd,
                 'stress_probability': self.agent_stress_probability,

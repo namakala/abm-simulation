@@ -10,13 +10,13 @@ import numpy as np
 import mesa
 
 # Import utility modules
-from stress_utils import (
+from src.python.stress_utils import (
     generate_stress_event, process_stress_event,
     StressEvent, AppraisalWeights, ThresholdParams,
     generate_pss10_responses, compute_pss10_score, generate_pss10_item_response
 )
 
-from affect_utils import (
+from src.python.affect_utils import (
     process_interaction, compute_stress_impact_on_affect,
     compute_stress_impact_on_resilience, clamp, InteractionConfig,
     update_affect_dynamics, update_resilience_dynamics,
@@ -28,8 +28,8 @@ from affect_utils import (
     compute_daily_affect_reset, compute_stress_decay
 )
 
-from math_utils import sample_poisson, create_rng, sample_normal
-from config import get_config
+from src.python.math_utils import sample_poisson, create_rng, sample_normal, tanh_transform, sigmoid_transform
+from src.python.config import get_config
 
 # Load configuration
 config = get_config()
@@ -81,46 +81,27 @@ class Person(mesa.Agent):
         # Note: Mesa Agent base class has 'rng' property, so we use '_rng'
         self._rng = create_rng(getattr(model, 'seed', None))
 
-        # Initialize state variables using normal distribution sampling
-        self.resilience = sample_normal(
+        # Initialize state variables using new transformation pipeline
+        # Use sigmoid_transform for [0,1] bounds (resilience, baseline_resilience, resources)
+        self.baseline_resilience = sigmoid_transform(
             mean=config['initial_resilience_mean'],
             std=config['initial_resilience_sd'],
-            rng=self._rng,
-            min_value=0.0,
-            max_value=1.0
+            rng=self._rng
         )
-        self.affect = sample_normal(
-            mean=config['initial_affect_mean'],
-            std=config['initial_affect_sd'],
-            rng=self._rng,
-            min_value=-1.0,
-            max_value=1.0
-        )
-        self.resources = sample_normal(
+        self.resilience = self.baseline_resilience
+        self.resources = sigmoid_transform(
             mean=config['initial_resources_mean'],
             std=config['initial_resources_sd'],
-            rng=self._rng,
-            min_value=0.0,
-            max_value=1.0
+            rng=self._rng
         )
 
-        # Initialize baseline affect for homeostasis (use same distribution as current affect)
-        self.baseline_affect = sample_normal(
+        # Use tanh_transform for [-1,1] bounds (affect, baseline_affect)
+        self.baseline_affect = tanh_transform(
             mean=config['initial_affect_mean'],
             std=config['initial_affect_sd'],
-            rng=self._rng,
-            min_value=-1.0,
-            max_value=1.0
+            rng=self._rng
         )
-
-        # Initialize baseline resilience for homeostasis (use same distribution as current resilience)
-        self.baseline_resilience = sample_normal(
-            mean=config['initial_resilience_mean'],
-            std=config['initial_resilience_sd'],
-            rng=self._rng,
-            min_value=0.0,
-            max_value=1.0
-        )
+        self.affect = self.baseline_affect
 
         # Initialize protective factors
         self.protective_factors = {
@@ -246,7 +227,7 @@ class Person(mesa.Agent):
         to create realistic mental health trajectories.
         """
         # Get configuration for dynamics
-        affect_config = AffectDynamicsConfig()
+        affect_config = getattr(self, 'affect_config', None) or AffectDynamicsConfig()
         resilience_config = ResilienceDynamicsConfig()
 
         # Store initial affect and resilience values at the beginning of each day
@@ -381,10 +362,8 @@ class Person(mesa.Agent):
         # Update PSS-10 scores based on current stress levels
         self.compute_pss10_score()
 
-        # Clamp all values to valid ranges
-        self.resilience = clamp(self.resilience, 0.0, 1.0)
-        self.affect = clamp(self.affect, -1.0, 1.0)
-        self.resources = clamp(self.resources, 0.0, 1.0)
+        # Clamp values that are not handled by transformation pipeline
+        # Note: resilience, affect, and resources are now handled by transformation pipeline
         self.current_stress = clamp(self.current_stress, 0.0, 1.0)
         self.stress_controllability = clamp(self.stress_controllability, 0.0, 1.0)
         self.stress_overload = clamp(self.stress_overload, 0.0, 1.0)

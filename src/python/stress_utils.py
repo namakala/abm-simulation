@@ -25,7 +25,8 @@ import hashlib
 import numpy as np
 from typing import Tuple, Optional, Dict, Any, List
 from dataclasses import dataclass, field
-from config import get_config
+
+from src.python.config import get_config
 
 # Load configuration
 config = get_config()
