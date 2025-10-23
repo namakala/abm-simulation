@@ -475,6 +475,13 @@ def inverse_tanh_transform(
     if value == 0.0:
         return mean  # Handle special case: 0.0 input → mean output
 
+    # Handle extreme values
+    modifier = 1e-10
+    if value == -1:
+        value = value + modifier
+    elif value == 1:
+        value = value - modifier
+
     # Apply inverse tanh (artanh)
     normalized = np.arctanh(value)
 
@@ -505,6 +512,13 @@ def inverse_sigmoid_transform(
     """
     if value == 0.5:
         return mean  # Handle special case: 0.5 input → mean output
+
+    # Handle extreme values
+    modifier = 1e-10
+    if value == 0:
+        value = modifier
+    elif value == 1:
+        value = 1 - modifier
 
     # Apply inverse sigmoid (logit)
     normalized = -np.log(1.0 / value - 1.0)

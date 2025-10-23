@@ -27,7 +27,7 @@ from typing import Tuple, Optional, Dict, Any, List
 from dataclasses import dataclass, field
 
 from src.python.config import get_config
-from src.python.math_utils import clamp
+from src.python.math_utils import clamp, sigmoid, inverse_sigmoid_transform
 
 # Load configuration
 config = get_config()
@@ -524,21 +524,18 @@ def generate_pss10_item_response(
     # Higher controllability → lower stress response (unless reverse scored)
     # Higher overload → higher stress response
     stress_component = (
-        controllability_loading * (1.0 - controllability_score) +  # Low controllability = high stress
-        overload_loading * overload_score                           # High overload = high stress
+        controllability_loading * (1.0 - controllability_score) + # Low controllability = high stress
+        overload_loading * overload_score                         # High overload = high stress
     )
 
     # Normalize by total loading (avoid division by zero)
     total_loading = max(controllability_loading + overload_loading, 1e-10)
     normalized_stress = stress_component / total_loading
 
-    # Sample from normal distribution around the empirically observed mean
-    # Adjust mean based on current stress level
-    adjusted_mean = item_mean + (normalized_stress - 0.5) * 0.5  # Scale stress effect
-    adjusted_mean = max(0.0, min(4.0, adjusted_mean))  # Keep within valid range
-
-    # Sample from normal distribution using local RNG
-    raw_response = local_rng.normal(adjusted_mean, item_sd)
+    # Transform from normal distribution around the empirically observed mean
+    # Adjust mean based on current stress level, normalized to [0, 4]
+    adjusted_mean = inverse_sigmoid_transform(normalized_stress, item_mean, item_sd)
+    raw_response  = sigmoid(adjusted_mean) * 4 # Limit to range [0, 4]
 
     # Add small amount of measurement error using local RNG
     measurement_error = local_rng.normal(0, 0.1)
@@ -759,13 +756,13 @@ def generate_pss10_from_stress_dimensions(
 
     # Apply recent stress intensity for immediate response
     intensity_boost = recent_stress_intensity * config['sensitivity']
-    dynamic_controllability = max(0.0, min(1.0, base_controllability - intensity_boost * 0.15))
-    dynamic_overload = min(1.0, base_overload + intensity_boost * 0.2)
+    dynamic_controllability = clamp(base_controllability - intensity_boost, 0, 1)
+    dynamic_overload = clamp(base_overload + intensity_boost, 0, 1)
 
     # Apply stress momentum for predictive response
     momentum_adjustment = stress_momentum * config['momentum_weight']
-    dynamic_controllability = max(0.0, min(1.0, dynamic_controllability + momentum_adjustment * 0.08))
-    dynamic_overload = min(1.0, dynamic_overload + abs(momentum_adjustment) * 0.12)
+    dynamic_controllability = clamp(dynamic_controllability + momentum_adjustment, 0, 1)
+    dynamic_overload = clamp(dynamic_overload + abs(momentum_adjustment), 0, 1)
 
     # Generate PSS-10 responses using dynamic stress state
     pss10_responses = generate_pss10_responses(
@@ -865,12 +862,67 @@ def update_stress_dimensions_from_pss10_feedback(
     return updated_controllability, updated_overload
 
 
+def compute_stress_from_pss10(
+    pss10_score: int,
+    stress_controllability: float,
+    stress_overload: float,
+    config: Optional[Dict[str, float]] = None
+) -> float:
+    """
+    Compute stress level from PSS-10 score using inverse of estimation function.
+
+    This function implements the inverse logic of estimate_pss10_from_stress_dimensions()
+    to convert PSS-10 scores back to stress levels for initialization and feedback.
+
+    Args:
+        pss10_score: PSS-10 score (0-40)
+        stress_controllability: Current stress controllability dimension ∈ [0,1]
+        stress_overload: Current stress overload dimension ∈ [0,1]
+        config: Configuration parameters for stress computation
+
+    Returns:
+        Computed stress level ∈ [0,1]
+    """
+    if config is None:
+        # Get fresh config instance to avoid global config issues
+        cfg = get_config()
+        config = {
+            'base_score': 10,  # Neutral baseline from estimate_pss10_from_stress_dimensions
+            'controllability_weight': 8,  # Weight for controllability effect
+            'overload_weight': 12  # Weight for overload effect
+        }
+
+    base_score = config['base_score']
+    controllability_weight = config['controllability_weight']
+    overload_weight = config['overload_weight']
+
+    if pss10_score <= base_score:
+        # Low stress: simple normalization
+        stress_level = pss10_score / 40.0
+    else:
+        # Higher stress: solve for combined stress impact using current stress dimensions
+        # For simplicity, use weighted average of controllability and overload effects
+        controllability_effect = max(0, (1.0 - stress_controllability)) * controllability_weight
+        overload_effect = stress_overload * overload_weight
+        total_effect = controllability_effect + overload_effect
+
+        if total_effect > 0:
+            # Normalize the stress level based on the theoretical maximum effect
+            max_possible_effect = controllability_weight + overload_weight  # 20
+            stress_level = min(1.0, total_effect / max_possible_effect)
+        else:
+            stress_level = 0.0
+
+    return clamp(stress_level, 0.0, 1.0)
+
+
 def update_stress_dimensions_from_event(
     current_controllability: float,
     current_overload: float,
     challenge: float,
     hindrance: float,
     coped_successfully: bool,
+    is_stressful: bool = True,
     config: Optional[Dict[str, float]] = None
 ) -> Tuple[float, float, float, float]:
     """
@@ -882,6 +934,7 @@ def update_stress_dimensions_from_event(
         challenge: Challenge component from event appraisal (0-1)
         hindrance: Hindrance component from event appraisal (0-1)
         coped_successfully: Whether the coping attempt was successful
+        is_stressful: Whether the event is stressful (True) or non-stressful (False)
         config: Configuration for stress dimension updates
 
     Returns:
@@ -895,6 +948,11 @@ def update_stress_dimensions_from_event(
             'controllability_update_rate': cfg.get('stress_dynamics', 'controllability_update_rate'),
             'overload_update_rate': cfg.get('stress_dynamics', 'overload_update_rate')
         }
+
+    # For non-stressful events, apply minimal updates
+    if not is_stressful:
+        config['controllability_update_rate'] = 0.0
+        config['overload_update_rate'] = 0.0
 
     # Challenge vs hindrance effects on controllability
     if coped_successfully:
@@ -938,6 +996,11 @@ def update_stress_dimensions_from_event(
     recent_stress_intensity, stress_momentum = _update_recent_stress_intensity(
         challenge, hindrance, coped_successfully
     )
+
+    # For non-stressful events, set intensity and momentum to zero
+    if not is_stressful:
+        recent_stress_intensity = 0.0
+        stress_momentum = 0.0
 
     return updated_controllability, updated_overload, recent_stress_intensity, stress_momentum
 

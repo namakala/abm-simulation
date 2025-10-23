@@ -296,6 +296,11 @@ class Config:
         # New protective factor improvement rate
         self.protective_improvement_rate = self._get_env_value('PROTECTIVE_IMPROVEMENT_RATE', float, 0.5)
 
+        # Social resource exchange parameters
+        self.resource_social_exchange_rate = self._get_env_value('RESOURCE_SOCIAL_EXCHANGE_RATE', float, 0.1)
+        self.resource_exchange_threshold = self._get_env_value('RESOURCE_EXCHANGE_THRESHOLD', float, 0.2)
+        self.resource_max_exchange_ratio = self._get_env_value('RESOURCE_MAX_EXCHANGE_RATIO', float, 0.3)
+
         # ==============================================
         # MATHEMATICAL UTILITY PARAMETERS
         # ==============================================
@@ -384,6 +389,8 @@ class Config:
                 'controllability_sd': self.pss10_controllability_sd,
                 'overload_sd': self.pss10_overload_sd,
                 'threshold': self.pss10_threshold,
+                'sensitivity': self._get_env_value('PSS10_SENSITIVITY', float, 0.5),
+                'momentum_weight': self._get_env_value('PSS10_MOMENTUM_WEIGHT', float, 0.3),
             },
             'interaction': {
                 'influence_rate': self.interaction_influence_rate,
@@ -409,6 +416,10 @@ class Config:
             'dynamics': {
                 'stress_decay_rate': self.stress_decay_rate,
             },
+            'stress_dynamics': {
+                'controllability_update_rate': self._get_env_value('STRESS_CONTROLLABILITY_UPDATE_RATE', float, 0.1),
+                'overload_update_rate': self._get_env_value('STRESS_OVERLOAD_UPDATE_RATE', float, 0.15),
+            },
             'protective': {
                 'social_support': self.protective_social_support,
                 'family_support': self.protective_family_support,
@@ -420,6 +431,9 @@ class Config:
                 'allocation_cost': self.resource_allocation_cost,
                 'cost_exponent': self.resource_cost_exponent,
                 'protective_improvement_rate': self.protective_improvement_rate,
+                'social_exchange_rate': self.resource_social_exchange_rate,
+                'exchange_threshold': self.resource_exchange_threshold,
+                'max_exchange_ratio': self.resource_max_exchange_ratio,
             },
             'utility': {
                 'softmax_temperature': self.utility_softmax_temperature,
@@ -598,6 +612,12 @@ class Config:
             raise ConfigurationError("Resource cost exponent must be >= 1")
         if not (0 <= self.protective_improvement_rate <= 1):
             raise ConfigurationError("Protective improvement rate must be in [0, 1]")
+        if not (0 <= self.resource_social_exchange_rate <= 1):
+            raise ConfigurationError("Social exchange rate must be in [0, 1]")
+        if not (0 <= self.resource_exchange_threshold <= 1):
+            raise ConfigurationError("Resource exchange threshold must be in [0, 1]")
+        if not (0 <= self.resource_max_exchange_ratio <= 1):
+            raise ConfigurationError("Max exchange ratio must be in [0, 1]")
 
         # Utility validation
         if self.utility_softmax_temperature <= 0:

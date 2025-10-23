@@ -18,7 +18,7 @@ from src.python.stress_utils import (
     update_stress_dimensions_from_pss10_feedback, update_stress_dimensions_from_event,
     decay_recent_stress_intensity, validate_theoretical_correlations,
     estimate_pss10_from_stress_dimensions, extract_controllability_from_pss10,
-    extract_overload_from_pss10
+    extract_overload_from_pss10, compute_stress_from_pss10
 )
 
 from src.python.affect_utils import (
@@ -149,6 +149,7 @@ class Person(mesa.Agent):
         self.stress_overload = 0.5  # Overload stress level ∈ [0,1]
         self.pss10 = 0  # Total PSS-10 score (0-40)
         self.stressed = False  # Stress classification based on PSS-10 threshold
+        self.daily_pss10_scores = []  # List to collect PSS-10 scores for the current day
 
         # Configuration for utility functions
         self.stress_config = {
@@ -160,6 +161,9 @@ class Person(mesa.Agent):
 
         # Initialize PSS-10 scores using utility function
         self._initialize_pss10_scores()
+
+        # Step 3: Initialize stress level based on the initialized PSS-10 score
+        self._initialize_stress_from_pss10()
 
     def _initialize_pss10_scores(self):
         """
@@ -362,6 +366,18 @@ class Person(mesa.Agent):
         # NOTE: baseline_affect and baseline_resilience remain FIXED (not updated daily)
         # This ensures homeostasis pulls toward the agent's natural equilibrium point
 
+        # Consolidate daily PSS-10 scores
+        if self.daily_pss10_scores:
+            avg_score = np.mean(self.daily_pss10_scores)
+            rounded_score = round(avg_score)
+            self.pss10 = rounded_score
+
+            # Step 7: Use the daily PSS-10 score to initialize stress level for next day
+            self._update_stress_from_daily_pss10(rounded_score)
+
+        # Clear daily scores for next day
+        self.daily_pss10_scores = []
+
         # Clamp values that are not handled by transformation pipeline
         # Note: resilience, affect, and resources are now handled by transformation pipeline
         self.current_stress = clamp(self.current_stress, 0.0, 1.0)
@@ -551,7 +567,19 @@ class Person(mesa.Agent):
 
         if not is_stressed:
             # Even non-stressful events provide learning opportunities for stress dimensions
-            self._update_stress_dimensions_from_non_stressful_event(challenge, hindrance)
+            (
+                self.stress_controllability,
+                self.stress_overload,
+                self.recent_stress_intensity,
+                self.stress_momentum
+            ) = update_stress_dimensions_from_event(
+                current_controllability=self.stress_controllability,
+                current_overload=self.stress_overload,
+                challenge=challenge,
+                hindrance=hindrance,
+                coped_successfully=True,  # No coping needed for non-stressful events
+                is_stressful=False
+            )
             return challenge, hindrance
 
         # STEP 2: Get neighbor affects for social influence on coping
@@ -585,7 +613,8 @@ class Person(mesa.Agent):
             current_overload=self.stress_overload,
             challenge=challenge,
             hindrance=hindrance,
-            coped_successfully=coped_successfully
+            coped_successfully=coped_successfully,
+            is_stressful=True
         )
 
         # STEP 6: Generate PSS-10 from updated stress dimensions
@@ -599,6 +628,9 @@ class Person(mesa.Agent):
         self.pss10_responses = pss10_data['pss10_responses']
         self.pss10 = pss10_data['pss10_score']
         self.stressed = pss10_data['stressed']
+
+        # Collect PSS-10 score for daily consolidation
+        self.daily_pss10_scores.append(self.pss10)
 
         # STEP 7: Update stress dimensions from PSS-10 feedback (complete loop)
         self.stress_controllability, self.stress_overload = update_stress_dimensions_from_pss10_feedback(
@@ -682,6 +714,45 @@ class Person(mesa.Agent):
             self.resources -= total_allocated
 
         return challenge, hindrance
+
+    def _initialize_stress_from_pss10(self):
+        """
+        Initialize current_stress level based on PSS-10 score using utility function.
+
+        This implements Step 3 of the PSS-10 workflow: using the initialized PSS-10 score
+        to set the initial current_stress level for the agent.
+        """
+        self.current_stress = compute_stress_from_pss10(
+            pss10_score=self.pss10,
+            stress_controllability=self.stress_controllability,
+            stress_overload=self.stress_overload
+        )
+
+    def _update_stress_from_daily_pss10(self, daily_pss10_score):
+        """
+        Update current_stress level based on daily consolidated PSS-10 score using utility function.
+
+        This implements Step 7 of the PSS-10 workflow: using the daily PSS-10 score
+        to set the stress level for the next day, creating a feedback loop.
+
+        Args:
+            daily_pss10_score: The consolidated daily PSS-10 score (0-40)
+        """
+        # Compute new stress level using utility function
+        new_stress_level = compute_stress_from_pss10(
+            pss10_score=daily_pss10_score,
+            stress_controllability=self.stress_controllability,
+            stress_overload=self.stress_overload
+        )
+
+        # Apply exponential smoothing to create more realistic stress transitions
+        # This prevents stress from changing too abruptly between days
+        smoothing_factor = 0.7  # Weight for new stress level (0.3 weight for previous)
+        self.current_stress = (smoothing_factor * new_stress_level +
+                              (1.0 - smoothing_factor) * self.current_stress)
+
+        # Ensure stress level is in valid range
+        self.current_stress = clamp(self.current_stress, 0.0, 1.0)
 
     def _update_stress_dimensions_from_event(self, challenge, hindrance, coped_successfully):
         """
@@ -812,3 +883,6 @@ class Person(mesa.Agent):
             # Slowly decay consecutive hindrances over days when no new hindrance events
             daily_decay_rate = 0.05  # Small daily decay rate
             self.consecutive_hindrances = max(0.0, self.consecutive_hindrances - daily_decay_rate)
+
+        # Reset daily PSS-10 scores for new day
+        self.daily_pss10_scores = []
