@@ -64,9 +64,12 @@ class TestHomeostaticStabilizationIntegration:
         """Test that affect and resilience still respond to external disruptions despite homeostasis."""
         model = MockModel(seed=42)
         agent = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3
@@ -117,9 +120,12 @@ class TestHomeostaticStabilizationIntegration:
         """Test that monotonic drift is eliminated over multiple days."""
         model = MockModel(seed=42)
         agent = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3
@@ -177,18 +183,24 @@ class TestHomeostaticStabilizationIntegration:
 
         # Create agents with different homeostatic rates
         agent_low = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3
         })
 
         agent_high = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3
@@ -247,9 +259,12 @@ class TestHomeostaticStabilizationIntegration:
         """Test that homeostatic mechanism doesn't interfere with existing daily update logic."""
         model = MockModel(seed=42)
         agent = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3
@@ -286,8 +301,17 @@ class TestHomeostaticStabilizationIntegration:
 
         # Homeostatic adjustment should have occurred (values pulled toward FIXED baselines)
         # Baselines should remain unchanged (they are the agent's natural equilibrium points)
-        assert agent.baseline_affect == 0.0  # Should remain at initial baseline
-        assert agent.baseline_resilience == 0.5  # Should remain at initial baseline
+        # Baselines are also transformed values, not raw means, so we check they remain stable
+        initial_baseline_affect = agent.baseline_affect
+        initial_baseline_resilience = agent.baseline_resilience
+
+        # Run a few more steps to verify baselines remain stable
+        for _ in range(3):
+            agent.step()
+
+        # Baselines should remain unchanged (they are fixed equilibrium points)
+        assert abs(agent.baseline_affect - initial_baseline_affect) < 1e-10
+        assert abs(agent.baseline_resilience - initial_baseline_resilience) < 1e-10
 
         # But current values may have changed due to daily activities and homeostasis
         # Values should still be in valid ranges
@@ -298,9 +322,12 @@ class TestHomeostaticStabilizationIntegration:
         """Test that agents can still experience realistic affect/resilience trajectories."""
         model = MockModel(seed=42)
         agent = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3
@@ -347,9 +374,12 @@ class TestHomeostaticStabilizationIntegration:
         """Test edge cases with extreme stress events and recovery patterns."""
         model = MockModel(seed=42)
         agent = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3
@@ -475,9 +505,12 @@ class TestHomeostaticStabilizationEdgeCases:
         """Test behavior when homeostatic rate is effectively zero."""
         model = MockModel(seed=42)
         agent = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3
@@ -519,9 +552,12 @@ class TestHomeostaticStabilizationEdgeCases:
         """Test behavior with maximum homeostatic rate."""
         model = MockModel(seed=42)
         agent = Person(model, {
-            'initial_affect': 0.0,
-            'initial_resilience': 0.5,
-            'initial_resources': 0.6,
+            'initial_affect_mean': 0.0,
+            'initial_affect_sd': 0.1,
+            'initial_resilience_mean': 0.5,
+            'initial_resilience_sd': 0.1,
+            'initial_resources_mean': 0.6,
+            'initial_resources_sd': 0.1,
             'stress_probability': 0.5,
             'coping_success_rate': 0.5,
             'subevents_per_day': 3

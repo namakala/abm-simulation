@@ -12,6 +12,7 @@ This module contains stateless functions for:
 import numpy as np
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
+
 from src.python.config import get_config
 from src.python.math_utils import clamp, softmax
 
@@ -42,6 +43,24 @@ class ResourceParams:
     base_regeneration: float = field(default_factory=lambda: get_config().get('resource', 'base_regeneration'))
     allocation_cost: float = field(default_factory=lambda: get_config().get('resource', 'allocation_cost'))
     cost_exponent: float = field(default_factory=lambda: get_config().get('resource', 'cost_exponent'))
+
+
+@dataclass
+class AffectDynamicsConfig:
+    """Configuration parameters for affect dynamics."""
+    peer_influence_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'peer_influence_rate'))
+    event_appraisal_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'event_appraisal_rate'))
+    homeostatic_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostatic_rate'))
+    influencing_neighbors: int = field(default_factory=lambda: get_config().get('influence', 'influencing_neighbors'))
+
+
+@dataclass
+class ResilienceDynamicsConfig:
+    """Configuration parameters for resilience dynamics."""
+    coping_success_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'coping_success_rate'))
+    social_support_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'social_support_rate'))
+    overload_threshold: int = field(default_factory=lambda: get_config().get('resilience_dynamics', 'overload_threshold'))
+    influencing_hindrance: int = field(default_factory=lambda: get_config().get('influence', 'influencing_hindrance'))
 
 
 def compute_social_influence(
@@ -547,6 +566,328 @@ def compute_stress_decay(
     return clamp(decayed_stress, 0.0, 1.0)
 
 
+@dataclass
+class ResourceOptimizationConfig:
+    """Configuration parameters for resilience-based resource optimization."""
+    base_resource_cost: float = field(default_factory=lambda: get_config().get('agent', 'resource_cost'))
+    resilience_efficiency_factor: float = 0.3  # 30% efficiency gain from resilience
+    minimum_resource_threshold: float = 0.05  # Minimum resources needed for allocation
+    coping_difficulty_scale: float = 0.5  # Scale for event difficulty effects
+
+
+def compute_resilience_optimized_resource_cost(
+    base_cost: float,
+    current_resilience: float,
+    challenge: float,
+    hindrance: float,
+    config: Optional[ResourceOptimizationConfig] = None
+) -> float:
+    """
+    Compute resource cost for coping that adapts based on resilience level.
+
+    Higher resilience provides efficiency gains, reducing the effective cost.
+    Challenge events are less costly than hindrance events for high-resilience agents.
+
+    Args:
+        base_cost: Base resource cost for coping attempt
+        current_resilience: Agent's current resilience level (0-1)
+        challenge: Challenge component of the stressor (0-1)
+        hindrance: Hindrance component of the stressor (0-1)
+        config: Resource optimization configuration
+
+    Returns:
+        Optimized resource cost considering resilience efficiency
+    """
+    if config is None:
+        config = ResourceOptimizationConfig()
+
+    # Base cost influenced by event difficulty (hindrance is more costly)
+    event_difficulty = (challenge * 0.7 + hindrance * 1.3)  # Hindrance is 30% more difficult
+    difficulty_multiplier = 1.0 + (event_difficulty * config.coping_difficulty_scale)
+
+    # Resilience provides efficiency gains
+    # Higher resilience = lower effective cost (more efficient resource use)
+    resilience_efficiency = 1.0 - (current_resilience * config.resilience_efficiency_factor)
+
+    # Challenge events benefit more from resilience (resilience helps with motivation)
+    # Hindrance events benefit less from resilience (hindrance is more about obstacles)
+    challenge_resilience_bonus = challenge * current_resilience * 0.2
+    hindrance_resilience_bonus = hindrance * current_resilience * 0.1
+
+    resilience_bonus = challenge_resilience_bonus + hindrance_resilience_bonus
+
+    # Calculate final cost
+    optimized_cost = base_cost * difficulty_multiplier * max(0.3, resilience_efficiency - resilience_bonus)
+
+    return optimized_cost
+
+
+def compute_resource_efficiency_gain(
+    current_resilience: float,
+    baseline_resilience: float,
+    config: Optional[ResourceOptimizationConfig] = None
+) -> float:
+    """
+    Compute efficiency gain from resilience for resource utilization.
+
+    Agents with higher resilience relative to baseline use resources more efficiently.
+    This represents learned coping strategies and psychological resource management.
+
+    Args:
+        current_resilience: Agent's current resilience level (0-1)
+        baseline_resilience: Agent's baseline resilience level (0-1)
+        config: Resource optimization configuration
+
+    Returns:
+        Efficiency multiplier (0.5-1.5 range, where >1 means more efficient)
+    """
+    if config is None:
+        config = ResourceOptimizationConfig()
+
+    # Resilience above baseline provides efficiency gains
+    resilience_surplus = current_resilience - baseline_resilience
+
+    if resilience_surplus <= 0:
+        # No efficiency gain when resilience is at or below baseline
+        return 1.0
+
+    # Efficiency gain scales with resilience surplus
+    # Maximum 50% efficiency improvement at very high resilience surplus
+    max_efficiency_gain = 0.5
+    efficiency_gain = min(resilience_surplus * config.resilience_efficiency_factor, max_efficiency_gain)
+
+    # Return efficiency multiplier (1.0 + gain)
+    return 1.0 + efficiency_gain
+
+
+def get_neighbor_affects(agent, model) -> List[float]:
+    """
+    Get affect values of neighboring agents for social influence calculations.
+
+    Args:
+        agent: Agent instance
+        model: Mesa model instance
+
+    Returns:
+        List of neighbor affect values
+    """
+    # Check if agent has a valid position
+    if agent.pos is None:
+        return []
+
+    try:
+        neighbors = list(
+            model.grid.get_neighbors(
+                agent.pos, include_center=False
+            )
+        )
+        return [neighbor.affect for neighbor in neighbors if hasattr(neighbor, 'affect')]
+    except Exception:
+        # Return empty list if there are any issues with neighbor lookup
+        return []
+
+
+def integrate_social_resilience_optimization(
+    current_resilience: float,
+    daily_interactions: int,
+    daily_support_exchanges: int,
+    resources: float,
+    baseline_resilience: float,
+    protective_factors: Dict[str, float],
+    rng: Optional[np.random.Generator] = None,
+    config: Optional[ResourceOptimizationConfig] = None
+) -> float:
+    """
+    Integrate social resource exchange with resilience optimization mechanisms.
+
+    Args:
+        current_resilience: Agent's current resilience level
+        daily_interactions: Number of daily interactions
+        daily_support_exchanges: Number of daily support exchanges
+        resources: Agent's current resources
+        baseline_resilience: Agent's baseline resilience level
+        protective_factors: Current protective factor efficacy levels
+        rng: Random number generator for stochastic decisions
+        config: Resource optimization configuration
+
+    Returns:
+        Updated resilience level after social optimization
+    """
+    if config is None:
+        config = ResourceOptimizationConfig()
+
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # Check if agent received social support recently (within last few interactions)
+    recent_social_benefit = calculate_recent_social_benefit(daily_support_exchanges)
+
+    if recent_social_benefit > 0:
+        # Social support enhances resilience optimization
+        # Boost resilience temporarily for better resource allocation
+        social_resilience_boost = recent_social_benefit * 0.1
+
+        # Store original resilience for this calculation
+        original_resilience = current_resilience
+
+        # Temporarily boost resilience for optimization calculations
+        boosted_resilience = min(1.0, current_resilience + social_resilience_boost)
+
+        # Re-allocate protective factors with social support boost if resources available
+        if resources > 0.1:  # Only if agent has resources to allocate
+            # This would call the resource allocation function with boosted resilience
+            # For now, just return the boosted resilience
+            pass
+
+        # Return boosted resilience
+        return boosted_resilience
+
+    return current_resilience
+
+
+def calculate_recent_social_benefit(daily_support_exchanges: int) -> float:
+    """
+    Calculate recent social support benefit for resilience optimization.
+
+    Args:
+        daily_support_exchanges: Number of daily support exchanges
+
+    Returns:
+        Float indicating recent social support level (0-1)
+    """
+    # Use daily support exchanges as a proxy for recent social benefit
+    # More recent exchanges have higher weight
+    recent_benefit = 0.0
+
+    if daily_support_exchanges > 0:
+        # Weight by number of support exchanges (more exchanges = more benefit)
+        # Cap at reasonable level to avoid excessive boosting
+        recent_benefit = min(1.0, daily_support_exchanges * 0.2)
+
+    return recent_benefit
+
+
+def allocate_resilience_optimized_resources(
+    available_resources: float,
+    current_resilience: float,
+    baseline_resilience: float,
+    protective_factors: Optional[ProtectiveFactors] = None,
+    rng: Optional[np.random.Generator] = None,
+    config: Optional[ResourceOptimizationConfig] = None
+) -> Dict[str, float]:
+    """
+    Allocate resources with resilience-based optimization.
+
+    Higher resilience provides:
+    1. More efficient resource utilization (lower effective costs)
+    2. Better allocation decisions (improved softmax weighting)
+    3. Enhanced protective factor development
+
+    Args:
+        available_resources: Total resources available for allocation
+        current_resilience: Agent's current resilience level (0-1)
+        baseline_resilience: Agent's baseline resilience level (0-1)
+        protective_factors: Current efficacy levels of protective factors
+        rng: Random number generator for stochastic decisions
+        config: Resource optimization configuration
+
+    Returns:
+        Dictionary mapping factor names to allocated resources
+    """
+    if config is None:
+        config = ResourceOptimizationConfig()
+
+    if protective_factors is None:
+        protective_factors = ProtectiveFactors()
+
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # Check if agent has minimum resources for allocation
+    if available_resources < config.minimum_resource_threshold:
+        return {
+            'social_support': 0.0,
+            'family_support': 0.0,
+            'formal_intervention': 0.0,
+            'psychological_capital': 0.0
+        }
+
+    # Compute resilience-based efficiency gain
+    efficiency_gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, config)
+
+    # Apply efficiency gain to available resources (more resilience = more effective resources)
+    effective_resources = available_resources * efficiency_gain
+
+    # Create allocation weights based on efficacy and resilience
+    factors = ['social_support', 'family_support', 'formal_intervention', 'psychological_capital']
+    efficacies = [
+        protective_factors.social_support,
+        protective_factors.family_support,
+        protective_factors.formal_intervention,
+        protective_factors.psychological_capital
+    ]
+
+    # Resilience improves allocation decisions by reducing temperature (more focused allocation)
+    base_temperature = config.get('utility', 'softmax_temperature') if hasattr(config, 'get') else 1.0
+    resilience_focus = current_resilience * 0.5  # Higher resilience = more focused allocation
+    temperature = max(0.1, base_temperature - resilience_focus)
+
+    # Add resilience bonus to allocation weights
+    resilience_bonuses = [current_resilience * 0.2] * len(factors)  # 20% resilience bonus to all factors
+    adjusted_efficacies = [efficacy + bonus for efficacy, bonus in zip(efficacies, resilience_bonuses)]
+
+    # Softmax decision making with resilience-adjusted temperature
+    logits = np.array(adjusted_efficacies) / temperature
+    softmax_weights = np.exp(logits) / np.sum(np.exp(logits))
+
+    # Allocate resources proportionally
+    allocations = {
+        factor: effective_resources * weight
+        for factor, weight in zip(factors, softmax_weights)
+    }
+
+    return allocations
+
+
+def compute_resource_depletion_with_resilience(
+    current_resources: float,
+    cost: float,
+    current_resilience: float,
+    coping_successful: bool,
+    config: Optional[ResourceOptimizationConfig] = None
+) -> float:
+    """
+    Compute resource depletion considering resilience-based optimization.
+
+    Args:
+        current_resources: Agent's current resources before depletion
+        cost: Base cost of coping attempt
+        current_resilience: Agent's current resilience level
+        coping_successful: Whether the coping attempt was successful
+        config: Resource optimization configuration
+
+    Returns:
+        Remaining resources after depletion
+    """
+    if config is None:
+        config = ResourceOptimizationConfig()
+
+    # Apply resilience-based cost optimization
+    optimized_cost = cost * (1.0 - current_resilience * config.resilience_efficiency_factor)
+
+    # Failed coping attempts cost more (inefficient resource use)
+    if not coping_successful:
+        optimized_cost *= 1.3  # 30% penalty for failed coping
+
+    # Ensure minimum cost even with very high resilience
+    optimized_cost = max(cost * 0.3, optimized_cost)
+
+    # Deplete resources
+    remaining_resources = max(0.0, current_resources - optimized_cost)
+
+    return remaining_resources
+
+
 def process_stress_event_with_new_mechanism(
     current_affect: float,
     current_resilience: float,
@@ -611,28 +952,6 @@ def process_stress_event_with_new_mechanism(
     new_affect = clamp(new_affect, -1.0, 1.0)
 
     return new_affect, new_resilience, new_stress, coped_successfully
-
-
-# ==============================================
-# ENHANCED AFFECT AND RESILIENCE DYNAMICS
-# ==============================================
-
-@dataclass
-class AffectDynamicsConfig:
-    """Configuration parameters for affect dynamics."""
-    peer_influence_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'peer_influence_rate'))
-    event_appraisal_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'event_appraisal_rate'))
-    homeostatic_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostatic_rate'))
-    influencing_neighbors: int = field(default_factory=lambda: get_config().get('influence', 'influencing_neighbors'))
-
-
-@dataclass
-class ResilienceDynamicsConfig:
-    """Configuration parameters for resilience dynamics."""
-    coping_success_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'coping_success_rate'))
-    social_support_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'social_support_rate'))
-    overload_threshold: int = field(default_factory=lambda: get_config().get('resilience_dynamics', 'overload_threshold'))
-    influencing_hindrance: int = field(default_factory=lambda: get_config().get('influence', 'influencing_hindrance'))
 
 
 def compute_peer_influence(
@@ -909,3 +1228,23 @@ def update_resilience_dynamics(
 
     # Clamp to valid range
     return clamp(new_resilience, 0.0, 1.0)
+
+
+def scale_homeostatic_rate(
+    base_rate: float,
+    resources: float,
+    stress: float
+) -> float:
+    """
+    Scale homeostatic rate based on resource availability and stress level.
+    Higher resources lead to weaker homeostasis, which allows over time
+    adaptation. Lower resource lead to stronger homeostasis, which maintains
+    stability. In contrast, higher stress leads to stronger homeostasis, and
+    lowe stress lead to weaker homeostasis.
+    """
+
+    resource_factor = 1.0 - (resources * 0.7) # Range: [0.3, 0.7]
+    stress_factor   = 1.0 + (stress * 0.5)    # Range: [1.0, 1.5]
+    scaled_rate     = base_rate * resource_factor * stress_factor
+
+    return min(base_rate * 2, scaled_rate) # Cap at 2x

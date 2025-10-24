@@ -102,13 +102,209 @@ All configuration parameters are organized into logical categories. Each paramet
 
 | Parameter | Default | Range | Description |
 |-----------|---------|-------|-------------|
-| `AGENT_INITIAL_RESILIENCE` | 0.5 | 0.0-1.0 | Starting resilience level for all agents |
-| `AGENT_INITIAL_AFFECT` | 0.0 | -1.0 to 1.0 | Initial emotional state (-1=negative, 1=positive) |
-| `AGENT_INITIAL_RESOURCES` | 0.6 | 0.0-1.0 | Starting psychological resources |
+| `AGENT_INITIAL_RESILIENCE_MEAN` | 0.5 | 0.0-1.0 | Mean of normal distribution for initial resilience levels |
+| `AGENT_INITIAL_RESILIENCE_SD` | 1.0 | >0 | Standard deviation for resilience distribution (higher = more variation) |
+| `AGENT_INITIAL_AFFECT_MEAN` | 0.0 | -1.0 to 1.0 | Mean of normal distribution for initial affect levels |
+| `AGENT_INITIAL_AFFECT_SD` | 1.0 | >0 | Standard deviation for affect distribution (higher = more variation) |
+| `AGENT_INITIAL_RESOURCES_MEAN` | 0.6 | 0.0-1.0 | Mean of normal distribution for initial resource levels |
+| `AGENT_INITIAL_RESOURCES_SD` | 1.0 | >0 | Standard deviation for resources distribution (higher = more variation) |
 | `AGENT_STRESS_PROBABILITY` | 0.5 | 0.0-1.0 | Daily probability of experiencing stress events |
 | `AGENT_COPING_SUCCESS_RATE` | 0.5 | 0.0-1.0 | Success rate when testing coping mechanisms |
 | `AGENT_SUBEVENTS_PER_DAY` | 3 | 1-10 | Average social interactions + stress events per day |
 | `AGENT_RESOURCE_COST` | 0.1 | 0.0-1.0 | Resource consumption for successful coping |
+
+#### Agent Initialization with Normal Distributions
+
+The agent initialization system has been enhanced to use normal distributions for creating realistic variation in agent populations. This approach replaces the previous fixed-value initialization with a more sophisticated statistical method.
+
+**Key Features:**
+
+1. **Normal Distribution Sampling**: Each agent's initial resilience, affect, and resources are sampled from normal distributions using the `sample_normal()` function from [`math_utils.py`](src/python/math_utils.py).
+
+2. **Configurable Variation**: The standard deviation parameters control the amount of variation within the population:
+   - Low SD (e.g., 0.05): Homogeneous population with most agents near the mean
+   - High SD (e.g., 0.3): Heterogeneous population with wide variation in initial states
+
+3. **Automatic Clamping**: Values are automatically constrained to valid ranges:
+   - Resilience and resources: [0.0, 1.0]
+   - Affect: [-1.0, 1.0]
+
+4. **Reproducible Results**: Same random seed produces identical agent populations for reproducible research.
+
+**Mathematical Foundation:**
+
+The initialization uses the normal distribution $\mathcal{N}(\mu, \sigma^2)$ with clamping:
+
+```math
+\text{initial_value} = \max(\min(\mathcal{N}(\mu, \sigma^2), \text{max_val}), \text{min_val})
+```
+
+Where $\mu$ is the mean parameter, $\sigma$ is the standard deviation parameter, and min_val/max_val are the valid range bounds.
+
+**Example Usage:**
+
+```python
+from src.python.agent import Person
+from src.python.config import get_config
+
+# Get configuration
+config = get_config()
+
+# Create agent with normal distribution initialization
+model = MockModel(seed=42)
+agent = Person(model)
+
+# Agent values are sampled from N(mean, sd) and clamped to valid ranges
+print(f"Resilience: {agent.resilience:.3f}")  # e.g., 0.487
+print(f"Affect: {agent.affect:.3f}")          # e.g., -0.123
+print(f"Resources: {agent.resources:.3f}")    # e.g., 0.723
+```
+
+#### Configuration Examples for Different Population Types
+
+**Scenario 1: Homogeneous High-Resilience Population**
+```bash
+# .env.homogeneous_high_resilience
+AGENT_INITIAL_RESILIENCE_MEAN=0.8
+AGENT_INITIAL_RESILIENCE_SD=0.05    # Low variation
+AGENT_INITIAL_AFFECT_MEAN=0.2
+AGENT_INITIAL_AFFECT_SD=0.1         # Low variation
+AGENT_INITIAL_RESOURCES_MEAN=0.8
+AGENT_INITIAL_RESOURCES_SD=0.05     # Low variation
+```
+*Use case:* Modeling populations with consistently high mental health resources and minimal individual differences.
+
+**Scenario 2: Heterogeneous Stressed Population**
+```bash
+# .env.heterogeneous_stressed
+AGENT_INITIAL_RESILIENCE_MEAN=0.4
+AGENT_INITIAL_RESILIENCE_SD=0.25    # High variation
+AGENT_INITIAL_AFFECT_MEAN=-0.3
+AGENT_INITIAL_AFFECT_SD=0.3         # High variation
+AGENT_INITIAL_RESOURCES_MEAN=0.5
+AGENT_INITIAL_RESOURCES_SD=0.2      # Moderate variation
+```
+*Use case:* Studying populations with diverse stress responses and coping capabilities, such as mixed clinical populations.
+
+**Scenario 3: Clinical Population with Negative Affect Bias**
+```bash
+# .env.clinical_negative_bias
+AGENT_INITIAL_RESILIENCE_MEAN=0.3
+AGENT_INITIAL_RESILIENCE_SD=0.15
+AGENT_INITIAL_AFFECT_MEAN=-0.5      # Negative bias
+AGENT_INITIAL_AFFECT_SD=0.2
+AGENT_INITIAL_RESOURCES_MEAN=0.4
+AGENT_INITIAL_RESOURCES_SD=0.15
+PSS10_THRESHOLD=25                  # Lower threshold for clinical sensitivity
+```
+*Use case:* Modeling clinical populations with depressive tendencies and lower stress thresholds.
+
+**Scenario 4: Resilient Population with Moderate Variation**
+```bash
+# .env.resilient_moderate
+AGENT_INITIAL_RESILIENCE_MEAN=0.7
+AGENT_INITIAL_RESILIENCE_SD=0.15    # Moderate variation
+AGENT_INITIAL_AFFECT_MEAN=0.1
+AGENT_INITIAL_AFFECT_SD=0.2         # Moderate variation
+AGENT_INITIAL_RESOURCES_MEAN=0.75
+AGENT_INITIAL_RESOURCES_SD=0.1      # Low variation
+RESILIENCE_COPING_SUCCESS_RATE=0.2  # Higher coping success
+```
+*Use case:* General population studies with realistic variation in mental health factors.
+
+**Scenario 5: High-Risk Population with Resource Depletion**
+```bash
+# .env.high_risk_depleted
+AGENT_INITIAL_RESILIENCE_MEAN=0.2
+AGENT_INITIAL_RESILIENCE_SD=0.2
+AGENT_INITIAL_AFFECT_MEAN=-0.2
+AGENT_INITIAL_AFFECT_SD=0.25
+AGENT_INITIAL_RESOURCES_MEAN=0.3    # Low resources
+AGENT_INITIAL_RESOURCES_SD=0.15
+AGENT_STRESS_PROBABILITY=0.8        # High stress exposure
+```
+*Use case:* Modeling at-risk populations with chronic stress exposure and limited coping resources.
+
+#### Migration Guide: From Fixed Values to Normal Distribution System
+
+**Background:**
+The agent initialization system has evolved from using fixed values for all agents to a more realistic normal distribution approach. This change improves model validity by introducing natural variation within populations.
+
+**Old System (Fixed Values):**
+```bash
+# Previous .env format
+AGENT_INITIAL_RESILIENCE=0.5      # All agents had exactly 0.5
+AGENT_INITIAL_AFFECT=0.0          # All agents had exactly 0.0
+AGENT_INITIAL_RESOURCES=0.6       # All agents had exactly 0.6
+```
+
+**New System (Normal Distributions):**
+```bash
+# New .env format with mean/SD parameters
+AGENT_INITIAL_RESILIENCE_MEAN=0.5  # Mean of distribution
+AGENT_INITIAL_RESILIENCE_SD=0.15   # Standard deviation (controls variation)
+AGENT_INITIAL_AFFECT_MEAN=0.0      # Mean of distribution
+AGENT_INITIAL_AFFECT_SD=0.2        # Standard deviation (controls variation)
+AGENT_INITIAL_RESOURCES_MEAN=0.6   # Mean of distribution
+AGENT_INITIAL_RESOURCES_SD=0.1     # Standard deviation (controls variation)
+```
+
+**Migration Steps:**
+
+1. **Update Environment Variables:**
+   ```bash
+   # Replace old fixed parameters with new mean/SD parameters
+   # Old: AGENT_INITIAL_RESILIENCE=0.5
+   # New:
+   AGENT_INITIAL_RESILIENCE_MEAN=0.5
+   AGENT_INITIAL_RESILIENCE_SD=0.15
+
+   # Old: AGENT_INITIAL_AFFECT=0.0
+   # New:
+   AGENT_INITIAL_AFFECT_MEAN=0.0
+   AGENT_INITIAL_AFFECT_SD=0.2
+
+   # Old: AGENT_INITIAL_RESOURCES=0.6
+   # New:
+   AGENT_INITIAL_RESOURCES_MEAN=0.6
+   AGENT_INITIAL_RESOURCES_SD=0.1
+   ```
+
+2. **Choose Appropriate Standard Deviations:**
+   - **Homogeneous populations**: Use low SD (0.05-0.1)
+   - **Typical populations**: Use moderate SD (0.15-0.25)
+   - **Clinical/diverse populations**: Use high SD (0.25-0.35)
+
+3. **Update Code References:**
+   ```python
+   # Old code:
+   config.get('agent', 'initial_resilience')  # No longer exists
+
+   # New code:
+   config.get('agent', 'initial_resilience_mean')  # Mean value
+   config.get('agent', 'initial_resilience_sd')   # Standard deviation
+   ```
+
+4. **Testing and Validation:**
+   ```python
+   # Test that new system produces expected variation
+   agents = [Person(MockModel(seed=i)) for i in range(100)]
+
+   resilience_values = [agent.resilience for agent in agents]
+   print(f"Mean: {np.mean(resilience_values):.3f}")      # Should be near target mean
+   print(f"SD: {np.std(resilience_values):.3f}")        # Should be near target SD
+   print(f"Range: {min(resilience_values):.3f} to {max(resilience_values):.3f}")  # Should be [0,1]
+   ```
+
+**Benefits of New System:**
+
+- **Realistic Variation**: Agents now have natural variation instead of identical values
+- **Population Diversity**: Can model different population types with appropriate variation levels
+- **Research Validity**: Better represents real-world heterogeneity in mental health factors
+- **Statistical Rigor**: Enables proper sensitivity analysis and parameter studies
+
+**Backward Compatibility:**
+The old fixed-value parameters are no longer supported. All configurations must use the new mean/SD format for agent initialization.
 
 ### Coping Mechanism Parameters
 

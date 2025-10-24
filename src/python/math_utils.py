@@ -195,6 +195,41 @@ def sample_exponential(
     return min(sample, max_value)
 
 
+def sample_normal(
+    mean: float = 0.0,
+    std: float = 1.0,
+    rng: Optional[np.random.Generator] = None,
+    min_value: float = None,
+    max_value: float = None
+) -> float:
+    """
+    Sample from normal distribution with optional clamping.
+
+    Args:
+        mean: Normal distribution mean parameter
+        std: Normal distribution standard deviation parameter
+        rng: Random number generator
+        min_value: Minimum allowed value (optional clamping)
+        max_value: Maximum allowed value (optional clamping)
+
+    Returns:
+        Sample from normal distribution, clamped to [min_value, max_value] if specified
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+
+    sample = rng.normal(mean, std)
+
+    # Apply clamping if bounds are specified
+    if min_value is not None or max_value is not None:
+        # Handle None values properly to avoid using 0.0 as -inf
+        clamp_min = min_value if min_value is not None else -np.inf
+        clamp_max = max_value if max_value is not None else np.inf
+        sample = clamp(sample, clamp_min, clamp_max)
+
+    return sample
+
+
 def compute_running_average(
     current_avg: float,
     new_value: float,
@@ -335,6 +370,166 @@ def calculate_entropy(probabilities: np.ndarray) -> float:
         return 0.0
 
     return -np.sum(probs * np.log(probs))
+
+
+def tanh_transform(
+    mean: float = 0.0,
+    std: float = 1.0,
+    rng: Optional[np.random.Generator] = None
+) -> float:
+    """
+    Transform normal distribution sample to [-1,1] bounds using tanh.
+
+    The transformation pipeline:
+    1. Sample from normal distribution N(mean, std)
+    2. Transform to Z-scale ~ N(0,1) by subtracting mean and dividing by std
+    3. Normalize by dividing by 3 to confine to approximately [-1,1]
+    4. Apply tanh() for [-1,1] bounds
+
+    Args:
+        mean: Normal distribution mean parameter
+        std: Normal distribution standard deviation parameter
+        rng: Random number generator
+
+    Returns:
+        Transformed value in [-1,1]
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # Handle zero standard deviation case
+    if std == 0:
+        return 0.0  # Return 0 for zero std case
+
+    # Sample from normal distribution
+    sample = rng.normal(mean, std)
+
+    # Transform to Z-scale and normalize
+    z_score = (sample - mean) / std
+    normalized = z_score / 3.0  # Divide by 3 to confine to ~[-1,1]
+
+    # Apply tanh transformation for [-1,1] bounds
+    result = np.tanh(normalized)
+
+    return result
+
+
+def sigmoid_transform(
+    mean: float = 0.0,
+    std: float = 1.0,
+    rng: Optional[np.random.Generator] = None
+) -> float:
+    """
+    Transform normal distribution sample to [0,1] bounds using sigmoid.
+
+    The transformation pipeline:
+    1. Sample from normal distribution N(mean, std)
+    2. Transform to Z-scale ~ N(0,1) by subtracting mean and dividing by std
+    3. Normalize by dividing by 3 to confine to approximately [-1,1]
+    4. Apply sigmoid() for [0,1] bounds
+
+    Args:
+        mean: Normal distribution mean parameter
+        std: Normal distribution standard deviation parameter
+        rng: Random number generator
+
+    Returns:
+        Transformed value in [0,1]
+    """
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # Handle zero standard deviation case
+    if std == 0:
+        return sigmoid(0.0)  # Return sigmoid of 0 for zero std case
+
+    # Sample from normal distribution
+    sample = rng.normal(mean, std)
+
+    # Transform to Z-scale and normalize
+    z_score = (sample - mean) / std
+    normalized = z_score / 3.0  # Divide by 3 to confine to ~[-1,1]
+
+    # Apply sigmoid transformation for [0,1] bounds
+    result = sigmoid(normalized)
+
+    return result
+
+
+def inverse_tanh_transform(
+    value: float,
+    mean: float = 0.0,
+    std: float = 1.0
+) -> float:
+    """
+    Inverse transformation of tanh_transform.
+
+    Args:
+        value: Value in [-1,1] to transform back
+        mean: Original normal distribution mean parameter
+        std: Original normal distribution standard deviation parameter
+
+    Returns:
+        Value in original scale
+    """
+    if value == 0.0:
+        return mean  # Handle special case: 0.0 input → mean output
+
+    # Handle extreme values
+    modifier = 1e-10
+    if value == -1:
+        value = value + modifier
+    elif value == 1:
+        value = value - modifier
+
+    # Apply inverse tanh (artanh)
+    normalized = np.arctanh(value)
+
+    # Scale back from normalized range
+    z_score = normalized * 3.0
+
+    # Transform back to original scale
+    original = z_score * std + mean
+
+    return original
+
+
+def inverse_sigmoid_transform(
+    value: float,
+    mean: float = 0.0,
+    std: float = 1.0
+) -> float:
+    """
+    Inverse transformation of sigmoid_transform.
+
+    Args:
+        value: Value in [0,1] to transform back
+        mean: Original normal distribution mean parameter
+        std: Original normal distribution standard deviation parameter
+
+    Returns:
+        Value in original scale
+    """
+    if value == 0.5:
+        return mean  # Handle special case: 0.5 input → mean output
+
+    # Handle extreme values
+    modifier = 1e-10
+    if value == 0:
+        value = modifier
+    elif value == 1:
+        value = 1 - modifier
+
+    # Apply inverse sigmoid (logit)
+    normalized = -np.log(1.0 / value - 1.0)
+
+    # Scale back from normalized range
+    z_score = normalized * 3.0
+
+    # Transform back to original scale
+    original = z_score * std + mean
+
+    return original
 
 
 def normalize_probabilities(

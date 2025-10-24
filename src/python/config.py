@@ -184,20 +184,30 @@ class Config:
         # ==============================================
         # AGENT STATE AND BEHAVIOR PARAMETERS
         # ==============================================
-        self.agent_initial_resilience = self._get_env_value('AGENT_INITIAL_RESILIENCE', float, 0.5)
-        self.agent_initial_affect = self._get_env_value('AGENT_INITIAL_AFFECT', float, 0.0)
-        self.agent_initial_resources = self._get_env_value('AGENT_INITIAL_RESOURCES', float, 0.6)
+        self.agent_initial_resilience_mean = self._get_env_value('AGENT_INITIAL_RESILIENCE_MEAN', float, 0.0)
+        self.agent_initial_resilience_sd = self._get_env_value('AGENT_INITIAL_RESILIENCE_SD', float, 1.0)
+        self.agent_initial_affect_mean = self._get_env_value('AGENT_INITIAL_AFFECT_MEAN', float, 0.0)
+        self.agent_initial_affect_sd = self._get_env_value('AGENT_INITIAL_AFFECT_SD', float, 1.0)
+        self.agent_initial_resources_mean = self._get_env_value('AGENT_INITIAL_RESOURCES_MEAN', float, 0.0)
+        self.agent_initial_resources_sd = self._get_env_value('AGENT_INITIAL_RESOURCES_SD', float, 1.0)
 
         self.agent_stress_probability = self._get_env_value('AGENT_STRESS_PROBABILITY', float, 0.5)
         self.agent_coping_success_rate = self._get_env_value('AGENT_COPING_SUCCESS_RATE', float, 0.5)
         self.agent_subevents_per_day = self._get_env_value('AGENT_SUBEVENTS_PER_DAY', int, 3)
         self.agent_resource_cost = self._get_env_value('AGENT_RESOURCE_COST', float, 0.1)
 
+        # Additional agent attributes for backward compatibility
+        self.agent_initial_resilience = self.agent_initial_resilience_mean
+        self.agent_initial_affect = self.agent_initial_affect_mean
+        self.agent_initial_resources = self.agent_initial_resources_mean
+
         # ==============================================
         # STRESS EVENT PARAMETERS
         # ==============================================
         self.stress_controllability_mean = self._get_env_value('STRESS_CONTROLLABILITY_MEAN', float, 0.5)
+        self.stress_controllability_sd = self._get_env_value('STRESS_CONTROLLABILITY_SD', float, 0.2)
         self.stress_overload_mean = self._get_env_value('STRESS_OVERLOAD_MEAN', float, 0.5)
+        self.stress_overload_sd = self._get_env_value('STRESS_OVERLOAD_SD', float, 0.2)
         self.stress_beta_alpha = self._get_env_value('STRESS_BETA_ALPHA', float, 2.0)
         self.stress_beta_beta = self._get_env_value('STRESS_BETA_BETA', float, 2.0)
 
@@ -255,7 +265,7 @@ class Config:
         # ==============================================
         self.affect_peer_influence_rate = self._get_env_value('AFFECT_PEER_INFLUENCE_RATE', float, 0.1)
         self.affect_event_appraisal_rate = self._get_env_value('AFFECT_EVENT_APPRAISAL_RATE', float, 0.15)
-        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.5)
+        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.1)
         self.resilience_homeostatic_rate = self._get_env_value('RESILIENCE_HOMEOSTATIC_RATE', float, 0.05)
 
         self.resilience_coping_success_rate = self._get_env_value('RESILIENCE_COPING_SUCCESS_RATE', float, 0.1)
@@ -285,6 +295,11 @@ class Config:
 
         # New protective factor improvement rate
         self.protective_improvement_rate = self._get_env_value('PROTECTIVE_IMPROVEMENT_RATE', float, 0.5)
+
+        # Social resource exchange parameters
+        self.resource_social_exchange_rate = self._get_env_value('RESOURCE_SOCIAL_EXCHANGE_RATE', float, 0.1)
+        self.resource_exchange_threshold = self._get_env_value('RESOURCE_EXCHANGE_THRESHOLD', float, 0.2)
+        self.resource_max_exchange_ratio = self._get_env_value('RESOURCE_MAX_EXCHANGE_RATIO', float, 0.3)
 
         # ==============================================
         # MATHEMATICAL UTILITY PARAMETERS
@@ -319,9 +334,15 @@ class Config:
                 'homophily_strength': self.network_homophily_strength,
             },
             'agent': {
-                'initial_resilience': self.agent_initial_resilience,
-                'initial_affect': self.agent_initial_affect,
-                'initial_resources': self.agent_initial_resources,
+                'initial_resilience': self.agent_initial_resilience_mean,
+                'initial_resilience_mean': self.agent_initial_resilience_mean,
+                'initial_resilience_sd': self.agent_initial_resilience_sd,
+                'initial_affect': self.agent_initial_affect_mean,
+                'initial_affect_mean': self.agent_initial_affect_mean,
+                'initial_affect_sd': self.agent_initial_affect_sd,
+                'initial_resources': self.agent_initial_resources_mean,
+                'initial_resources_mean': self.agent_initial_resources_mean,
+                'initial_resources_sd': self.agent_initial_resources_sd,
                 'stress_probability': self.agent_stress_probability,
                 'coping_success_rate': self.agent_coping_success_rate,
                 'subevents_per_day': self.agent_subevents_per_day,
@@ -335,7 +356,9 @@ class Config:
             },
             'stress': {
                 'controllability_mean': self.stress_controllability_mean,
+                'controllability_sd': self.stress_controllability_sd,
                 'overload_mean': self.stress_overload_mean,
+                'overload_sd': self.stress_overload_sd,
                 'beta_alpha': self.stress_beta_alpha,
                 'beta_beta': self.stress_beta_beta,
             },
@@ -366,6 +389,8 @@ class Config:
                 'controllability_sd': self.pss10_controllability_sd,
                 'overload_sd': self.pss10_overload_sd,
                 'threshold': self.pss10_threshold,
+                'sensitivity': self._get_env_value('PSS10_SENSITIVITY', float, 0.5),
+                'momentum_weight': self._get_env_value('PSS10_MOMENTUM_WEIGHT', float, 0.3),
             },
             'interaction': {
                 'influence_rate': self.interaction_influence_rate,
@@ -391,6 +416,10 @@ class Config:
             'dynamics': {
                 'stress_decay_rate': self.stress_decay_rate,
             },
+            'stress_dynamics': {
+                'controllability_update_rate': self._get_env_value('STRESS_CONTROLLABILITY_UPDATE_RATE', float, 0.1),
+                'overload_update_rate': self._get_env_value('STRESS_OVERLOAD_UPDATE_RATE', float, 0.15),
+            },
             'protective': {
                 'social_support': self.protective_social_support,
                 'family_support': self.protective_family_support,
@@ -402,6 +431,9 @@ class Config:
                 'allocation_cost': self.resource_allocation_cost,
                 'cost_exponent': self.resource_cost_exponent,
                 'protective_improvement_rate': self.protective_improvement_rate,
+                'social_exchange_rate': self.resource_social_exchange_rate,
+                'exchange_threshold': self.resource_exchange_threshold,
+                'max_exchange_ratio': self.resource_max_exchange_ratio,
             },
             'utility': {
                 'softmax_temperature': self.utility_softmax_temperature,
@@ -462,12 +494,18 @@ class Config:
             raise ConfigurationError("Network homophily strength must be in [0, 1]")
 
         # Agent validation
-        if not (0 <= self.agent_initial_resilience <= 1):
-            raise ConfigurationError("Agent initial resilience must be in [0, 1]")
-        if not (-1 <= self.agent_initial_affect <= 1):
-            raise ConfigurationError("Agent initial affect must be in [-1, 1]")
-        if not (0 <= self.agent_initial_resources <= 1):
-            raise ConfigurationError("Agent initial resources must be in [0, 1]")
+        if not (0 <= self.agent_initial_resilience_mean <= 1):
+            raise ConfigurationError("Agent initial resilience mean must be in [0, 1]")
+        if self.agent_initial_resilience_sd <= 0:
+            raise ConfigurationError("Agent initial resilience SD must be positive")
+        if not (-1 <= self.agent_initial_affect_mean <= 1):
+            raise ConfigurationError("Agent initial affect mean must be in [-1, 1]")
+        if self.agent_initial_affect_sd <= 0:
+            raise ConfigurationError("Agent initial affect SD must be positive")
+        if not (0 <= self.agent_initial_resources_mean <= 1):
+            raise ConfigurationError("Agent initial resources mean must be in [0, 1]")
+        if self.agent_initial_resources_sd <= 0:
+            raise ConfigurationError("Agent initial resources SD must be positive")
         if not (0 <= self.agent_stress_probability <= 1):
             raise ConfigurationError("Agent stress probability must be in [0, 1]")
 
@@ -475,6 +513,11 @@ class Config:
         for param in [self.stress_controllability_mean, self.stress_overload_mean]:
             if not (0 <= param <= 1):
                 raise ConfigurationError("Stress event means must be in [0, 1]")
+
+        # Stress SD validation
+        for param in [self.stress_controllability_sd, self.stress_overload_sd]:
+            if param <= 0:
+                raise ConfigurationError("Stress event standard deviations must be positive")
 
         # PSS-10 validation
         if len(self.pss10_item_means) != 10:
@@ -569,6 +612,12 @@ class Config:
             raise ConfigurationError("Resource cost exponent must be >= 1")
         if not (0 <= self.protective_improvement_rate <= 1):
             raise ConfigurationError("Protective improvement rate must be in [0, 1]")
+        if not (0 <= self.resource_social_exchange_rate <= 1):
+            raise ConfigurationError("Social exchange rate must be in [0, 1]")
+        if not (0 <= self.resource_exchange_threshold <= 1):
+            raise ConfigurationError("Resource exchange threshold must be in [0, 1]")
+        if not (0 <= self.resource_max_exchange_ratio <= 1):
+            raise ConfigurationError("Max exchange ratio must be in [0, 1]")
 
         # Utility validation
         if self.utility_softmax_temperature <= 0:

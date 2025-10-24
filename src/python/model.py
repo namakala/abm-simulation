@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from mesa.space import NetworkGrid
 from mesa import DataCollector
+
 from src.python.agent import Person
 from src.python.config import get_config
 

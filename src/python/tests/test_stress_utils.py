@@ -46,7 +46,9 @@ class TestStressEventGeneration:
         rng = np.random.default_rng(456)
         config = {
             'controllability_mean': 0.8,
-            'overload_mean': 0.6
+            'controllability_sd': 0.2,
+            'overload_mean': 0.6,
+            'overload_sd': 0.2
         }
 
         # Generate multiple events and check statistical properties
