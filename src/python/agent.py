@@ -259,6 +259,8 @@ class Person(mesa.Agent):
                 daily_hindrance += hindrance
                 stress_events_count += 1
 
+        print(f"DEBUG: Total stressful_event calls: {stress_events_count}")
+
         # Normalize daily challenge/hindrance by number of events
         if stress_events_count > 0:
             daily_challenge /= stress_events_count
@@ -333,6 +335,7 @@ class Person(mesa.Agent):
         cfg = get_config()
         affect_homeostatic_rate = cfg.get('affect_dynamics', 'homeostatic_rate')
         resilience_homeostatic_rate = cfg.get('resilience_dynamics', 'homeostatic_rate')
+        pss10_threshold = cfg.get('pss10', 'threshold')
 
         # Scale the homeostatic rate based on resources and stress
         scaled_affect_homeostatic_rate = scale_homeostatic_rate(
@@ -383,6 +386,7 @@ class Person(mesa.Agent):
         self.current_stress = clamp(self.current_stress, 0.0, 1.0)
         self.stress_controllability = clamp(self.stress_controllability, 0.0, 1.0)
         self.stress_overload = clamp(self.stress_overload, 0.0, 1.0)
+        self.stressed = (self.pss10 >= pss10_threshold)
 
     def interact(self):
         """
