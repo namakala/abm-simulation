@@ -142,6 +142,9 @@ This document provides the authoritative reference for all mathematical notation
 | $\lambda_{\text{appraise}}$ | Event appraisal rate | $\lambda_{\text{appraise}} \in [0,1]$ | 0.15 |
 | $\theta_{\text{boost}}$ | Boost rate parameter | $\theta_{\text{boost}} > 0$ | 0.1 |
 | $\theta_{\text{boost\|cope}}$ | Coping success boost | $\theta_{\text{boost\|cope}} > 0$ | 0.1 |
+| $\alpha_p$ | Peer influence rate | $\alpha_p \in [0,1]$ | 0.1 |
+| $\alpha_e$ | Event appraisal influence rate | $\alpha_e \in [0,1]$ | 0.15 |
+| $\eta_{\text{affect}}$ | Affect threshold for resilience influence | $\eta_{\text{affect}} > 0$ | 0.3 |
 
 ### Output Parameters
 
@@ -177,7 +180,7 @@ This document provides the authoritative reference for all mathematical notation
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
-| $\eta_{\text{adapt,thresh}}$ | Adaptation threshold | $\eta_{\text{adapt,thresh}} \in \mathbb{N}$ | - |
+| $\eta_{\text{adapt}}$ | Adaptation threshold | $\eta_{\text{adapt}} \in \mathbb{N}$ | - |
 | $p_{\text{rewire,adapt}}$ | Rewiring probability for adaptation | $p_{\text{rewire,adapt}} \in [0,1]$ | 0.01 |
 | $\delta_{\text{homophily}}$ | Homophily strength | $\delta_{\text{homophily}} \in [0,1]$ | 0.7 |
 
@@ -217,8 +220,8 @@ This document provides the authoritative reference for all mathematical notation
 | $\eta_{\text{0}}$ | Base threshold | $\eta_{\text{0}} \in [0,1]$ | 0.5 |
 | $\lambda_\chi$ | Challenge scale | $\lambda_\chi > 0$ | 0.15 |
 | $\lambda_\zeta$ | Hindrance scale | $\lambda_\zeta > 0$ | 0.25 |
-| $\eta_{\text{stress,thresh}}$ | Stress threshold | $\eta_{\text{stress,thresh}} \in [0,1]$ | 0.3 |
-| $\eta_{\text{affect,thresh}}$ | Affect threshold | $\eta_{\text{affect,thresh}} \in [0,1]$ | 0.3 |
+| $\eta_{\text{stress}}$ | Stress threshold | $\eta_{\text{stress}} \in [0,1]$ | 0.3 |
+| $\eta_{\text{affect}}$ | Affect threshold | $\eta_{\text{affect}} \in [0,1]$ | 0.3 |
 | $\alpha_\chi$ | Challenge alpha | $\alpha_\chi > 0$ | 0.8 |
 | $\alpha_\zeta$ | Hindrance alpha | $\alpha_\zeta > 0$ | 1.2 |
 | $\delta_{\text{stress,load}}$ | Stress load delta | $\delta_{\text{stress,load}} > 0$ | 0.2 |
