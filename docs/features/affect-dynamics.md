@@ -44,11 +44,11 @@ $$\Delta A_i = \alpha_p \cdot (A_j - A_i) \cdot \begin{cases}
 
 **Resilience Influence:**
 
-$$\Delta R_i = \beta_r \cdot A_j \cdot \mathbb{1}_{|A_j| > \theta_a}$$
+$$\Delta R_i = \lambda_{\text{res,interact}} \cdot A_j \cdot \mathbb{1}_{|A_j| > \eta_{\text{affect}}}$$
 
 Where:
-- $\beta_r > 0$ is resilience influence rate
-- $\theta_a > 0$ is affect threshold for resilience influence
+- $\lambda_{\text{res,interact}} > 0$ is resilience influence rate
+- $\eta_{\text{affect}} > 0$ is affect threshold for resilience influence
 - $\mathbb{1}$ is indicator function
 
 **Implementation**: [`process_interaction()`](src/python/affect_utils.py:120) in `affect_utils.py`
@@ -74,12 +74,12 @@ Emotional states naturally tend to return to an individual's baseline level over
 
 **Homeostasis Effect:**
 
-$$\Delta A_h = \theta_a \cdot (A_b - A_c)$$
+$$\Delta A_h = \lambda_{\text{affect}} \cdot (A_{\text{0}} - A_c)$$
 
 Where:
 - $\Delta A_h$ is homeostatic affect change
-- $\theta_a \in [0,1]$ is homeostatic rate
-- $A_b \in [-1,1]$ is baseline affect
+- $\lambda_{\text{affect}} \in [0,1]$ is homeostatic rate
+- $A_{\text{0}} \in [-1,1]$ is baseline affect
 - $A_c \in [-1,1]$ is current affect
 
 **Implementation**: [`compute_homeostasis_effect()`](src/python/affect_utils.py:711) in `affect_utils.py`
@@ -128,10 +128,10 @@ Where:
 
 **Aggregated Peer Influence:**
 
-$$\Delta A_p = \frac{1}{n} \sum_{j=1}^{n} \alpha_p \cdot (A_j - A_t)$$
+$$\Delta A_p = \frac{1}{k} \sum_{j=1}^{k} \alpha_p \cdot (A_j - A_t)$$
 
 Where:
-- $n$ is number of neighbors (limited by $\max(1, n_{\mathrm{influence}})$)
+- $k$ is number of neighbors (limited by $\max(1, k_{\text{influence}})$)
 - $A_j \in [-1,1]$ is neighbor $j$'s affect
 
 ## Resilience-Affect Interactions

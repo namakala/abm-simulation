@@ -51,6 +51,51 @@ Where:
 - $R_{a_i} \in [0,1]$ is available resources
 - $\mathbf{\Psi}_i$ is PSS-10 state vector
 
+#### Baseline State Vector Integration
+
+Each agent maintains a comprehensive baseline state vector that represents their natural equilibrium points and initial conditions:
+
+$$\mathbf{s}_{\text{0},i} = \begin{bmatrix}
+R_{\text{0},i} \\
+A_{\text{0},i} \\
+\mathbf{e}_{\text{0},i} \\
+c_{\Psi,\text{0},i} \\
+o_{\Psi,\text{0},i}
+\end{bmatrix}$$
+
+Where:
+- $\mathbf{s}_{\text{0},i}$ is baseline state vector for agent $i$
+- $R_{\text{0},i} \in [0,1]$ is baseline resilience capacity
+- $A_{\text{0},i} \in [-1,1]$ is baseline affect equilibrium
+- $\mathbf{e}_{\text{0},i} \in [0,1]^4$ is initial protective factor efficacy
+- $c_{\Psi,\text{0},i}, o_{\Psi,\text{0},i} \in [0,1]$ are initial PSS-10 dimension scores
+
+**Baseline Initialization Process**:
+
+**Mathematical Generation**:
+1. **Resilience Baseline**:
+   $$R_{\text{0},i} = \sigma\left(\frac{X - \mu_{R,\text{init}}}{\sigma_{R,\text{init}}}\right)$$
+   Where $X \sim \mathcal{N}(\mu_{R,\text{init}}, \sigma_{R,\text{init}}^2)$
+
+2. **Affect Baseline**:
+   $$A_{\text{0},i} = \tanh\left(\frac{X - \mu_{A,\text{init}}}{\sigma_{A,\text{init}}}\right)$$
+   Where $X \sim \mathcal{N}(\mu_{A,\text{init}}, \sigma_{A,\text{init}}^2)$
+
+3. **PSS-10 Dimensions**:
+   $$c_{\Psi,\text{0},i}, o_{\Psi,\text{0},i} \sim \mathcal{N}\left(\begin{bmatrix} \mu_c \\ \mu_o \end{bmatrix}, \begin{bmatrix} \sigma_c^2 & \rho_\Psi \sigma_c \sigma_o \\ \rho_\Psi \sigma_c \sigma_o & \sigma_o^2 \end{bmatrix}\right)$$
+
+**Integration with State Dynamics**:
+- **Homeostatic Regulation**: Current state values regulated toward baseline equilibria
+- **Individual Differences**: Population variation created through configurable distribution parameters
+- **Reproducible Generation**: Seeded random number generation ensures consistent baseline generation
+- **Research Applications**: Baseline values enable measurement of individual trajectories and intervention effects
+
+**Implementation Details**:
+- **Unified Configuration**: All baseline parameters managed through environment variable system
+- **Transformation Pipeline**: Consistent mathematical transformations ensure proper value ranges
+- **Validation Framework**: Comprehensive testing validates baseline generation and integration
+- **Population Analysis**: Baseline distributions enable analysis of individual differences and subgroup variations
+
 ### Daily Step Integration
 
 Each day follows a structured sequence that integrates all mechanisms:
@@ -91,7 +136,7 @@ Low resilience creates a negative cycle that reinforces poor coping and negative
 
 **Success Reinforcement:**
 
-$$R_{t+1} = R_t + \beta_c \cdot \mathbb{1}_{\mathrm{coping\ success}} + \alpha_s \cdot \max(0, A_t)$$
+$$R_{t+1} = R_t + \theta_{\text{boost|cope}} \cdot \mathbb{1}_{\mathrm{coping\ success}} + \alpha_s \cdot \max(0, A_t)$$
 
 **Resource Regeneration:**
 
@@ -103,7 +148,7 @@ $$e_f' = e_f + r_f \cdot \gamma_p \cdot (1 - e_f) \quad \forall f \in F$$
 
 Where:
 - $R_t \in [0,1]$ is current resilience
-- $\beta_c > 0$ is coping success boost
+- $\theta_{\text{boost|cope}} > 0$ is coping success boost
 - $\mathbb{1}_{\mathrm{coping\ success}}$ is coping success indicator
 - $\alpha_s > 0$ is social support boost
 - $A_t \in [-1,1]$ is current affect
@@ -119,14 +164,14 @@ Where:
 
 **Stress Degradation:**
 
-$$R_{t+1} = R_t - \beta_f \cdot \mathbb{1}_{\mathrm{coping\ failure}} - \delta_o \cdot \mathbb{1}_{\mathrm{overload}}$$
+$$R_{t+1} = R_t - \theta_{\text{cope,}\zeta} \cdot \mathbb{1}_{\mathrm{coping\ failure}} - \delta_o \cdot \mathbb{1}_{\mathrm{overload}}$$
 
 **Resource Depletion:**
 
 $$R_a' = R_a - \kappa \cdot \mathbb{1}_{\mathrm{coping\ success}} - c_m \cdot \sum e_f$$
 
 Where:
-- $\beta_f > 0$ is coping failure penalty
+- $\theta_{\text{cope,}\zeta} > 0$ is coping failure penalty
 - $\mathbb{1}_{\mathrm{coping\ failure}}$ is coping failure indicator
 - $\delta_o > 0$ is overload penalty
 - $\mathbb{1}_{\mathrm{overload}}$ is overload indicator

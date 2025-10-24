@@ -36,7 +36,7 @@ Social interactions create bidirectional changes where both individuals affect e
 
 **Basic Influence:**
 
-$$\Delta A_i = \alpha_i \cdot \mathrm{sign}(A_j)$$
+$$\Delta A_i = \alpha_p \cdot \mathrm{sign}(A_j)$$
 
 **Asymmetric Weighting:**
 
@@ -52,7 +52,7 @@ $$A_j' = A_j + \Delta A_j'$$
 
 Where:
 - $\Delta A_i$ is affect change for agent $i$
-- $\alpha_i \in [0,1]$ is influence rate
+- $\alpha_p \in [0,1]$ is peer influence rate
 - $A_i, A_j \in [-1,1]$ are affect values
 - $\mathrm{sign}(x)$ returns sign of $x$
 
@@ -96,7 +96,7 @@ Individuals tend to form connections with others who have similar experiences an
 **Network Adaptation Trigger:**
 
 $$\mathrm{trigger\ adaptation} = \begin{cases}
-1 & \text{if } s_c \geq \eta_a \\
+1 & \text{if } c_{\text{breach}} \geq \eta_{\text{adapt}} \\
 0 & \text{otherwise}
 \end{cases}$$
 
@@ -105,15 +105,15 @@ $$\mathrm{trigger\ adaptation} = \begin{cases}
 $$s_{ij} = 1 - \frac{|A_i - A_j| + |R_i - R_j|}{2}$$
 
 Where:
-- $s_c$ is stress breach count
-- $\eta_a \in \mathbb{N}$ is adaptation threshold
+- $c_{\text{breach}} \in \mathbb{N}$ is stress breach count
+- $\eta_{\text{adapt}} \in \mathbb{N}$ is adaptation threshold
 - $s_{ij} \in [0,1]$ is similarity between agents $i,j$
 - $A_i, A_j \in [-1,1]$ are affect values
 - $R_i, R_j \in [0,1]$ are resilience values
 
 **Connection Retention Probability:**
 
-$$p_{\mathrm{keep}} = s_{ij} \cdot \alpha_h + e_s \cdot (1 - \alpha_h)$$
+$$p_{\mathrm{keep}} = s_{ij} \cdot \delta_{\text{homophily}} + e_s \cdot (1 - \delta_{\text{homophily}})$$
 
 **Rewiring Decision:**
 
@@ -124,7 +124,7 @@ $$\mathrm{rewire} = \begin{cases}
 
 Where:
 - $p_{\mathrm{keep}} \in [0,1]$ is probability of keeping connection
-- $\alpha_h \in [0,1]$ is homophily strength
+- $\delta_{\text{homophily}} \in [0,1]$ is homophily strength
 - $e_s \in [0,1]$ is support effectiveness
 - $U$ is uniform random variable
 

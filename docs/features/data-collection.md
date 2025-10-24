@@ -81,6 +81,41 @@ Agent-level variables capture individual experiences, emotional states, and copi
 - **Consumption**: Used for coping and maintaining protective factors
 - **Affect Influence**: Positive emotions enhance rebuilding rate
 
+### Agent Baseline Initialization
+
+Agent baseline initialization establishes the starting state for each individual in the simulation, setting initial values for resilience, affect, resources, protective factors, PSS-10 dimensions, and stress levels. This process uses configurable parameters and random sampling to create realistic population variation while ensuring reproducibility through seeded random number generation.
+
+#### Baseline State Variables
+
+| Variable | Symbol | Range | Description | Implementation |
+|----------|--------|-------|-------------|---------------|
+| **Baseline Resilience** | $R_{\text{0}}$ | [0,1] | Natural equilibrium point for resilience capacity | [`sigmoid_transform()`](src/python/math_utils.py:78) |
+| **Baseline Affect** | $A_{\text{0}}$ | [-1,1] | Natural equilibrium point for emotional state | [`tanh_transform()`](src/python/math_utils.py:95) |
+| **Initial Resources** | $R$ | [0,1] | Available psychological and physical resources | [`sigmoid_transform()`](src/python/math_utils.py:78) |
+| **Protective Factors** | $\mathbf{e}$ | [0,1]$^4$ | Efficacy levels for social support, family support, formal interventions, and psychological capital | Default values (0.5) |
+| **PSS-10 Dimensions** | $c_\Psi, o_\Psi$ | [0,1] | Controllability and overload stress dimensions | [`generate_pss10_dimension_scores()`](src/python/stress_utils.py:413) |
+| **Initial Stress Level** | $S$ | [0,1] | Starting stress level derived from PSS-10 | [`compute_stress_from_pss10()`](src/python/stress_utils.py:865) |
+
+#### Mathematical Initialization Process
+
+**Baseline Resilience Generation**:
+$$R_{\text{0}} = \sigma\left(\frac{X - \mu_{R,\text{init}}}{\sigma_{R,\text{init}}}\right)$$
+Where $X \sim \mathcal{N}(\mu_{R,\text{init}}, \sigma_{R,\text{init}}^2)$ and $\sigma(x) = \frac{1}{1+e^{-x}}$ is the sigmoid function.
+
+**Baseline Affect Generation**:
+$$A_{\text{0}} = \tanh\left(\frac{X - \mu_{A,\text{init}}}{\sigma_{A,\text{init}}}\right)$$
+Where $X \sim \mathcal{N}(\mu_{A,\text{init}}, \sigma_{A,\text{init}}^2)$ and $\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$ is the hyperbolic tangent function.
+
+**PSS-10 Dimension Score Generation**:
+$$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} \mu_c \\ \mu_o \end{bmatrix}, \begin{bmatrix} \sigma_c^2 & \rho_\Psi \sigma_c \sigma_o \\ \rho_\Psi \sigma_c \sigma_o & \sigma_o^2 \end{bmatrix}\right)$$
+Where $\rho_\Psi \in [-1,1]$ is the bifactor correlation between dimensions.
+
+**Implementation Details**:
+- **Configuration Integration**: All parameters loaded from environment variables via [`get_config()`](src/python/config.py:15)
+- **Reproducible Randomization**: Seeded random number generation using [`create_rng()`](src/python/math_utils.py:45)
+- **Population Variation**: Individual differences created through normal distribution sampling with configurable means and standard deviations
+- **Validation**: Range checking and distribution validation in [`test_agent_initialization.py`](src/python/tests/test_agent_initialization.py)
+
 ## Model-Level Variables
 
 Model-level variables capture population patterns, aggregated statistics, and system-wide trends. These are calculated once per time step from individual data.
