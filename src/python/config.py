@@ -191,7 +191,7 @@ class Config:
         self.agent_initial_resources_mean = self._get_env_value('AGENT_INITIAL_RESOURCES_MEAN', float, 0.0)
         self.agent_initial_resources_sd = self._get_env_value('AGENT_INITIAL_RESOURCES_SD', float, 1.0)
 
-        self.agent_stress_probability = self._get_env_value('AGENT_STRESS_PROBABILITY', float, 0.5)
+        self.agent_stress_probability = self._get_env_value('AGENT_STRESS_PROBABILITY', float, 0.2)
         self.agent_coping_success_rate = self._get_env_value('AGENT_COPING_SUCCESS_RATE', float, 0.5)
         self.agent_subevents_per_day = self._get_env_value('AGENT_SUBEVENTS_PER_DAY', int, 3)
         self.agent_resource_cost = self._get_env_value('AGENT_RESOURCE_COST', float, 0.1)
@@ -222,7 +222,7 @@ class Config:
         self.threshold_base_threshold = self._get_env_value('THRESHOLD_BASE_THRESHOLD', float, 0.5)
         self.threshold_challenge_scale = self._get_env_value('THRESHOLD_CHALLENGE_SCALE', float, 0.15)
         self.threshold_hindrance_scale = self._get_env_value('THRESHOLD_HINDRANCE_SCALE', float, 0.25)
-        self.threshold_stress_threshold = self._get_env_value('THRESHOLD_STRESS_THRESHOLD', float, 0.3)
+        self.threshold_stress_threshold = self._get_env_value('THRESHOLD_STRESS_THRESHOLD', float, 0.7)
         self.threshold_affect_threshold = self._get_env_value('THRESHOLD_AFFECT_THRESHOLD', float, 0.3)
 
         self.stress_alpha_challenge = self._get_env_value('STRESS_ALPHA_CHALLENGE', float, 0.8)
@@ -265,8 +265,8 @@ class Config:
         # ==============================================
         self.affect_peer_influence_rate = self._get_env_value('AFFECT_PEER_INFLUENCE_RATE', float, 0.1)
         self.affect_event_appraisal_rate = self._get_env_value('AFFECT_EVENT_APPRAISAL_RATE', float, 0.15)
-        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.1)
-        self.resilience_homeostatic_rate = self._get_env_value('RESILIENCE_HOMEOSTATIC_RATE', float, 0.05)
+        self.affect_homeostatic_rate = self._get_env_value('AFFECT_HOMEOSTATIC_RATE', float, 0.5)
+        self.resilience_homeostatic_rate = self._get_env_value('RESILIENCE_HOMEOSTATIC_RATE', float, 0.5)
 
         self.resilience_coping_success_rate = self._get_env_value('RESILIENCE_COPING_SUCCESS_RATE', float, 0.1)
         self.resilience_social_support_rate = self._get_env_value('RESILIENCE_SOCIAL_SUPPORT_RATE', float, 0.08)
@@ -417,8 +417,8 @@ class Config:
                 'stress_decay_rate': self.stress_decay_rate,
             },
             'stress_dynamics': {
-                'controllability_update_rate': self._get_env_value('STRESS_CONTROLLABILITY_UPDATE_RATE', float, 0.1),
-                'overload_update_rate': self._get_env_value('STRESS_OVERLOAD_UPDATE_RATE', float, 0.15),
+                'controllability_update_rate': self._get_env_value('STRESS_CONTROLLABILITY_UPDATE_RATE', float, 0.05),
+                'overload_update_rate': self._get_env_value('STRESS_OVERLOAD_UPDATE_RATE', float, 0.05),
             },
             'protective': {
                 'social_support': self.protective_social_support,
