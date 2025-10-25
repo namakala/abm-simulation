@@ -66,8 +66,8 @@ This document provides the authoritative reference for all mathematical notation
 | $D$ | Distress | $D \in [0,1]$ | - |
 | $\eta_{\text{stress}}$ | Stress threshold | $\eta_{\text{stress}} \in [0,1]$ | - |
 | $A$ | Affect | $A \in [-1,1]$ | - |
-| $A_{\text{baseline}}$ | Baseline affect | $A_{\text{baseline}} \in [-1,1]$ | - |
-| $R_{\text{baseline}}$ | Baseline resilience | $R_{\text{baseline}} \in [0,1]$ | - |
+| $A_{\text{0}}$ | Baseline affect | $A_{\text{0}} \in [-1,1]$ | - |
+| $R_{\text{0}}$ | Baseline resilience | $R_{\text{0}} \in [0,1]$ | - |
 | $L$ | Appraised stress load | $L \in [0,1]$ | - |
 | $S$ | Current stress level | $S \in [0,1]$ | - |
 
@@ -97,14 +97,6 @@ This document provides the authoritative reference for all mathematical notation
 
 ## Parameter Constants
 
-### Stress Event Parameters
-
-| Symbol | Meaning/Description | Example/Range | Defaults |
-|--------|-------------------|---------------|----------|
-| $\lambda_{\text{shock}}$ | Shock arrival rate | $\lambda_{\text{shock}} > 0$ | - |
-| $\alpha_s$ | Beta distribution shape parameter | $\alpha_s > 0$ | 2.0 |
-| $\beta_s$ | Beta distribution shape parameter | $\beta_s > 0$ | 2.0 |
-
 ### Appraisal Parameters
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
@@ -115,14 +107,6 @@ This document provides the authoritative reference for all mathematical notation
 | $\gamma$ | Sigmoid steepness | $\gamma > 0$ | 6.0 |
 | $\eta_{\chi}$ | Challenge threshold modifier | $\eta_{\chi} > 0$ | 0.8 |
 | $\eta_{\zeta}$ | Hindrance threshold modifier | $\eta_{\zeta} > 0$ | 1.2 |
-
-### Resource Dynamics Parameters
-
-| Symbol | Meaning/Description | Example/Range | Defaults |
-|--------|-------------------|---------------|----------|
-| $\lambda_R$ | Resource regeneration rate | $\lambda_R \in [0,1]$ | - |
-| $\kappa$ | Cost scalar | $\kappa > 0$ | - |
-| $\gamma_c$ | Cost function exponent | $\gamma_c > 0$ | - |
 
 ### Protective Factor Parameters
 
@@ -152,13 +136,15 @@ This document provides the authoritative reference for all mathematical notation
 | $\eta_{\text{adapt}}$ | Adaptation threshold | $\eta_{\text{adapt}} > 0$ | - |
 | $\lambda_{\text{adapt}}$ | Learning rate | $\lambda_{\text{adapt}} \in [0,1]$ | - |
 | $p_{\text{rewire}}$ | Rewiring probability | $p_{\text{rewire}} \in [0,1]$ | 0.01 |
-| $p_b$ | Base coping probability | $p_b \in [0,1]$ | 0.5 |
 | $\theta_{\chi}$ | Challenge bonus parameter | $\theta_{\chi} > 0$ | 0.2 |
 | $\theta_{\zeta}$ | Hindrance penalty parameter | $\theta_{\zeta} > 0$ | 0.3 |
 | $\delta_{\text{soc}}$ | Social influence factor | $\delta_{\text{soc}} \in [0,1]$ | 0.1 |
 | $\lambda_{\text{appraise}}$ | Event appraisal rate | $\lambda_{\text{appraise}} \in [0,1]$ | 0.15 |
 | $\theta_{\text{boost}}$ | Boost rate parameter | $\theta_{\text{boost}} > 0$ | 0.1 |
 | $\theta_{\text{boost\|cope}}$ | Coping success boost | $\theta_{\text{boost\|cope}} > 0$ | 0.1 |
+| $\alpha_p$ | Peer influence rate | $\alpha_p \in [0,1]$ | 0.1 |
+| $\alpha_e$ | Event appraisal influence rate | $\alpha_e \in [0,1]$ | 0.15 |
+| $\eta_{\text{affect}}$ | Affect threshold for resilience influence | $\eta_{\text{affect}} > 0$ | 0.3 |
 
 ### Output Parameters
 
@@ -189,6 +175,134 @@ This document provides the authoritative reference for all mathematical notation
 | $\lambda_{\text{affect}}$ | Affect homeostasis rate | $\lambda_{\text{affect}} \in [0,1]$ | - |
 | $\lambda_{\text{resilience}}$ | Resilience homeostasis rate | $\lambda_{\text{resilience}} \in [0,1]$ | - |
 | $\delta_{\text{stress}}$ | Stress decay rate | $\delta_{\text{stress}} \in [0,1]$ | 0.05 |
+
+### Network Adaptation Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\eta_{\text{adapt}}$ | Adaptation threshold | $\eta_{\text{adapt}} \in \mathbb{N}$ | - |
+| $p_{\text{rewire,adapt}}$ | Rewiring probability for adaptation | $p_{\text{rewire,adapt}} \in [0,1]$ | 0.01 |
+| $\delta_{\text{homophily}}$ | Homophily strength | $\delta_{\text{homophily}} \in [0,1]$ | 0.7 |
+
+### Agent Initialization Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\mu_{R,\text{init}}$ | Initial resilience mean | $\mu_{R,\text{init}} \in [0,1]$ | 0.0 |
+| $\sigma_{R,\text{init}}$ | Initial resilience standard deviation | $\sigma_{R,\text{init}} > 0$ | - |
+| $\mu_{A,\text{init}}$ | Initial affect mean | $\mu_{A,\text{init}} \in [-1,1]$ | 0.0 |
+| $\sigma_{A,\text{init}}$ | Initial affect standard deviation | $\sigma_{A,\text{init}} > 0$ | - |
+| $\mu_{\text{Res,init}}$ | Initial resources mean | $\mu_{\text{Res,init}} \in [0,1]$ | 0.0 |
+| $\sigma_{\text{Res,init}}$ | Initial resources standard deviation | $\sigma_{\text{Res,init}} > 0$ | - |
+| $p_{\text{stress}}$ | Stress probability | $p_{\text{stress}} \in [0,1]$ | 0.5 |
+| $p_{\text{cope,success}}$ | Coping success rate | $p_{\text{cope,success}} \in [0,1]$ | 0.5 |
+| $n_{\text{subevents}}$ | Subevents per day | $n_{\text{subevents}} \in \mathbb{N}$ | 3 |
+| $\kappa_{\text{res}}$ | Resource cost | $\kappa_{\text{res}} > 0$ | 0.1 |
+
+### Stress Event Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\lambda_{\text{shock}}$ | Shock arrival rate | $\lambda_{\text{shock}} > 0$ | - |
+| $\alpha_s$ | Beta distribution shape parameter | $\alpha_s > 0$ | 2.0 |
+| $\beta_s$ | Beta distribution shape parameter | $\beta_s > 0$ | 2.0 |
+| $\mu_c$ | Controllability mean | $\mu_c \in [0,1]$ | 0.5 |
+| $\sigma_c$ | Controllability standard deviation | $\sigma_c > 0$ | - |
+| $\mu_o$ | Overload mean | $\mu_o \in [0,1]$ | 0.5 |
+| $\sigma_o$ | Overload standard deviation | $\sigma_o > 0$ | - |
+| $\alpha_{s,\beta}$ | Beta distribution alpha for stress | $\alpha_{s,\beta} > 0$ | - |
+| $\beta_{s,\beta}$ | Beta distribution beta for stress | $\beta_{s,\beta} > 0$ | - |
+
+### Threshold Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\eta_{\text{0}}$ | Base threshold | $\eta_{\text{0}} \in [0,1]$ | 0.5 |
+| $\lambda_\chi$ | Challenge scale | $\lambda_\chi > 0$ | 0.15 |
+| $\lambda_\zeta$ | Hindrance scale | $\lambda_\zeta > 0$ | 0.25 |
+| $\eta_{\text{stress}}$ | Stress threshold | $\eta_{\text{stress}} \in [0,1]$ | 0.3 |
+| $\eta_{\text{affect}}$ | Affect threshold | $\eta_{\text{affect}} \in [0,1]$ | 0.3 |
+| $\alpha_\chi$ | Challenge alpha | $\alpha_\chi > 0$ | 0.8 |
+| $\alpha_\zeta$ | Hindrance alpha | $\alpha_\zeta > 0$ | 1.2 |
+| $\delta_{\text{stress,load}}$ | Stress load delta | $\delta_{\text{stress,load}} > 0$ | 0.2 |
+
+### PSS-10 Specific Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\mu_{\Psi,i}$ | PSS-10 item means | $\mu_{\Psi,i} \in [0,4]$ | - |
+| $\sigma_{\Psi,i}$ | PSS-10 item standard deviations | $\sigma_{\Psi,i} > 0$ | - |
+| $\lambda_{c,\Psi,i}$ | Controllability loadings | $\lambda_{c,\Psi,i} \in [0,1]$ | - |
+| $\lambda_{o,\Psi,i}$ | Overload loadings | $\lambda_{o,\Psi,i} \in [0,1]$ | - |
+| $\rho_{\Psi,\text{bifactor}}$ | Bifactor correlation | $\rho_{\Psi,\text{bifactor}} \in [-1,1]$ | 0.3 |
+| $\sigma_{c,\Psi}$ | Controllability standard deviation | $\sigma_{c,\Psi} > 0$ | - |
+| $\sigma_{o,\Psi}$ | Overload standard deviation | $\sigma_{o,\Psi} > 0$ | - |
+| $\eta_\Psi$ | PSS-10 threshold | $\eta_\Psi \in \mathbb{N}$ | 27 |
+
+### Coping Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $p_{\text{cope,0}}$ | Base coping probability | $p_{\text{cope,0}} \in [0,1]$ | 0.5 |
+| $\delta_{\text{cope,soc}}$ | Social influence on coping | $\delta_{\text{cope,soc}} \in [0,1]$ | 0.1 |
+| $\theta_{\text{cope,}\chi}$ | Challenge bonus for coping | $\theta_{\text{cope,}\chi} > 0$ | 0.2 |
+| $\theta_{\text{cope,}\zeta}$ | Hindrance penalty for coping | $\theta_{\text{cope,}\zeta} > 0$ | 0.3 |
+
+### Interaction Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\lambda_{\text{interact}}$ | Interaction influence rate | $\lambda_{\text{interact}} \in [0,1]$ | 0.05 |
+| $\lambda_{\text{res,interact}}$ | Resilience influence rate | $\lambda_{\text{res,interact}} \in [0,1]$ | 0.05 |
+| $k_{\text{max}}$ | Maximum neighbors | $k_{\text{max}} \in \mathbb{N}$ | 10 |
+
+### Affect Dynamics Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\lambda_{\text{affect,peer}}$ | Peer influence rate | $\lambda_{\text{affect,peer}} \in [0,1]$ | 0.1 |
+| $\lambda_{\text{affect,appraise}}$ | Event appraisal rate | $\lambda_{\text{affect,appraise}} \in [0,1]$ | 0.15 |
+| $\lambda_{\text{affect,homeo}}$ | Homeostatic rate | $\lambda_{\text{affect,homeo}} \in [0,1]$ | 0.1 |
+
+### Resilience Dynamics Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\lambda_{\text{res,cope}}$ | Coping success rate | $\lambda_{\text{res,cope}} \in [0,1]$ | 0.1 |
+| $\lambda_{\text{res,soc}}$ | Social support rate | $\lambda_{\text{res,soc}} \in [0,1]$ | 0.08 |
+| $\eta_{\text{res,overload}}$ | Overload threshold | $\eta_{\text{res,overload}} \in \mathbb{N}$ | 3 |
+| $\lambda_{\text{res,boost}}$ | Boost rate | $\lambda_{\text{res,boost}} > 0$ | 0.1 |
+| $k_{\text{influence}}$ | Influencing neighbors | $k_{\text{influence}} \in \mathbb{N}$ | 5 |
+| $k_{\text{hindrance}}$ | Hindrance neighbors | $k_{\text{hindrance}} \in \mathbb{N}$ | 3 |
+
+### Resource Dynamics Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\lambda_R$ | Resource regeneration rate | $\lambda_R \in [0,1]$ | - |
+| $\kappa$ | Cost scalar | $\kappa > 0$ | - |
+| $\gamma_c$ | Cost function exponent | $\gamma_c > 0$ | - |
+| $\epsilon_{\text{soc}}$ | Social support efficacy | $\epsilon_{\text{soc}} > 0$ | - |
+| $\epsilon_{\text{fam}}$ | Family support efficacy | $\epsilon_{\text{fam}} > 0$ | - |
+| $\epsilon_{\text{int}}$ | Formal intervention efficacy | $\epsilon_{\text{int}} > 0$ | - |
+| $\epsilon_{\text{cap}}$ | Psychological capital efficacy | $\epsilon_{\text{cap}} > 0$ | - |
+| $\upsilon_{\text{soc}}$ | Social support replenishment | $\upsilon_{\text{soc}} > 0$ | - |
+| $\upsilon_{\text{fam}}$ | Family support replenishment | $\upsilon_{\text{fam}} > 0$ | - |
+| $\upsilon_{\text{int}}$ | Formal intervention replenishment | $\upsilon_{\text{int}} > 0$ | - |
+| $\upsilon_{\text{cap}}$ | Psychological capital replenishment | $\upsilon_{\text{cap}} > 0$ | - |
+| $\lambda_{\text{res,0}}$ | Base regeneration rate | $\lambda_{\text{res,0}} \geq 0$ | 0.05 |
+| $\kappa_{\text{alloc}}$ | Allocation cost | $\kappa_{\text{alloc}} \geq 0$ | 0.15 |
+| $\gamma_{\text{cost}}$ | Cost exponent | $\gamma_{\text{cost}} \geq 1$ | 1.5 |
+| $\lambda_{\text{protect,improve}}$ | Protective improvement rate | $\lambda_{\text{protect,improve}} \in [0,1]$ | 0.5 |
+| $\lambda_{\text{exchange,soc}}$ | Social exchange rate | $\lambda_{\text{exchange,soc}} \in [0,1]$ | 0.1 |
+| $\eta_{\text{exchange}}$ | Exchange threshold | $\eta_{\text{exchange}} \in [0,1]$ | 0.2 |
+| $r_{\text{exchange,max}}$ | Max exchange ratio | $r_{\text{exchange,max}} \in [0,1]$ | 0.3 |
+
+### Utility Parameters
+
+| Symbol | Meaning/Description | Example/Range | Defaults |
+|--------|-------------------|---------------|----------|
+| $\beta_{\text{softmax}}$ | Softmax temperature | $\beta_{\text{softmax}} > 0$ | 1.0 |
 
 ## Model-Level Variables
 
@@ -294,5 +408,6 @@ All parameters are configurable through the unified configuration system. See [`
 ## Version History
 
 - **v1.0**: Initial notation standardization
+- **v1.1**: Removed redundant sections and parameters to eliminate repetition; standardized baseline notations to subscript 0
 
 This notation reference serves as the single source of truth for all mathematical representations in the agent-based mental health model.

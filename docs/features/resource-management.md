@@ -104,7 +104,7 @@ Individuals allocate resources across protective factors using a decision-making
 
 **Softmax Allocation Equation:**
 
-$$w_f = \frac{\exp(e_f / \tau)}{\sum_{k \in F} \exp(e_k / \tau)}$$
+$$w_f = \frac{\exp(e_f / \beta_{\text{softmax}})}{\sum_{k \in F} \exp(e_k / \beta_{\text{softmax}})}$$
 
 **Resource Allocation:**
 
@@ -113,7 +113,7 @@ $$r_f = w_f \cdot R_a$$
 Where:
 - $w_f \in [0,1]$ is allocation weight for factor $f$
 - $e_f \in [0,1]$ is efficacy of factor $f$
-- $\tau > 0$ is softmax temperature
+- $\beta_{\text{softmax}} > 0$ is softmax temperature
 - $F$ is set of protective factors
 - $r_f > 0$ is resources allocated to factor $f$
 - $R_a \in [0,1]$ is available resources
@@ -209,15 +209,15 @@ Low resources may create negative affect, representing the psychological stress 
 
 **Protective Factor Resilience Boost:**
 
-$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_b - R_c) \cdot \beta_p$$
+$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_{\text{0}} - R_c) \cdot \theta_{\text{boost}}$$
 
 Where:
 - $\Delta R_p$ is resilience boost from protective factors
 - $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
 - $e_f \in [0,1]$ is efficacy of factor $f$
-- $R_b \in [0,1]$ is baseline resilience
+- $R_{\text{0}} \in [0,1]$ is baseline resilience
 - $R_c \in [0,1]$ is current resilience
-- $\beta_p > 0$ is boost rate parameter
+- $\theta_{\text{boost}} > 0$ is boost rate parameter
 
 ### Resilience System Integration
 

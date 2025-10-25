@@ -36,17 +36,18 @@ Each agent represents an individual with the following state variables:
 - `stress_utils.py` - Stress event generation and appraisal processing utilities
 - `affect_utils.py` - Social interaction and resilience computation utilities
 - `math_utils.py` - Mathematical utilities for random sampling and clamping
+- `resource_utils.py` - Resource management functions and utilities
 - `config.py` - Centralized configuration management with environment variable loading and validation
 - `simulate.py` - Main simulation runner (in project root)
 - `debug/` - Debugging utilities for threshold evaluation (`debug_threshold.py`) and stress processing troubleshooting (`simple_threshold_test.py`)
-- `demos/` - Demonstration scripts (`stress-processing-mechanism.py`, `track_daily_stress.py`) for understanding model mechanisms
+- `demos/` - Demonstration scripts (`stress-processing-mechanism.py`, `track_daily_stress.py`, `agent_diversity_demo.py`, `agent_initialization_demo.py`, `population_analysis.py`, `stress_pipeline_debug_demo.py`, `analyze.py`) for understanding model mechanisms
 - **PSS-10 Integration** - Complete Perceived Stress Scale-10 implementation with bifactor model, dimension score generation, and empirical validation testing
 - **DataCollector Integration** - Comprehensive Mesa DataCollector implementation with 20+ model-level metrics and 8+ agent-level variables for research analysis
-- `test_*.py` - Comprehensive test suite with 30 specialized test files:
+- `test_*.py` - Comprehensive test suite with 35+ specialized test files:
   - Unit tests: `test_math_utils.py`, `test_stress_utils.py`, `test_affect_utils.py`
-  - Integration tests: `test_agent_integration.py`, `test_model_integration.py`, `test_affect_resilience_integration.py`, `test_agent_pss10_integration.py`, `test_datacollector_integration_comprehensive.py`, `test_datacollector_integration.py`, `test_datacollector_social_integration.py`
+  - Integration tests: `test_agent_integration.py`, `test_model_integration.py`, `test_affect_resilience_integration.py`, `test_agent_pss10_integration.py`, `test_datacollector_integration_comprehensive.py`, `test_datacollector_integration.py`, `test_datacollector_social_integration.py`, `test_agent_initialization.py`, `test_agent_population_variation.py`, `test_complete_stress_processing_loop.py`, `test_integrated_stress_dynamics.py`
   - Configuration tests: `test_config_integration.py`, `test_dataclass_config.py`, `test_environment_variable_validation.py`, `test_pss10_config.py`, `test_agent_parameters_config.py`
-  - Mechanism tests: `test_stress_processing_mechanisms.py`, `test_affect_resilience_dynamics.py`, `test_homeostatic_adjustment.py`, `test_homeostatic_stabilization_integration.py`
+  - Mechanism tests: `test_stress_processing_mechanisms.py`, `test_affect_resilience_dynamics.py`, `test_homeostatic_adjustment.py`, `test_homeostatic_stabilization_integration.py`, `test_resilience_resource_optimization.py`
   - Validation tests: `test_imports_and_dependencies.py`, `test_integration_new_mechanisms.py`, `test_new_mechanisms.py`, `test_daily_reset_functionality.py`, `test_interaction_tracking.py`
   - PSS-10 tests: `test_pss10_comprehensive.py`, `test_pss10_empirical.py`, `test_generate_pss10_dimension_scores.py`, `test_pss10_threshold.py`
 

@@ -72,7 +72,7 @@ The decision to become stressed uses a dynamic threshold mechanism that adjusts 
 
 **Stress Threshold Evaluation:**
 
-$$\eta_{\mathrm{eff}} = \eta_{\mathrm{base}} + \lambda_C \cdot \chi - \lambda_H \cdot \zeta$$
+$$\eta_{\mathrm{eff}} = \eta_{\text{0}} + \eta_{\chi} \cdot \chi - \eta_{\zeta} \cdot \zeta$$
 
 **Stress Classification:**
 
@@ -82,9 +82,9 @@ $$\mathrm{stressed} = \begin{cases}
 \end{cases}$$
 
 Where:
-- $\eta_{\mathrm{base}} \in [0,1]$ is base stress threshold
-- $\lambda_C \in \mathbb{R}$ is challenge threshold modifier
-- $\lambda_H \in \mathbb{R}$ is hindrance threshold modifier
+- $\eta_{\text{0}} \in [0,1]$ is base stress threshold
+- $\eta_{\chi} > 0$ is challenge threshold modifier
+- $\eta_{\zeta} > 0$ is hindrance threshold modifier
 - $\chi \in [0,1]$ is challenge component
 - $\zeta \in [0,1]$ is hindrance component
 
@@ -126,7 +126,7 @@ $$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} c \\ o \end{bmatrix}, \be
 
 **Item Response Generation:**
 
-$$\Psi_i = \mathrm{clamp}\left(\mathrm{round}\left(\mu_i + (\lambda_{ic}(1-c_\Psi) + \lambda_{io} o_\Psi - 0.5) \cdot 0.5 + \epsilon\right), 0, 4\right)$$
+$$\Psi_i = \mathrm{clamp}\left(\mathrm{round}\left(\mu_{\Psi,i} + (\lambda_{c,\Psi,i}(1-c_\Psi) + \lambda_{o,\Psi,i} o_\Psi - 0.5) \cdot 0.5 + \epsilon\right), 0, 4\right)$$
 
 **Total PSS-10 Score:**
 
@@ -139,8 +139,8 @@ Where:
 - $c_\Psi, o_\Psi \in [0,1]$ are PSS-10 dimension scores
 - $\rho_\Psi \in [-1,1]$ is dimension correlation
 - $\sigma_c, \sigma_o > 0$ are dimension standard deviations
-- $\mu_i \in [0,4]$ is empirical item mean
-- $\lambda_{ic}, \lambda_{io} \in [0,1]$ are factor loadings
+- $\mu_{\Psi,i} \in [0,4]$ is empirical item mean
+- $\lambda_{c,\Psi,i}, \lambda_{o,\Psi,i} \in [0,1]$ are factor loadings
 - $\epsilon \sim \mathcal{N}(0, 0.1)$ is measurement error
 
 **Implementation**: [`generate_pss10_dimension_scores()`](src/python/stress_utils.py:413), [`generate_pss10_item_response()`](src/python/stress_utils.py:479), [`compute_pss10_score()`](src/python/stress_utils.py:351) in `stress_utils.py`
@@ -166,35 +166,127 @@ self.pss10_dimension_scores = {}  # Controllability and overload dimension score
 
 ### PSS-10 Initialization Process
 
-When agents are created, PSS-10 state is initialized through a two-step process:
+When agents are created, PSS-10 state is initialized through a comprehensive process that integrates with the overall agent baseline initialization system:
 
-1. **Baseline Stress Level Setting**: Initial stress levels are set based on agent characteristics
-2. **PSS-10 Response Generation**: Initial PSS-10 responses are generated from baseline stress levels
-3. **Bidirectional Synchronization**: PSS-10 scores and stress levels are synchronized
+1. **Baseline Stress Level Setting**: Initial stress levels are set based on agent characteristics using the same mathematical transformations as other baseline variables
+2. **PSS-10 Response Generation**: Initial PSS-10 responses are generated from baseline stress levels using empirically grounded bifactor model
+3. **Bidirectional Synchronization**: PSS-10 scores and stress levels are synchronized with feedback loops
+4. **Integration with Other Baselines**: PSS-10 initialization coordinates with resilience and affect baseline generation
+
+#### Complete Baseline Integration Process
+
+**Step 1: Agent-Wide Baseline Generation**
+All baseline values are generated simultaneously using the unified initialization framework:
+
+```python
+def __init__(self, model, config=None):
+    """Initialize agent with complete baseline state integration."""
+    super().__init__(model)
+
+    # Generate all baseline values using transformation pipeline
+    self.baseline_resilience = sigmoid_transform(
+        mean=config['initial_resilience_mean'],
+        std=config['initial_resilience_sd'],
+        rng=self._rng
+    )
+    self.resilience = self.baseline_resilience
+
+    self.baseline_affect = tanh_transform(
+        mean=config['initial_affect_mean'],
+        std=config['initial_affect_sd'],
+        rng=self._rng
+    )
+    self.affect = self.baseline_affect
+
+    # Initialize PSS-10 state with stress dimensions
+    self._initialize_pss10_scores()
+
+    # Initialize stress level from PSS-10
+    self._initialize_stress_from_pss10()
+```
+
+**Step 2: PSS-10 Dimension Generation**
+PSS-10 dimensions are generated using multivariate normal distribution correlated with other baseline characteristics:
+
+$$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} \mu_c \\ \mu_o \end{bmatrix}, \begin{bmatrix} \sigma_c^2 & \rho_\Psi \sigma_c \sigma_o \\ \rho_\Psi \sigma_c \sigma_o & \sigma_o^2 \end{bmatrix}\right)$$
+
+Where:
+- $\mu_c, \mu_o \in [0,1]$ are PSS-10 dimension means (default: 0.5)
+- $\sigma_c, \sigma_o > 0$ are dimension standard deviations (default: 0.25)
+- $\rho_\Psi \in [-1,1]$ is bifactor correlation (default: 0.3)
+
+**Step 3: Item Response Generation**
+Individual PSS-10 item responses are generated using empirically derived factor loadings:
+
+$$\Psi_i = \mathrm{clamp}\left(\mathrm{round}\left(\mu_{\Psi,i} + (\lambda_{c,\Psi,i}(1-c_\Psi) + \lambda_{o,\Psi,i} o_\Psi - 0.5) \cdot 0.5 + \epsilon\right), 0, 4\right)$$
+
+Where:
+- $\mu_{\Psi,i} \in [0,4]$ is empirical item mean for item $i$
+- $\lambda_{c,\Psi,i}, \lambda_{o,\Psi,i} \in [0,1]$ are factor loadings for controllability and overload
+- $\epsilon \sim \mathcal{N}(0, 0.1)$ is measurement error
+- Items 4, 5, 7, 8 are reverse scored: $\Psi_i' = 4 - \Psi_i$
+
+**Step 4: Total Score Calculation**
+Total PSS-10 score is computed with proper reverse scoring:
+
+$$\Psi = \sum_{i=1}^{10} \begin{cases}
+\Psi_i & \text{if } i \notin \{4,5,7,8\} \\
+4 - \Psi_i & \text{if } i \in \{4,5,7,8\}
+\end{cases}$$
+
+**Step 5: Stress Level Derivation**
+Initial stress level is computed from PSS-10 score and dimensions:
+
+$$S = \frac{\Psi - \Psi_{\min}}{\Psi_{\max} - \Psi_{\min}} \cdot (1 - c_\Psi) + \frac{\Psi - \Psi_{\min}}{\Psi_{\max} - \Psi_{\min}} \cdot o_\Psi$$
+
+Where $\Psi_{\min} = 0$, $\Psi_{\max} = 40$.
+
+#### Integration with Resilience and Affect Baselines
+
+**Mathematical Consistency**:
+All baseline values use consistent transformation functions:
+- **Resilience/Resources**: Sigmoid transformation for [0,1] bounds
+- **Affect**: Tanh transformation for [-1,1] bounds
+- **PSS-10**: Multivariate normal with empirical factor structure
+
+**Parameter Coordination**:
+Baseline generation coordinates through the unified configuration system:
+- **Resilience**: $\mu_{R,\text{init}} = 0.5$, $\sigma_{R,\text{init}} = 0.2$
+- **Affect**: $\mu_{A,\text{init}} = 0.0$, $\sigma_{A,\text{init}} = 0.5$
+- **PSS-10**: $\mu_c = \mu_o = 0.5$, $\sigma_c = \sigma_o = 0.25$, $\rho_\Psi = 0.3$
+
+**Implementation Details**:
+- **Reproducible Generation**: All baselines use the same seeded random number generator
+- **Population Variation**: Individual differences created through configurable distribution parameters
+- **Validation**: Comprehensive testing ensures proper ranges and realistic distributions
+- **Research Integration**: Parameters calibrated against empirical psychological research
 
 **Initialization Code Example:**
 ```python
 def initialize_pss10_state(self, controllability=0.5, overload=0.5):
-    """Initialize PSS-10 state for new agent."""
-    # Set baseline stress dimensions
+    """Initialize PSS-10 state for new agent with full baseline integration."""
+    # Set baseline stress dimensions (correlated with other baselines)
     self.stress_controllability = controllability
     self.stress_overload = overload
 
-    # Generate initial PSS-10 responses
+    # Generate initial PSS-10 responses using bifactor model
     self.pss10_responses = generate_pss10_responses(
         controllability=controllability,
         overload=overload,
         rng=self._rng
     )
 
-    # Compute initial total score
+    # Compute initial total score with reverse scoring
     self.pss10 = compute_pss10_score(self.pss10_responses)
 
-    # Store dimension scores for tracking
+    # Store dimension scores for tracking and validation
     self.pss10_dimension_scores = {
         'controllability': controllability,
         'overload': overload
     }
+
+    # Initialize stress level from PSS-10 (bidirectional sync)
+    self._initialize_stress_from_pss10()
 ```
 
 ### Dimension Score Generation

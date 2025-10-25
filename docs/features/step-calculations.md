@@ -25,6 +25,53 @@ Each simulation day follows a structured sequence of operations:
 **Initial State Capture**:
 At the beginning of each day, the system captures initial values for affect and resilience, gathers information about neighbor emotional states, and initializes tracking variables for daily events.
 
+**Baseline State Integration**:
+Each agent maintains baseline values that represent their natural equilibrium points, established during initialization and used throughout the simulation for homeostatic regulation and behavioral reference.
+
+**Baseline Value Definitions**:
+- **Baseline Resilience** $R_{\text{0}} \in [0,1]$: Agent's natural resilience capacity, established at initialization using sigmoid transformation of normal distribution
+- **Baseline Affect** $A_{\text{0}} \in [-1,1]$: Agent's natural emotional equilibrium, established at initialization using tanh transformation of normal distribution
+- **Baseline Resources**: Maximum resource capacity (typically 1.0) toward which regeneration occurs
+- **Baseline PSS-10**: Individual stress assessment baseline derived from initial stress dimensions
+
+**Mathematical Baseline Generation**:
+
+**Resilience Baseline**:
+$$R_{\text{0}} = \sigma\left(\frac{X - \mu_{R,\text{init}}}{\sigma_{R,\text{init}}}\right)$$
+Where:
+- $X \sim \mathcal{N}(\mu_{R,\text{init}}, \sigma_{R,\text{init}}^2)$ is normally distributed
+- $\sigma(x) = \frac{1}{1+e^{-x}}$ is sigmoid function ensuring [0,1] range
+- $\mu_{R,\text{init}} = 0.5$ (default mean resilience)
+- $\sigma_{R,\text{init}} = 0.2$ (default standard deviation)
+
+**Affect Baseline**:
+$$A_{\text{0}} = \tanh\left(\frac{X - \mu_{A,\text{init}}}{\sigma_{A,\text{init}}}\right)$$
+Where:
+- $X \sim \mathcal{N}(\mu_{A,\text{init}}, \sigma_{A,\text{init}}^2)$ is normally distributed
+- $\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$ ensures [-1,1] range
+- $\mu_{A,\text{init}} = 0.0$ (default neutral affect)
+- $\sigma_{A,\text{init}} = 0.5$ (default standard deviation)
+
+**PSS-10 Baseline Generation**:
+$$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} \mu_c \\ \mu_o \end{bmatrix}, \begin{bmatrix} \sigma_c^2 & \rho_\Psi \sigma_c \sigma_o \\ \rho_\Psi \sigma_c \sigma_o & \sigma_o^2 \end{bmatrix}\right)$$
+Where:
+- $\rho_\Psi \in [-1,1]$ is bifactor correlation (default: 0.3)
+- $\sigma_c, \sigma_o > 0$ are dimension standard deviations
+- $\mu_c, \mu_o \in [0,1]$ are dimension means
+
+**Implementation Details**:
+- **Configuration Integration**: All baseline parameters loaded from environment variables via unified configuration system
+- **Reproducible Initialization**: Seeded random number generation ensures consistent baseline generation across simulation runs
+- **Population Variation**: Individual differences created through configurable normal distribution parameters
+- **Validation**: Baseline values validated for proper ranges and distributions in comprehensive test suite
+
+**Integration with Daily Dynamics**:
+Baseline values serve as reference points for:
+- **Homeostatic Regulation**: Natural tendency to return to baseline equilibrium
+- **Behavioral Adaptation**: Learning and adjustment relative to baseline capacity
+- **Intervention Effects**: Measuring improvement relative to individual baselines
+- **Population Analysis**: Understanding individual differences in baseline characteristics
+
 ### Step 2: Subevent Generation and Execution
 
 **Subevent Count Determination**:
@@ -79,7 +126,7 @@ $$A_{t+1} = A_t + \Delta A_p + \Delta A_e + \Delta A_h$$
 
 **Peer Influence:**
 
-$$\Delta A_p = \frac{1}{n} \sum_{j=1}^{n} \alpha_p \cdot (A_j - A_t) \cdot \mathbb{1}_{j \leq n_i}$$
+$$\Delta A_p = \frac{1}{k} \sum_{j=1}^{k} \alpha_p \cdot (A_j - A_t) \cdot \mathbb{1}_{j \leq k_{\text{influence}}}$$
 
 **Event Appraisal Effect:**
 
@@ -87,18 +134,18 @@ $$\Delta A_e = \alpha_e \cdot \bar{\chi}_d \cdot (1 - A_t) - \alpha_e \cdot \bar
 
 **Homeostasis Effect:**
 
-$$\Delta A_h = \theta_a \cdot (A_b - A_t)$$
+$$\Delta A_h = \lambda_{\text{affect}} \cdot (A_{\text{0}} - A_t)$$
 
 Where:
 - $A_t \in [-1,1]$ is current affect
 - $\Delta A_p$ is peer influence effect
 - $\Delta A_e$ is event appraisal effect
 - $\Delta A_h$ is homeostasis effect
-- $n$ is number of neighbors
-- $n_i$ is number of influencing neighbors
+- $k$ is number of neighbors
+- $k_{\text{influence}}$ is number of influencing neighbors
 - $\alpha_p, \alpha_e \in [0,1]$ are influence rates
-- $\theta_a \in [0,1]$ is homeostatic rate
-- $A_b \in [-1,1]$ is baseline affect
+- $\lambda_{\text{affect}} \in [0,1]$ is homeostatic rate
+- $A_{\text{0}} \in [-1,1]$ is baseline affect
 
 **Implementation**: [`update_affect_dynamics()`](src/python/affect_utils.py:830) in `affect_utils.py`
 
@@ -126,7 +173,7 @@ These components combine to determine daily resilience changes.
 
 **Integrated Resilience Update:**
 
-$$R_{t+1} = R_t + \Delta R_{\chi\zeta} + \Delta R_p + \Delta R_o + \Delta R_s + \theta_r \cdot (R_b - R_t)$$
+$$R_{t+1} = R_t + \Delta R_{\chi\zeta} + \Delta R_p + \Delta R_o + \Delta R_s + \lambda_{\text{resilience}} \cdot (R_{\text{0}} - R_t)$$
 
 **Challenge-Hindrance Effect:**
 
@@ -137,12 +184,12 @@ $$\Delta R_{\chi\zeta} = \begin{cases}
 
 **Protective Factor Boost:**
 
-$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_b - R_t) \cdot \beta_p$$
+$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_{\text{0}} - R_t) \cdot \theta_{\text{boost}}$$
 
 **Overload Effect:**
 
 $$\Delta R_o = \begin{cases}
--0.2 \cdot \min\left(\frac{h_c}{\eta_h}, 2.0\right) & \text{if } h_c \geq \eta_h \\
+-0.2 \cdot \min\left(\frac{h_c}{\eta_{\text{res,overload}}}, 2.0\right) & \text{if } h_c \geq \eta_{\text{res,overload}} \\
 0 & \text{otherwise}
 \end{cases}$$
 
@@ -152,13 +199,13 @@ Where:
 - $\Delta R_p$ is protective factor boost
 - $\Delta R_o$ is overload effect
 - $\Delta R_s$ is social support effect
-- $\theta_r \in [0,1]$ is homeostatic rate
-- $R_b \in [0,1]$ is baseline resilience
+- $\lambda_{\text{resilience}} \in [0,1]$ is homeostatic rate
+- $R_{\text{0}} \in [0,1]$ is baseline resilience
 - $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
 - $e_f \in [0,1]$ is efficacy of factor $f$
-- $\beta_p > 0$ is boost rate parameter
+- $\theta_{\text{boost}} > 0$ is boost rate parameter
 - $h_c \in \mathbb{N}$ is consecutive hindrances count
-- $\eta_h \in \mathbb{N}$ is overload threshold
+- $\eta_{\text{res,overload}} \in \mathbb{N}$ is overload threshold
 
 **Detailed Component Calculations**:
 
@@ -197,7 +244,7 @@ Both affect and resilience are adjusted toward their baseline levels, with the r
 
 **Homeostatic Adjustment:**
 
-$$x_{t+1} = x_t + \theta_x \cdot (x_b - x_t)$$
+$$x_{t+1} = x_t + \lambda_x \cdot (x_{\text{0}} - x_t)$$
 
 **Clamping:**
 
@@ -208,18 +255,18 @@ $$x_{t+1} = \begin{cases}
 
 Where:
 - $x_t$ is current value (affect $A_t$ or resilience $R_t$)
-- $\theta_x \in [0,1]$ is homeostatic rate
-- $x_b$ is baseline value ($A_b$ or $R_b$)
+- $\lambda_x \in [0,1]$ is homeostatic rate ($\lambda_{\text{affect}}$ for affect, $\lambda_{\text{resilience}}$ for resilience)
+- $x_{\text{0}}$ is baseline value ($A_{\text{0}}$ or $R_{\text{0}}$)
 
 **Implementation**: [`compute_homeostatic_adjustment()`](src/python/affect_utils.py:744) in `affect_utils.py`
 
 **Stress Decay:**
 
-$$S_{t+1} = S_t \cdot (1 - \delta_s)$$
+$$S_{t+1} = S_t \cdot (1 - \delta_{\text{stress}})$$
 
 Where:
 - $S_t \in [0,1]$ is current stress level
-- $\delta_s \in [0,1]$ is stress decay rate
+- $\delta_{\text{stress}} \in [0,1]$ is stress decay rate
 
 ### Step 9: Daily Reset and Tracking
 

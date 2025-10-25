@@ -259,8 +259,6 @@ class Person(mesa.Agent):
                 daily_hindrance += hindrance
                 stress_events_count += 1
 
-        print(f"DEBUG: Total stressful_event calls: {stress_events_count}")
-
         # Normalize daily challenge/hindrance by number of events
         if stress_events_count > 0:
             daily_challenge /= stress_events_count

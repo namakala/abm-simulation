@@ -73,6 +73,10 @@
 
 /src/
 ├── python/       # Core ABM implementation
+│   ├── agent.py, model.py, stress_utils.py, affect_utils.py, math_utils.py, resource_utils.py, config.py, simulate.py
+│   ├── debug/     # Debugging utilities
+│   ├── demos/     # Demonstration scripts
+│   └── tests/     # Comprehensive test suite with 35+ specialized test files
 ├── shell/        # Configuration management utilities
 ├── r/           # Analysis and visualization
 └── sql/         # Database schemas and queries
