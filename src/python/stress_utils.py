@@ -954,8 +954,8 @@ def update_stress_dimensions_from_event(
         config['controllability_update_rate'] = 0.0
         config['overload_update_rate'] = 0.0
 
-    # Configure modifier when updating controllability and overload
-    modifier = 0.1
+    # Configure volatility when updating stress dimension and intensity
+    volatility = 0.5
 
     # Challenge vs hindrance effects on controllability
     if coped_successfully:
@@ -974,7 +974,7 @@ def update_stress_dimensions_from_event(
     event_effect = controllability_change * config['controllability_update_rate']
 
     updated_controllability = current_controllability + homeostasis_pull + event_effect
-    updated_controllability = clamp(updated_controllability, 0.0, 1.0) * modifier
+    updated_controllability = clamp(updated_controllability * volatility, 0.0, 1.0)
 
     # Overload effects: hindrance increases overload, challenge reduces it slightly
     if coped_successfully:
@@ -993,12 +993,14 @@ def update_stress_dimensions_from_event(
     event_effect = overload_change * config['overload_update_rate']
 
     updated_overload = current_overload + homeostasis_pull + event_effect
-    updated_overload = clamp(updated_overload, 0.0, 1.0) * modifier
+    updated_overload = clamp(updated_overload * volatility, 0.0, 1.0)
 
     # Update recent stress intensity and momentum for dynamic PSS-10 response
     recent_stress_intensity, stress_momentum = _update_recent_stress_intensity(
         challenge, hindrance, coped_successfully
     )
+
+    recent_stress_intensity *= volatility
 
     # For non-stressful events, set intensity and momentum to zero
     if not is_stressful:
