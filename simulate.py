@@ -47,6 +47,7 @@ from typing import Optional
 # Import project modules
 from src.python.model import StressModel
 from src.python.config import get_config, ConfigurationError
+from src.python.visualization_utils import create_visualization_report
 
 
 ## LOGGING CONFIGURATION
@@ -151,10 +152,11 @@ def save_dataframe_with_error_handling(
 ## MAIN SIMULATION FUNCTION
 
 def run_simulation(
-   num_agents: int = 10,
-   max_steps: int = 100,
-   seed: Optional[int] = None,
-   logger: Optional[logging.Logger] = None
+    num_agents: int = 10,
+    max_steps: int = 100,
+    seed: Optional[int] = None,
+    logger: Optional[logging.Logger] = None,
+    output_fig_dir: str = "docs/figures"
 ) -> tuple[StressModel, pd.DataFrame, pd.DataFrame]:
    """
    Run the complete mental health simulation.
@@ -196,6 +198,12 @@ def run_simulation(
        model = StressModel(N=num_agents, max_days=max_steps, seed=seed)
 
        logger.info(f"Model initialized with {len(model.agents)} agents")
+
+       # Generate initial population visualization
+       logger.info("Generating initial population visualization...")
+       initial_viz_path = create_visualization_report(list(model.agents), output_fig_dir, "initial_population.png")
+       logger.info(f"Initial visualization saved to: {initial_viz_path}")
+
        logger.info("Starting simulation...")
 
        # Run simulation loop
@@ -209,6 +217,11 @@ def run_simulation(
                logger.info(f"Completed step {step_count}/{max_steps}")
 
        logger.info(f"Simulation completed after {model.day} days")
+
+       # Generate final population visualization
+       logger.info("Generating final population visualization...")
+       final_viz_path = create_visualization_report(list(model.agents), output_fig_dir, "final_population.png")
+       logger.info(f"Final visualization saved to: {final_viz_path}")
 
        # Extract data using DataCollector methods
        logger.info("Extracting model data...")
@@ -333,7 +346,8 @@ Examples:
             num_agents=num_agents,
             max_steps=max_steps,
             seed=seed,
-            logger=logger
+            logger=logger,
+            output_fig_dir=output_fig_dir
         )
 
         # Save results to CSV files
