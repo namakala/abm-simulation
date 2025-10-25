@@ -165,6 +165,9 @@ class Person(mesa.Agent):
         # Step 3: Initialize stress level based on the initialized PSS-10 score
         self._initialize_stress_from_pss10()
 
+        # Initialize agent-specific volatility from Beta(1,1) distribution
+        self.volatility = self._rng.beta(1, 1)
+
     def _initialize_pss10_scores(self):
         """
         Initialize PSS-10 scores and map to stress levels during agent creation.
@@ -580,7 +583,8 @@ class Person(mesa.Agent):
                 challenge=challenge,
                 hindrance=hindrance,
                 coped_successfully=True,  # No coping needed for non-stressful events
-                is_stressful=False
+                is_stressful=False,
+                volatility=self.volatility
             )
             return challenge, hindrance
 
@@ -616,7 +620,8 @@ class Person(mesa.Agent):
             challenge=challenge,
             hindrance=hindrance,
             coped_successfully=coped_successfully,
-            is_stressful=True
+            is_stressful=True,
+            volatility=self.volatility
         )
 
         # STEP 6: Generate PSS-10 from updated stress dimensions

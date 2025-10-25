@@ -923,6 +923,7 @@ def update_stress_dimensions_from_event(
     hindrance: float,
     coped_successfully: bool,
     is_stressful: bool = True,
+    volatility: float = 0.5,
     config: Optional[Dict[str, float]] = None
 ) -> Tuple[float, float, float, float]:
     """
@@ -935,6 +936,7 @@ def update_stress_dimensions_from_event(
         hindrance: Hindrance component from event appraisal (0-1)
         coped_successfully: Whether the coping attempt was successful
         is_stressful: Whether the event is stressful (True) or non-stressful (False)
+        volatility: Agent-specific volatility parameter ∈ [0,1] drawn from Beta(1,1)
         config: Configuration for stress dimension updates
 
     Returns:
@@ -953,9 +955,6 @@ def update_stress_dimensions_from_event(
     if not is_stressful:
         config['controllability_update_rate'] = 0.0
         config['overload_update_rate'] = 0.0
-
-    # Configure volatility when updating stress dimension and intensity
-    volatility = 0.5
 
     # Challenge vs hindrance effects on controllability
     if coped_successfully:
