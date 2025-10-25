@@ -535,7 +535,7 @@ def generate_pss10_item_response(
     # Transform from normal distribution around the empirically observed mean
     # Adjust mean based on current stress level, normalized to [0, 4]
     adjusted_mean = inverse_sigmoid_transform(normalized_stress, item_mean, item_sd)
-    raw_response  = sigmoid(adjusted_mean) * 4 # Limit to range [0, 4]
+    raw_response  = clamp(adjusted_mean, 0, 4) # Limit to range [0, 4]
 
     # Add small amount of measurement error using local RNG
     measurement_error = local_rng.normal(0, 0.1)
@@ -954,13 +954,16 @@ def update_stress_dimensions_from_event(
         config['controllability_update_rate'] = 0.0
         config['overload_update_rate'] = 0.0
 
+    # Configure modifier when updating controllability and overload
+    modifier = 0.1
+
     # Challenge vs hindrance effects on controllability
     if coped_successfully:
         # Successful coping: challenge builds controllability, hindrance slightly reduces it
-        controllability_change = (challenge * 0.15) - (hindrance * 0.08)
+        controllability_change = (challenge * 0.10) - (hindrance * 0.05)
     else:
         # Failed coping: both challenge and hindrance reduce controllability
-        controllability_change = -(challenge * 0.12) - (hindrance * 0.18)
+        controllability_change = -(challenge * 0.10) - (hindrance * 0.15)
 
     # Apply controllability update with decay toward baseline
     baseline_controllability = 0.5  # Neutral baseline
@@ -971,15 +974,15 @@ def update_stress_dimensions_from_event(
     event_effect = controllability_change * config['controllability_update_rate']
 
     updated_controllability = current_controllability + homeostasis_pull + event_effect
-    updated_controllability = clamp(updated_controllability, 0.0, 1.0)
+    updated_controllability = clamp(updated_controllability, 0.0, 1.0) * modifier
 
     # Overload effects: hindrance increases overload, challenge reduces it slightly
     if coped_successfully:
         # Successful coping: hindrance still increases overload but less, challenge reduces it
-        overload_change = (hindrance * 0.12) - (challenge * 0.08)
+        overload_change = (hindrance * 0.10) - (challenge * 0.05)
     else:
         # Failed coping: both increase overload significantly
-        overload_change = (hindrance * 0.25) + (challenge * 0.15)
+        overload_change = (hindrance * 0.15) + (challenge * 0.10)
 
     # Apply overload update with decay toward baseline
     baseline_overload = 0.5  # Neutral baseline
@@ -990,7 +993,7 @@ def update_stress_dimensions_from_event(
     event_effect = overload_change * config['overload_update_rate']
 
     updated_overload = current_overload + homeostasis_pull + event_effect
-    updated_overload = clamp(updated_overload, 0.0, 1.0)
+    updated_overload = clamp(updated_overload, 0.0, 1.0) * modifier
 
     # Update recent stress intensity and momentum for dynamic PSS-10 response
     recent_stress_intensity, stress_momentum = _update_recent_stress_intensity(

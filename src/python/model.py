@@ -391,6 +391,7 @@ class StressModel(mesa.Model):
             agent_data = self.datacollector.get_agent_vars_dataframe()
 
             # Current averages from DataCollector
+            current_pss10 = latest_data.get('avg_pss10', 0.0)
             current_affect = latest_data.get('avg_affect', 0.0)
             current_resilience = latest_data.get('avg_resilience', 0.0)
             current_resources = latest_data.get('avg_resources', 0.0)
@@ -417,6 +418,7 @@ class StressModel(mesa.Model):
             return {
                 'day': self.day,
                 'num_agents': len(self.agents),
+                'avg_pss10': current_pss10,
                 'avg_affect': current_affect,
                 'affect_std': affect_std,
                 'avg_resilience': current_resilience,
@@ -579,18 +581,11 @@ class StressModel(mesa.Model):
 
         try:
             # Handle missing PSS-10 data gracefully
-            pss10_values = []
-            for agent in self.agents:
-                if hasattr(agent, 'pss10') and agent.pss10 is not None:
-                    pss10_values.append(float(agent.pss10))
-                else:
-                    # Use default PSS-10 score if missing
-                    pss10_values.append(10.0)
-
+            pss10_values = [a.pss10 for a in self.agents]
             if not pss10_values:
                 return 0.0
 
-            return sum(pss10_values) / len(pss10_values)
+            return np.mean(pss10_values)
         except (AttributeError, TypeError, ValueError):
             # Fallback to 0.0 if there are any errors
             return 0.0
