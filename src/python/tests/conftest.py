@@ -8,8 +8,7 @@ import unittest.mock
 import pytest
 import numpy as np
 import networkx as nx
-from src.python import config
-from src.python.config import get_config, reload_config
+from src.python.config import get_config, reload_config, config
 from src.python.math_utils import create_rng
 from src.python.stress_utils import generate_stress_event
 from src.python.agent import Person

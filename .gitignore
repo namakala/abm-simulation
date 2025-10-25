@@ -3,6 +3,7 @@
 *.swp
 *.xml
 *outputs*
+test*csv
 
 # Environment variables and configuration
 .env
