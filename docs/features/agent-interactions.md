@@ -51,7 +51,7 @@ Where:
 - $\alpha_p \in [0,1]$ is peer influence rate
 - $A_i, A_j \in [-1,1]$ are affect values
 
-**Implementation**: [`process_interaction()`](src/python/affect_utils.py:139) in `affect_utils.py`
+**Implementation**: [`process_interaction()`](../../src/python/affect_utils.py#L139-L201) in `affect_utils.py`
 
 ## Social Influence Dynamics
 
@@ -154,7 +154,7 @@ Where:
 - $f$ is the exchange function considering resilience and affect changes
 - $e_s$ is support effectiveness
 
-**Implementation**: [`process_social_resource_exchange()`](src/python/resource_utils.py:354) in `resource_utils.py`
+**Implementation**: [`process_social_resource_exchange()`](../../src/python/resource_utils.py#L354-L437) in `resource_utils.py`
 
 ### Support Impact on Resilience
 
@@ -172,7 +172,7 @@ Where:
 - $\Delta R_i, \Delta R_j$ are resilience changes for agents $i,j$
 - $\Delta \text{resources}$ is resource transfer between agents
 
-**Implementation**: [`interact()`](src/python/agent.py:392) method in `agent.py`
+**Implementation**: [`interact()`](../../src/python/agent.py#L392-L521) method in `agent.py`
 
 ## Interaction Impact Analysis
 

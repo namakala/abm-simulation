@@ -89,12 +89,12 @@ Agent baseline initialization establishes the starting state for each individual
 
 | Variable | Symbol | Range | Description | Implementation |
 |----------|--------|-------|-------------|---------------|
-| **Baseline Resilience** | $R_{\text{0}}$ | [0,1] | Natural equilibrium point for resilience capacity | [`sigmoid_transform()`](src/python/math_utils.py:78) |
-| **Baseline Affect** | $A_{\text{0}}$ | [-1,1] | Natural equilibrium point for emotional state | [`tanh_transform()`](src/python/math_utils.py:95) |
+| **Baseline Resilience** | $R_{\text{0}}$ | [0,1] | Natural equilibrium point for resilience capacity | [`sigmoid_transform()`](../../src/python/math_utils.py#L417-L456) |
+| **Baseline Affect** | $A_{\text{0}}$ | [-1,1] | Natural equilibrium point for emotional state | [`tanh_transform()`](../../src/python/math_utils.py#L375-L414) |
 | **Initial Resources** | $R$ | [0,1] | Available psychological and physical resources | [`sigmoid_transform()`](src/python/math_utils.py:78) |
 | **Protective Factors** | $\mathbf{e}$ | [0,1]$^4$ | Efficacy levels for social support, family support, formal interventions, and psychological capital | Default values (0.5) |
-| **PSS-10 Dimensions** | $c_\Psi, o_\Psi$ | [0,1] | Controllability and overload stress dimensions | [`generate_pss10_dimension_scores()`](src/python/stress_utils.py:413) |
-| **Initial Stress Level** | $S$ | [0,1] | Starting stress level derived from PSS-10 | [`compute_stress_from_pss10()`](src/python/stress_utils.py:865) |
+| **PSS-10 Dimensions** | $c_\Psi, o_\Psi$ | [0,1] | Controllability and overload stress dimensions | [`generate_pss10_dimension_scores()`](../../src/python/stress_utils.py#L420-L483) |
+| **Initial Stress Level** | $S$ | [0,1] | Starting stress level derived from PSS-10 | [`compute_stress_from_pss10()`](../../src/python/stress_utils.py#L865-L916) |
 
 #### Mathematical Initialization Process
 
@@ -111,10 +111,10 @@ $$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} \mu_c \\ \mu_o \end{bmatr
 Where $\rho_\Psi \in [-1,1]$ is the bifactor correlation between dimensions.
 
 **Implementation Details**:
-- **Configuration Integration**: All parameters loaded from environment variables via [`get_config()`](src/python/config.py:15)
-- **Reproducible Randomization**: Seeded random number generation using [`create_rng()`](src/python/math_utils.py:45)
+- **Configuration Integration**: All parameters loaded from environment variables via [`get_config()`](../../src/python/config.py#L647-L661)
+- **Reproducible Randomization**: Seeded random number generation using [`create_rng()`](../../src/python/math_utils.py#L27-L37)
 - **Population Variation**: Individual differences created through normal distribution sampling with configurable means and standard deviations
-- **Validation**: Range checking and distribution validation in [`test_agent_initialization.py`](src/python/tests/test_agent_initialization.py)
+- **Validation**: Range checking and distribution validation in [`test_agent_initialization.py`](../../src/python/tests/test_agent_initialization.py)
 
 ## Model-Level Variables
 
@@ -199,7 +199,7 @@ Where:
 - $N$ is population size
 - $\Psi_i, R_i, A_i$ are individual agent values
 
-**Implementation**: [`get_avg_pss10()`](src/python/model.py:577), [`get_avg_resilience()`](src/python/model.py:594), [`get_avg_affect()`](src/python/model.py:607) in `model.py`
+**Implementation**: [`get_avg_pss10()`](../../src/python/model.py#L577-L591), [`get_avg_resilience()`](../../src/python/model.py#L593-L604), [`get_avg_affect()`](../../src/python/model.py#L606-L617) in `model.py`
 
 ### Stress Processing Metrics
 
@@ -243,7 +243,7 @@ Where:
 - $n_e$ is number of edges in network
 - $N$ is number of nodes (agents)
 
-**Implementation**: [`_calculate_social_support_rate()`](src/python/model.py:264), [`_calculate_network_density()`](src/python/model.py:271) in `model.py`
+**Implementation**: [`_calculate_social_support_rate()`](../../src/python/model.py#L264-L269), [`_calculate_network_density()`](../../src/python/model.py#L271-L281) in `model.py`
 
 **Stress Prevalence:**
 

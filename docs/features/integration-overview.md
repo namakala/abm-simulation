@@ -310,7 +310,7 @@ Where:
 - $\mathbf{i}_t$ is social interactions at time $t$
 - $\mathbf{p}$ is model parameters
 
-**Implementation**: [`step()`](src/python/agent.py:208) method in `agent.py`
+**Implementation**: [`step()`](../../src/python/agent.py#L204-L391) method in `agent.py`
 
 ### Equilibrium Analysis
 
