@@ -22,14 +22,18 @@ Individuals influence each other's emotional states through social interactions.
 
 **Social Influence Equation:**
 
-$$\Delta A_{ij} = \alpha_p \cdot (A_j - A_i)$$
+$$\Delta A_p = \frac{1}{k} \sum_{j=1}^{k} \alpha_p \cdot (A_j - A_t) \cdot \begin{cases}
+1.5 & \text{if } A_j - A_t < 0 \\
+1.0 & \text{if } A_j - A_t \geq 0
+\end{cases}$$
 
 Where:
-- $\Delta A_{ij}$ is affect change for agent $i$ from neighbor $j$
+- $\Delta A_p$ is aggregated peer influence effect
+- $k$ is number of influencing neighbors (limited by $k_{\text{influence}}$)
 - $\alpha_p \in [0,1]$ is peer influence rate
-- $A_j, A_i \in [-1,1]$ are affect values
+- $A_j, A_t \in [-1,1]$ are neighbor and current affect values
 
-**Implementation**: [`compute_social_influence()`](src/python/affect_utils.py:47) in `affect_utils.py`
+**Implementation**: [`compute_peer_influence()`](src/python/affect_utils.py:957) in `affect_utils.py`
 
 ### Interaction Effects
 
@@ -51,7 +55,7 @@ Where:
 - $\eta_{\text{affect}} > 0$ is affect threshold for resilience influence
 - $\mathbb{1}$ is indicator function
 
-**Implementation**: [`process_interaction()`](src/python/affect_utils.py:120) in `affect_utils.py`
+**Implementation**: [`process_interaction()`](src/python/affect_utils.py:139) in `affect_utils.py`
 
 ## Stress Event Impact on Affect
 
@@ -82,7 +86,7 @@ Where:
 - $A_{\text{0}} \in [-1,1]$ is baseline affect
 - $A_c \in [-1,1]$ is current affect
 
-**Implementation**: [`compute_homeostasis_effect()`](src/python/affect_utils.py:711) in `affect_utils.py`
+**Implementation**: [`compute_homeostasis_effect()`](src/python/affect_utils.py:1030) in `affect_utils.py`
 
 ### Baseline Affect Dynamics
 
@@ -97,6 +101,9 @@ Where:
 - $\alpha_e \in [0,1]$ is event appraisal rate
 - $\chi \in [0,1]$ is challenge component
 - $\zeta \in [0,1]$ is hindrance component
+- $A_c \in [-1,1]$ is current affect
+
+**Implementation**: [`compute_event_appraisal_effect()`](src/python/affect_utils.py:996) in `affect_utils.py`
 
 ## Integrated Affect Dynamics
 
@@ -124,7 +131,7 @@ Where:
 - $\Delta A_e$ is event appraisal effect
 - $\Delta A_h$ is homeostasis effect
 
-**Implementation**: [`update_affect_dynamics()`](src/python/affect_utils.py:830) in `affect_utils.py`
+**Implementation**: [`update_affect_dynamics()`](src/python/affect_utils.py:1149) in `affect_utils.py`
 
 **Aggregated Peer Influence:**
 
@@ -138,14 +145,26 @@ Where:
 
 ### Bidirectional Influence
 
-Emotional state and resilience influence each other:
+Emotional state and resilience influence each other through integrated mechanisms:
 
-- **Positive affect** tends to improve resource recovery
-- **High resilience** provides emotional buffer against stress
+- **Positive affect** enhances resource regeneration and coping efficiency
+- **High resilience** provides emotional buffer against stress and improves social support effectiveness
+- **Social optimization**: Recent social interactions boost resilience through optimized resource allocation
 
 ### Threshold Effects
 
 Some resilience effects only occur when emotional states exceed certain thresholds, representing how intense emotions can trigger different coping responses.
+
+**Social Resilience Optimization:**
+
+$$\Delta R_{\text{soc}} = f(\text{daily_interactions}, \text{daily_support_exchanges}, \text{resources}, R_{\text{0}}, \mathbf{e})$$
+
+Where:
+- $\Delta R_{\text{soc}}$ is resilience change from social optimization
+- $f$ integrates social benefit with resource allocation
+- $\mathbf{e}$ is protective factor efficacy vector
+
+**Implementation**: [`integrate_social_resilience_optimization()`](src/python/affect_utils.py:690) in `affect_utils.py`
 
 ## Social Network Effects
 

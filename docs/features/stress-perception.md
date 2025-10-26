@@ -543,3 +543,33 @@ Key parameters for sensitivity analysis:
 - Sigmoid steepness (`γ`)
 - Event generation parameters (`alpha, beta`)
 - PSS-10 factor loadings and correlations
+
+### Agent-Specific Volatility
+
+Each agent is assigned a unique volatility parameter that introduces individual differences in stress response variability:
+
+**Volatility Initialization:**
+
+$$v_i \sim \mathcal{B}(1, 1)$$
+
+Where:
+- $v_i \in [0,1]$ is the volatility for agent $i$
+- $\mathcal{B}(\alpha, \beta)$ is the Beta distribution (uniform on [0,1])
+
+**Volatility Effects on Stress Dimensions:**
+
+Volatility scales the magnitude of stress dimension updates, representing individual differences in sensitivity to stress events:
+
+$$\Delta c' = \Delta c \cdot v_i$$
+$$\Delta o' = \Delta o \cdot v_i$$
+
+Where:
+- $\Delta c, \Delta o$ are unscaled changes in controllability and overload
+- $v_i$ is agent's volatility level
+
+**Implementation Details:**
+- **Initialization**: Assigned during agent creation using seeded random number generator
+- **Usage**: Applied in stress dimension updates to modulate response intensity
+- **Research Applications**: Enables modeling of individual differences in stress sensitivity and resilience variability
+
+**Implementation**: [`update_stress_dimensions_from_event()`](src/python/stress_utils.py:919) in `stress_utils.py`

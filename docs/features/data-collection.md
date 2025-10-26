@@ -10,13 +10,13 @@ This document provides an overview of the data collection system that tracks bot
 
 ### Collection Framework
 
-The system uses a structured approach to collect data efficiently, focusing on key indicators of mental health and social dynamics. Data is gathered once per day during the simulation process.
+The system uses Mesa's DataCollector framework for efficient, standardized data collection. Data is gathered once per day during the simulation process, capturing both model-level and agent-level metrics.
 
 **Key Benefits:**
-- **Performance Optimized**: Efficient data collection methods
-- **Memory Efficient**: Streamlined storage approach
+- **Performance Optimized**: Leverages Mesa's optimized data collection mechanisms
+- **Memory Efficient**: Streamlined storage in DataFrames
 - **Research-Ready**: Comprehensive metrics for mental health research
-- **Standardized Access**: Consistent data access patterns
+- **Standardized Access**: Consistent data access patterns via DataCollector API
 
 ### Collection Frequency
 
@@ -199,7 +199,7 @@ Where:
 - $N$ is population size
 - $\Psi_i, R_i, A_i$ are individual agent values
 
-**Implementation**: [`get_avg_pss10()`](src/python/model.py:574), [`get_avg_resilience()`](src/python/model.py:597), [`get_avg_affect()`](src/python/model.py:610) in `model.py`
+**Implementation**: [`get_avg_pss10()`](src/python/model.py:577), [`get_avg_resilience()`](src/python/model.py:594), [`get_avg_affect()`](src/python/model.py:607) in `model.py`
 
 ### Stress Processing Metrics
 
@@ -243,7 +243,7 @@ Where:
 - $n_e$ is number of edges in network
 - $N$ is number of nodes (agents)
 
-**Implementation**: [`_calculate_social_support_rate()`](src/python/model.py:263), [`_calculate_network_density()`](src/python/model.py:270) in `model.py`
+**Implementation**: [`_calculate_social_support_rate()`](src/python/model.py:264), [`_calculate_network_density()`](src/python/model.py:271) in `model.py`
 
 **Stress Prevalence:**
 
