@@ -74,6 +74,34 @@ python -m pytest src/python/tests --cov=src/python --cov-report=html
 python -m pytest src/python/tests/test_agent_integration.py -v
 ```
 
+## Command-Line Arguments
+
+The `simulate.py` script supports several command-line arguments for customizing simulation runs. Below is a table of available options:
+
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `-h, --help` | Show this help message and exit | N/A |
+| `--days` | Number of simulation days | from config |
+| `--agents` | Number of agents in simulation | from config |
+| `--seed` | Random seed for reproducibility | from config |
+| `--env` | Path to .env configuration file | .env |
+| `--output-data` | Directory for raw data output | from config |
+| `--output-fig` | Directory for figure output | from config |
+| `--prefix` | Prefix for output files | none |
+
+### Examples
+
+```bash
+# Run with custom simulation parameters
+python simulate.py --days 500 --agents 1000 --seed 42
+
+# Use a custom configuration file and output directories
+python simulate.py --env custom.env --output-data ./results --prefix test_
+
+# Specify figure output directory with prefix
+python simulate.py --output-fig ./figures --prefix experiment1_
+```
+
 ## Configuration
 
 The model uses a comprehensive configuration system with 50+ parameters organized into logical groups:

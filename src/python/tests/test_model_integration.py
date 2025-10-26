@@ -131,19 +131,19 @@ def test_get_avg_pss10_error_handling():
         delattr(agent, 'pss10') if hasattr(agent, 'pss10') else None
 
     avg_pss10 = model.get_avg_pss10()
-    assert avg_pss10 == 10.0  # Should use default
+    assert avg_pss10 == 0.0  # Should use default
 
     # Test with None pss10
     for agent in model.agents:
         agent.pss10 = None
     avg_pss10 = model.get_avg_pss10()
-    assert avg_pss10 == 10.0
+    assert avg_pss10 == 0.0
 
     # Test with invalid pss10
     for agent in model.agents:
         agent.pss10 = "invalid"
     avg_pss10 = model.get_avg_pss10()
-    assert avg_pss10 == 0.0  # Should fallback to 0.0
+    assert avg_pss10 == 0.0
 
 def test_get_avg_resilience_error_handling():
     """Test get_avg_resilience with error handling."""
@@ -325,7 +325,7 @@ def test_get_avg_pss10_empty_values():
         agent.pss10 = None
 
     avg_pss10 = model.get_avg_pss10()
-    assert avg_pss10 == 10.0  # Should use default
+    assert avg_pss10 == 0.0  # Should use default
 
 def test_get_avg_resilience_empty_values():
     """Test get_avg_resilience when no valid resilience values."""

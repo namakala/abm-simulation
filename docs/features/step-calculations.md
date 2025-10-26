@@ -86,7 +86,7 @@ Where:
 - $\lambda_s > 0$ is subevent rate parameter
 - $\mathcal{P}(\lambda)$ is Poisson distribution
 
-**Implementation**: [`sample_poisson()`](src/python/math_utils.py:126) in `math_utils.py`
+**Implementation**: [`sample_poisson()`](../../src/python/math_utils.py#L126-L148) in `math_utils.py`
 
 **Action Processing**:
 The system processes each subevent, tracking social interactions and accumulating challenge/hindrance effects from stress events.
@@ -147,7 +147,7 @@ Where:
 - $\lambda_{\text{affect}} \in [0,1]$ is homeostatic rate
 - $A_{\text{0}} \in [-1,1]$ is baseline affect
 
-**Implementation**: [`update_affect_dynamics()`](src/python/affect_utils.py:830) in `affect_utils.py`
+**Implementation**: [`update_affect_dynamics()`](../../src/python/affect_utils.py#L1149-L1186) in `affect_utils.py`
 
 **Detailed Component Calculations**:
 
@@ -258,7 +258,7 @@ Where:
 - $\lambda_x \in [0,1]$ is homeostatic rate ($\lambda_{\text{affect}}$ for affect, $\lambda_{\text{resilience}}$ for resilience)
 - $x_{\text{0}}$ is baseline value ($A_{\text{0}}$ or $R_{\text{0}}$)
 
-**Implementation**: [`compute_homeostatic_adjustment()`](src/python/affect_utils.py:744) in `affect_utils.py`
+**Implementation**: [`compute_homeostatic_adjustment()`](../../src/python/affect_utils.py#L1063-L1118) in `affect_utils.py`
 
 **Stress Decay:**
 

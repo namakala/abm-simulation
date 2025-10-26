@@ -36,27 +36,22 @@ Social interactions create bidirectional changes where both individuals affect e
 
 **Basic Influence:**
 
-$$\Delta A_i = \alpha_p \cdot \mathrm{sign}(A_j)$$
-
-**Asymmetric Weighting:**
-
-$$\Delta A_i' = \Delta A_i \cdot \begin{cases}
-1.5 & \text{if } \Delta A_i < 0 \\
-1.0 & \text{if } \Delta A_i \geq 0
+$$\Delta A_i = \alpha_p \cdot (A_j - A_i) \cdot \begin{cases}
+1.5 & \text{if } A_j - A_i < 0 \\
+1.0 & \text{if } A_j - A_i \geq 0
 \end{cases}$$
 
 **Mutual Updates:**
 
-$$A_i' = A_i + \Delta A_i'$$
-$$A_j' = A_j + \Delta A_j'$$
+$$A_i' = A_i + \Delta A_i$$
+$$A_j' = A_j + \Delta A_j$$
 
 Where:
 - $\Delta A_i$ is affect change for agent $i$
 - $\alpha_p \in [0,1]$ is peer influence rate
 - $A_i, A_j \in [-1,1]$ are affect values
-- $\mathrm{sign}(x)$ returns sign of $x$
 
-**Implementation**: [`process_interaction()`](src/python/affect_utils.py:120) in `affect_utils.py`
+**Implementation**: [`process_interaction()`](../../src/python/affect_utils.py#L139-L201) in `affect_utils.py`
 
 ## Social Influence Dynamics
 
@@ -146,6 +141,21 @@ Where:
 - $R_j \in [0,1]$ is neighbor's resilience
 - $A_j \in [-1,1]$ is neighbor's affect
 
+### Social Resource Exchange
+
+Agents engage in resource exchange during interactions, allowing sharing of psychological and physical resources based on resilience and social support efficacy.
+
+**Resource Exchange Equation:**
+
+$$\Delta R_i = f(R_i, R_j, e_s, \Delta A_i, \Delta A_j)$$
+
+Where:
+- $\Delta R_i$ is resource change for agent $i$
+- $f$ is the exchange function considering resilience and affect changes
+- $e_s$ is support effectiveness
+
+**Implementation**: [`process_social_resource_exchange()`](../../src/python/resource_utils.py#L354-L437) in `resource_utils.py`
+
 ### Support Impact on Resilience
 
 Receiving social support provides a direct boost to resilience, representing how supportive relationships can help people better cope with stress.
@@ -153,15 +163,16 @@ Receiving social support provides a direct boost to resilience, representing how
 **Support Exchange Detection:**
 
 $$\mathrm{support\ exchange} = \begin{cases}
-1 & \text{if } |\Delta A_i| > 0.05 \lor |\Delta R_i| > 0.05 \lor |\Delta A_j| > 0.05 \lor |\Delta R_j| > 0.05 \\
+1 & \text{if } |\Delta A_i| > 0.05 \lor |\Delta R_i| > 0.05 \lor |\Delta A_j| > 0.05 \lor |\Delta R_j| > 0.05 \lor |\Delta \text{resources}| > 0.05 \\
 0 & \text{otherwise}
 \end{cases}$$
 
 Where:
 - $\Delta A_i, \Delta A_j$ are affect changes for agents $i,j$
 - $\Delta R_i, \Delta R_j$ are resilience changes for agents $i,j$
+- $\Delta \text{resources}$ is resource transfer between agents
 
-**Implementation**: [`interact()`](src/python/agent.py:359) method in `agent.py`
+**Implementation**: [`interact()`](../../src/python/agent.py#L392-L521) method in `agent.py`
 
 ## Interaction Impact Analysis
 

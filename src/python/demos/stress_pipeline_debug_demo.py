@@ -149,7 +149,8 @@ class StressPipelineDebugger:
                 challenge=challenge,
                 hindrance=hindrance,
                 coped_successfully=coped_successfully,
-                is_stressful=True
+                is_stressful=True,
+                volatility=agent.volatility
             )
 
             # Generate PSS-10 from updated stress dimensions
