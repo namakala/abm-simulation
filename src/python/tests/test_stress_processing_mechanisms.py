@@ -14,7 +14,7 @@ import numpy as np
 from src.python.affect_utils import (
     compute_coping_probability, compute_challenge_hindrance_resilience_effect,
     compute_daily_affect_reset, compute_stress_decay,
-    process_stress_event_with_new_mechanism, StressProcessingConfig
+    determine_coping_outcome_and_psychological_impact, StressProcessingConfig
 )
 
 
@@ -360,7 +360,7 @@ class TestCompleteStressProcessingPipeline:
         neighbor_affects = [0.2, 0.4, 0.6]
 
         new_affect, new_resilience, new_stress, coped_successfully = (
-            process_stress_event_with_new_mechanism(
+            determine_coping_outcome_and_psychological_impact(
                 current_affect, current_resilience, current_stress,
                 challenge, hindrance, neighbor_affects, config
             )
@@ -394,7 +394,7 @@ class TestCompleteStressProcessingPipeline:
             neighbor_affects = [0.5, 0.7]  # Positive social influence
 
             new_affect, new_resilience, new_stress, coped_successfully = (
-                process_stress_event_with_new_mechanism(
+                determine_coping_outcome_and_psychological_impact(
                     current_affect, current_resilience, current_stress,
                     challenge, hindrance, neighbor_affects, config
                 )
@@ -434,7 +434,7 @@ class TestCompleteStressProcessingPipeline:
             neighbor_affects = [-0.5, -0.7]  # Negative social influence
 
             new_affect, new_resilience, new_stress, coped_successfully = (
-                process_stress_event_with_new_mechanism(
+                determine_coping_outcome_and_psychological_impact(
                     current_affect, current_resilience, current_stress,
                     challenge, hindrance, neighbor_affects, config
                 )
@@ -468,7 +468,7 @@ class TestCompleteStressProcessingPipeline:
         neighbor_affects = [1.0, 1.0, 1.0]
 
         new_affect, new_resilience, new_stress, coped_successfully = (
-            process_stress_event_with_new_mechanism(
+            determine_coping_outcome_and_psychological_impact(
                 current_affect, current_resilience, current_stress,
                 challenge, hindrance, neighbor_affects, config
             )
@@ -485,7 +485,7 @@ class TestCompleteStressProcessingPipeline:
         neighbor_affects = [-1.0, -1.0, -1.0]
 
         new_affect, new_resilience, new_stress, coped_successfully = (
-            process_stress_event_with_new_mechanism(
+            determine_coping_outcome_and_psychological_impact(
                 current_affect, current_resilience, current_stress,
                 challenge, hindrance, neighbor_affects, config
             )
@@ -508,7 +508,7 @@ class TestCompleteStressProcessingPipeline:
         neighbor_affects = []
 
         new_affect, new_resilience, new_stress, coped_successfully = (
-            process_stress_event_with_new_mechanism(
+            determine_coping_outcome_and_psychological_impact(
                 current_affect, current_resilience, current_stress,
                 challenge, hindrance, neighbor_affects, config
             )

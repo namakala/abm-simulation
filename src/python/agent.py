@@ -28,7 +28,7 @@ from src.python.affect_utils import (
     AffectDynamicsConfig, ResilienceDynamicsConfig,
     compute_resource_regeneration, ResourceParams,
     compute_homeostatic_adjustment, scale_homeostatic_rate,
-    process_stress_event_with_new_mechanism, StressProcessingConfig,
+    determine_coping_outcome_and_psychological_impact, StressProcessingConfig,
     compute_daily_affect_reset, compute_stress_decay,
     get_neighbor_affects, integrate_social_resilience_optimization
 )
@@ -593,7 +593,7 @@ class Person(mesa.Agent):
 
         # STEP 3: Use enhanced stress processing mechanism with complete feedback loop
         stress_config = StressProcessingConfig()
-        new_affect, new_resilience, new_stress, coped_successfully = process_stress_event_with_new_mechanism(
+        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
             current_affect=self.affect,
             current_resilience=self.resilience,
             current_stress=self.current_stress,
@@ -730,7 +730,6 @@ class Person(mesa.Agent):
         to set the initial current_stress level for the agent.
         """
         self.current_stress = compute_stress_from_pss10(
-            pss10_score=self.pss10,
             stress_controllability=self.stress_controllability,
             stress_overload=self.stress_overload
         )
@@ -747,7 +746,6 @@ class Person(mesa.Agent):
         """
         # Compute new stress level using utility function
         new_stress_level = compute_stress_from_pss10(
-            pss10_score=daily_pss10_score,
             stress_controllability=self.stress_controllability,
             stress_overload=self.stress_overload
         )

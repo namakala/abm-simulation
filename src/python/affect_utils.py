@@ -888,7 +888,7 @@ def compute_resource_depletion_with_resilience(
     return remaining_resources
 
 
-def process_stress_event_with_new_mechanism(
+def determine_coping_outcome_and_psychological_impact(
     current_affect: float,
     current_resilience: float,
     current_stress: float,

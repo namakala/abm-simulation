@@ -15,7 +15,7 @@ from src.python.affect_utils import (
     # New stress processing functions
     compute_coping_probability, compute_challenge_hindrance_resilience_effect,
     compute_daily_affect_reset, compute_stress_decay,
-    process_stress_event_with_new_mechanism, StressProcessingConfig
+    determine_coping_outcome_and_psychological_impact, StressProcessingConfig
 )
 
 
@@ -361,7 +361,7 @@ class TestNewStressProcessingMechanisms:
         # Should be positive (no negative stress)
         assert decayed_stress >= 0.0
 
-    def test_process_stress_event_with_new_mechanism_basic(self):
+    def test_determine_coping_outcome_and_psychological_impact_basic(self):
         """Test complete stress processing with new mechanism."""
         config = StressProcessingConfig()
 
@@ -375,7 +375,7 @@ class TestNewStressProcessingMechanisms:
         # Use deterministic RNG for testing
         with patch('numpy.random.random', return_value=0.5):
             new_affect, new_resilience, new_stress, coped_successfully = (
-                process_stress_event_with_new_mechanism(
+                determine_coping_outcome_and_psychological_impact(
                     current_affect, current_resilience, current_stress,
                     challenge, hindrance, neighbor_affects, config
                 )

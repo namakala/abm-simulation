@@ -16,7 +16,7 @@ from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.model import StressModel
 from src.python.affect_utils import (
-    process_stress_event_with_new_mechanism, StressProcessingConfig,
+    determine_coping_outcome_and_psychological_impact, StressProcessingConfig,
     compute_coping_probability, compute_daily_affect_reset, compute_stress_decay
 )
 from src.python.stress_utils import generate_stress_event, StressEvent
@@ -220,7 +220,7 @@ class TestEndToEndWorkflows:
         # Use deterministic RNG for coping probability
         with patch('numpy.random.random', return_value=0.4):
             new_affect, new_resilience, new_stress, coped_successfully = (
-                process_stress_event_with_new_mechanism(
+                determine_coping_outcome_and_psychological_impact(
                     current_affect, current_resilience, current_stress,
                     challenge, hindrance, neighbor_affects, config
                 )
@@ -412,7 +412,7 @@ class TestErrorHandling:
 
         # Should handle extreme values gracefully
         new_affect, new_resilience, new_stress, coped_successfully = (
-            process_stress_event_with_new_mechanism(
+            determine_coping_outcome_and_psychological_impact(
                 current_affect, current_resilience, current_stress,
                 challenge, hindrance, neighbor_affects, config
             )

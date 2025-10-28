@@ -228,7 +228,7 @@ class TestCompleteStressProcessingLoop:
         # Mock process_stress_event to ensure is_stressed=True
         with patch('src.python.agent.generate_stress_event', return_value=stressful_event), \
              patch('src.python.agent.process_stress_event', return_value=(True, 0.1, 0.9)), \
-             patch('src.python.agent.process_stress_event_with_new_mechanism', return_value=(agent.affect, agent.resilience, 0.5, True)):
+             patch('src.python.agent.determine_coping_outcome_and_psychological_impact', return_value=(agent.affect, agent.resilience, 0.5, True)):
             challenge, hindrance = agent.stressful_event()
 
         # Validate that all components were updated
@@ -238,12 +238,12 @@ class TestCompleteStressProcessingLoop:
         assert agent.pss10 != initial_pss10
 
         # Validate PSS-10 to stress feedback loop (Step 3 and Step 7)
-        # Initial stress should be based on initial PSS-10
-        expected_initial_stress = initial_pss10 / 40.0
+        # Initial stress should be based on stress dimensions
+        expected_initial_stress = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
         assert abs(initial_stress - expected_initial_stress) < 1e-10
 
-        # After processing, stress should be updated based on new PSS-10
-        expected_final_stress = agent.pss10 / 40.0
+        # After processing, stress should be updated based on new stress dimensions
+        expected_final_stress = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
         assert abs(agent.current_stress - expected_final_stress) <= 0.5  # Allow for smoothing and volatility
 
         # Validate theoretical correlations are maintained
@@ -548,7 +548,6 @@ class TestCompleteStressProcessingLoop:
         initial_pss10 = agent.pss10
         initial_stress = agent.current_stress
         expected_initial_stress = compute_stress_from_pss10(
-            pss10_score=initial_pss10,
             stress_controllability=agent.stress_controllability,
             stress_overload=agent.stress_overload
         )
@@ -584,7 +583,6 @@ class TestCompleteStressProcessingLoop:
     
             # Verify Step 7: Stress level updated based on consolidated PSS-10
             expected_stress = compute_stress_from_pss10(
-                pss10_score=expected_rounded,
                 stress_controllability=agent.stress_controllability,
                 stress_overload=agent.stress_overload
             )
@@ -605,11 +603,10 @@ class TestCompleteStressProcessingLoop:
             assert 0 <= agent.pss10 <= 40, f"PSS-10 out of bounds on day {day}"
     
         # Test that the feedback mechanism creates realistic stress transitions
-        # Stress should generally follow PSS-10 trends (allowing for smoothing)
+        # Stress should generally follow stress dimension trends (allowing for smoothing)
         final_stress = agent.current_stress
         final_pss10 = agent.pss10
         expected_final_stress = compute_stress_from_pss10(
-            pss10_score=final_pss10,
             stress_controllability=agent.stress_controllability,
             stress_overload=agent.stress_overload
         )
@@ -647,6 +644,51 @@ class TestCompleteStressProcessingLoop:
             assert -1.0 <= agent.affect <= 1.0
             assert 0.0 <= agent.resilience <= 1.0
             assert 0.0 <= agent.resources <= 1.0
+
+    def test_pss10_stress_correlation_improvement(self):
+        """Test that the correlation between avg_pss10 and avg_stress is improved with dimension-based formula."""
+        from src.python.stress_utils import compute_stress_from_pss10, generate_pss10_from_stress_dimensions
+
+        # Create multiple agents with different stress profiles
+        agents = []
+        num_agents = 50  # Sample size for correlation analysis
+
+        for i in range(num_agents):
+            mock_model = Mock()
+            mock_model.seed = 42 + i  # Different seeds for variability
+            agent = Person(mock_model)
+
+            # Set random stress dimensions to cover the space
+            agent.stress_controllability = np.random.uniform(0, 1)
+            agent.stress_overload = np.random.uniform(0, 1)
+
+            # Compute stress from dimensions using the new formula
+            agent.current_stress = compute_stress_from_pss10(
+                agent.stress_controllability, agent.stress_overload
+            )
+
+            # Generate PSS-10 from the same dimensions
+            pss10_data = generate_pss10_from_stress_dimensions(
+                stress_controllability=agent.stress_controllability,
+                stress_overload=agent.stress_overload,
+                rng=agent._rng
+            )
+            agent.pss10 = pss10_data['pss10_score']
+
+            agents.append(agent)
+
+        # Collect PSS-10 scores and stress levels
+        pss10_scores = [agent.pss10 for agent in agents]
+        stress_levels = [agent.current_stress for agent in agents]
+
+        # Compute Pearson correlation coefficient
+        correlation = np.corrcoef(pss10_scores, stress_levels)[0, 1]
+
+        # Assert high correlation (dimension-based formula should improve correlation)
+        assert correlation > 0.7, f"Correlation between PSS-10 and stress should be high with dimension-based formula, got {correlation:.3f}"
+
+        # Additional check: ensure correlation is positive (higher PSS-10 should correlate with higher stress)
+        assert correlation > 0, f"Correlation should be positive, got {correlation:.3f}"
 
 
 if __name__ == "__main__":
