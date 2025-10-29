@@ -534,7 +534,7 @@ def generate_pss10_item_response(
 
     # Transform from normal distribution around the empirically observed mean
     # Adjust mean based on current stress level, normalized to [0, 4]
-    adjusted_mean = inverse_sigmoid_transform(normalized_stress, item_mean, item_sd)
+    adjusted_mean = normalized_stress * 4
     raw_response  = clamp(adjusted_mean, 0, 4) # Limit to range [0, 4]
 
     # Add small amount of measurement error using local RNG
@@ -789,6 +789,7 @@ def update_stress_dimensions_from_pss10_feedback(
     current_controllability: float,
     current_overload: float,
     pss10_responses: Dict[int, int],
+    current_resources: float,
     config: Optional[Dict[str, float]] = None
 ) -> Tuple[float, float]:
     """
@@ -798,6 +799,7 @@ def update_stress_dimensions_from_pss10_feedback(
         current_controllability: Current stress controllability ∈ [0,1]
         current_overload: Current stress overload ∈ [0,1]
         pss10_responses: PSS-10 item responses
+        current_resources: Agent's current resource level ∈ [0,1]
         config: Configuration for feedback weighting
 
     Returns:
@@ -808,8 +810,13 @@ def update_stress_dimensions_from_pss10_feedback(
 
     if config is None:
         config = {
-            'feedback_weight': 0.3  # Weight for PSS-10 feedback
+            'feedback_weight': 0.005,  # Further damped weight for PSS-10 feedback
+            'resource_cost_factor': 0.1  # Resource cost consideration
         }
+
+    # Resource cost consideration: reduce feedback when resources are low
+    resource_cost_penalty = (1.0 - current_resources) * config['resource_cost_factor']
+    effective_feedback_weight = config['feedback_weight'] * (1.0 - resource_cost_penalty)
 
     # Calculate controllability stress from relevant PSS-10 items
     controllability_items = [4, 5, 7, 8]  # Reverse scored items
@@ -825,10 +832,9 @@ def update_stress_dimensions_from_pss10_feedback(
     if controllability_scores:
         pss10_controllability = np.mean(controllability_scores)
         # Blend current stress dimension with PSS-10 feedback
-        feedback_weight = config['feedback_weight']
         updated_controllability = (
-            current_controllability * (1.0 - feedback_weight) +
-            pss10_controllability * feedback_weight
+            current_controllability * (1.0 - effective_feedback_weight) +
+            pss10_controllability * effective_feedback_weight
         )
     else:
         updated_controllability = current_controllability
@@ -847,10 +853,9 @@ def update_stress_dimensions_from_pss10_feedback(
     if overload_scores:
         pss10_overload = np.mean(overload_scores)
         # Blend current stress dimension with PSS-10 feedback
-        feedback_weight = config['feedback_weight']
         updated_overload = (
-            current_overload * (1.0 - feedback_weight) +
-            pss10_overload * feedback_weight
+            current_overload * (1.0 - effective_feedback_weight) +
+            pss10_overload * effective_feedback_weight
         )
     else:
         updated_overload = current_overload
@@ -863,56 +868,23 @@ def update_stress_dimensions_from_pss10_feedback(
 
 
 def compute_stress_from_pss10(
-    pss10_score: int,
     stress_controllability: float,
-    stress_overload: float,
-    config: Optional[Dict[str, float]] = None
+    stress_overload: float
 ) -> float:
     """
-    Compute stress level from PSS-10 score using inverse of estimation function.
+    Compute stress level from PSS-10 dimensions using improved correlation formula.
 
-    This function implements the inverse logic of estimate_pss10_from_stress_dimensions()
-    to convert PSS-10 scores back to stress levels for initialization and feedback.
+    This function calculates stress_level as the mean of overload and the
+    inverted controllability.
 
     Args:
-        pss10_score: PSS-10 score (0-40)
         stress_controllability: Current stress controllability dimension ∈ [0,1]
         stress_overload: Current stress overload dimension ∈ [0,1]
-        config: Configuration parameters for stress computation
 
     Returns:
         Computed stress level ∈ [0,1]
     """
-    if config is None:
-        # Get fresh config instance to avoid global config issues
-        cfg = get_config()
-        config = {
-            'base_score': 10,  # Neutral baseline from estimate_pss10_from_stress_dimensions
-            'controllability_weight': 8,  # Weight for controllability effect
-            'overload_weight': 12  # Weight for overload effect
-        }
-
-    base_score = config['base_score']
-    controllability_weight = config['controllability_weight']
-    overload_weight = config['overload_weight']
-
-    if pss10_score <= base_score:
-        # Low stress: simple normalization
-        stress_level = pss10_score / 40.0
-    else:
-        # Higher stress: solve for combined stress impact using current stress dimensions
-        # For simplicity, use weighted average of controllability and overload effects
-        controllability_effect = max(0, (1.0 - stress_controllability)) * controllability_weight
-        overload_effect = stress_overload * overload_weight
-        total_effect = controllability_effect + overload_effect
-
-        if total_effect > 0:
-            # Normalize the stress level based on the theoretical maximum effect
-            max_possible_effect = controllability_weight + overload_weight  # 20
-            stress_level = min(1.0, total_effect / max_possible_effect)
-        else:
-            stress_level = 0.0
-
+    stress_level = (stress_overload + (1.0 - stress_controllability)) / 2.0
     return clamp(stress_level, 0.0, 1.0)
 
 
@@ -957,42 +929,43 @@ def update_stress_dimensions_from_event(
         config['overload_update_rate'] = 0.0
 
     # Challenge vs hindrance effects on controllability
+    controllability_change_magnitude = ((challenge * 0.10) + (hindrance * 0.05))
     if coped_successfully:
-        # Successful coping: challenge builds controllability, hindrance slightly reduces it
-        controllability_change = (challenge * 0.10) - (hindrance * 0.05)
+        # Successful coping: challenge and hindrance builds controllability
+        controllability_change = controllability_change_magnitude
     else:
         # Failed coping: both challenge and hindrance reduce controllability
-        controllability_change = -(challenge * 0.10) - (hindrance * 0.15)
+        controllability_change = -controllability_change_magnitude
 
     # Apply controllability update with decay toward baseline
     baseline_controllability = 0.5  # Neutral baseline
-    current_controllability = current_controllability
 
     # Move toward baseline when no strong events, but allow event-driven changes
     homeostasis_pull = (baseline_controllability - current_controllability) * 0.05
-    event_effect = controllability_change * config['controllability_update_rate']
+    event_effect = controllability_change * volatility
 
     updated_controllability = current_controllability + homeostasis_pull + event_effect
-    updated_controllability = clamp(updated_controllability * volatility, 0.0, 1.0)
+    updated_controllability = clamp(updated_controllability, 0.0, 1.0)
 
     # Overload effects: hindrance increases overload, challenge reduces it slightly
+    overload_change_magnitude = (challenge * 0.05) + (hindrance * 0.10)
     if coped_successfully:
         # Successful coping: hindrance still increases overload but less, challenge reduces it
-        overload_change = (hindrance * 0.10) - (challenge * 0.05)
+        overload_change = -overload_change_magnitude
     else:
         # Failed coping: both increase overload significantly
-        overload_change = (hindrance * 0.15) + (challenge * 0.10)
+        overload_change = overload_change_magnitude
 
     # Apply overload update with decay toward baseline
     baseline_overload = 0.5  # Neutral baseline
-    current_overload = current_overload
 
     # Move toward baseline when no strong events, but allow event-driven changes
     homeostasis_pull = (baseline_overload - current_overload) * 0.05
-    event_effect = overload_change * config['overload_update_rate']
+    event_effect = overload_change * volatility
+    #event_effect = overload_change * config['overload_update_rate']
 
     updated_overload = current_overload + homeostasis_pull + event_effect
-    updated_overload = clamp(updated_overload * volatility, 0.0, 1.0)
+    updated_overload = clamp(updated_overload, 0.0, 1.0)
 
     # Update recent stress intensity and momentum for dynamic PSS-10 response
     recent_stress_intensity, stress_momentum = _update_recent_stress_intensity(

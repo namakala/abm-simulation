@@ -116,7 +116,7 @@ Where:
 
 ### Bifactor Model Implementation
 
-The model implements a comprehensive PSS-10 integration using an empirically grounded bifactor model that accurately represents the two-factor structure of perceived stress:
+The model implements a comprehensive PSS-10 integration using an empirically grounded bifactor model that accurately represents the two-factor structure of perceived stress. The integration maintains validated theoretical correlations between PSS-10 scores and other agent variables:
 
 **PSS-10 Bifactor Model:**
 
@@ -153,7 +153,15 @@ Where:
 
 ### PSS-10 State Variables
 
-Agents maintain comprehensive PSS-10 state for tracking perceived stress and enabling empirical validation.
+Agents maintain comprehensive PSS-10 state for tracking perceived stress and enabling empirical validation. The PSS-10 integration maintains validated correlations with other agent variables:
+
+**Validated Correlation Ranges:**
+- PSS-10 ↔ Current Stress: $r \in [0.2, 0.9]$ (positive correlation)
+- PSS-10 ↔ Resilience: $r \in [-1.0, 0.5]$ (negative to weak correlation)
+- PSS-10 ↔ Affect: $r \in [-0.3, 0.3]$ (weak correlation)
+- PSS-10 ↔ Resources: $r \in [-0.5, 0.5]$ (variable correlation)
+
+**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) validates these correlation ranges across different simulation configurations.
 
 ### PSS-10 Initialization Process
 
@@ -364,6 +372,27 @@ The stress perception mechanism is calibrated against:
 2. **Challenge-Hindrance Ratios**: Distribution of challenge vs hindrance events
 3. **PSS-10 Score Distributions**: Realistic stress scale responses
 4. **Threshold Sensitivity**: Appropriate stress response rates
+
+### Correlation Validation Framework
+
+The stress perception system includes comprehensive correlation validation to ensure theoretical relationships are maintained:
+
+**Agent-Level Correlation Validation:**
+- Validates PSS-10 correlations with stress, resilience, affect, and resources
+- Tests statistical significance of all key relationships
+- Ensures correlations remain within expected theoretical ranges
+
+**Population-Level Correlation Validation:**
+- Tests average correlations across simulation time series
+- Validates social support and coping success relationships
+- Ensures stability across different population sizes and random seeds
+
+**Parameter Sweep Validation:**
+- Tests correlation stability across different parameter configurations
+- Uses Latin Hypercube Sampling for efficient parameter space exploration
+- Validates robustness of theoretical relationships under parameter variation
+
+**Implementation**: [`parameter_sweep_correlations.py`](../../src/python/demos/parameter_sweep_correlations.py) performs parameter sweep validation, [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) provides comprehensive correlation testing.
 
 ### Sensitivity Analysis
 

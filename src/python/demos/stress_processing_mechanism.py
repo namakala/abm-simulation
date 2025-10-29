@@ -21,7 +21,7 @@ from src.python.affect_utils import (
     compute_challenge_hindrance_resilience_effect,
     compute_daily_affect_reset,
     compute_stress_decay,
-    process_stress_event_with_new_mechanism,
+    determine_coping_outcome_and_psychological_impact,
     compute_homeostatic_adjustment,
     StressProcessingConfig
 )
@@ -404,7 +404,7 @@ def demonstrate_daily_reset_mechanisms():
 
     # Process complete stress event
     neighbor_affects = [0.2, -0.1, 0.4]  # Mixed social environment
-    new_affect, new_resilience, new_stress, coped_successfully = process_stress_event_with_new_mechanism(
+    new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
         current_affect=agent.affect,
         current_resilience=agent.resilience,
         current_stress=agent.current_stress,

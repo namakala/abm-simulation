@@ -12,7 +12,7 @@ from affect_utils import (
     compute_challenge_hindrance_resilience_effect,
     compute_daily_affect_reset,
     compute_stress_decay,
-    process_stress_event_with_new_mechanism,
+    determine_coping_outcome_and_psychological_impact,
     StressProcessingConfig
 )
 
@@ -85,7 +85,7 @@ def test_new_mechanisms():
     hindrance = 0.3
     neighbor_affects = [0.4, 0.6]
 
-    new_affect, new_resilience, new_stress, coped_successfully = process_stress_event_with_new_mechanism(
+    new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
         current_affect, current_resilience, current_stress,
         challenge, hindrance, neighbor_affects
     )

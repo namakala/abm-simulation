@@ -295,7 +295,7 @@ class TestAgentResourceManagement:
         
         # Simplify the mocking - use fewer layers
         with patch('src.python.agent.process_stress_event', return_value=(True, 0.8, 0.2)), \
-             patch('src.python.affect_utils.process_stress_event_with_new_mechanism', return_value=(0.1, 0.9, 0.15, True)), \
+             patch('src.python.affect_utils.determine_coping_outcome_and_psychological_impact', return_value=(0.1, 0.9, 0.15, True)), \
              patch('src.python.agent.generate_stress_event', return_value=StressEvent(0.1, 0.7)), \
              patch.object(agent, '_allocate_protective_factors'):  # Prevent additional consumption
         
@@ -358,7 +358,7 @@ class TestAgentResourceManagement:
         # Mock no stress scenario - create event that won't trigger stress
         with patch('src.python.stress_utils.generate_stress_event') as mock_stress_event, \
               patch('src.python.agent.process_stress_event') as mock_process_stress, \
-              patch('src.python.affect_utils.process_stress_event_with_new_mechanism') as mock_new_mechanism:
+              patch('src.python.affect_utils.determine_coping_outcome_and_psychological_impact') as mock_new_mechanism:
 
             # Create event with low magnitude that won't exceed threshold
             mock_stress_event.return_value = StressEvent(0.5, 0.1)

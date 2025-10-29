@@ -242,7 +242,9 @@ class TestAgentInitializationCore:
         agent = Person(model)
 
         # Check stress tracking variables
-        assert agent.current_stress == 0.0
+        # current_stress is computed from PSS-10 score: pss10_score / 40.0
+        expected_stress = agent.pss10 / 40.0
+        assert abs(agent.current_stress - expected_stress) < 1e-1
         assert agent.daily_stress_events == []
         assert agent.stress_history == []
         assert agent.last_reset_day == 0

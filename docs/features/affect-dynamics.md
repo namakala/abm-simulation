@@ -203,3 +203,31 @@ The model includes several interconnected patterns:
 2. **Negative Loop**: Poor mood → Worse coping → Lower resilience → Poorer mood
 3. **Social Amplification**: Similar social connections reinforce existing emotional states
 4. **Homeostatic Regulation**: Natural tendency to return to baseline emotional equilibrium
+## Validation Metrics
+
+### Key Affect Metrics
+
+1. **Emotional Stability**: Maintenance of baseline affect levels over time
+2. **Social Influence Strength**: Impact of network connections on emotional states
+3. **Stress Response Sensitivity**: Appropriate emotional reactions to stress events
+4. **Homeostatic Regulation**: Return to baseline emotional equilibrium
+
+### Correlation Validation Framework
+
+The affect dynamics system includes validated correlations with other agent variables:
+
+**Validated Correlation Ranges:**
+- Affect ↔ Resources: $r \in [-0.2, 0.4]$ (weak correlation)
+- Affect ↔ Current Stress: $r \in [-0.2, 0.2]$ (weak correlation)
+- Affect ↔ Resilience: $r \in [-0.5, 0.5]$ (variable correlation)
+- Affect ↔ PSS-10: $r \in [-0.3, 0.3]$ (weak correlation)
+
+**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) validates these correlation ranges and statistical significance.
+
+### Calibration Targets
+
+- **Literature-based**: Emotional contagion patterns from social psychology
+- **Intervention Effects**: Expected emotional improvements from mental health programs
+- **Population Patterns**: Realistic distribution of emotional states
+- **Social Dynamics**: Appropriate sensitivity to social influence
+- **Correlation Stability**: Theoretical relationships maintained across parameter configurations

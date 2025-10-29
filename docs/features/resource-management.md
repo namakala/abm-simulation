@@ -277,6 +277,18 @@ Low resources limit protective investment, leading to poor stress coping, negati
 - **Protective Coverage**: Appropriate distribution of protective factor efficacy
 - **Intervention Reach**: Realistic access to formal interventions
 
+### Correlation Validation Framework
+
+The resource management system includes validated correlations with other agent variables:
+
+**Validated Correlation Ranges:**
+- Resources ↔ Current Stress: $r \in [-0.8, 0.1]$ (negative to weak correlation)
+- Resources ↔ Affect: $r \in [-0.2, 0.4]$ (weak correlation)
+- Resources ↔ Resilience: $r \in [-1.0, 1.0]$ (any correlation)
+- Resources ↔ PSS-10: $r \in [-0.5, 0.5]$ (variable correlation)
+
+**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) validates these correlation ranges and statistical significance.
+
 ### Theoretical Alignment
 
 **Conservation of Resources**:
@@ -288,6 +300,7 @@ Low resources limit protective investment, leading to poor stress coping, negati
 - **State-Like**: Can change over time through investment
 - **Trait-Like**: Stable individual differences in baseline levels
 - **Investment**: Requires resource commitment for development
+- **Correlation Stability**: Theoretical relationships maintained across parameter configurations
 
 ## Implementation Integration
 

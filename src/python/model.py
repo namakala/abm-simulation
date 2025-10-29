@@ -158,7 +158,11 @@ class StressModel(mesa.Model):
             'total_stress_events': lambda m: sum(len(getattr(agent, 'daily_stress_events', [])) for agent in m.agents),  # Total stress events
             'successful_coping': lambda m: sum(sum(1 for event in getattr(agent, 'daily_stress_events', []) if event.get('coped_successfully', False)) for agent in m.agents),  # Successful coping instances
             'social_interactions': lambda m: sum(getattr(agent, 'daily_interactions', 0) for agent in m.agents),  # Total social interactions
-            'support_exchanges': lambda m: sum(getattr(agent, 'daily_support_exchanges', 0) for agent in m.agents)  # Total support exchanges
+            'support_exchanges': lambda m: sum(getattr(agent, 'daily_support_exchanges', 0) for agent in m.agents),  # Total support exchanges
+
+            # Cumulative tracking via DataCollector
+            'total_interactions': lambda m: getattr(m, 'total_interactions', 0),  # Cumulative social interactions
+            'social_support_exchanges': lambda m: getattr(m, 'social_support_exchanges', 0)  # Cumulative support exchanges
         }
 
         # Define agent reporters (agent-level metrics)
@@ -228,6 +232,12 @@ class StressModel(mesa.Model):
         # Execute all agent steps with enhanced social interactions
         self.agents.shuffle_do("step")
 
+        # Update cumulative counters before data collection to ensure social_support_rate is calculated correctly
+        daily_social_interactions = sum(getattr(agent, 'daily_interactions', 0) for agent in self.agents)
+        daily_support_exchanges = sum(getattr(agent, 'daily_support_exchanges', 0) for agent in self.agents)
+        self.total_interactions += daily_social_interactions
+        self.social_support_exchanges += daily_support_exchanges
+
         # Collects both model-level (population) and agent-level (individual) metrics
         self.datacollector.collect(self)
 
@@ -236,9 +246,6 @@ class StressModel(mesa.Model):
 
         # Update social support tracking from agent interaction data
         self._update_social_support_tracking()
-
-        # Maintains backward compatibility while using DataCollector as source of truth
-        self._record_daily_stats()
 
         # Apply daily reset to all agents AFTER data collection
         for agent in self.agents:
@@ -318,11 +325,6 @@ class StressModel(mesa.Model):
             'adaptation_rate': agents_adapting / max(1, len(self.agents))
         }
 
-    def _record_daily_stats(self):
-        """Record daily statistics for analysis."""
-        # Update cumulative counters
-        self.total_interactions += self.daily_stats['social_interactions']
-        self.social_support_exchanges += self.daily_stats['support_exchanges']
 
     def get_population_summary(self) -> Dict[str, Any]:
         """
@@ -433,7 +435,7 @@ class StressModel(mesa.Model):
                     'high': high_resilience
                 },
                 'social_support_rate': latest_data.get('social_support_rate', 0.0),
-                'total_interactions': self.total_interactions,
+                'total_interactions': latest_data.get('total_interactions', 0),
                 'network_density': latest_data.get('network_density', 0.0),
                 # Enhanced integrated metrics
                 'mental_health_index': (current_affect + current_resilience) / 2,  # Combined mental health score

@@ -35,7 +35,7 @@ from src.python.stress_utils import (
     StressEvent, AppraisalWeights, ThresholdParams
 )
 from src.python.affect_utils import (
-    compute_coping_probability, process_stress_event_with_new_mechanism,
+    compute_coping_probability, determine_coping_outcome_and_psychological_impact,
     StressProcessingConfig, get_neighbor_affects
 )
 
@@ -122,7 +122,7 @@ class StressPipelineDebugger:
 
             # Process the stress event
             stress_config = StressProcessingConfig()
-            new_affect, new_resilience, new_stress, coped_successfully = process_stress_event_with_new_mechanism(
+            new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
                 current_affect=agent.affect,
                 current_resilience=agent.resilience,
                 current_stress=agent.current_stress,
