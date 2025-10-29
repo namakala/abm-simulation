@@ -253,11 +253,20 @@ All mechanisms use the same configuration system, ensuring consistency across al
 - **Intervention Effects**: Measurable impact of protective factors
 - **Emergent Patterns**: Realistic mental health outcome distributions
 
+**Correlation Validation Framework**:
+- **Agent-Level Correlations**: Validates theoretical relationships between PSS-10, resilience, affect, resources, and stress variables
+- **Population-Level Correlations**: Tests average correlations across simulation time series
+- **Parameter Sweep Validation**: Ensures correlation stability across different parameter configurations
+- **Statistical Significance**: Tests that correlations meet statistical significance thresholds
+
 **Literature Alignment**:
 - **Assessment Scores**: Match empirical stress scale distributions
 - **Recovery Times**: Align with psychological recovery research
 - **Social Effects**: Consistent with social influence studies
 - **Intervention Efficacy**: Match mental health intervention research
+- **Correlation Patterns**: Theoretical relationships maintained across configurations
+
+**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) provides comprehensive correlation validation, [`parameter_sweep_correlations.py`](../../src/python/demos/parameter_sweep_correlations.py) performs parameter sweep validation.
 
 ## Research Pipeline Integration
 

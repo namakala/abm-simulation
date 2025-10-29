@@ -265,9 +265,21 @@ Where:
 3. **Coping Success Rate**: Overall success rate across all stress events
 4. **Overload Frequency**: Rate of cumulative overload events
 
+### Correlation Validation Framework
+
+The resilience dynamics system includes validated correlations with other agent variables:
+
+**Validated Correlation Ranges:**
+- Resilience ↔ Affect: $r \in [-0.5, 0.5]$ (variable correlation)
+- Resilience ↔ Resources: $r \in [-1.0, 1.0]$ (any correlation)
+- Resilience ↔ PSS-10: $r \in [-1.0, 0.5]$ (negative to weak correlation)
+
+**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) validates these correlation ranges and statistical significance.
+
 ### Calibration Targets
 
 - **Literature-based**: Recovery times from psychological studies
 - **Intervention Effects**: Expected improvement from mental health programs
 - **Population Patterns**: Realistic distribution of resilience levels
 - **Stress-Response Relationships**: Appropriate sensitivity to stress events
+- **Correlation Stability**: Theoretical relationships maintained across parameter configurations
