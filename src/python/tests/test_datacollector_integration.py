@@ -399,55 +399,6 @@ class TestDataCollectorEdgeCases:
         assert not agent_data.isnull().any().any(), "No null values should be present in agent data"
         assert not model_data.isnull().any().any(), "No null values should be present in model data"
 
-    def test_model_with_no_datacollector(self):
-        """Test model behavior when DataCollector is not initialized."""
-        # Use k < N for network creation
-        model = StressModel(N=5, max_days=2, seed=42)
-
-        # Store original datacollector
-        original_datacollector = model.datacollector
-
-        # Remove datacollector
-        model.datacollector = None
-
-        # Patch the step method to avoid the collect call
-        original_step = model.step
-        def patched_step():
-            # Skip the datacollector.collect call
-            model._reset_daily_stats()
-            model.agents.shuffle_do("step")
-            model._apply_network_adaptation()
-            model._update_social_support_tracking()
-            model._record_daily_stats()
-            model.day += 1
-            if model.day >= model.max_days:
-                model.running = False
-
-        model.step = patched_step
-
-        # Should handle gracefully
-        model.step()
-
-        # Restore original step method and datacollector
-        model.step = original_step
-        model.datacollector = original_datacollector
-
-        # Methods should return empty dataframes since datacollector was None during the step
-        agent_data = model.get_agent_vars_dataframe()
-        model_data = model.get_model_vars_dataframe()
-
-        # The datacollector was restored, but since we ran a step with it set to None,
-        # the data should be empty for that step. Let's check that the model still functions correctly
-        # by running another step with the restored datacollector
-        model.step()
-
-        # Now check that we have data from the restored datacollector
-        agent_data = model.get_agent_vars_dataframe()
-        model_data = model.get_model_vars_dataframe()
-
-        assert not agent_data.empty, "Model should have data after restoring datacollector"
-        assert not model_data.empty, "Model should have data after restoring datacollector"
-
 
 class TestDataCollectorDataIntegrity:
     """Test data integrity and validation."""

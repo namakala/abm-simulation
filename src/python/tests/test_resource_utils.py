@@ -9,6 +9,7 @@ This module tests all functions in resource_utils.py including:
 - Edge cases and conditional branches
 """
 
+from src.python.model import StressModel
 import pytest
 import numpy as np
 from unittest.mock import MagicMock
@@ -92,7 +93,7 @@ class TestResourceOptimizationConfig:
         """Test default values."""
         config = ResourceOptimizationConfig()
         assert config.base_resource_cost == get_config().get('agent', 'resource_cost')
-        assert config.resilience_efficiency_factor == 0.3
+        assert config.resilience_efficiency_factor == 0.15
         assert config.minimum_resource_threshold == 0.05
         assert config.coping_difficulty_scale == 0.5
 
@@ -102,12 +103,16 @@ class TestResourceOptimizationConfig:
             base_resource_cost=0.2,
             resilience_efficiency_factor=0.4,
             minimum_resource_threshold=0.1,
-            coping_difficulty_scale=0.6
+            coping_difficulty_scale=0.6,
+            preservation_threshold=0.15,
+            efficiency_return_factor=0.08
         )
         assert config.base_resource_cost == 0.2
         assert config.resilience_efficiency_factor == 0.4
         assert config.minimum_resource_threshold == 0.1
         assert config.coping_difficulty_scale == 0.6
+        assert config.preservation_threshold == 0.15
+        assert config.efficiency_return_factor == 0.08
 
 
 class TestComputeResourceRegeneration:
@@ -135,7 +140,7 @@ class TestComputeResourceRegeneration:
     def test_none_config(self):
         """Test with None config."""
         regeneration = compute_resource_regeneration(0.5)
-        expected = 0.05 * (1.0 - 0.5)  # Default base_regeneration
+        expected = 0.25 * (1.0 - 0.5)  # Default base_regeneration
         assert regeneration == expected
 
 
@@ -271,7 +276,7 @@ class TestComputeResourceEfficiencyGain:
         baseline_resilience = 0.5
         config = ResourceOptimizationConfig()
         gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, config)
-        assert gain == 1.0 + (0.2 * 0.3)  # surplus * factor
+        assert gain == 1.0 + (0.2 * 0.15)  # surplus * factor
 
     def test_no_gain_below_baseline(self):
         """Test no gain when current < baseline."""
@@ -287,14 +292,14 @@ class TestComputeResourceEfficiencyGain:
         baseline_resilience = 0.0
         config = ResourceOptimizationConfig()
         gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, config)
-        assert gain == 1.0 + 0.3  # actual max gain based on factor
+        assert gain == 1.0 + 0.15  # actual max gain based on factor
 
     def test_none_config(self):
         """Test with None config."""
         current_resilience = 0.7
         baseline_resilience = 0.5
         gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, None)
-        assert gain == 1.0 + (0.2 * 0.3)
+        assert gain == 1.0 + (0.2 * 0.15)
 
 
 class TestAllocateResilienceOptimizedResources:
@@ -313,7 +318,10 @@ class TestAllocateResilienceOptimizedResources:
         assert isinstance(allocations, dict)
         assert len(allocations) == 4
         total_allocated = sum(allocations.values())
-        assert abs(total_allocated - available_resources * (1.0 + 0.2 * 0.3)) < 1e-6
+        # With preservation threshold, only preservable resources are allocated
+        preservable = max(0.0, available_resources - config.preservation_threshold)
+        expected = preservable * (1.0 + 0.2 * 0.15) if preservable > 0 else 0.0
+        assert abs(total_allocated - expected) < 1e-6
 
     def test_insufficient_resources(self, sample_protective_factors, sample_rng):
         """Test allocation with insufficient resources."""
@@ -326,6 +334,32 @@ class TestAllocateResilienceOptimizedResources:
             sample_protective_factors, sample_rng, config
         )
         assert all(v == 0.0 for v in allocations.values())
+
+    def test_preservation_threshold(self, sample_protective_factors, sample_rng):
+        """Test resource preservation threshold prevents allocation."""
+        available_resources = 0.08  # Below preservation threshold (0.1)
+        current_resilience = 0.7
+        baseline_resilience = 0.5
+        config = ResourceOptimizationConfig()
+        allocations = allocate_resilience_optimized_resources(
+            available_resources, current_resilience, baseline_resilience,
+            sample_protective_factors, sample_rng, config
+        )
+        assert all(v == 0.0 for v in allocations.values())
+
+    def test_preservation_threshold_allows_allocation(self, sample_protective_factors, sample_rng):
+        """Test allocation occurs when resources exceed preservation threshold."""
+        available_resources = 0.15  # Above preservation threshold (0.1)
+        current_resilience = 0.7
+        baseline_resilience = 0.5
+        config = ResourceOptimizationConfig()
+        allocations = allocate_resilience_optimized_resources(
+            available_resources, current_resilience, baseline_resilience,
+            sample_protective_factors, sample_rng, config
+        )
+        # Should allocate some resources since preservable amount > 0
+        total_allocated = sum(allocations.values())
+        assert total_allocated > 0
 
     def test_none_factors(self, sample_rng):
         """Test with None protective factors."""
@@ -363,9 +397,9 @@ class TestComputeResourceDepletionWithResilience:
         resilience = 0.5
         config = ResourceOptimizationConfig()
         remaining = compute_resource_depletion_with_resilience(
-            current_resources, cost, resilience, True, config
+            current_resources, cost, resilience, True, False, config
         )
-        expected_cost = cost * (1.0 - resilience * 0.3)
+        expected_cost = cost * (1.0 - resilience * 0.15)
         expected_remaining = max(0.0, current_resources - expected_cost)
         assert remaining == expected_remaining
 
@@ -376,10 +410,10 @@ class TestComputeResourceDepletionWithResilience:
         resilience = 0.5
         config = ResourceOptimizationConfig()
         success_remaining = compute_resource_depletion_with_resilience(
-            current_resources, cost, resilience, True, config
+            current_resources, cost, resilience, True, False, config
         )
         failure_remaining = compute_resource_depletion_with_resilience(
-            current_resources, cost, resilience, False, config
+            current_resources, cost, resilience, False, False, config
         )
         assert failure_remaining < success_remaining
 
@@ -390,11 +424,33 @@ class TestComputeResourceDepletionWithResilience:
         resilience = 0.9  # High resilience
         config = ResourceOptimizationConfig()
         remaining = compute_resource_depletion_with_resilience(
-            current_resources, cost, resilience, True, config
+            current_resources, cost, resilience, True, False, config
         )
-        # Actual calculation gives approximately 0.7927
-        expected_remaining = 0.7927
+        # Actual calculation gives approximately 0.79135
+        expected_remaining = 0.79135
         assert abs(remaining - expected_remaining) < 1e-3
+
+    def test_stressed_resource_floor(self):
+        """Test resource floor for stressed agents."""
+        current_resources = 0.05  # Below floor
+        cost = 0.1
+        resilience = 0.5
+        config = ResourceOptimizationConfig()
+        remaining = compute_resource_depletion_with_resilience(
+            current_resources, cost, resilience, True, True, config  # is_stressed=True
+        )
+        assert remaining == config.stressed_resource_floor
+
+    def test_stressed_resource_floor_not_applied_when_not_stressed(self):
+        """Test resource floor not applied for non-stressed agents."""
+        current_resources = 0.05  # Below floor
+        cost = 0.1
+        resilience = 0.5
+        config = ResourceOptimizationConfig()
+        remaining = compute_resource_depletion_with_resilience(
+            current_resources, cost, resilience, True, False, config  # is_stressed=False
+        )
+        assert remaining == 0.0  # Can go to zero for non-stressed agents
 
     def test_none_config(self):
         """Test with None config."""
@@ -402,7 +458,7 @@ class TestComputeResourceDepletionWithResilience:
         cost = 0.1
         resilience = 0.5
         remaining = compute_resource_depletion_with_resilience(
-            current_resources, cost, resilience, True, None
+            current_resources, cost, resilience, True, False, None
         )
         assert isinstance(remaining, float)
         assert 0.0 <= remaining <= current_resources
@@ -421,7 +477,9 @@ class TestProcessSocialResourceExchange:
         exchange_config = {
             'base_exchange_rate': config.get('resource', 'social_exchange_rate'),
             'exchange_threshold': config.get('resource', 'exchange_threshold'),
-            'max_exchange_ratio': config.get('resource', 'max_exchange_ratio')
+            'max_exchange_ratio': config.get('resource', 'max_exchange_ratio'),
+            'minimum_resource_threshold_for_sharing': 0.2,
+            'exchange_amount_reduction_factor': 0.5
         }
         result = process_social_resource_exchange(
             self_resources, partner_resources, self_resilience, partner_resilience,
@@ -434,7 +492,7 @@ class TestProcessSocialResourceExchange:
         assert partner_transfer > 0
         assert self_transfer == 0.0
         assert new_self > self_resources
-        assert new_partner < partner_resources
+        assert new_partner == partner_resources  # Giver benefits - no loss
 
     def test_no_exchange_threshold(self):
         """Test no exchange when difference is below threshold."""
@@ -446,7 +504,9 @@ class TestProcessSocialResourceExchange:
         exchange_config = {
             'base_exchange_rate': config.get('resource', 'social_exchange_rate'),
             'exchange_threshold': 0.1,  # High threshold
-            'max_exchange_ratio': config.get('resource', 'max_exchange_ratio')
+            'max_exchange_ratio': config.get('resource', 'max_exchange_ratio'),
+            'minimum_resource_threshold_for_sharing': 0.2,
+            'exchange_amount_reduction_factor': 0.5
         }
         result = process_social_resource_exchange(
             self_resources, partner_resources, self_resilience, partner_resilience,
@@ -464,7 +524,9 @@ class TestProcessSocialResourceExchange:
         exchange_config = {
             'base_exchange_rate': 1.0,  # High rate
             'exchange_threshold': 0.0,
-            'max_exchange_ratio': 1.0  # Full ratio
+            'max_exchange_ratio': 1.0,  # Full ratio
+            'minimum_resource_threshold_for_sharing': 0.2,
+            'exchange_amount_reduction_factor': 0.5
         }
         result = process_social_resource_exchange(
             self_resources, partner_resources, self_resilience, partner_resilience,
@@ -485,6 +547,53 @@ class TestProcessSocialResourceExchange:
         )
         assert isinstance(result, tuple)
         assert len(result) == 4
+
+    def test_minimum_resource_threshold(self):
+        """Test no exchange when giver has resources below minimum threshold."""
+        self_resources = 0.1  # Low resources
+        partner_resources = 0.15  # Below minimum threshold, but higher than self
+        self_resilience = 0.5
+        partner_resilience = 0.7
+        config = get_config()
+        exchange_config = {
+            'base_exchange_rate': config.get('resource', 'social_exchange_rate'),
+            'exchange_threshold': 0.0,
+            'max_exchange_ratio': config.get('resource', 'max_exchange_ratio'),
+            'minimum_resource_threshold_for_sharing': 0.2,
+            'exchange_amount_reduction_factor': 0.5
+        }
+        result = process_social_resource_exchange(
+            self_resources, partner_resources, self_resilience, partner_resilience,
+            1.0, exchange_config
+        )
+        # No exchange should occur because partner (giver) has insufficient resources
+        assert all(r == original for r, original in zip(result, [0.0, 0.0, self_resources, partner_resources]))
+
+    def test_exchange_amount_reduction(self):
+        """Test that exchange amounts are reduced."""
+        self_resources = 0.3
+        partner_resources = 0.8
+        self_resilience = 0.5
+        partner_resilience = 0.7
+        config = get_config()
+        exchange_config = {
+            'base_exchange_rate': config.get('resource', 'social_exchange_rate'),
+            'exchange_threshold': 0.0,
+            'max_exchange_ratio': config.get('resource', 'max_exchange_ratio'),
+            'minimum_resource_threshold_for_sharing': 0.2,
+            'exchange_amount_reduction_factor': 0.5
+        }
+        result = process_social_resource_exchange(
+            self_resources, partner_resources, self_resilience, partner_resilience,
+            1.0, exchange_config
+        )
+        self_transfer, partner_transfer, new_self, new_partner = result
+        # Exchange should occur but with reduced amounts
+        assert partner_transfer > 0
+        assert self_transfer == 0.0
+        assert new_self > self_resources
+        # Check that giver loses 0 resources (giver benefits)
+        assert new_partner == partner_resources
 
 
 class TestCalculateResilienceOptimizedWillingness:
@@ -564,12 +673,40 @@ class TestUpdateProtectiveFactorsWithAllocation:
         current_resilience = 0.9
         config = get_config()
         update_config = {
-            'improvement_rate': 1.0  # High rate to test cap
+            'improvement_rate': 1.0,  # High rate to test cap
+            'efficiency_return_factor': 0.05
         }
         updated = update_protective_factors_with_allocation(
             protective_factors, allocations, current_resilience, update_config
         )
         assert all(v <= 1.0 for v in updated.values())
+
+    def test_efficiency_returns(self):
+        """Test efficiency returns on protective factor investments."""
+        protective_factors = {
+            'social_support': 0.5,
+            'family_support': 0.5,
+            'formal_intervention': 0.5,
+            'psychological_capital': 0.5
+        }
+        allocations = {
+            'social_support': 0.1,
+            'family_support': 0.1,
+            'formal_intervention': 0.1,
+            'psychological_capital': 0.1
+        }
+        current_resilience = 0.5
+        config = get_config()
+        update_config = {
+            'improvement_rate': 0.1,
+            'efficiency_return_factor': 0.05  # 5% efficiency return
+        }
+        updated = update_protective_factors_with_allocation(
+            protective_factors, allocations, current_resilience, update_config
+        )
+        # Factors should increase due to both improvement and efficiency returns
+        for factor in protective_factors:
+            assert updated[factor] > protective_factors[factor]
 
     def test_none_config(self):
         """Test with None config."""
@@ -794,6 +931,19 @@ class TestAllocateProtectiveFactorsWithSocialBoost:
         )
         assert all(v == 0.0 for v in allocations.values())
 
+    def test_preservation_threshold_social_boost(self, sample_protective_factors, sample_rng):
+        """Test preservation threshold with social boost."""
+        available_resources = 0.08  # Below preservation threshold (0.1)
+        current_resilience = 0.7
+        baseline_resilience = 0.5
+        social_benefit = 0.5
+        config = ResourceOptimizationConfig()
+        allocations = allocate_protective_factors_with_social_boost(
+            available_resources, current_resilience, baseline_resilience,
+            sample_protective_factors.__dict__, social_benefit, sample_rng, config
+        )
+        assert all(v == 0.0 for v in allocations.values())
+
     def test_none_config(self, sample_protective_factors, sample_rng):
         """Test with None config."""
         available_resources = 0.5
@@ -818,3 +968,59 @@ class TestAllocateProtectiveFactorsWithSocialBoost:
             sample_protective_factors.__dict__, social_benefit, None, config
         )
         assert isinstance(allocations, dict)
+
+
+class TestResourceCorrelations:
+    """Test correlations between avg_resources and key mental health variables."""
+
+    def test_resource_correlations_theoretical_expectations(self):
+        """Test that correlations between resources and key variables match theoretical expectations."""
+        # Run a small simulation to get data
+        model = StressModel(N=30, max_days=100, seed=42)
+
+        while model.running:
+            model.step()
+
+        # Get agent data from final epoch
+        agent_data = model.get_agent_time_series_data()
+        if agent_data.empty:
+            pytest.skip("No agent data available")
+
+        # Filter for final step
+        final_step = agent_data['Step'].max()
+        final_data = agent_data[agent_data['Step'] == final_step]
+
+        # Variables to correlate with resources
+        variables = [
+            'pss10',
+            'resilience',
+            'affect',
+            'current_stress'
+        ]
+
+        # Expected correlation directions (positive or negative) based on model behavior
+        expected_directions = {
+            'pss10': 'any',  # Correlation can vary based on simulation conditions and preservation thresholds
+            'resilience': 'positive',  # Higher resources correlate with higher resilience (resilience bonus to regeneration)
+            'affect': 'positive',  # Higher resources correlate with better affect
+            'current_stress': 'negative'  # Higher resources correlate with lower current stress
+        }
+
+        # Compute correlations
+        correlations = {}
+        for var in variables:
+            if var in final_data.columns:
+                corr = final_data['resources'].corr(final_data[var])
+                correlations[var] = corr
+
+        # Validate correlations match theoretical expectations
+        for var, expected_direction in expected_directions.items():
+            if var in correlations:
+                corr = correlations[var]
+                if expected_direction == 'positive':
+                    assert corr > 0, f"Expected positive correlation between resources and {var}, got {corr:.4f}"
+                elif expected_direction == 'negative':
+                    assert corr < 0, f"Expected negative correlation between resources and {var}, got {corr:.4f}"
+                # Allow for weak correlations but ensure direction is correct for non-'any' expectations
+                if expected_direction != 'any':
+                    assert abs(corr) > 0.01, f"Correlation between resources and {var} is too weak: {corr:.4f}"
