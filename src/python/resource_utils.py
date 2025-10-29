@@ -63,8 +63,7 @@ def compute_resource_regeneration(
     if config is None:
         config = ResourceParams()
 
-    # Linear regeneration: γ_R * (1 - current_resources)
-    # This ensures resources tend toward 1.0 over time
+    # Linear regeneration to ensure resources tend toward 1.0 over time
     regeneration = config.base_regeneration * (1.0 - current_resources)
 
     return regeneration
@@ -296,7 +295,7 @@ def allocate_resilience_optimized_resources(
     temperature = max(0.1, base_temperature - resilience_focus)
 
     # Add resilience bonus to allocation weights
-    resilience_bonuses = [current_resilience * 0.2] * len(factors)  # 20% resilience bonus to all factors
+    resilience_bonuses = [current_resilience * 0.5] * len(factors)  # 50% resilience bonus to all factors
     adjusted_efficacies = [efficacy + bonus for efficacy, bonus in zip(efficacies, resilience_bonuses)]
 
     # Softmax decision making with resilience-adjusted temperature
@@ -340,10 +339,10 @@ def compute_resource_depletion_with_resilience(
 
     # Failed coping attempts cost more (inefficient resource use)
     if not coping_successful:
-        optimized_cost *= 1.3  # 30% penalty for failed coping
+        optimized_cost *= 1.1  # 10% penalty for failed coping
 
     # Ensure minimum cost even with very high resilience
-    optimized_cost = max(cost * 0.3, optimized_cost)
+    optimized_cost = max(cost * 0.1, optimized_cost)
 
     # Deplete resources
     remaining_resources = max(0.0, current_resources - optimized_cost)
@@ -426,11 +425,11 @@ def process_social_resource_exchange(
         if resource_diff > 0:
             # Partner gave resources to self
             new_self_resources = self_resources + final_exchange_amount
-            new_partner_resources = partner_resources - final_exchange_amount
+            new_partner_resources = partner_resources - (0.1 * final_exchange_amount)
             return 0.0, final_exchange_amount, new_self_resources, new_partner_resources
         else:
             # Self gave resources to partner
-            new_self_resources = self_resources - final_exchange_amount
+            new_self_resources = self_resources - (0.1 * final_exchange_amount)
             new_partner_resources = partner_resources + final_exchange_amount
             return final_exchange_amount, 0.0, new_self_resources, new_partner_resources
 
@@ -697,8 +696,8 @@ def allocate_protective_factors_with_social_boost(
         rng = np.random.default_rng()
 
     # Social support increases available resources for allocation
-    social_resource_boost = social_benefit * 0.05  # 5% boost per social benefit unit
-    available_for_allocation = (available_resources * 0.3) + social_resource_boost
+    social_resource_boost = social_benefit * 0.1  # 10% boost per social benefit unit
+    available_for_allocation = (available_resources * 0.1) + social_resource_boost
 
     if available_for_allocation > 0:
         # Use resilience-optimized allocation function with social enhancement

@@ -308,7 +308,7 @@ class Person(mesa.Agent):
         )
 
         # Affect influences resource regeneration (positive affect helps recovery)
-        affect_multiplier = 1.0 + 0.2 * max(0.0, self.affect)  # Positive affect boosts regeneration
+        affect_multiplier = 1.0 + 0.5 * max(0.0, self.affect)  # Positive affect boosts regeneration
         base_regeneration = compute_resource_regeneration(self.resources, regen_params)
         self.resources += base_regeneration * affect_multiplier
 
@@ -716,6 +716,10 @@ class Person(mesa.Agent):
                 current_resilience=self.resilience
             )
 
+            # Give 50% resource reward after successful coping
+            resource_reward = base_resource_cost * 0.5
+            self.resoures = clamp(self.resources + resource_reward, 0.0, 1.0)
+
             # Deduct allocated resources
             total_allocated = sum(allocations.values())
             self.resources -= total_allocated
@@ -758,69 +762,6 @@ class Person(mesa.Agent):
 
         # Ensure stress level is in valid range
         self.current_stress = clamp(self.current_stress, 0.0, 1.0)
-
-    def _update_stress_dimensions_from_event(self, challenge, hindrance, coped_successfully):
-        """
-        Update agent's controllability and overload dimensions based on stress event outcomes.
-
-        This creates a direct feedback loop between stress events and PSS-10 dimensions:
-        - Challenge events build controllability when coping succeeds
-        - Hindrance events reduce controllability and increase overload
-        - Successful coping improves both dimensions
-        - Failed coping worsens both dimensions
-
-        Args:
-            challenge: Challenge component from event appraisal (0-1)
-            hindrance: Hindrance component from event appraisal (0-1)
-            coped_successfully: Whether the coping attempt was successful
-        """
-        # Get configuration for stress dimension updates
-        cfg = get_config()
-
-        # Base update rates from configuration
-        controllability_update_rate = cfg.get('stress_dynamics', 'controllability_update_rate')
-        overload_update_rate = cfg.get('stress_dynamics', 'overload_update_rate')
-
-        # Challenge vs hindrance effects on controllability
-        if coped_successfully:
-            # Successful coping: challenge builds controllability, hindrance slightly reduces it
-            controllability_change = (challenge * 0.15) - (hindrance * 0.08)
-        else:
-            # Failed coping: both challenge and hindrance reduce controllability
-            controllability_change = -(challenge * 0.12) - (hindrance * 0.18)
-
-        # Apply controllability update with decay toward baseline
-        baseline_controllability = 0.5  # Neutral baseline
-        current_controllability = self.stress_controllability
-
-        # Move toward baseline when no strong events, but allow event-driven changes
-        homeostasis_pull = (baseline_controllability - current_controllability) * 0.05
-        event_effect = controllability_change * controllability_update_rate
-
-        self.stress_controllability += homeostasis_pull + event_effect
-        self.stress_controllability = clamp(self.stress_controllability, 0.0, 1.0)
-
-        # Overload effects: hindrance increases overload, challenge reduces it slightly
-        if coped_successfully:
-            # Successful coping: hindrance still increases overload but less, challenge reduces it
-            overload_change = (hindrance * 0.12) - (challenge * 0.08)
-        else:
-            # Failed coping: both increase overload significantly
-            overload_change = (hindrance * 0.25) + (challenge * 0.15)
-
-        # Apply overload update with decay toward baseline
-        baseline_overload = 0.5  # Neutral baseline
-        current_overload = self.stress_overload
-
-        # Move toward baseline when no strong events, but allow event-driven changes
-        homeostasis_pull = (baseline_overload - current_overload) * 0.05
-        event_effect = overload_change * overload_update_rate
-
-        self.stress_overload += homeostasis_pull + event_effect
-        self.stress_overload = clamp(self.stress_overload, 0.0, 1.0)
-
-        # Update recent stress intensity and momentum for dynamic PSS-10 response
-        self._update_recent_stress_intensity(challenge, hindrance, coped_successfully)
 
     def _daily_reset(self, current_day):
         """

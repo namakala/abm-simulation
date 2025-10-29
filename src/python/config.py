@@ -194,7 +194,7 @@ class Config:
         self.agent_stress_probability = self._get_env_value('AGENT_STRESS_PROBABILITY', float, 0.2)
         self.agent_coping_success_rate = self._get_env_value('AGENT_COPING_SUCCESS_RATE', float, 0.5)
         self.agent_subevents_per_day = self._get_env_value('AGENT_SUBEVENTS_PER_DAY', int, 3)
-        self.agent_resource_cost = self._get_env_value('AGENT_RESOURCE_COST', float, 0.1)
+        self.agent_resource_cost = self._get_env_value('AGENT_RESOURCE_COST', float, 0.05)
 
         # Additional agent attributes for backward compatibility
         self.agent_initial_resilience = self.agent_initial_resilience_mean
@@ -289,7 +289,7 @@ class Config:
         self.protective_formal_intervention = self._get_env_value('PROTECTIVE_FORMAL_INTERVENTION', float, 0.5)
         self.protective_psychological_capital = self._get_env_value('PROTECTIVE_PSYCHOLOGICAL_CAPITAL', float, 0.5)
 
-        self.resource_base_regeneration = self._get_env_value('RESOURCE_BASE_REGENERATION', float, 0.05)
+        self.resource_base_regeneration = self._get_env_value('RESOURCE_BASE_REGENERATION', float, 0.15)
         self.resource_allocation_cost = self._get_env_value('RESOURCE_ALLOCATION_COST', float, 0.15)
         self.resource_cost_exponent = self._get_env_value('RESOURCE_COST_EXPONENT', float, 1.5)
 
