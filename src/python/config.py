@@ -236,9 +236,9 @@ class Config:
         self.pss10_item_sds = self._get_env_array('PSS10_ITEM_SD', float, [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8], expected_length=10)
 
         # PSS-10 bifactor model parameters
-        self.pss10_load_controllability = self._get_env_array('PSS10_LOAD_CONTROLLABILITY', float, [0.2, 0.8, 0.1, 0.7, 0.6, 0.1, 0.8, 0.6, 0.7, 0.1], expected_length=10)
-        self.pss10_load_overload = self._get_env_array('PSS10_LOAD_OVERLOAD', float, [0.7, 0.3, 0.8, 0.2, 0.4, 0.9, 0.2, 0.3, 0.4, 0.9], expected_length=10)
-        self.pss10_bifactor_correlation = self._get_env_value('PSS10_BIFACTOR_COR', float, 0.3)
+        self.pss10_load_controllability = self._get_env_array('PSS10_LOAD_CONTROLLABILITY', float, [0, 0, 0, 1, 1, 0, 1, 1, 0, 0], expected_length=10)
+        self.pss10_load_overload = self._get_env_array('PSS10_LOAD_OVERLOAD', float, [1, 1, 1, 0, 0, 1, 0, 0, 1, 1], expected_length=10)
+        self.pss10_bifactor_correlation = self._get_env_value('PSS10_BIFACTOR_COR', float, -0.3)
 
         # PSS-10 standard deviations for controllability and overload factors
         self.pss10_controllability_sd = self._get_env_value('PSS10_CONTROLLABILITY_SD', float, 1.0)
@@ -289,7 +289,7 @@ class Config:
         self.protective_formal_intervention = self._get_env_value('PROTECTIVE_FORMAL_INTERVENTION', float, 0.5)
         self.protective_psychological_capital = self._get_env_value('PROTECTIVE_PSYCHOLOGICAL_CAPITAL', float, 0.5)
 
-        self.resource_base_regeneration = self._get_env_value('RESOURCE_BASE_REGENERATION', float, 0.15)
+        self.resource_base_regeneration = self._get_env_value('RESOURCE_BASE_REGENERATION', float, 0.25)
         self.resource_allocation_cost = self._get_env_value('RESOURCE_ALLOCATION_COST', float, 0.15)
         self.resource_cost_exponent = self._get_env_value('RESOURCE_COST_EXPONENT', float, 1.5)
 
@@ -297,9 +297,9 @@ class Config:
         self.protective_improvement_rate = self._get_env_value('PROTECTIVE_IMPROVEMENT_RATE', float, 0.5)
 
         # Social resource exchange parameters
-        self.resource_social_exchange_rate = self._get_env_value('RESOURCE_SOCIAL_EXCHANGE_RATE', float, 0.1)
+        self.resource_social_exchange_rate = self._get_env_value('RESOURCE_SOCIAL_EXCHANGE_RATE', float, 0.5)
         self.resource_exchange_threshold = self._get_env_value('RESOURCE_EXCHANGE_THRESHOLD', float, 0.2)
-        self.resource_max_exchange_ratio = self._get_env_value('RESOURCE_MAX_EXCHANGE_RATIO', float, 0.3)
+        self.resource_max_exchange_ratio = self._get_env_value('RESOURCE_MAX_EXCHANGE_RATIO', float, 0.5)
 
         # ==============================================
         # MATHEMATICAL UTILITY PARAMETERS
