@@ -302,15 +302,19 @@ class Person(mesa.Agent):
         )
         self.resilience = min(1.0, self.resilience + protective_boost)
 
-        # Apply enhanced resource regeneration with affect influence
+        # Apply enhanced resource regeneration with affect and resilience influence
         regen_params = ResourceParams(
             base_regeneration=config.get('resource', 'base_regeneration')
         )
 
         # Affect influences resource regeneration (positive affect helps recovery)
-        affect_multiplier = 1.0 + 0.5 * max(0.0, self.affect)  # Positive affect boosts regeneration
+        affect_multiplier = 1.0 + 0.5 * max(0.0, self.affect)  # Increased effectiveness: positive affect boosts regeneration more
+
+        # Resilience provides additional regeneration bonus (higher resilience = better resource management)
+        resilience_multiplier = 1.0 + 0.3 * self.resilience  # Resilience bonus for resource regeneration
+
         base_regeneration = compute_resource_regeneration(self.resources, regen_params)
-        self.resources += base_regeneration * affect_multiplier
+        self.resources += base_regeneration * affect_multiplier * resilience_multiplier
 
         # Integrate social support with resilience optimization
         self.resilience = integrate_social_resilience_optimization(
@@ -643,7 +647,8 @@ class Person(mesa.Agent):
         self.stress_controllability, self.stress_overload = update_stress_dimensions_from_pss10_feedback(
             current_controllability=self.stress_controllability,
             current_overload=self.stress_overload,
-            pss10_responses=self.pss10_responses
+            pss10_responses=self.pss10_responses,
+            current_resources=self.resources
         )
 
         # STEP 8: Validate theoretical correlations are maintained
@@ -686,6 +691,7 @@ class Person(mesa.Agent):
             cost=optimized_cost,
             current_resilience=self.resilience,
             coping_successful=coped_successfully,
+            is_stressed=self.stressed,
             config=resource_config
         )
 
@@ -700,6 +706,10 @@ class Person(mesa.Agent):
 
         # STEP 11: Allocate resources to protective factors with complete stress integration
         if is_stressed and coped_successfully:
+            # Give 75% resource reward after successful coping
+            resource_reward = base_resource_cost * 0.75
+            self.resources = clamp(self.resources + resource_reward, 0.0, 1.0)
+
             # Use utility function for protective factor allocation
             allocations = allocate_protective_factors(
                 available_resources=self.resources * 0.3,
@@ -716,13 +726,13 @@ class Person(mesa.Agent):
                 current_resilience=self.resilience
             )
 
-            # Give 50% resource reward after successful coping
-            resource_reward = base_resource_cost * 0.5
-            self.resoures = clamp(self.resources + resource_reward, 0.0, 1.0)
-
             # Deduct allocated resources
             total_allocated = sum(allocations.values())
             self.resources -= total_allocated
+        else:
+            # Add small resource penalty for failed coping attempts
+            resource_penalty = base_resource_cost * 0.1  # 10% penalty
+            self.resources = clamp(self.resources - resource_penalty, 0.0, 1.0)
 
         return challenge, hindrance
 

@@ -789,6 +789,7 @@ def update_stress_dimensions_from_pss10_feedback(
     current_controllability: float,
     current_overload: float,
     pss10_responses: Dict[int, int],
+    current_resources: float,
     config: Optional[Dict[str, float]] = None
 ) -> Tuple[float, float]:
     """
@@ -798,6 +799,7 @@ def update_stress_dimensions_from_pss10_feedback(
         current_controllability: Current stress controllability ∈ [0,1]
         current_overload: Current stress overload ∈ [0,1]
         pss10_responses: PSS-10 item responses
+        current_resources: Agent's current resource level ∈ [0,1]
         config: Configuration for feedback weighting
 
     Returns:
@@ -808,8 +810,13 @@ def update_stress_dimensions_from_pss10_feedback(
 
     if config is None:
         config = {
-            'feedback_weight': 0.01  # Weight for PSS-10 feedback
+            'feedback_weight': 0.005,  # Further damped weight for PSS-10 feedback
+            'resource_cost_factor': 0.1  # Resource cost consideration
         }
+
+    # Resource cost consideration: reduce feedback when resources are low
+    resource_cost_penalty = (1.0 - current_resources) * config['resource_cost_factor']
+    effective_feedback_weight = config['feedback_weight'] * (1.0 - resource_cost_penalty)
 
     # Calculate controllability stress from relevant PSS-10 items
     controllability_items = [4, 5, 7, 8]  # Reverse scored items
@@ -825,10 +832,9 @@ def update_stress_dimensions_from_pss10_feedback(
     if controllability_scores:
         pss10_controllability = np.mean(controllability_scores)
         # Blend current stress dimension with PSS-10 feedback
-        feedback_weight = config['feedback_weight']
         updated_controllability = (
-            current_controllability * (1.0 - feedback_weight) +
-            pss10_controllability * feedback_weight
+            current_controllability * (1.0 - effective_feedback_weight) +
+            pss10_controllability * effective_feedback_weight
         )
     else:
         updated_controllability = current_controllability
@@ -847,10 +853,9 @@ def update_stress_dimensions_from_pss10_feedback(
     if overload_scores:
         pss10_overload = np.mean(overload_scores)
         # Blend current stress dimension with PSS-10 feedback
-        feedback_weight = config['feedback_weight']
         updated_overload = (
-            current_overload * (1.0 - feedback_weight) +
-            pss10_overload * feedback_weight
+            current_overload * (1.0 - effective_feedback_weight) +
+            pss10_overload * effective_feedback_weight
         )
     else:
         updated_overload = current_overload

@@ -41,9 +41,12 @@ class ResourceParams:
 class ResourceOptimizationConfig:
     """Configuration parameters for resilience-based resource optimization."""
     base_resource_cost: float = field(default_factory=lambda: get_config().get('agent', 'resource_cost'))
-    resilience_efficiency_factor: float = 0.3  # 30% efficiency gain from resilience
+    resilience_efficiency_factor: float = 0.15  # 15% efficiency gain from resilience
     minimum_resource_threshold: float = 0.05  # Minimum resources needed for allocation
     coping_difficulty_scale: float = 0.5  # Scale for event difficulty effects
+    stressed_resource_floor: float = 0.1  # Minimum resources maintained for stressed agents
+    preservation_threshold: float = 0.1  # Resources to preserve for basic needs before allocation
+    efficiency_return_factor: float = 0.05  # Efficiency return on protective factor investments
 
 
 def compute_resource_regeneration(
@@ -238,12 +241,14 @@ def allocate_resilience_optimized_resources(
     config: Optional[ResourceOptimizationConfig] = None
 ) -> Dict[str, float]:
     """
-    Allocate resources with resilience-based optimization.
+    Allocate resources with resilience-based optimization and preservation thresholds.
 
     Higher resilience provides:
     1. More efficient resource utilization (lower effective costs)
     2. Better allocation decisions (improved softmax weighting)
     3. Enhanced protective factor development
+    4. Resource preservation for basic needs
+    5. Efficiency returns on protective factor investments
 
     Args:
         available_resources: Total resources available for allocation
@@ -274,11 +279,21 @@ def allocate_resilience_optimized_resources(
             'psychological_capital': 0.0
         }
 
+    # Preserve resources for basic needs before allocation
+    preservable_resources = max(0.0, available_resources - config.preservation_threshold)
+    if preservable_resources <= 0:
+        return {
+            'social_support': 0.0,
+            'family_support': 0.0,
+            'formal_intervention': 0.0,
+            'psychological_capital': 0.0
+        }
+
     # Compute resilience-based efficiency gain
     efficiency_gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, config)
 
-    # Apply efficiency gain to available resources (more resilience = more effective resources)
-    effective_resources = available_resources * efficiency_gain
+    # Apply efficiency gain to preservable resources (more resilience = more effective resources)
+    effective_resources = preservable_resources * efficiency_gain
 
     # Create allocation weights based on efficacy and resilience
     factors = ['social_support', 'family_support', 'formal_intervention', 'psychological_capital']
@@ -316,6 +331,7 @@ def compute_resource_depletion_with_resilience(
     cost: float,
     current_resilience: float,
     coping_successful: bool,
+    is_stressed: bool,
     config: Optional[ResourceOptimizationConfig] = None
 ) -> float:
     """
@@ -326,6 +342,7 @@ def compute_resource_depletion_with_resilience(
         cost: Base cost of coping attempt
         current_resilience: Agent's current resilience level
         coping_successful: Whether the coping attempt was successful
+        is_stressed: Whether the agent is currently stressed
         config: Resource optimization configuration
 
     Returns:
@@ -346,6 +363,10 @@ def compute_resource_depletion_with_resilience(
 
     # Deplete resources
     remaining_resources = max(0.0, current_resources - optimized_cost)
+
+    # For stressed agents, maintain minimum resource floor to preserve correlation patterns
+    if is_stressed:
+        remaining_resources = max(remaining_resources, config.stressed_resource_floor)
 
     return remaining_resources
 
@@ -371,7 +392,7 @@ def process_social_resource_exchange(
 
     Returns:
         Tuple of (self_resource_transfer, partner_resource_transfer,
-                 new_self_resources, new_partner_resources)
+                  new_self_resources, new_partner_resources)
     """
     # Get configuration for resource exchange
     cfg = get_config()
@@ -380,7 +401,9 @@ def process_social_resource_exchange(
         config = {
             'base_exchange_rate': cfg.get('resource', 'social_exchange_rate'),
             'exchange_threshold': cfg.get('resource', 'exchange_threshold'),
-            'max_exchange_ratio': cfg.get('resource', 'max_exchange_ratio')
+            'max_exchange_ratio': cfg.get('resource', 'max_exchange_ratio'),
+            'minimum_resource_threshold_for_sharing': 0.2,  # Minimum resources needed before sharing
+            'exchange_amount_reduction_factor': 0.5  # Reduce exchange amounts to minimize correlation impact
         }
 
     # Calculate resource difference (positive if partner has more resources)
@@ -399,6 +422,10 @@ def process_social_resource_exchange(
         # Self has more resources - we can provide support
         giver, receiver = self_resources, partner_resources
         giver_resilience, receiver_resilience = self_resilience, partner_resilience
+
+    # Check minimum resource threshold for sharing
+    if giver < config['minimum_resource_threshold_for_sharing']:
+        return 0.0, 0.0, self_resources, partner_resources
 
     # Resilience-optimized exchange calculation
     # Higher giver resilience = more generous sharing
@@ -419,17 +446,20 @@ def process_social_resource_exchange(
     # Apply social support boost
     final_exchange_amount = optimized_amount * social_support_boost
 
+    # Reduce exchange amount to minimize correlation impact
+    final_exchange_amount *= config['exchange_amount_reduction_factor']
+
     # Apply exchange only if giver has sufficient resources
     if final_exchange_amount > 0 and giver >= final_exchange_amount:
         # Transfer resources
         if resource_diff > 0:
             # Partner gave resources to self
             new_self_resources = self_resources + final_exchange_amount
-            new_partner_resources = partner_resources - (0.1 * final_exchange_amount)
+            new_partner_resources = partner_resources  # No loss for giver (giver benefits)
             return 0.0, final_exchange_amount, new_self_resources, new_partner_resources
         else:
             # Self gave resources to partner
-            new_self_resources = self_resources - (0.1 * final_exchange_amount)
+            new_self_resources = self_resources  # No loss for giver (giver benefits)
             new_partner_resources = partner_resources + final_exchange_amount
             return final_exchange_amount, 0.0, new_self_resources, new_partner_resources
 
@@ -462,7 +492,7 @@ def update_protective_factors_with_allocation(
     config: Optional[Dict[str, float]] = None
 ) -> Dict[str, float]:
     """
-    Update protective factor levels based on resource allocations.
+    Update protective factor levels based on resource allocations with efficiency returns.
 
     Args:
         protective_factors: Current protective factor efficacy levels
@@ -477,7 +507,8 @@ def update_protective_factors_with_allocation(
 
     if config is None:
         config = {
-            'improvement_rate': cfg.get('resource', 'protective_improvement_rate')
+            'improvement_rate': cfg.get('resource', 'protective_improvement_rate'),
+            'efficiency_return_factor': 0.05  # Efficiency return on investments
         }
 
     updated_factors = protective_factors.copy()
@@ -497,7 +528,10 @@ def update_protective_factors_with_allocation(
             # Apply resilience-based efficiency gain
             efficiency_gain = 1.0 + resilience_bonus
 
-            efficacy_increase = (allocation * improvement_rate * investment_effectiveness * efficiency_gain)
+            # Add efficiency returns: investments yield additional benefits over time
+            efficiency_return = allocation * config.get('efficiency_return_factor', 0.05)
+
+            efficacy_increase = (allocation * improvement_rate * investment_effectiveness * efficiency_gain) + efficiency_return
             updated_factors[factor] = min(1.0, current_efficacy + efficacy_increase)
 
     return updated_factors
@@ -675,7 +709,7 @@ def allocate_protective_factors_with_social_boost(
     config: Optional[ResourceOptimizationConfig] = None
 ) -> Dict[str, float]:
     """
-    Allocate protective factors with social support enhancement.
+    Allocate protective factors with social support enhancement and preservation thresholds.
 
     Args:
         available_resources: Total resources available for allocation
@@ -695,11 +729,21 @@ def allocate_protective_factors_with_social_boost(
     if rng is None:
         rng = np.random.default_rng()
 
+    # Preserve resources for basic needs before allocation
+    preservable_resources = max(0.0, available_resources - config.preservation_threshold)
+    if preservable_resources <= 0:
+        return {
+            'social_support': 0.0,
+            'family_support': 0.0,
+            'formal_intervention': 0.0,
+            'psychological_capital': 0.0
+        }
+
     # Social support increases available resources for allocation
     social_resource_boost = social_benefit * 0.1  # 10% boost per social benefit unit
-    available_for_allocation = (available_resources * 0.1) + social_resource_boost
+    available_for_allocation = preservable_resources * 0.1 + social_resource_boost
 
-    if available_for_allocation > 0:
+    if available_for_allocation > 0 and preservable_resources > 0:
         # Use resilience-optimized allocation function with social enhancement
         allocations = allocate_resilience_optimized_resources(
             available_resources=available_for_allocation,
