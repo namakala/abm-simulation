@@ -29,7 +29,7 @@ At the beginning of each day, the system captures initial values for affect and 
 Each agent maintains baseline values that represent their natural equilibrium points, established during initialization and used throughout the simulation for homeostatic regulation and behavioral reference.
 
 **Baseline Value Definitions**:
-- **Baseline Resilience** $R_{\text{0}} \in [0,1]$: Agent's natural resilience capacity, established at initialization using sigmoid transformation of normal distribution
+- **Baseline Resilience** $\mathfrak{R}_{\text{0}} \in [0,1]$: Agent's natural resilience capacity, established at initialization using sigmoid transformation of normal distribution
 - **Baseline Affect** $A_{\text{0}} \in [-1,1]$: Agent's natural emotional equilibrium, established at initialization using tanh transformation of normal distribution
 - **Baseline Resources**: Maximum resource capacity (typically 1.0) toward which regeneration occurs
 - **Baseline PSS-10**: Individual stress assessment baseline derived from initial stress dimensions
@@ -37,12 +37,12 @@ Each agent maintains baseline values that represent their natural equilibrium po
 **Mathematical Baseline Generation**:
 
 **Resilience Baseline**:
-$$R_{\text{0}} = \sigma\left(\frac{X - \mu_{R,\text{init}}}{\sigma_{R,\text{init}}}\right)$$
+$$\mathfrak{R}_{\text{0}} = \sigma\left(\frac{X - \mu_{\mathfrak{R},\text{init}}}{\sigma_{\mathfrak{R},\text{init}}}\right)$$
 Where:
-- $X \sim \mathcal{N}(\mu_{R,\text{init}}, \sigma_{R,\text{init}}^2)$ is normally distributed
+- $X \sim \mathcal{N}(\mu_{\mathfrak{R},\text{init}}, \sigma_{\mathfrak{R},\text{init}}^2)$ is normally distributed
 - $\sigma(x) = \frac{1}{1+e^{-x}}$ is sigmoid function ensuring [0,1] range
-- $\mu_{R,\text{init}} = 0.5$ (default mean resilience)
-- $\sigma_{R,\text{init}} = 0.2$ (default standard deviation)
+- $\mu_{\mathfrak{R},\text{init}} = 0.5$ (default mean resilience)
+- $\sigma_{\mathfrak{R},\text{init}} = 0.2$ (default standard deviation)
 
 **Affect Baseline**:
 $$A_{\text{0}} = \tanh\left(\frac{X - \mu_{A,\text{init}}}{\sigma_{A,\text{init}}}\right)$$
@@ -173,7 +173,7 @@ These components combine to determine daily resilience changes.
 
 **Integrated Resilience Update:**
 
-$$R_{t+1} = R_t + \Delta R_{\chi\zeta} + \Delta R_p + \Delta R_o + \Delta R_s + \lambda_{\text{resilience}} \cdot (R_{\text{0}} - R_t)$$
+$$\mathfrak{R}_{t+1} = \mathfrak{R}_t + \Delta \mathfrak{R}_{\chi\zeta} + \Delta \mathfrak{R}_p + \Delta \mathfrak{R}_o + \Delta \mathfrak{R}_s + \lambda_{\text{resilience}} \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t)$$
 
 **Challenge-Hindrance Effect:**
 
@@ -194,13 +194,13 @@ $$\Delta R_o = \begin{cases}
 \end{cases}$$
 
 Where:
-- $R_t \in [0,1]$ is current resilience
-- $\Delta R_{\chi\zeta}$ is challenge-hindrance effect
-- $\Delta R_p$ is protective factor boost
-- $\Delta R_o$ is overload effect
-- $\Delta R_s$ is social support effect
+- $\mathfrak{R}_t \in [0,1]$ is current resilience
+- $\Delta \mathfrak{R}_{\chi\zeta}$ is challenge-hindrance effect
+- $\Delta \mathfrak{R}_p$ is protective factor boost
+- $\Delta \mathfrak{R}_o$ is overload effect
+- $\Delta \mathfrak{R}_s$ is social support effect
 - $\lambda_{\text{resilience}} \in [0,1]$ is homeostatic rate
-- $R_{\text{0}} \in [0,1]$ is baseline resilience
+- $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience
 - $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
 - $e_f \in [0,1]$ is efficacy of factor $f$
 - $\theta_{\text{boost}} > 0$ is boost rate parameter
@@ -250,13 +250,13 @@ $$x_{t+1} = x_t + \lambda_x \cdot (x_{\text{0}} - x_t)$$
 
 $$x_{t+1} = \begin{cases}
 \mathrm{clamp}(x_{t+1}, -1, 1) & \text{if } x = A \\
-\mathrm{clamp}(x_{t+1}, 0, 1) & \text{if } x = R
+\mathrm{clamp}(x_{t+1}, 0, 1) & \text{if } x = \mathfrak{R}
 \end{cases}$$
 
 Where:
-- $x_t$ is current value (affect $A_t$ or resilience $R_t$)
+- $x_t$ is current value (affect $A_t$ or resilience $\mathfrak{R}_t$)
 - $\lambda_x \in [0,1]$ is homeostatic rate ($\lambda_{\text{affect}}$ for affect, $\lambda_{\text{resilience}}$ for resilience)
-- $x_{\text{0}}$ is baseline value ($A_{\text{0}}$ or $R_{\text{0}}$)
+- $x_{\text{0}}$ is baseline value ($A_{\text{0}}$ or $\mathfrak{R}_{\text{0}}$)
 
 **Implementation**: [`compute_homeostatic_adjustment()`](../../src/python/affect_utils.py#L1063-L1118) in `affect_utils.py`
 

@@ -18,9 +18,9 @@ This document provides a comprehensive reference mapping all environment variabl
 | `NETWORK_ADAPTATION_THRESHOLD` | $\eta_{\text{adapt}}$ | 3 | Threshold for triggering network adaptation |
 | `NETWORK_REWIRE_PROBABILITY` | $p_{\text{rewire}}$ | 0.01 | Probability of rewiring network connections |
 | `NETWORK_HOMOPHILY_STRENGTH` | $\delta_{\text{homophily}}$ | 0.7 | Strength of homophily in network connections |
-| `AGENT_INITIAL_RESILIENCE` | $R_{\text{0}}$ | 0.5 | Initial resilience level for agents |
-| `AGENT_INITIAL_AFFECT` | $A_{\text{0}}$ | 0.0 | Initial affect level for agents |
-| `AGENT_INITIAL_RESOURCES` | $R$ | 0.6 | Initial resource level for agents |
+| `AGENT_INITIAL_RESILIENCE` | $\mu_{\mathfrak{R}, \text{0}}$ | 0.5 | Initial resilience mean for agents |
+| `AGENT_INITIAL_AFFECT` | $\mu_{A, \text{0}}$ | 0.0 | Initial affect mean for agents |
+| `AGENT_INITIAL_RESOURCES` | $\mu_{R, \text{0}}$ | 0.6 | Initial resources mean for agents |
 | `AGENT_STRESS_PROBABILITY` | - | 0.5 | Probability of stress events for agents |
 | `AGENT_COPING_SUCCESS_RATE` | $p_b$ | 0.5 | Base success rate for coping with stress |
 | `AGENT_SUBEVENTS_PER_DAY` | $n_{\text{subevents}}$ | 3 | Number of subevents per day for each agent |

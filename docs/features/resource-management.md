@@ -209,14 +209,14 @@ Low resources may create negative affect, representing the psychological stress 
 
 **Protective Factor Resilience Boost:**
 
-$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_{\text{0}} - R_c) \cdot \theta_{\text{boost}}$$
+$$\Delta \mathfrak{R}_p = \sum_{f \in F} e_f \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_c) \cdot \theta_{\text{boost}}$$
 
 Where:
-- $\Delta R_p$ is resilience boost from protective factors
+- $\Delta \mathfrak{R}_p$ is resilience boost from protective factors
 - $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
 - $e_f \in [0,1]$ is efficacy of factor $f$
-- $R_{\text{0}} \in [0,1]$ is baseline resilience
-- $R_c \in [0,1]$ is current resilience
+- $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience
+- $\mathfrak{R}_c \in [0,1]$ is current resilience
 - $\theta_{\text{boost}} > 0$ is boost rate parameter
 
 ### Resilience System Integration

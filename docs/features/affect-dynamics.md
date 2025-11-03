@@ -48,7 +48,7 @@ $$\Delta A_i = \alpha_p \cdot (A_j - A_i) \cdot \begin{cases}
 
 **Resilience Influence:**
 
-$$\Delta R_i = \lambda_{\text{res,interact}} \cdot A_j \cdot \mathbb{1}_{|A_j| > \eta_{\text{affect}}}$$
+$$\Delta \mathfrak{R}_i = \lambda_{\text{res,interact}} \cdot A_j \cdot \mathbb{1}_{|A_j| > \eta_{\text{affect}}}$$
 
 Where:
 - $\lambda_{\text{res,interact}} > 0$ is resilience influence rate
@@ -157,10 +157,10 @@ Some resilience effects only occur when emotional states exceed certain threshol
 
 **Social Resilience Optimization:**
 
-$$\Delta R_{\text{soc}} = f(\text{daily interactions}, \text{daily support exchanges}, \text{resources}, R_{\text{0}}, \mathbf{e})$$
+$$\Delta \mathfrak{R}_{\text{soc}} = f(\text{daily interactions}, \text{daily support exchanges}, \text{resources}, \mathfrak{R}_{\text{0}}, \mathbf{e})$$
 
 Where:
-- $\Delta R_{\text{soc}}$ is resilience change from social optimization
+- $\Delta \mathfrak{R}_{\text{soc}}$ is resilience change from social optimization
 - $f$ integrates social benefit with resource allocation
 - $\mathbf{e}$ is protective factor efficacy vector
 

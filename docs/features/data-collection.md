@@ -89,7 +89,7 @@ Agent baseline initialization establishes the starting state for each individual
 
 | Variable | Symbol | Range | Description | Implementation |
 |----------|--------|-------|-------------|---------------|
-| **Baseline Resilience** | $R_{\text{0}}$ | [0,1] | Natural equilibrium point for resilience capacity | [`sigmoid_transform()`](../../src/python/math_utils.py#L417-L456) |
+| **Baseline Resilience** | $\mathfrak{R}_{\text{0}}$ | [0,1] | Natural equilibrium point for resilience capacity | [`sigmoid_transform()`](../../src/python/math_utils.py#L417-L456) |
 | **Baseline Affect** | $A_{\text{0}}$ | [-1,1] | Natural equilibrium point for emotional state | [`tanh_transform()`](../../src/python/math_utils.py#L375-L414) |
 | **Initial Resources** | $R$ | [0,1] | Available psychological and physical resources | [`sigmoid_transform()`](src/python/math_utils.py:78) |
 | **Protective Factors** | $\mathbf{e}$ | [0,1]$^4$ | Efficacy levels for social support, family support, formal interventions, and psychological capital | Default values (0.5) |
@@ -99,8 +99,8 @@ Agent baseline initialization establishes the starting state for each individual
 #### Mathematical Initialization Process
 
 **Baseline Resilience Generation**:
-$$R_{\text{0}} = \sigma\left(\frac{X - \mu_{R,\text{init}}}{\sigma_{R,\text{init}}}\right)$$
-Where $X \sim \mathcal{N}(\mu_{R,\text{init}}, \sigma_{R,\text{init}}^2)$ and $\sigma(x) = \frac{1}{1+e^{-x}}$ is the sigmoid function.
+$$\mathfrak{R}_{\text{0}} = \sigma\left(\frac{X - \mu_{\mathfrak{R},\text{init}}}{\sigma_{\mathfrak{R},\text{init}}}\right)$$
+Where $X \sim \mathcal{N}(\mu_{\mathfrak{R},\text{init}}, \sigma_{\mathfrak{R},\text{init}}^2)$ and $\sigma(x) = \frac{1}{1+e^{-x}}$ is the sigmoid function.
 
 **Baseline Affect Generation**:
 $$A_{\text{0}} = \tanh\left(\frac{X - \mu_{A,\text{init}}}{\sigma_{A,\text{init}}}\right)$$
@@ -188,7 +188,7 @@ Model-level variables capture population patterns, aggregated statistics, and sy
 
 $$\bar{\Psi} = \frac{1}{N} \sum_{i=1}^N \Psi_i$$
 
-$$\bar{R} = \frac{1}{N} \sum_{i=1}^N R_i$$
+$$\bar{\mathfrak{R}} = \frac{1}{N} \sum_{i=1}^N \mathfrak{R}_i$$
 
 $$\bar{A} = \frac{1}{N} \sum_{i=1}^N A_i$$
 
@@ -266,20 +266,20 @@ Where:
 
 **Low Resilience Count:**
 
-$$n_{R_l} = \sum_{i=1}^N \mathbb{1}_{R_i < 0.3}$$
+$$n_{\mathfrak{R}_l} = \sum_{i=1}^N \mathbb{1}_{\mathfrak{R}_i < 0.3}$$
 
 **High Resilience Count:**
 
-$$n_{R_h} = \sum_{i=1}^N \mathbb{1}_{R_i > 0.7}$$
+$$n_{\mathfrak{R}_h} = \sum_{i=1}^N \mathbb{1}_{\mathfrak{R}_i > 0.7}$$
 
 **Medium Resilience Count:**
 
-$$n_{R_m} = N - n_{R_l} - n_{R_h}$$
+$$n_{\mathfrak{R}_m} = N - n_{\mathfrak{R}_l} - n_{\mathfrak{R}_h}$$
 
 Where:
-- $n_{R_l}, n_{R_m}, n_{R_h} \in \mathbb{N}$ are resilience category counts
+- $n_{\mathfrak{R}_l}, n_{\mathfrak{R}_m}, n_{\mathfrak{R}_h} \in \mathbb{N}$ are resilience category counts
 - $\mathbb{1}$ is indicator function
-- $R_i \in [0,1]$ is resilience for agent $i$
+- $\mathfrak{R}_i \in [0,1]$ is resilience for agent $i$
 
 **Challenge-Hindrance Metrics:**
 
