@@ -20,16 +20,13 @@ Affect represents an individual's current emotional state, ranging from very neg
 
 Individuals influence each other's emotional states through social interactions. When people interact, their emotional states can spread to others, with the extent of influence depending on the number of connections and the strength of the emotional states involved.
 
-**Social Influence Equation:**
+**Peer Influence:**
 
-$$\Delta A_p = \frac{1}{k} \sum_{j=1}^{k} \alpha_p \cdot (A_j - A_t) \cdot \begin{cases}
-1.5 & \text{if } A_j - A_t < 0 \\
-1.0 & \text{if } A_j - A_t \geq 0
-\end{cases}$$
+$$\Delta A_p = \frac{1}{k} \sum_{j=1}^{k_{\text{influence}}} \alpha_p \cdot (A_j - A_t)$$
 
 Where:
 - $\Delta A_p$ is aggregated peer influence effect
-- $k$ is number of influencing neighbors (limited by $k_{\text{influence}}$)
+- $k_{\text{influence}}$ is number of influencing neighbors
 - $\alpha_p \in [0,1]$ is peer influence rate
 - $A_j, A_t \in [-1,1]$ are neighbor and current affect values
 
@@ -39,12 +36,9 @@ Where:
 
 Social interactions create mutual influence where both individuals affect each other's emotional state. The model recognizes that negative emotional states tend to have a stronger impact than positive ones, reflecting how negative interactions can be more memorable and influential.
 
-**Mutual Influence with Asymmetric Effects:**
+**Mutual Influence:**
 
-$$\Delta A_i = \alpha_p \cdot (A_j - A_i) \cdot \begin{cases}
-1.5 & \text{if } A_j - A_i < 0 \\
-1.0 & \text{if } A_j - A_i \geq 0
-\end{cases}$$
+$$\Delta A_i = \alpha_p \cdot (A_j - A_i)$$
 
 **Resilience Influence:**
 
@@ -133,7 +127,7 @@ Where:
 
 **Implementation**: [`update_affect_dynamics()`](../../src/python/affect_utils.py#L1149-L1186) in `affect_utils.py`
 
-**Aggregated Peer Influence:**
+**Peer Influence (Alternative Form):**
 
 $$\Delta A_p = \frac{1}{k} \sum_{j=1}^{k} \alpha_p \cdot (A_j - A_t)$$
 

@@ -393,7 +393,7 @@ The assessment integration occurs as part of the daily step process, ensuring co
 Affect changes result from peer influence, event appraisal, and homeostatic processes.
 
 **Resilience Dynamics**:
-Resilience changes result from coping success, social support, overload effects, and challenge/hindrance outcomes.
+Resilience changes result from coping success, social support, overload effects, challenge/hindrance outcomes, and protective factor boosts.
 
 **Stress Processing**:
 Stress levels change based on event characteristics and natural decay processes.

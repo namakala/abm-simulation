@@ -56,14 +56,13 @@ The core resilience update mechanism integrates challenge and hindrance effects,
 **Challenge-Hindrance Resilience Effect:**
 
 $$\Delta \mathfrak{R}_{\chi\zeta} = \begin{cases}
-0.3 \cdot \chi + 0.1 \cdot \zeta & \text{if coping successful} \\
--0.1 \cdot \chi - 0.4 \cdot \zeta & \text{if coping failed}
+0.3 \cdot \bar{\chi}_d + 0.1 \cdot \bar{\zeta}_d & \text{if coping successful} \\
+-0.1 \cdot \bar{\chi}_d - 0.4 \cdot \bar{\zeta}_d & \text{if coping failed}
 \end{cases}$$
 
 Where:
 - $\Delta \mathfrak{R}_{\chi\zeta}$ is resilience change from challenge/hindrance
-- $\chi \in [0,1]$ is challenge component
-- $\zeta \in [0,1]$ is hindrance component
+- $\bar{\chi}_d, \bar{\zeta}_d \in [0,1]$ are daily average challenge/hindrance
 
 **Implementation**: [`compute_challenge_hindrance_resilience_effect()`](../../src/python/affect_utils.py#L471-L510) in `affect_utils.py`
 
@@ -76,14 +75,14 @@ Where:
 
 **Protective Factor Resilience Boost:**
 
-$$\Delta \mathfrak{R}_p = \sum_{f \in F} e_f \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_c) \cdot \theta_{\text{boost}}$$
+$$\Delta \mathfrak{R}_p = \sum_{f \in F} e_f \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t) \cdot \theta_{\text{boost}}$$
 
 Where:
 - $\Delta \mathfrak{R}_p$ is resilience boost from protective factors
 - $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
 - $e_f \in [0,1]$ is efficacy of factor $f$
 - $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience
-- $\mathfrak{R}_c \in [0,1]$ is current resilience
+- $\mathfrak{R}_t \in [0,1]$ is current resilience
 - $\theta_{\text{boost}} > 0$ is boost rate parameter
 
 **Protective Factors**:
@@ -253,6 +252,8 @@ Where:
 - $\Delta \mathfrak{R}_s$ is social support effect
 - $\lambda_{\text{resilience}} \in [0,1]$ is homeostatic rate
 - $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience
+
+**Implementation**: [`update_resilience_dynamics()`](../../src/python/affect_utils.py#L1189-L1230) in `affect_utils.py`
 
 **Implementation**: [`update_resilience_dynamics()`](../../src/python/affect_utils.py#L1189-L1230) in `affect_utils.py`
 

@@ -58,13 +58,15 @@ Resources naturally regenerate toward maximum capacity, representing rest, recov
 
 **Resource Regeneration Equation:**
 
-$$R' = \lambda_R \cdot (R_{\max} - R)$$
+$$R' = \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A))$$
 
 Where:
 - $R' > 0$ is resource regeneration amount
 - $\lambda_R \in [0,1]$ is regeneration rate
 - $R_{\max} = 1$ is maximum resources
 - $R \in [0,1]$ is current resources
+- $\beta_a > 0$ is affect influence parameter
+- $A \in [-1,1]$ is current affect
 
 **Implementation**: [`compute_resource_regeneration()`](../../src/python/affect_utils.py#L360-L381) in `affect_utils.py`
 
@@ -82,6 +84,8 @@ $$R' = \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A))$$
 Where:
 - $\beta_a > 0$ is affect influence parameter
 - $A \in [-1,1]$ is current affect
+
+**Implementation**: [`compute_resource_regeneration()`](../../src/python/affect_utils.py#L360-L381) in `affect_utils.py`
 
 ## Resource Consumption Patterns
 
@@ -146,6 +150,8 @@ Where:
 - $\gamma_p > 0$ is improvement rate
 - $e_f \in [0,1]$ is current efficacy
 
+**Implementation**: [`allocate_protective_factors()`](../../src/python/resource_utils.py#L549-L587) in `resource_utils.py`
+
 **Implementation**: [`allocate_protective_factors()`](../../src/python/resource_utils.py#L549-L587) method in `resource_utils.py`
 
 ## Protective Factor Efficacy Dynamics
@@ -198,6 +204,8 @@ Where:
 - $R' \in [0,1]$ is updated resources
 - $\kappa > 0$ is resource cost parameter
 - $\mathbb{1}_{\mathrm{coping\ successful}}$ is indicator for successful coping
+
+**Implementation**: [`compute_resource_depletion_with_resilience()`](../../src/python/resource_utils.py#L1-L50) in `resource_utils.py`
 
 ### Affect System Integration
 
