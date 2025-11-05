@@ -48,6 +48,7 @@ from typing import Optional
 from src.python.model import StressModel
 from src.python.config import get_config, ConfigurationError
 from src.python.visualization_utils import create_visualization_report, create_time_series_visualization
+from src.python.analysis_utils import analyze_simulation_data
 
 
 ## LOGGING CONFIGURATION
@@ -152,12 +153,14 @@ def save_dataframe_with_error_handling(
 ## MAIN SIMULATION FUNCTION
 
 def run_simulation(
-    num_agents: int = 10,
-    max_steps: int = 100,
-    seed: Optional[int] = None,
-    logger: Optional[logging.Logger] = None,
-    output_fig_dir: str = "docs/figures"
-) -> tuple[StressModel, pd.DataFrame, pd.DataFrame]:
+     num_agents: int = 10,
+     max_steps: int = 100,
+     seed: Optional[int] = None,
+     logger: Optional[logging.Logger] = None,
+     output_fig_dir: str = "docs/figures",
+     output_data_dir: str = "data/raw",
+     prefix: str = ""
+ ) -> tuple[StressModel, pd.DataFrame, pd.DataFrame]:
    """
    Run the complete mental health simulation.
 
@@ -206,7 +209,7 @@ def run_simulation(
            {'resilience': agent.resilience, 'affect': agent.affect, 'stress': agent.current_stress, 'pss10': agent.pss10}
            for agent in model.agents
        ])
-       initial_viz_path = create_visualization_report(initial_data, output_fig_dir, "initial_population.pdf")
+       initial_viz_path = create_visualization_report(initial_data, output_fig_dir, f"{prefix}_initial_population.pdf")
        logger.info(f"Initial visualization saved to: {initial_viz_path}")
 
        logger.info("Starting simulation...")
@@ -223,15 +226,6 @@ def run_simulation(
 
        logger.info(f"Simulation completed after {model.day} days")
 
-       # Generate final population visualization
-       logger.info("Generating final population visualization...")
-       # Use DataCollector data (before daily reset) to match demo correlation analysis
-       agent_data = model.get_agent_time_series_data()
-       final_step = agent_data['Step'].max()
-       final_data = agent_data[agent_data['Step'] == final_step][['resilience', 'affect', 'current_stress', 'pss10']].rename(columns={'current_stress': 'stress'})
-       final_viz_path = create_visualization_report(final_data, output_fig_dir, "final_population.pdf")
-       logger.info(f"Final visualization saved to: {final_viz_path}")
-
        # Extract data using DataCollector methods
        logger.info("Extracting model data...")
        model_data = model.get_time_series_data()
@@ -241,9 +235,20 @@ def run_simulation(
 
        logger.info(f"Data extraction complete - Model: {model_data.shape}, Agent: {agent_data.shape}")
 
+       # Perform analysis on extracted data
+       logger.info("Performing data analysis...")
+       analyze_simulation_data(model_data, agent_data, output_data_dir, prefix)
+
+       # Generate final population visualization
+       logger.info("Generating final population visualization...")
+       final_step = agent_data['Step'].max()
+       final_data = agent_data[agent_data['Step'] == final_step][['resilience', 'affect', 'current_stress', 'pss10']].rename(columns={'current_stress': 'stress'})
+       final_viz_path = create_visualization_report(final_data, output_fig_dir, f"{prefix}_final_population.pdf")
+       logger.info(f"Final visualization saved to: {final_viz_path}")
+
        # Generate time series visualization
        logger.info("Generating time series visualization...")
-       time_series_path = create_time_series_visualization(model_data, output_fig_dir, "time_series.pdf")
+       time_series_path = create_time_series_visualization(model_data, output_fig_dir, f"{prefix}_time_series.pdf")
        logger.info(f"Time series visualization saved to: {time_series_path}")
 
        return model, model_data, agent_data
@@ -349,11 +354,12 @@ Examples:
         # Get output directories, override with CLI args if provided
         output_data_dir = args.output_data if args.output_data is not None else config.get('output', 'raw_dir')
         output_fig_dir = args.output_fig if args.output_fig is not None else 'docs/figures'
+        prefix = args.prefix if args.prefix else ''
 
         logger.info(f"Simulation parameters: agents={num_agents}, days={max_steps}, seed={seed}")
         logger.info(f"Output directories: data={output_data_dir}, figures={output_fig_dir}")
-        if args.prefix:
-            logger.info(f"Output prefix: {args.prefix}")
+        if prefix:
+            logger.info(f"Output prefix: {prefix}")
 
         # Run simulation with parameters
         model, model_data, agent_data = run_simulation(
@@ -361,7 +367,9 @@ Examples:
             max_steps=max_steps,
             seed=seed,
             logger=logger,
-            output_fig_dir=output_fig_dir
+            output_fig_dir=output_fig_dir,
+            output_data_dir=output_data_dir,
+            prefix=prefix
         )
 
         # Save results to CSV files
@@ -377,9 +385,8 @@ Examples:
             return 1
 
         # Define output paths with prefix
-        prefix = args.prefix if args.prefix else ''
-        model_csv_path = f"{output_data_dir}/{prefix}model.csv"
-        agent_csv_path = f"{output_data_dir}/{prefix}agent.csv"
+        model_csv_path = f"{output_data_dir}/{prefix}_model.csv"
+        agent_csv_path = f"{output_data_dir}/{prefix}_agent.csv"
 
         # Save model data
         model_success = save_dataframe_with_error_handling(
