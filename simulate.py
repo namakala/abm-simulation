@@ -204,7 +204,8 @@ def run_simulation(
 
        # Generate initial population visualization
        logger.info("Generating initial population visualization...")
-       # Create DataFrame from agents
+
+       # Manually extract the initial data because data collector has not run
        initial_data = pd.DataFrame([
            {'resilience': agent.resilience, 'affect': agent.affect, 'stress': agent.current_stress, 'pss10': agent.pss10}
            for agent in model.agents

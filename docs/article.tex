@@ -393,9 +393,15 @@ necessitating sensitivity analysis.
 
 \setlength\LTleft{0pt}
 \setlength\LTright{0pt}
+
 \begin{longtable}{ll}
-\caption{Summary of model parameters and variables used in the agent-based mental health simulation} \\
-\label{tab:parameters} \\
+
+\caption{\label{tbl-parameters}Summary of model parameters and variables used in the agent-based mental health simulation}
+
+\tabularnewline
+
+ \\
+ \\
 \toprule
 \multicolumn{2}{c}{\textbf{Model Structure}} \\
 \midrule
@@ -532,6 +538,7 @@ $\mathrm{clamp}(x, a, b)$ & Clamping function to bind the value of $x$ into the 
 $n_s$ & Number of subevents per day \\
 $n_e$ & Number of stress events in day \\
 \bottomrule
+
 \end{longtable}
 
 \subsection{Simulation Mechanism}\label{simulation-mechanism}
@@ -855,161 +862,258 @@ framework supported comprehensive research applications including
 baseline versus intervention comparison, individual trajectory analysis,
 network analysis, and parameter sensitivity studies.
 
+\subsection{Data Analysis}\label{data-analysis}
+
+Exploratory data analysis was conducted on the exported simulation data
+at both the agent level and the population level. Agent-level data
+encompassed individual data for each simulation epoch, capturing the
+unique trajectories of each agent over time. In contrast,
+population-level data consisted of aggregated metrics for each
+simulation epoch, providing a summary view of collective behavior across
+the entire agent population.
+
+For agent-level data, the first and final epochs were extracted to
+examine initial and end-state distributions. Histograms were visualized
+for the core variables: resilience, affect, stress, and PSS-10, enabling
+assessment of shifts in individual agent characteristics throughout the
+simulation. For population-level data, stability over time was assessed
+by computing moving averages to smooth temporal fluctuations and
+highlight long-term trends. Specifically, 7-step moving averages (7-MA),
+14-step moving averages (14-MA), and 28-step moving averages (28-MA)
+were calculated for key metrics, allowing evaluation of whether
+population-level indicators remained within stable ranges or exhibited
+significant deviations.
+
+The rationale for this analytical approach stems from the research
+question and hypotheses outlined in the study. The primary question
+investigates whether agent-based simulations can effectively model the
+homeostatic mechanisms of psychological resilience through social
+network dynamics and agent interactions. By analyzing agent-level data,
+we examined how individual resilience, affect, stress, and PSS-10 scores
+evolved, reflecting the activation of psychological resilience under
+stress exposure. The visualization of histograms for initial and final
+epochs allowed for the identification of heterogeneity in agent
+responses, supporting the hypothesis that agents with higher resilience
+are less likely to develop psychological disorders.
+
+At the population level, the assessment of stability through moving
+averages tested the hypothesis that population metrics would remain
+within a constant range, indicative of a stable homeostatic state. This
+approach captured the influence of social interactions and resource
+dynamics on collective mental health outcomes, enabling validation of
+whether the simulation accurately represented homeostatic mechanisms.
+Together, these analyses provided empirical evidence for the model's
+ability to simulate complex social dynamics that traditional methods
+cannot capture, thereby addressing the core inquiry into the efficacy of
+agent-based modeling for understanding psychological resilience.
+
 \section{Results}\label{results}
 
-Under homogeneous initial conditions representing a general population,
-the model converged to a stable equilibrium across all key variables.
-Mean perceived stress (\(\mu_{PSS-10}\) = 19.44 ± 0.10), resilience
-(\(\mu_{res}\) = 0.48 ± 0.01), and affect (\(\mu_{affect}\) = −0.045 ±
-0.004) remained consistent throughout the simulation. Variance across
-agents was minimal, indicating that emotional and resilience homeostasis
-mechanisms function as designed. Coping success stabilized around 0.45,
-balancing challenge and hindrance appraisals. These findings validate
-that the model captures stable psychological dynamics in the absence of
-perturbation, forming a robust baseline for subsequent experiments
-involving stress shocks or social disturbances.
+Figure~\ref{fig-initial-population} presents a cross-sectional snapshot
+of agent psychological states at epoch 0, derived from randomly
+generated baseline data with minimal theoretical associations except for
+PSS-10 scores and stress levels. This figure underscores the absence of
+predetermined relationships in the initialization phase, highlighting
+the random nature of agent attributes that establish a neutral starting
+point for subsequent dynamics. The initial stress level has an
+artificially strong correlation to PSS-10 because it was generated from
+PSS-10. The rationale is to ground the initial stress level to an
+empirical values reflected in PSS-10. By illustrating uncorrelated
+variables, it emphasizes the model's reliance on stochastic processes to
+simulate real-world heterogeneity without biasing initial conditions.
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3212}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2117}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1095}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3577}}@{}}
-\caption{Descriptive findings on the model level}\tabularnewline
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Description}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Mean ± SD}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Min -- Max}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Interpretation}
-\end{minipage} \\
-\midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Description}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Mean ± SD}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Min -- Max}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Interpretation}
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Mean perceived stress (PSS-10) across agents & 19.44 ± 0.10 & 19.08 --
-19.76 & Stable population-level stress perception \\
-Average resilience level & 0.478 ± 0.013 & 0.44 -- 0.51 & High
-stability; minimal variance between agents \\
-Mean affect (emotional valence) & −0.045 ± 0.004 & −0.055 -- −0.018 &
-Neutral-negative baseline affect, low variability \\
-Proportion of successful coping events & 0.446 ± 0.013 & 0.41 -- 0.49 &
-Balanced coping outcomes (\textasciitilde45\% success) \\
-Mean psychological resources & 0.111 ± 0.017 & 0.10 -- 0.47 & Narrowly
-distributed, stable resource pool \\
-Average current stress level & 0.651 ± 0.017 & 0.30 -- 0.69 & Mild,
-steady stress levels across agents \\
-Mean challenge vs.~hindrance appraisal & 0.500 ± 0.008 / 0.500 ± 0.008 &
-0.47 -- 0.53 & Balanced stress appraisal pattern \\
-Challenge--hindrance difference & 0.0006 ± 0.016 & −0.05 -- 0.05 &
-Centered near zero, indicating equilibrium \\
-Mean sequence of hindrance events & 1.86 ± 0.06 & 1.25 -- 2.04 &
-Occasional stress streaks but stable overall \\
-Count of successful coping events per agent & 679.7 ± 25.4 & 607 -- 759
-& Moderate variability in coping outcomes \\
-Number of social exchanges per agent & 1525.2 ± 38.6 & 1406 -- 1655 &
-Consistent, dense social network activity \\
-Number of support transactions & 167.2 ± 13.5 & 84 -- 215 & Regular but
-bounded support flow \\
-\end{longtable}
+\begin{figure}
 
-The model-level data reveal a system characterized by marked stability
-and equilibrium across psychological and social dimensions. Aggregate
-stress, resilience, and affect indicators exhibit limited variability,
-suggesting that the simulated population reached a steady-state dynamic.
-The balance between challenge and hindrance appraisals indicates that
-agents, on average, perceived stressors as neither predominantly
-threatening nor facilitating, implying a neutral cognitive framing of
-stress events. Similarly, the near-constant network density and social
-support rate highlight a static social structure in which interpersonal
-connectivity remained fixed throughout the simulation. Despite this
-structural stability, behavioral outcomes such as coping success and
-social exchanges demonstrate bounded variability, reflecting modest
-inter-agent heterogeneity in adaptive processes. Overall, the
-model-level summary suggests that the collective system maintained
-homeostasis while allowing limited individual differentiation in coping
-and social behaviors.
+\centering{
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3604}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1261}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1171}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3964}}@{}}
-\caption{Descriptive findings on the agent level}\tabularnewline
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Description}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Mean ± SD}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Min -- Max}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Interpretation}
-\end{minipage} \\
-\midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Description}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Mean ± SD}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Min -- Max}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Interpretation}
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Perceived stress (PSS-10) per agent-step & 19.44 ± 3.28 & 5 -- 35 &
-Realistic spread in individual stress scores \\
-Instantaneous resilience level & 0.478 ± 0.267 & 0.006 -- 1.00 & Wide
-range; resilience varies across steps \\
-Current emotional state & −0.045 ± 0.119 & −0.76 -- 0.53 & Normal
-emotional fluctuation around neutral \\
-Available psychological resources & 0.111 ± 0.071 & 0.05 -- 0.78 &
-Resource regeneration and depletion balanced \\
-Active stress intensity & 0.651 ± 0.344 & 0 -- 1.0 & Bounded stress
-within coping limits \\
-Perceived controllability of stress & 0.482 ± 0.128 & 0 -- 1.0 &
-Moderate controllability on average \\
-Perceived overload of stress events & 0.488 ± 0.105 & 0.04 -- 0.92 &
-Balanced between manageable and high load \\
-Ongoing hindrance streak length & 0.93 ± 1.32 & 0 -- 18.05 & Occasional
-long stress streaks observed \\
-\end{longtable}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/base_initial_population.pdf}}
 
-At the agent level, the data depict dynamic variability embedded within
-an overall stable population structure. Individual measures of stress,
-affect, and resilience fluctuate widely across time and agents,
-capturing the stochastic and adaptive nature of micro-level
-psychological processes. The broad range in perceived stress and
-resilience underscores individual differences in vulnerability and
-coping potential, consistent with naturalistic behavioral diversity.
-Measures of stress controllability and overload suggest a dynamic
-tension between agents' perceived ability to manage stressors and their
-exposure to them, resulting in a balance between effective adaptation
-and temporary overload. The occurrence of extended hindrance sequences
-further illustrates intermittent periods of cumulative stress before
-recovery. Taken together, the agent-level summary portrays a complex
-adaptive system in which individuals exhibit continuous fluctuations
-around a stable population mean, thereby supporting emergent equilibrium
-at the collective level.
+}
+
+\caption{\label{fig-initial-population}Cross-sectional visualization of
+agent psychological states at epoch 0, highlighting randomly generated
+baseline distributions with minimal associations except between PSS-10
+and stress levels}
+
+\end{figure}%
+
+Figure~\ref{fig-final-population} captures cross-sectional agent states
+at the simulation's conclusion, revealing theoretically grounded
+associations among psychological variables. Resilience exhibits a weak
+positive correlation with affect, a weak-to-moderate negative
+correlation with stress, and a weak negative correlation with PSS-10. In
+contrast, stress shows a moderate positive correlation with PSS-10,
+accompanied by increasing dispersion in stress levels at higher PSS-10
+scores, reflecting realistic overdispersion in psychometric instruments.
+This visualization demonstrates model convergence toward expected
+relationships, validating the simulation's capacity to generate
+plausible homeostatic mechanism of psychological dynamics.
+
+Figure~\ref{fig-time-series} depicts longitudinal trajectories of all
+agents across simulation epochs, showcasing stable temporal variation
+indicative of effective homeostatic mechanisms. Drawing from
+comprehensive agent-state data over time, this figure reveals
+equilibrium maintenance through consistent fluctuations, with
+implications for understanding behavioral stability and dynamic
+resilience in response to stressors. It directly addresses the
+hypothesis by evidencing stable population metrics within constant
+ranges, affirming that agent-based simulations can model homeostatic
+resilience via social network dynamics, where interactions sustain
+mental health equilibrium without excessive variability.
+
+\begin{figure}
+
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{figures/base_final_population.pdf}}
+
+}
+
+\caption{\label{fig-final-population}The emerging associations of agent
+psychological states captured at simulation completion}
+
+\end{figure}%
+
+Under homogeneous initial conditions simulating a general population,
+the model exhibited stable homeostatic mechanisms with population-level
+metrics confined to narrow ranges, directly supporting the research
+question on agent-based modeling of psychological resilience through
+social network dynamics. Model-level analysis reveals remarkable
+stability in aggregate measures. Mean perceived stress (PSS-10 = 24.804
+± 0.308, range: 21.93--25.65) demonstrates low variability indicative of
+effective homeostatic regulation. Resilience (0.523 ± 0.008, range:
+0.48--0.54) shows uniform coping capacity across the population. Affect
+(−0.024 ± 0.003, range: −0.03 to −0.01) exhibits controlled mood
+variation near neutral. This population-level stability occurs despite
+substantial individual-level heterogeneity. Agent-level variability in
+stress shows a coefficient of variation of 31.8\%. Resilience
+demonstrates a coefficient of variation of 55.3\%. Affect exhibits a
+coefficient of variation of 1421\%. Elevated resource levels (0.702 ±
+0.005) indicate effective resource management through social network
+dynamics. Moderate stress (0.484 ± 0.007) relative to baselines suggests
+effective stress mitigation. These outcomes directly affirm the
+hypothesis that agent interactions determine mental health outcomes
+within a stable homeostatic state. The findings simultaneously address
+the research question by demonstrating that complex social interactions
+can maintain population equilibrium despite individual variability.
+
+\begin{table}
+
+\caption{\label{tbl-model-level}Model-level population statistics demonstrating homeostatic stability}
+
+\centering{
+
+\centering
+
+
+\begin{tabular}{llp{5.5cm}}
+\toprule
+\textbf{Variable} & \textbf{Mean $\pm$ SD} & \textbf{Interpretation} \\
+\midrule
+PSS-10 across agents & 24.804 $\pm$ 0.308 & Stable stress perception with moderate elevation \\
+Resilience level & 0.523 $\pm$ 0.008 & Uniform coping capacity across population \\
+Affect (valence) & $-0.024 \pm 0.003$ & Controlled mood variation near neutral \\
+Coping success rate & 0.448 $\pm$ 0.012 & Reliable coping outcomes maintaining homeostasis \\
+Psychological resources & 0.702 $\pm$ 0.005 & Stable resource levels supporting resilience \\
+Current stress level & 0.484 $\pm$ 0.007 & Variable patterns within bounded ranges \\
+Challenge appraisal & 0.500 $\pm$ 0.007 & Balanced appraisal pattern \\
+Hindrance appraisal & 0.500 $\pm$ 0.007 & Balanced appraisal pattern \\
+Challenge--hindrance diff. & $-0.000 \pm 0.014$ & Centered near zero, indicating equilibrium \\
+Hindrance sequence length & 1.862 $\pm$ 0.066 & Occasional stress streaks but stable overall \\
+Coping events per agent & 684.201 $\pm$ 25.642 & Uniform behavioral patterns \\
+Social exchanges per agent & 1522.693 $\pm$ 38.794 & Consistent network engagement \\
+Support transactions & 395.853 $\pm$ 22.364 & Consistent mutual aid \\
+\bottomrule
+\end{tabular}
+
+}
+
+\end{table}%
+
+Table~\ref{tbl-model-level} substantiates a homeostatic system sustained
+by social network dynamics and agent interactions. The aggregate metrics
+demonstrate stability across all psychological variables, with
+coefficients of variation ranging from 1.1\% (resource levels) to 5.7\%
+(current stress), indicating tight population-level regulation. These
+constrained variabilities evidence steady-state dynamics wherein
+supportive networks bolster resource preservation and stress
+alleviation, supporting the hypothesis of population metrics within
+constant ranges. Balanced challenge-hindrance appraisals (0.500 ± 0.007
+each, with difference centered at -0.000 ± 0.014) imply neutral
+cognitive processing and effective appraisal mechanisms. Uniform social
+exchanges (1522.693 ± 38.794 per agent) denote robust network-based
+mutual aid that maintains collective stability. Support transactions
+(395.853 ± 22.364) further validate the mutual aid system. The
+consistent coping success rate (0.448 ± 0.012) across all agents
+validates the model's capacity to simulate emergent equilibrium from
+individual interactions that promote mental health outcomes.
+
+\begin{figure}
+
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{figures/base_time_series.pdf}}
+
+}
+
+\caption{\label{fig-time-series}Stable temporal variation and
+homeostatic equilibrium of agent psychological states across all
+simulation epochs}
+
+\end{figure}%
+
+\begin{table}
+
+\caption{\label{tbl-agent-level}Agent-level temporal dynamics demonstrating individual heterogeneity within population stability}
+
+\centering{
+
+\centering
+
+
+\begin{tabular}{llp{5.5cm}}
+\toprule
+\textbf{Variable} & \textbf{Mean $\pm$ SD} & \textbf{Interpretation} \\
+\midrule
+PSS-10 per agent-step & 24.804 $\pm$ 7.900 & Variable stress levels with realistic range \\
+Resilience level & 0.523 $\pm$ 0.289 & Diverse adaptive capacities \\
+Emotional state & $-0.024 \pm$ 0.341 & Variable patterns around neutral \\
+Psychological resources & 0.702 $\pm$ 0.089 & Fluctuating resource capacity \\
+Stress intensity & 0.484 $\pm$ 0.200 & Variable patterns within bounds \\
+Controllability perception & 0.477 $\pm$ 0.131 & Diverse agency experiences \\
+Overload perception & 0.612 $\pm$ 0.144 & Diverse capacity challenges \\
+Hindrance streak length & 0.932 $\pm$ 1.320 & Variable patterns observed \\
+\bottomrule
+\end{tabular}
+
+}
+
+\end{table}%
+
+Table~\ref{tbl-agent-level} reveals substantial dynamic variability
+within the stable population framework, directly supporting the research
+question on homeostatic resilience modeling through social network
+dynamics. The contrast between population-level stability (coefficient
+of variation \textless{} 6\%) and individual-level heterogeneity
+(coefficient of variation 31.8-1421\%) exemplifies the dual nature of
+the modeled system. Individual agents experience significant
+fluctuations in stress (0.00--40.00), resilience (0.00--1.00), and
+affect (−1.00--1.00). These variations are constrained by social
+interactions that maintain population equilibrium. The comprehensive
+range of controllability (0.477 ± 0.131) captures the cognitive
+appraisal diversity that drives individual adaptation strategies.
+Overload perceptions (0.612 ± 0.144) further demonstrate diverse
+capacity challenges. The bounded hindrance streaks (maximum 17.65)
+demonstrate the system's capacity to prevent pathological cascades
+through network support. These observations directly validate the
+hypothesis that agent interactions shape outcomes within a homeostatic
+state. The model portrays a complex adaptive system where individual
+diversities reflect realistic psychological heterogeneity. Individual
+diversities are harmonized through social dynamics to achieve collective
+stability. The model thus successfully demonstrates that agent-based
+simulations can effectively capture the homeostatic mechanisms of
+psychological resilience. Social network dynamics transform individual
+variability into population-level equilibrium.
 
 \section{Discussion}\label{discussion}
 

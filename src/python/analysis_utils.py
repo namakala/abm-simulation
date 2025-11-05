@@ -107,7 +107,7 @@ def analyze_simulation_data(model_df: pd.DataFrame, agent_df: pd.DataFrame, outp
     Perform statistical analysis on model and agent data, computing specific metrics and saving as CSV tables.
 
     Generates two CSV files: one for model-level aggregated data and one for agent-level per-step data,
-    with columns: Description, Mean ± SD, Min – Max, Interpretation.
+    with columns: Description, Mean ± SD, Min - Max, Interpretation.
 
     Parameters:
     - model_df (pd.DataFrame): DataFrame containing model-level data (not directly used for metrics, but passed for consistency)
@@ -249,7 +249,7 @@ def analyze_simulation_data(model_df: pd.DataFrame, agent_df: pd.DataFrame, outp
                     model_rows.append({
                         'Description': metric['description'],
                         'Mean ± SD': mean_sd,
-                        'Min – Max': min_max,
+                        'Min - Max': min_max,
                         'Interpretation': interpretation
                     })
                     continue
@@ -264,7 +264,7 @@ def analyze_simulation_data(model_df: pd.DataFrame, agent_df: pd.DataFrame, outp
                 model_rows.append({
                     'Description': metric['description'],
                     'Mean ± SD': format_mean_sd(mean_val, std_val),
-                    'Min – Max': format_min_max(min_val, max_val),
+                    'Min - Max': format_min_max(min_val, max_val),
                     'Interpretation': interpretation
                 })
             except Exception as e:
@@ -272,7 +272,7 @@ def analyze_simulation_data(model_df: pd.DataFrame, agent_df: pd.DataFrame, outp
                 model_rows.append({
                     'Description': metric['description'],
                     'Mean ± SD': "N/A",
-                    'Min – Max': "N/A",
+                    'Min - Max': "N/A",
                     'Interpretation': "Data unavailable"
                 })
 
@@ -295,7 +295,7 @@ def analyze_simulation_data(model_df: pd.DataFrame, agent_df: pd.DataFrame, outp
                 agent_rows.append({
                     'Description': metric['description'],
                     'Mean ± SD': format_mean_sd(mean_val, std_val),
-                    'Min – Max': format_min_max(min_val, max_val),
+                    'Min - Max': format_min_max(min_val, max_val),
                     'Interpretation': interpretation
                 })
             except Exception as e:
@@ -303,7 +303,7 @@ def analyze_simulation_data(model_df: pd.DataFrame, agent_df: pd.DataFrame, outp
                 agent_rows.append({
                     'Description': metric['description'],
                     'Mean ± SD': "N/A",
-                    'Min – Max': "N/A",
+                    'Min - Max': "N/A",
                     'Interpretation': "Data unavailable for interpretation"
                 })
 

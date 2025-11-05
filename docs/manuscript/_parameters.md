@@ -1,8 +1,9 @@
+```{=latex}
 \setlength\LTleft{0pt}
 \setlength\LTright{0pt}
 \begin{longtable}{ll}
 \caption{Summary of model parameters and variables used in the agent-based mental health simulation} \\
-\label{tab:parameters} \\
+\label{tbl-parameters} \\
 \toprule
 \multicolumn{2}{c}{\textbf{Model Structure}} \\
 \midrule
@@ -140,3 +141,4 @@ $n_s$ & Number of subevents per day \\
 $n_e$ & Number of stress events in day \\
 \bottomrule
 \end{longtable}
+```
