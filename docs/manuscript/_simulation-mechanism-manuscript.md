@@ -1,4 +1,4 @@
-## Agent Initialization and State Management
+### Agent Initialization and State Management
 
 Each agent was initialized with baseline values representing natural equilibrium points using mathematical transformations ensuring proper statistical distributions. Resilience baselines utilized sigmoid transformation and affect baselines employed hyperbolic tangent transformation, both using seeded random number generation for reproducibility:
 
@@ -31,7 +31,7 @@ $$ {#eq-pss10-dimension-score}
 
 Where $c_\Psi, o_\Psi \in [0,1]$ are PSS-10 dimension scores, $\rho_\Psi \in [-1,1]$ is the bifactor correlation, and $\mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})$ denotes the multivariate normal distribution.
 
-## Stress Event Processing and Coping
+### Stress Event Processing and Coping
 
 The stress processing pipeline transformed life events into psychological responses through challenge-hindrance appraisal. Events were generated with controllability ($c$) and overload ($o$) attributes, then appraised using the following mathematical framework:
 
@@ -48,11 +48,11 @@ where $c, o \in [0,1]$ are event attributes, $\omega_c, \omega_o \in \mathbb{R}$
 
 Dynamic threshold evaluation adjusted stress response based on event characteristics, and coping success determination integrated challenge/hindrance effects with social influence through probability calculation.
 
-## Social Interaction Mechanism
+### Social Interaction Mechanism
 
 Social interactions occurred between neighboring agents in the network topology, enabling emotional contagion and mutual support. The system processed interactions through utility functions computing mutual emotional and resilience effects, with social influence on affect determined by neighbor states and relationship dynamics.
 
-### Mutual Influence Mechanism
+#### Mutual Influence Mechanism
 
 Social interactions created bidirectional changes where both individuals affect each other's emotional state. The model recognized that negative emotional states tended to have stronger influence than positive ones:
 
@@ -65,7 +65,7 @@ $$ {#eq-mutual-influence}
 
 Where $\Delta A_i$ is affect change for agent $i$, $\alpha_p \in [0,1]$ is peer influence rate, and $A_i, A_j \in [-1,1]$ are affect values.
 
-### Network Adaptation Mechanism
+#### Network Adaptation Mechanism
 
 When individuals experienced repeated stress, they adapted their social connections to better suit their needs. Network adaptation triggers based on stress breach counts:
 
@@ -94,7 +94,7 @@ $$ {#eq-retention-probability}
 
 where $p_{\text{keep}} \in [0,1]$ is probability of keeping connection, $\delta_{\text{homophily}} \in [0,1]$ is homophily strength, and $e_s \in [0,1]$ is support effectiveness.
 
-### Social Support Dynamics
+#### Social Support Dynamics
 
 Support effectiveness depended on the neighbor's resilience and affect:
 
@@ -115,7 +115,7 @@ $$ {#eq-support-exchange}
 
 where $\Delta A_i, \Delta A_j$ are affect changes, $\Delta \mathfrak{R}_i, \Delta \mathfrak{R}_j$ are resilience changes, $\Delta \text{resources}$ is resource transfer, and $\eta_{\text{exchange}} \in [0,1]$ is exchange threshold.
 
-## Daily Simulation Step
+### Daily Simulation Step
 
 Each simulation day followed a structured sequence ensuring proper mechanism integration. The process initiated with daily initialization, capturing initial affect and resilience values while obtaining neighbor emotional states. Subevent generation determined daily activity through Poisson sampling, creating random sequences of interactions and stress events:
 
@@ -141,7 +141,7 @@ where $A_t, \mathfrak{R}_t, S_t \in [0,1]$ are current values; $\Delta A_p, \Del
 
 Homeostatic adjustment applied natural pull toward baseline equilibrium for affect and resilience, while stress decay followed exponential reduction. Daily reset procedures cleared tracking variables and stored summaries for analysis.
 
-## Affect and Resilience Dynamics
+### Affect and Resilience Dynamics
 
 Integrated affect dynamics combined peer influence, event appraisal effects, and homeostasis through the following mathematical framework:
 
@@ -164,7 +164,7 @@ where $\Delta \mathfrak{R}_p$ is resilience boost from protective factors; $F = 
 
 Challenge-hindrance effects varied based on coping outcomes: successful coping yields positive resilience changes while failed coping produces negative impacts.
 
-## Resource Management System
+### Resource Management System
 
 Resources represented finite psychological and physical capacity for coping and protective factor maintenance. Resource regeneration followed affect-modulated recovery, while consumption occurred during coping attempts. Protective factor allocation utilized softmax decision framework for bounded rational resource distribution across social support, family support, formal intervention, and psychological capital:
 
@@ -176,12 +176,12 @@ w_f &= \frac{\exp(e_f / \beta_{\text{softmax}})}{\sum_{k \in F} \exp(e_k / \beta
 
 where $R' > 0$ is resource regeneration; $\lambda_R \in [0,1]$ is regeneration rate; $R_{\max} = 1$ is maximum resources; $R \in [0,1]$ is current resources; $\beta_a > 0$ is affect influence parameter; $A \in [-1,1]$ is current affect; $w_f \in [0,1]$ is allocation weight for factor $f$; $e_f \in [0,1]$ is efficacy of factor $f$; $\beta_{\text{softmax}} > 0$ is softmax temperature; and $F$ is set of protective factors.
 
-## Model-Level Simulation Orchestration
+### Model-Level Simulation Orchestration
 
 The simulation employed Mesa's agent-based modeling framework with dual-class architecture separating agent behaviors from model orchestration. Network structure utilized Watts-Strogatz small-world topology providing realistic social connection patterns with local clustering and short path lengths. The network was initialized with a mean degree of $WS_k$ and rewiring probability of $WS_p$.
 
 Model-level coordination managed population statistics, network adaptation tracking, and cumulative social support monitoring. The orchestration ensured proper temporal sequencing and data collection while maintaining computational efficiency for large-scale simulations.
 
-## Data Collection and Analysis Framework
+### Data Collection and Analysis Framework
 
 The simulation implemented Mesa's `DataCollector` for standardized, efficient data collection replacing manual tracking systems. Model-level reporters captured population metrics including average PSS-10 scores ($\bar{\Psi}$), resilience levels ($\bar{\mathfrak{R}}$), affect states ($\bar{A}$), stress prevalence ($P_{\text{stressed}}$), and social network characteristics. Agent-level reporters tracked individual trajectories for PSS-10 scores, resilience, affect, resources, current stress, stress controllability, stress overload, and consecutive hindrances. Recovery potential, vulnerability index, challenge-hindrance balance, and coping success rates were also computed for comprehensive analysis. The data collection framework supported comprehensive research applications including baseline versus intervention comparison, individual trajectory analysis, network analysis, and parameter sensitivity studies.

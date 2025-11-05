@@ -20,229 +20,23 @@ Anxiety and depression are among the most prevalent psychological disorders in t
 
 ## Previous ABM Publications
 
-The following five articles were selected for their relevance to the development of ABM simulations addressing mental health, social interaction, or their intersection. Each study contributed unique methodological insights that informed the current work. While some articles demonstrated only minimal overlap with our research, they were included because they resolved specific modeling challenges pertinent to our framework. Collectively, these studies provided a foundation for constructing comprehensive and realistic ABM simulations in the context of mental health and social dynamics.
-
-@Romanyukha2023 implemented an ABM to evaluate the mental health consequences of policy measures during the COVID-19 pandemic. The model integrated epidemic dynamics with the development of mental disorders in a large urban population. Using Quality-Adjusted Life Years (QALY) as an outcome measure, the study considered major depressive disorder, anxiety disorder, COVID-19 cases (lethal and non-lethal), and immunization. The results showed that mental disorders accounted for a substantial share of pandemic-related health losses, and under strong lockdown conditions, the lowest QALY loss occurred when approximately 70% of the population was isolated. These findings demonstrate that ABM can quantify the impact of policy interventions on mental health outcomes, supporting its use for evaluating preventive strategies that enhance psychological resilience.
-
-@Murase2021 introduced a generalized weighted social network (GWSN) model to describe the formation of social ties and networks. The GWSN model integrates mechanisms previously examined in isolation, including triadic closure (the tendency for friends of friends to become friends), homophilic interactions, and link termination processes. Due to the model's complexity and numerous input parameters, the authors combined extensive simulations with deep neural networks for regression and global sensitivity analysis, enabling prediction of network properties and identification of key determinants of network dynamics. By providing a robust framework for modeling realistic social interactions, this approach is directly relevant for simulating how social connectivity influences resilience and the spread of mental disorders in ABM.
-
-@Andarlia2021 examined the contagion effect of psychological disorders using ABM to simulate the spread of depression in a population. The model accounted for the influence of close social relationships, which could trigger mild, moderate, or severe depressive episodes, and modeled recovery through therapy with transition dynamics and recovery rates differentiated by gender. Simulation results indicated that higher contact rates with depressed individuals increased episode severity, whereas greater therapy uptake reduced depression prevalence. This study highlights how ABM can capture both the propagation and mitigation of mental disorders through social mechanisms, a key component for modeling interventions aimed at strengthening psychological resilience.
-
-@Lopez2024 introduced a methodology embedding an ABM within adaptive temporal networks to simulate daily interactions and examine the interplay between infectious disease spread and individual behavior. The model integrates individual behavior, social dynamics, and epidemiological factors, validated using real-world influenza outbreak data, and can simulate complex social phenomena such as social awareness. By incorporating self-organized system logic, agents respond dynamically to external stimuli, perceptions, and health states. Combined with social network models and mental health contagion dynamics, this approach demonstrates that ABM can simulate emergent phenomena arising from the interaction of social behavior and health, providing a powerful tool for testing policies that influence population resilience.
-
-@Benny2022 employed ABM to evaluate the impact of government policies on mental health, focusing on depression in expectant mothers. The model incorporated parameters from the "All Our Families" cohort dataset and literature, including household income, age, education, and environmental factors. The study hypothesized that income-supportive programs would reduce maternal depression, and simulations confirmed that progressive income policies significantly lowered prevalence. Additionally, modeling mothers' social networks showed that expanding social connections further reduced depression risk. These findings illustrate that ABM can assess the effectiveness of policy interventions on mental health outcomes, underscoring its applicability for designing strategies to enhance resilience and reduce the prevalence of psychological disorders.
+{{< include manuscript/_previous-abm-publication.md >}}
 
 ## Current Research
 
-This study aims to simulate stress perception using an ABM approach. Stress perception is operationalized as a generalization of the Perceived Stress Scale-10 (PSS-10), following the guidance provided in its interpretation manual [@cohen1988perceived]. Modeling stress perception is essential for capturing the activation of psychological resilience [@parsons2016cognitive]. Under equivalent stress exposure, agents with higher resilience are less likely to develop psychological disorders, whereas less resilient agents are more vulnerable. The simulation incorporates multiple psychological resources, including social support, family support, and psychological capital, with the latter encompassing personality traits such as openness, conscientiousness, and extraversion [@Hobfoll1989; @klaver2021exposure; @ZagerKocjan2021].
+{{< include manuscript/_current-research.md >}}
 
 # Methods
 
-## Affect
+## Modelling Approach
 
-Affect represented an individual's current emotional state, ranging from very negative to very positive. The model examined how various factors influenced these emotional states, including social connections, stress events, and natural tendencies to return to an individual's baseline emotional level.  
+{{< include manuscript/_modelling-approach.md >}}
 
-The affect of agent $i$ at time $t+1$ was influenced by the affect of neighboring agents $j \in N_i$:
+{{< include manuscript/_parameters.md >}}
 
-$$\Delta a_{i,t+1}^{social} = \alpha \sum_{j \in N_i} (a_{j,t} - a_{i,t})$$
+## Simulation Mechanism
 
-where $\alpha$ denoted the peer influence rate and $N_i$ represented the set of neighboring agents.  
-
-Stress events modified affect based on challenge–hindrance appraisal and coping outcomes:
-
-$$\Delta a_{i,t+1}^{stress} = \beta \cdot (c_i \cdot s_i - h_i \cdot f_i)$$
-
-where $\beta$ indicated the event appraisal rate, $c_i$ and $h_i$ represented the challenge and hindrance components, respectively, $s_i$ denoted coping success (1 for success, 0 for failure), and $f_i$ denoted coping failure (1 for failure, 0 for success).  
-
-Affect naturally returned to baseline through homeostatic processes:
-
-$$a_{i,t+1} = a_{i,t} + \gamma (a_{i,0} - a_{i,t}) + \Delta a_{i,t+1}^{social} + \Delta a_{i,t+1}^{stress}$$
-
-where $\gamma$ was the homeostatic rate and $a_{i,0}$ represented the baseline affect level.  
-
-Positive affect enhanced resource regeneration, whereas high resilience provided emotional buffering:
-
-$$r_{i,t+1} = r_{i,t} + \delta \cdot \max(0, a_{i,t}) \cdot R_{max} - \epsilon \cdot \max(0, -a_{i,t})$$
-
-where $r_i$ represented resources, $\delta$ denoted the positive affect regeneration bonus, $\epsilon$ denoted the negative affect regeneration penalty, and $R_{max}$ represented the maximum resource capacity.
-
-## Stress Perception
-
-Stress perception followed a comprehensive pipeline that transformed life events into psychological stress responses using the challenge–hindrance framework.  
-
-Each stress event $e_i$ was characterized by controllability $c_i \in [0,1]$ and overload $o_i \in [0,1]$:
-
-$$z_i = \omega_c c_i - \omega_o o_i + b$$
-
-$$challenge_i = \sigma(\gamma z_i) = \frac{1}{1 + e^{-\gamma z_i}}$$
-
-$$hindrance_i = 1 - challenge_i$$
-
-where $\omega_c$ and $\omega_o$ were weight parameters, $b$ was a bias term, and $\gamma$ controlled the steepness of the sigmoid function.  
-
-Controllability and overload were then modeled according to the bifactor structure of the PSS-10:
-
-$$PSS_{10_{total}} = \sum_{k=1}^{10} item_k$$
-
-$$item_k = \mu_k + \lambda_k^c \cdot C + \lambda_k^o \cdot O + \epsilon_k$$
-
-where $C \sim N(0,1)$ and $O \sim N(0,1)$ were latent factors with correlation $\rho$, $\lambda_k^c$ and $\lambda_k^o$ were factor loadings, $\mu_k$ represented item means, and $\epsilon_k$ denoted residuals.  
-
-An agent became stressed when the appraised stress load exceeded their dynamic threshold:
-
-$$L_i = s_i \cdot (1 + \delta \cdot (hindrance_i - challenge_i))$$
-
-$$T_{i,effective} = T_{base} + \lambda_C \cdot challenge_i - \lambda_H \cdot hindrance_i$$
-
-$$stressed_i = \begin{cases} 1 & \text{if } L_i > T_{i,effective} \\ 0 & \text{otherwise} \end{cases}$$
-
-where $s_i$ was the event magnitude, $\delta$ controlled the challenge–hindrance polarity, $\lambda_C$ and $\lambda_H$ were threshold scaling parameters, and $T_{base}$ represented the baseline threshold.
-
-## Resilience
-
-Resilience represented an individual's capacity to adapt and recover from stress events, with state variables including current resilience level, baseline resilience, consecutive hindrances, and stress breach count.  
-
-Resilience updated based on challenge–hindrance appraisal and coping success:
-
-$$\Delta r_i = \begin{cases}
-\rho_{success} \cdot challenge_i & \text{if coping successful} \\
-\rho_{minor} \cdot hindrance_i & \text{if coping successful} \\
--\rho_{failure} \cdot hindrance_i & \text{if coping failed} \\
--\rho_{minor} \cdot challenge_i & \text{if coping failed}
-\end{cases}$$
-
-where $\rho_{success}$, $\rho_{minor}$, and $\rho_{failure}$ were rate parameters corresponding to different outcomes.  
-
-Social support enhanced resilience:
-
-$$r_{i,t+1} = r_{i,t} + \sigma_{support} \cdot \sum_{j \in supporters} q_j$$
-
-where $\sigma_{support}$ denoted the social support rate and $q_j$ represented the quality of support from agent $j$.  
-
-Cumulative hindrance events generated overload when exceeding a threshold:
-
-$$overload_i = \begin{cases} 1 & \text{if } h_i^{consecutive} > \theta_{overload} \\ 0 & \text{otherwise} \end{cases}$$
-
-$$\Delta r_{i,overload} = -\nu \cdot overload_i$$
-
-where $\theta_{overload}$ represented the overload threshold and $\nu$ denoted the overload penalty rate.  
-
-Resilience naturally returned to baseline over time:
-
-$$r_{i,t+1} = r_{i,t} + \eta (r_{i,0} - r_{i,t}) + \Delta r_i + \Delta r_{i,overload}$$
-
-where $\eta$ was the homeostatic rate and $r_{i,0}$ represented baseline resilience.  
-
-The probability of successful coping integrated challenge–hindrance effects and social influence:
-
-$$p_{coping_i} = p_{base} + \phi_C \cdot challenge_i - \phi_H \cdot hindrance_i + \psi \cdot \bar{a}_{N_i}$$
-
-where $p_{base}$ denoted the base coping probability, $\phi_C$ and $\phi_H$ were challenge and hindrance modifiers, $\psi$ represented the strength of social influence, and $\bar{a}_{N_i}$ was the average affect of neighboring agents.
-
-## Agent Interaction
-
-Agent interactions formed the core social dynamics through a graph-based small-world network generated using the Watts–Strogatz model.  
-
-Social interactions occurred randomly between adjacent nodes and produced bidirectional affect changes with asymmetric effects:
-
-$$\Delta a_{i,t+1} = \mu \sum_{j \in N_i} (a_{j,t} - a_{i,t})$$
-
-$$\Delta a_{j,t+1} = \mu \sum_{i \in N_j} (a_{i,t} - a_{j,t})$$
-
-where $\mu$ denoted the interaction influence rate.  
-
-Stress triggered network rewiring based on homophily and support effectiveness:
-
-$$p_{rewire_i} = \begin{cases}
-\pi & \text{if } stress_i^{breaches} > \theta_{adapt} \\ 0 & \text{otherwise} \end{cases}$$
-
-Connection probability accounted for stress and affect similarity:
-
-$$p_{connect_{ij}} = \frac{1}{1 + e^{-\kappa (similarity_{ij} - 0.5)}}$$
-
-$$similarity_{ij} = 1 - \frac{|stress_i - stress_j| + |a_i - a_j|}{2}$$
-
-where $\kappa$ controlled the strength of homophily.  
-
-Agent interactions also reflected social support, depending on neighbor affect and resilience:
-
-$$support_{ij} = \begin{cases}
-q_j \cdot r_j & \text{if } a_j > \theta_{support} \\ 0 & \text{otherwise} \end{cases}$$
-
-where $q_j$ represented support quality and $\theta_{support}$ denoted the support threshold.
-
-## Psychological Resource Management
-
-Resource management implemented the conservation of resources theory, where individuals possessed limited psychological and physical resources to allocate across protective strategies.  
-
-Resources regenerated toward maximum capacity, modulated by affect:
-
-$$R_{i,t+1} = R_{i,t} + \rho (R_{max} - R_{i,t}) + \delta \cdot \max(0, a_{i,t}) \cdot R_{max}$$
-
-where $\rho$ denoted the base regeneration rate, $R_{max}$ represented the maximum resource capacity, and $\delta$ was the positive affect bonus.  
-
-Successful coping consumed resources proportional to the event hindrance:
-
-$$R_{i,t+1} = R_{i,t} - \kappa \cdot hindrance_i \cdot s_i$$
-
-where $\kappa$ represented the resource cost parameter and $s_i$ indicated coping success.  
-
-Resources were allocated across protective factors using a softmax decision-making process:
-
-$$allocation_{i,k} = \frac{e^{u_{i,k}/\tau}}{\sum_{m=1}^4 e^{u_{i,m}/\tau}} \cdot R_{i,t}$$
-
-$$u_{i,k} = \alpha_k \cdot (1 - p_{i,k}) + \beta \cdot (1 - resilience_i)$$
-
-where $\tau$ denoted the softmax temperature, $u_{i,k}$ represented the utility of protective factor $k$, $\alpha_k$ indicated the efficacy of factor $k$, $p_{i,k}$ was the current protection level, and $\beta$ controlled need-based allocation.  
-
-Protective factors improved based on resource investment:
-
-$$\Delta p_{i,k} = \gamma_k \cdot allocation_{i,k} \cdot (1 - p_{i,k})$$
-
-where $\gamma_k$ represented the improvement rate for protective factor $k$.
-
-## Model Integration
-
-The agent-based model integrated six core mechanism groups that worked together to simulate realistic mental health dynamics through a comprehensive state-transition framework.  
-
-Each agent $i$ maintained a complete state vector that was updated daily:
-
-$$\mathbf{s}_{i,t+1} = f(\mathbf{s}_{i,t}, \mathbf{e}_{i,t}, \mathbf{n}_{i,t}, \mathbf{\theta})$$
-
-where $\mathbf{s}_i = [a_i, r_i, stress_i, \mathbf{p}_i, R_i, pss10_i]$ represented affect, resilience, stress level, protective factors, resources, and PSS-10 scores; $\mathbf{e}_i$ were external events; $\mathbf{n}_i$ were network influences; and $\mathbf{\theta}$ denoted model parameters.  
-
-Each simulation day followed a structured sequence:
-
-1. Initialization: $\mathbf{s}_{i,t}^{init} = initialize(\mathbf{s}_{i,t-1})$
-2. Event Processing: $\mathbf{e}_{i,t} \sim P(\mathbf{e}|\mathbf{s}_{i,t}^{init}, \mathbf{\theta})$
-3. Social Interaction: $\Delta \mathbf{s}_{i,t}^{social} = g(\mathbf{s}_{N_i,t}, \mathbf{\theta}_{social})$
-4. Stress Appraisal: $stress_{i,t} = appraise(\mathbf{e}_{i,t}, \mathbf{\theta}_{stress})$
-5. Coping Determination: $coping_i = h(stress_{i,t}, r_{i,t}, \mathbf{s}_{N_i,t})$
-6. State Updates: $\mathbf{s}_{i,t+1} = update(\mathbf{s}_{i,t}, \Delta \mathbf{s}_{i,t}^{social}, stress_{i,t}, coping_i)$
-7. Homeostasis: $\mathbf{s}_{i,t+1} = homeostasis(\mathbf{s}_{i,t+1}, \mathbf{s}_{i,0})$
-
-Positive reinforcement loops were represented as:
-
-$$r_{t+1} = r_t + \phi_{success} \cdot challenge \cdot coping_{success}$$
-$$a_{t+1} = a_t + \beta \cdot coping_{success} \cdot challenge$$
-$$R_{t+1} = R_t + \delta \cdot \max(0, a_{t+1})$$
-
-Negative degradation loops were represented as:
-
-$$r_{t+1} = r_t - \phi_{failure} \cdot hindrance \cdot coping_{failure}$$
-$$a_{t+1} = a_t - \beta \cdot coping_{failure} \cdot hindrance$$
-$$R_{t+1} = R_t - \epsilon \cdot \max(0, -a_{t+1})$$
-
-Social amplification loops were represented as:
-
-$$\Delta a_i = \mu \sum_{j \in N_i} (a_j - a_i)$$
-$$p_{connect_{ij}} = \frac{1}{1 + e^{-\kappa |a_i - a_j|}}$$
-
-The system tended toward equilibrium points where all mechanisms balanced:
-
-$$\frac{d\mathbf{s}}{dt} = 0 \implies \mathbf{s}^* = equilibrium(\mathbf{\theta})$$
-
-where $\mathbf{s}^*$ represented stable mental health states, depending on parameter configurations and the structure of the social network.
+{{< include manuscript/_simulation-mechanism-manuscript.md >}}
 
 # Results
 
