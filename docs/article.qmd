@@ -38,6 +38,10 @@ Anxiety and depression are among the most prevalent psychological disorders in t
 
 {{< include manuscript/_simulation-mechanism-manuscript.md >}}
 
+## Data Analysis
+
+{{< include manuscript/_data-analysis.md >}}
+
 # Results
 
 Under homogeneous initial conditions representing a general population, the model converged to a stable equilibrium across all key variables. Mean perceived stress ($\mu_{PSS-10}$ = 19.44 ± 0.10), resilience ($\mu_{res}$ = 0.48 ± 0.01), and affect ($\mu_{affect}$ = −0.045 ± 0.004) remained consistent throughout the simulation. Variance across agents was minimal, indicating that emotional and resilience homeostasis mechanisms function as designed. Coping success stabilized around 0.45, balancing challenge and hindrance appraisals. These findings validate that the model captures stable psychological dynamics in the absence of perturbation, forming a robust baseline for subsequent experiments involving stress shocks or social disturbances.

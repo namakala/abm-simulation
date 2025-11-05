@@ -47,7 +47,7 @@ from typing import Optional
 # Import project modules
 from src.python.model import StressModel
 from src.python.config import get_config, ConfigurationError
-from src.python.visualization_utils import create_visualization_report
+from src.python.visualization_utils import create_visualization_report, create_time_series_visualization
 
 
 ## LOGGING CONFIGURATION
@@ -201,7 +201,12 @@ def run_simulation(
 
        # Generate initial population visualization
        logger.info("Generating initial population visualization...")
-       initial_viz_path = create_visualization_report(list(model.agents), output_fig_dir, "initial_population.png")
+       # Create DataFrame from agents
+       initial_data = pd.DataFrame([
+           {'resilience': agent.resilience, 'affect': agent.affect, 'stress': agent.current_stress, 'pss10': agent.pss10}
+           for agent in model.agents
+       ])
+       initial_viz_path = create_visualization_report(initial_data, output_fig_dir, "initial_population.pdf")
        logger.info(f"Initial visualization saved to: {initial_viz_path}")
 
        logger.info("Starting simulation...")
@@ -220,7 +225,11 @@ def run_simulation(
 
        # Generate final population visualization
        logger.info("Generating final population visualization...")
-       final_viz_path = create_visualization_report(list(model.agents), output_fig_dir, "final_population.png")
+       # Use DataCollector data (before daily reset) to match demo correlation analysis
+       agent_data = model.get_agent_time_series_data()
+       final_step = agent_data['Step'].max()
+       final_data = agent_data[agent_data['Step'] == final_step][['resilience', 'affect', 'current_stress', 'pss10']].rename(columns={'current_stress': 'stress'})
+       final_viz_path = create_visualization_report(final_data, output_fig_dir, "final_population.pdf")
        logger.info(f"Final visualization saved to: {final_viz_path}")
 
        # Extract data using DataCollector methods
@@ -231,6 +240,11 @@ def run_simulation(
        agent_data = model.get_agent_time_series_data()
 
        logger.info(f"Data extraction complete - Model: {model_data.shape}, Agent: {agent_data.shape}")
+
+       # Generate time series visualization
+       logger.info("Generating time series visualization...")
+       time_series_path = create_time_series_visualization(model_data, output_fig_dir, "time_series.pdf")
+       logger.info(f"Time series visualization saved to: {time_series_path}")
 
        return model, model_data, agent_data
 
