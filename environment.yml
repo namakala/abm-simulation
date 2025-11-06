@@ -1,29 +1,32 @@
 name: ABM
 channels:
   - conda-forge
+  - bioconda
+  - defaults
 dependencies:
+  - mesa=3.3.0
+  - python=3.12.11
+  - r-base=4.5.1
+  - networkx=3.5
+  - pytest-mock
+  - pandas=2.3.2
+  - pytest-cov
+  - typing
+  - hypothesis
   - bandit
-  - black
-  - coverage
+  - pytest-html
+  - safety
+  - isort
+  - numpy=2.3.3
   - dataclasses
+  - pytest-xdist
+  - pytest
+  - conda-forge::python-dotenv
+  - mypy
   - faker
   - flake8
-  - hypothesis
-  - isort
-  - mesa=3.3.0
-  - mypy
-  - networkx=3.5
-  - numpy=2.3.3
-  - pandas=2.3.2
-  - pytest
+  - black
   - pytest-benchmark
-  - pytest-cov
-  - pytest-html
-  - pytest-mock
-  - pytest-xdist
-  - python=3.12.11
-  - conda-forge::python-dotenv
-  - r-base=4.5.1
-  - safety
-  - typing
-
+  - coverage
+  - matplotlib
+  - seaborn
