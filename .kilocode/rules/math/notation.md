@@ -62,12 +62,14 @@ This document provides the authoritative reference for all mathematical notation
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
+| $\mathfrak{R}$ | Resilience | $\mathfrak{R} \in [0,1]$ | - |
 | $R$ | Resources | $R \in [0,1]$ | - |
+| $R_{\text{0}}$ | Baseline resources | $R_{\text{0}} \in [0,1]$ | - |
 | $D$ | Distress | $D \in [0,1]$ | - |
 | $\eta_{\text{stress}}$ | Stress threshold | $\eta_{\text{stress}} \in [0,1]$ | - |
 | $A$ | Affect | $A \in [-1,1]$ | - |
 | $A_{\text{0}}$ | Baseline affect | $A_{\text{0}} \in [-1,1]$ | - |
-| $R_{\text{0}}$ | Baseline resilience | $R_{\text{0}} \in [0,1]$ | - |
+| $\mathfrak{R}_{\text{0}}$ | Baseline resilience | $\mathfrak{R}_{\text{0}} \in [0,1]$ | - |
 | $L$ | Appraised stress load | $L \in [0,1]$ | - |
 | $S$ | Current stress level | $S \in [0,1]$ | - |
 
@@ -188,12 +190,12 @@ This document provides the authoritative reference for all mathematical notation
 
 | Symbol | Meaning/Description | Example/Range | Defaults |
 |--------|-------------------|---------------|----------|
-| $\mu_{R,\text{init}}$ | Initial resilience mean | $\mu_{R,\text{init}} \in [0,1]$ | 0.0 |
-| $\sigma_{R,\text{init}}$ | Initial resilience standard deviation | $\sigma_{R,\text{init}} > 0$ | - |
-| $\mu_{A,\text{init}}$ | Initial affect mean | $\mu_{A,\text{init}} \in [-1,1]$ | 0.0 |
-| $\sigma_{A,\text{init}}$ | Initial affect standard deviation | $\sigma_{A,\text{init}} > 0$ | - |
-| $\mu_{\text{Res,init}}$ | Initial resources mean | $\mu_{\text{Res,init}} \in [0,1]$ | 0.0 |
-| $\sigma_{\text{Res,init}}$ | Initial resources standard deviation | $\sigma_{\text{Res,init}} > 0$ | - |
+| $\mu_{\mathfrak{R}, \text{0}}$ | Initial resilience mean | $\mu_{\mathfrak{R}, \text{0}} \in [0,1]$ | 0.0 |
+| $\sigma_{\mathfrak{R}, \text{0}}$ | Initial resilience standard deviation | $\sigma_{\mathfrak{R}, \text{0}} > 0$ | - |
+| $\mu_{A, \text{0}}$ | Initial affect mean | $\mu_{A, \text{0}} \in [-1,1]$ | 0.0 |
+| $\sigma_{A, \text{0}}$ | Initial affect standard deviation | $\sigma_{A, \text{0}} > 0$ | - |
+| $\mu_{R, \text{0}}$ | Initial resources mean | $\mu_{R, \text{0}} \in [0,1]$ | 0.0 |
+| $\sigma_{R, \text{0}}$ | Initial resources standard deviation | $\sigma_{R, \text{0}} > 0$ | - |
 | $p_{\text{stress}}$ | Stress probability | $p_{\text{stress}} \in [0,1]$ | 0.5 |
 | $p_{\text{cope,success}}$ | Coping success rate | $p_{\text{cope,success}} \in [0,1]$ | 0.5 |
 | $n_{\text{subevents}}$ | Subevents per day | $n_{\text{subevents}} \in \mathbb{N}$ | 3 |
@@ -313,6 +315,7 @@ This document provides the authoritative reference for all mathematical notation
 | $\bar{R}$ | Average resources | $\bar{R} \in [0,1]$ | - |
 | $\bar{D}$ | Average distress | $\bar{D} \in [0,1]$ | - |
 | $\bar{A}$ | Average affect | $\bar{A} \in [-1,1]$ | - |
+| $\bar{\mathfrak{R}}$ | Average resilience | $\bar{\mathfrak{R}} \in [0,1]$ | - |
 | $\bar{S}$ | Average stress | $\bar{S} \in [0,1]$ | - |
 | $\bar{\Psi}$ | Average PSS-10 score | $\bar{\Psi} \in [0,40]$ | - |
 

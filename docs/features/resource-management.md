@@ -58,13 +58,15 @@ Resources naturally regenerate toward maximum capacity, representing rest, recov
 
 **Resource Regeneration Equation:**
 
-$$R' = \lambda_R \cdot (R_{\max} - R)$$
+$$R' = \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A))$$
 
 Where:
 - $R' > 0$ is resource regeneration amount
 - $\lambda_R \in [0,1]$ is regeneration rate
 - $R_{\max} = 1$ is maximum resources
 - $R \in [0,1]$ is current resources
+- $\beta_a > 0$ is affect influence parameter
+- $A \in [-1,1]$ is current affect
 
 **Implementation**: [`compute_resource_regeneration()`](../../src/python/affect_utils.py#L360-L381) in `affect_utils.py`
 
@@ -82,6 +84,8 @@ $$R' = \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A))$$
 Where:
 - $\beta_a > 0$ is affect influence parameter
 - $A \in [-1,1]$ is current affect
+
+**Implementation**: [`compute_resource_regeneration()`](../../src/python/affect_utils.py#L360-L381) in `affect_utils.py`
 
 ## Resource Consumption Patterns
 
@@ -146,6 +150,8 @@ Where:
 - $\gamma_p > 0$ is improvement rate
 - $e_f \in [0,1]$ is current efficacy
 
+**Implementation**: [`allocate_protective_factors()`](../../src/python/resource_utils.py#L549-L587) in `resource_utils.py`
+
 **Implementation**: [`allocate_protective_factors()`](../../src/python/resource_utils.py#L549-L587) method in `resource_utils.py`
 
 ## Protective Factor Efficacy Dynamics
@@ -199,6 +205,8 @@ Where:
 - $\kappa > 0$ is resource cost parameter
 - $\mathbb{1}_{\mathrm{coping\ successful}}$ is indicator for successful coping
 
+**Implementation**: [`compute_resource_depletion_with_resilience()`](../../src/python/resource_utils.py#L1-L50) in `resource_utils.py`
+
 ### Affect System Integration
 
 **Affect Influence on Regeneration**:
@@ -209,14 +217,14 @@ Low resources may create negative affect, representing the psychological stress 
 
 **Protective Factor Resilience Boost:**
 
-$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_{\text{0}} - R_c) \cdot \theta_{\text{boost}}$$
+$$\Delta \mathfrak{R}_p = \sum_{f \in F} e_f \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_c) \cdot \theta_{\text{boost}}$$
 
 Where:
-- $\Delta R_p$ is resilience boost from protective factors
+- $\Delta \mathfrak{R}_p$ is resilience boost from protective factors
 - $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
 - $e_f \in [0,1]$ is efficacy of factor $f$
-- $R_{\text{0}} \in [0,1]$ is baseline resilience
-- $R_c \in [0,1]$ is current resilience
+- $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience
+- $\mathfrak{R}_c \in [0,1]$ is current resilience
 - $\theta_{\text{boost}} > 0$ is boost rate parameter
 
 ### Resilience System Integration

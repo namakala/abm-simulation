@@ -55,15 +55,14 @@ The core resilience update mechanism integrates challenge and hindrance effects,
 
 **Challenge-Hindrance Resilience Effect:**
 
-$$\Delta R_{\chi\zeta} = \begin{cases}
-0.3 \cdot \chi + 0.1 \cdot \zeta & \text{if coping successful} \\
--0.1 \cdot \chi - 0.4 \cdot \zeta & \text{if coping failed}
+$$\Delta \mathfrak{R}_{\chi\zeta} = \begin{cases}
+0.3 \cdot \bar{\chi}_d + 0.1 \cdot \bar{\zeta}_d & \text{if coping successful} \\
+-0.1 \cdot \bar{\chi}_d - 0.4 \cdot \bar{\zeta}_d & \text{if coping failed}
 \end{cases}$$
 
 Where:
-- $\Delta R_{\chi\zeta}$ is resilience change from challenge/hindrance
-- $\chi \in [0,1]$ is challenge component
-- $\zeta \in [0,1]$ is hindrance component
+- $\Delta \mathfrak{R}_{\chi\zeta}$ is resilience change from challenge/hindrance
+- $\bar{\chi}_d, \bar{\zeta}_d \in [0,1]$ are daily average challenge/hindrance
 
 **Implementation**: [`compute_challenge_hindrance_resilience_effect()`](../../src/python/affect_utils.py#L471-L510) in `affect_utils.py`
 
@@ -76,14 +75,14 @@ Where:
 
 **Protective Factor Resilience Boost:**
 
-$$\Delta R_p = \sum_{f \in F} e_f \cdot (R_{\text{0}} - R_c) \cdot \theta_{\text{boost}}$$
+$$\Delta \mathfrak{R}_p = \sum_{f \in F} e_f \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t) \cdot \theta_{\text{boost}}$$
 
 Where:
-- $\Delta R_p$ is resilience boost from protective factors
+- $\Delta \mathfrak{R}_p$ is resilience boost from protective factors
 - $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors
 - $e_f \in [0,1]$ is efficacy of factor $f$
-- $R_{\text{0}} \in [0,1]$ is baseline resilience
-- $R_c \in [0,1]$ is current resilience
+- $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience
+- $\mathfrak{R}_t \in [0,1]$ is current resilience
 - $\theta_{\text{boost}} > 0$ is boost rate parameter
 
 **Protective Factors**:
@@ -98,12 +97,12 @@ Where:
 
 **Homeostatic Resilience Adjustment:**
 
-$$R_{t+1} = R_t + \lambda_{\text{resilience}} \cdot (R_{\text{0}} - R_t)$$
+$$\mathfrak{R}_{t+1} = \mathfrak{R}_t + \lambda_{\text{resilience}} \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t)$$
 
 Where:
-- $R_t \in [0,1]$ is current resilience
+- $\mathfrak{R}_t \in [0,1]$ is current resilience
 - $\lambda_{\text{resilience}} \in [0,1]$ is homeostatic rate
-- $R_{\text{0}} \in [0,1]$ is baseline resilience
+- $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience
 
 ## Coping Success Determination
 
@@ -195,13 +194,13 @@ When hindrance events accumulate beyond a threshold, they create an overload eff
 
 **Cumulative Overload Effect:**
 
-$$\Delta R_o = \begin{cases}
+$$\Delta \mathfrak{R}_o = \begin{cases}
 -0.2 \cdot \min\left(\frac{h_c}{\eta_{\text{res,overload}}}, 2.0\right) & \text{if } h_c \geq \eta_{\text{res,overload}} \\
 0 & \text{otherwise}
 \end{cases}$$
 
 Where:
-- $\Delta R_o$ is overload resilience change
+- $\Delta \mathfrak{R}_o$ is overload resilience change
 - $h_c \in \mathbb{N}$ is consecutive hindrances count
 - $\eta_{\text{res,overload}} \in \mathbb{N}$ is overload threshold
 
@@ -239,20 +238,22 @@ The system tracks daily stress events, including average stress levels, maximum 
 
 **Integrated Resilience Update:**
 
-$$R_{t+1} = R_t + \Delta R_{\chi\zeta} + \Delta R_p + \Delta R_o + \Delta R_s + \lambda_{\text{resilience}} \cdot (R_{\text{0}} - R_t)$$
+$$\mathfrak{R}_{t+1} = \mathfrak{R}_t + \Delta \mathfrak{R}_{\chi\zeta} + \Delta \mathfrak{R}_p + \Delta \mathfrak{R}_o + \Delta \mathfrak{R}_s + \lambda_{\text{resilience}} \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t)$$
 
 **Final Resilience Clamping:**
 
-$$R_{t+1} = \mathrm{clamp}(R_{t+1}, 0, 1)$$
+$$\mathfrak{R}_{t+1} = \mathrm{clamp}(\mathfrak{R}_{t+1}, 0, 1)$$
 
 Where:
-- $R_t \in [0,1]$ is current resilience
-- $\Delta R_{\chi\zeta}$ is challenge-hindrance effect
-- $\Delta R_p$ is protective factor boost
-- $\Delta R_o$ is overload effect
-- $\Delta R_s$ is social support effect
+- $\mathfrak{R}_t \in [0,1]$ is current resilience
+- $\Delta \mathfrak{R}_{\chi\zeta}$ is challenge-hindrance effect
+- $\Delta \mathfrak{R}_p$ is protective factor boost
+- $\Delta \mathfrak{R}_o$ is overload effect
+- $\Delta \mathfrak{R}_s$ is social support effect
 - $\lambda_{\text{resilience}} \in [0,1]$ is homeostatic rate
-- $R_{\text{0}} \in [0,1]$ is baseline resilience
+- $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience
+
+**Implementation**: [`update_resilience_dynamics()`](../../src/python/affect_utils.py#L1189-L1230) in `affect_utils.py`
 
 **Implementation**: [`update_resilience_dynamics()`](../../src/python/affect_utils.py#L1189-L1230) in `affect_utils.py`
 

@@ -82,6 +82,7 @@ $$\mathrm{stressed} = \begin{cases}
 \end{cases}$$
 
 Where:
+- $\eta_{\mathrm{eff}} = \eta_{\text{0}} + \eta_{\chi} \cdot \chi - \eta_{\zeta} \cdot \zeta$ is effective threshold
 - $\eta_{\text{0}} \in [0,1]$ is base stress threshold
 - $\eta_{\chi} > 0$ is challenge threshold modifier
 - $\eta_{\zeta} > 0$ is hindrance threshold modifier
@@ -96,9 +97,10 @@ The overall stress load is computed from challenge-hindrance polarity, represent
 
 **Appraised Stress Load:**
 
-$$L = 1 + \delta \cdot (\zeta - \chi)$$
+$$L = s \cdot (1 + \delta \cdot (\zeta - \chi))$$
 
 Where:
+- $s \in [0,1]$ is event magnitude
 - $\delta > 0$ controls polarity effect strength
 - $\zeta - \chi \in [-1,1]$ represents hindrance vs challenge balance
 

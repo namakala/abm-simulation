@@ -10,7 +10,7 @@ Agent baseline initialization establishes the starting state for each individual
 
 Each agent represents an individual with the following baseline state variables:
 
-- **Baseline Resilience** $R_{\text{0}} \in [0,1]$: Natural equilibrium point for resilience capacity
+- **Baseline Resilience** $\mathfrak{R}_{\text{0}} \in [0,1]$: Natural equilibrium point for resilience capacity
 - **Baseline Affect** $A_{\text{0}} \in [-1,1]$: Natural equilibrium point for emotional state
 - **Initial Resources** $R \in [0,1]$: Available psychological and physical resources
 - **Protective Factors** $\mathbf{e} \in [0,1]^4$: Efficacy levels for social support, family support, formal interventions, and psychological capital
@@ -35,13 +35,13 @@ A reproducible random number generator is created for each agent.
 
 Baseline resilience is initialized using a sigmoid transformation to ensure values remain in [0,1]:
 
-$$R_{\text{0}} = \sigma\left(\frac{X - \mu_{R,\text{init}}}{\sigma_{R,\text{init}}}\right)$$
+$$\mathfrak{R}_{\text{0}} = \sigma\left(\frac{X - \mu_{\mathfrak{R}, \text{0}}}{\sigma_{\mathfrak{R}, \text{0}}}\right)$$
 
 Where:
-- $X \sim \mathcal{N}(\mu_{R,\text{init}}, \sigma_{R,\text{init}}^2)$ is a normal random variable
+- $X \sim \mathcal{N}(\mu_{\mathfrak{R}, \text{0}}, \sigma_{\mathfrak{R}, \text{0}}^2)$ is a normal random variable
 - $\sigma(x) = \frac{1}{1+e^{-x}}$ is the sigmoid function
-- $\mu_{R,\text{init}} = 0.5$ (default mean)
-- $\sigma_{R,\text{init}} = 0.2$ (default standard deviation)
+- $\mu_{\mathfrak{R}, \text{0}} = 0.5$ (default mean)
+- $\sigma_{\mathfrak{R}, \text{0}} = 0.2$ (default standard deviation)
 
 **Implementation**: [`sigmoid_transform()`](../../src/python/math_utils.py#L417-L456) in `math_utils.py`
 
@@ -49,13 +49,13 @@ Where:
 
 Baseline affect is initialized using a tanh transformation to ensure values remain in [-1,1]:
 
-$$A_{\text{0}} = \tanh\left(\frac{X - \mu_{A,\text{init}}}{\sigma_{A,\text{init}}}\right)$$
+$$A_{\text{0}} = \tanh\left(\frac{X - \mu_{A, \text{0}}}{\sigma_{A, \text{0}}}\right)$$
 
 Where:
-- $X \sim \mathcal{N}(\mu_{A,\text{init}}, \sigma_{A,\text{init}}^2)$ is a normal random variable
+- $X \sim \mathcal{N}(\mu_{A, \text{0}}, \sigma_{A, \text{0}}^2)$ is a normal random variable
 - $\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$ is the hyperbolic tangent function
-- $\mu_{A,\text{init}} = 0.0$ (default mean)
-- $\sigma_{A,\text{init}} = 0.5$ (default standard deviation)
+- $\mu_{A, \text{0}} = 0.0$ (default mean)
+- $\sigma_{A, \text{0}} = 0.5$ (default standard deviation)
 
 **Implementation**: [`tanh_transform()`](../../src/python/math_utils.py#L375-L414) in `math_utils.py`
 
@@ -63,12 +63,12 @@ Where:
 
 Initial resources are initialized using the same sigmoid transformation as resilience:
 
-$$R = \sigma\left(\frac{X - \mu_{\text{Res,init}}}{\sigma_{\text{Res,init}}}\right)$$
+$$R = \sigma\left(\frac{X - \mu_{R, \text{0}}}{\sigma_{R, \text{0}}}\right)$$
 
 Where:
-- $X \sim \mathcal{N}(\mu_{\text{Res,init}}, \sigma_{\text{Res,init}}^2)$
-- $\mu_{\text{Res,init}} = 0.6$ (default mean)
-- $\sigma_{\text{Res,init}} = 0.2$ (default standard deviation)
+- $X \sim \mathcal{N}(\mu_{R, \text{0}}, \sigma_{R, \text{0}}^2)$
+- $\mu_{R, \text{0}} = 0.6$ (default mean)
+- $\sigma_{R, \text{0}} = 0.2$ (default standard deviation)
 
 ### Step 6: Protective Factors Initialization
 

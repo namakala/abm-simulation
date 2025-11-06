@@ -97,14 +97,14 @@ $$\mathrm{trigger\ adaptation} = \begin{cases}
 
 **Connection Similarity:**
 
-$$s_{ij} = 1 - \frac{|A_i - A_j| + |R_i - R_j|}{2}$$
+$$s_{ij} = 1 - \frac{|A_i - A_j| + |\mathfrak{R}_i - \mathfrak{R}_j|}{2}$$
 
 Where:
 - $c_{\text{breach}} \in \mathbb{N}$ is stress breach count
 - $\eta_{\text{adapt}} \in \mathbb{N}$ is adaptation threshold
 - $s_{ij} \in [0,1]$ is similarity between agents $i,j$
 - $A_i, A_j \in [-1,1]$ are affect values
-- $R_i, R_j \in [0,1]$ are resilience values
+- $\mathfrak{R}_i, \mathfrak{R}_j \in [0,1]$ are resilience values
 
 **Connection Retention Probability:**
 
@@ -134,11 +134,11 @@ The quality of support depends on the current state and capabilities of the pers
 
 **Support Effectiveness Calculation:**
 
-$$e_s = \frac{R_j + (1 + A_j)/2}{2} + 0.2$$
+$$e_s = \frac{\mathfrak{R}_j + (1 + A_j)/2}{2} + 0.2$$
 
 Where:
 - $e_s \in [0,1]$ is support effectiveness
-- $R_j \in [0,1]$ is neighbor's resilience
+- $\mathfrak{R}_j \in [0,1]$ is neighbor's resilience
 - $A_j \in [-1,1]$ is neighbor's affect
 
 ### Social Resource Exchange
@@ -147,7 +147,7 @@ Agents engage in resource exchange during interactions, allowing sharing of psyc
 
 **Resource Exchange Equation:**
 
-$$\Delta R_i = f(R_i, R_j, e_s, \Delta A_i, \Delta A_j)$$
+$$\Delta R_i = f(\mathfrak{R}_i, \mathfrak{R}_j, e_s, \Delta A_i, \Delta A_j)$$
 
 Where:
 - $\Delta R_i$ is resource change for agent $i$
@@ -163,13 +163,13 @@ Receiving social support provides a direct boost to resilience, representing how
 **Support Exchange Detection:**
 
 $$\mathrm{support\ exchange} = \begin{cases}
-1 & \text{if } |\Delta A_i| > 0.05 \lor |\Delta R_i| > 0.05 \lor |\Delta A_j| > 0.05 \lor |\Delta R_j| > 0.05 \lor |\Delta \text{resources}| > 0.05 \\
+1 & \text{if } |\Delta A_i| > 0.05 \lor |\Delta \mathfrak{R}_i| > 0.05 \lor |\Delta A_j| > 0.05 \lor |\Delta \mathfrak{R}_j| > 0.05 \lor |\Delta \text{resources}| > 0.05 \\
 0 & \text{otherwise}
 \end{cases}$$
 
 Where:
 - $\Delta A_i, \Delta A_j$ are affect changes for agents $i,j$
-- $\Delta R_i, \Delta R_j$ are resilience changes for agents $i,j$
+- $\Delta \mathfrak{R}_i, \Delta \mathfrak{R}_j$ are resilience changes for agents $i,j$
 - $\Delta \text{resources}$ is resource transfer between agents
 
 **Implementation**: [`interact()`](../../src/python/agent.py#L392-L521) method in `agent.py`
