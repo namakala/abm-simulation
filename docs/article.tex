@@ -1117,75 +1117,97 @@ variability into population-level equilibrium.
 
 \section{Discussion}\label{discussion}
 
-The findings of this study demonstrate that the agent-based model
-successfully reproduces stable psychological and social dynamics under
-homogeneous baseline conditions. The convergence of key indicators,
-including perceived stress, resilience, and affect, indicates that the
-model reliably captures equilibrium states that align with empirical
-expectations of population-level homeostasis. The observed stability
-suggests that the implemented mechanisms governing stress perception,
-coping, and social exchange are internally consistent and theoretically
-coherent. This provides a solid foundation for further experimentation
-involving environmental shocks or targeted interventions, where
-deviations from equilibrium can reveal the resilience properties of the
-simulated population.
+The simulation results reproduced homeostatic psychological dynamics
+through agent-based modeling of social network interactions.
+Population-level metrics maintained stable equilibrium despite
+individual heterogeneity. This supports the hypothesis that agent
+interactions determine mental health outcomes within constrained ranges.
 
-At the macro level, the model demonstrates that collective patterns of
-stress and resilience can remain balanced even when individual-level
-fluctuations are present. The equilibrium between challenge and
-hindrance appraisals implies that agents, on average, experience
-stressors as manageable rather than destabilizing. This mirrors
-empirical findings in resilience research, where moderate stress
-exposure often promotes adaptive functioning rather than deterioration
-(Fletcher and Sarkar 2013; Waldeck et al. 2021). The stability of
-network characteristics, such as constant density and social exchange
-rates, indicates that the system's social structure was sufficient to
-sustain equilibrium without requiring additional external regulation.
-Together, these results highlight the model's capacity to reproduce
-homeostatic processes commonly observed in resilient populations.
+The observed homeostatic stability aligns with resilience research. This
+emphasizes social support systems as protective factors against
+psychological distress (Hobfoll 1989). The model successfully reproduced
+empirically grounded associations between psychological variables.
+Resilience showed negative correlations with stress and PSS-10 scores.
+These patterns mirror community resilience studies demonstrating
+supportive networks enhance resource conservation and stress mitigation
+(Fasihi Harandi, Mohammad Taghinasab, and Dehghan Nayeri 2017).
 
-At the micro level, individual trajectories exhibit substantial
-variability, reflecting the stochastic and adaptive nature of
-psychological processes within the model. Agents display diverse
-patterns of stress perception, coping success, and affective regulation,
-yet the system collectively stabilizes around its mean state. This
-emergent property is consistent with theories of complex adaptive
-systems, in which local heterogeneity supports global stability (Yan,
-Martinez, and Liu 2017). The wide range in resilience and perceived
-controllability further indicates that the model effectively captures
-inter-individual differences that are central to resilience theory.
-Importantly, transient stress overloads and recovery cycles emerge
-naturally from the interaction of cognitive and social mechanisms,
-underscoring the ecological validity of the model's behavioral
-assumptions.
+As demonstrated in Figure~\ref{fig-final-population}, the agent
+population exhibits bimodal distribution on affect and stress levels.
+This pattern appeared as distinct clustering around stable equilibrium
+points. It captured complex adaptive system behaviors where local
+heterogeneity supports global stability (Yan, Martinez, and Liu 2017).
+Previous ABM mental health research demonstrated similar emergent
+phenomena through social contagion mechanisms (Andarlia and Gunawan
+2021). The current model extends these findings by incorporating
+comprehensive appraisal processes and resource management systems. The
+simulation framework provides a robust foundation for evaluating
+preventive mental health interventions.
 
-Overall, this study advances the use of agent-based modeling for
-investigating psychological resilience and stress adaptation. By
-reproducing both stability and variability, the model bridges
-individual-level dynamics and population-level outcomes, offering a
-valuable tool for testing preventive mental health interventions. Future
-research should extend this framework by introducing perturbations such
-as social disruptions, environmental stressors, or policy interventions
-to examine how resilience unfolds under adversity. Incorporating
-longitudinal empirical data would further strengthen the model's
-external validity and support its application in the design of
-resilience-enhancing public health strategies.
+The phenomenon emerged from the interaction of multiple mechanisms
+operating at different scales. The network adaptation equation
+demonstrated how homophily strength balances similarity preferences with
+support effectiveness. This maintains network cohesion while enabling
+adaptive rewiring. Connection similarity quantified how affect and
+resilience differences influence relationship formation patterns.
+Network rewiring triggers occurred when chronic stress breaches exceed
+adaptation thresholds. Persistently distressed agents modify their
+social environments to improve support access. The support effectiveness
+equation demonstrated how neighbor resilience and affect combine to
+determine mutual aid capacity. These mechanisms collectively produce the
+bimodal affect-stress distribution. As observed in
+Figure~\ref{fig-final-population}, agents cluster into stable social
+groups that maintain collective equilibrium.
+
+The stress processing pipeline transformed life events into
+psychological responses through challenge-hindrance appraisal
+mechanisms. The appraisal equation combined with sigmoid transformation
+produced balanced challenge-hindrance patterns that maintain cognitive
+processing neutrality. The effective threshold equation demonstrates how
+challenge and hindrance appraisals modify stress response thresholds
+dynamically. Coping success probability integrates social influence
+through neighbor affect averaging. This produces consistent coping rates
+that sustain population-level resilience. Resource management equations
+demonstrate affect-modulated recovery. This maintains stable resource
+levels supporting sustained coping capacity. The daily integration
+framework normalizes challenge-hindrance values across
+Poisson-distributed subevents. This ensures consistent temporal dynamics
+regardless of daily stress exposure variability. Homeostatic adjustments
+provide natural system restoration toward baseline equilibrium. This
+creates the stable population metrics observed across all simulation
+epochs.
+
+The simulation demonstrated that population-level mental health outcomes
+emerge from complex interactions. These occur between individual
+characteristics, social network structures, and environmental stressors.
+The model validated agent-based approaches for evaluating preventive
+strategies that enhance psychological resilience through social support
+optimization (Benny et al. 2022). However, this study exclusive focused
+on resilience mechanisms without incorporating mental health outcomes.
+The validation was primarily through pattern matching rather than
+longitudinal empirical integration. The simulation also makes
+assumptions of stationary social network structures that ignore
+demographic transitions over extended periods. Notwithstanding these
+limitations, future research may find practical uses of the simulation
+framework. This model can be modified to evaluate the impact of public
+mental health policies that leverage social interaction mechanisms.
 
 \section{Conclusion}\label{conclusion}
 
-This study demonstrates the potential of agent-based modeling to capture
-the dynamic interplay between stress perception, resilience, and social
-interaction within a simulated population. By operationalizing
-psychological constructs such as perceived stress, coping, and social
-support, the model reproduces realistic patterns of equilibrium and
-individual variability, consistent with the established theory on
-resilience and adaptation. The results validate the internal coherence
-of the model and establish a baseline framework for future experiments
-involving perturbations or policy interventions. As such, this work
-contributes a methodological foundation for the quantitative evaluation
-of preventive mental health strategies, enabling systematic exploration
-of how psychological and social mechanisms jointly shape population
-resilience.
+This study demonstrates that agent-based simulations can model
+homeostatic mechanisms of psychological resilience through social
+network dynamics and interactive agent behaviors. The mathematical
+framework reproduced empirically validated associations among
+psychological variables while maintaining population-level stability
+through individual heterogeneity. The bimodal affect-stress distribution
+emerges naturally from network rewiring and homophily mechanisms,
+providing insight into collective mental health patterns. The
+integration of stress perception modeling with comprehensive assessment
+tools provides new capabilities for evaluating mental health
+intervention effectiveness at population scales. The simulation
+framework enables systematic exploration of how individual
+characteristics, social connections, and environmental factors combine
+to determine collective mental health outcomes.
 
 \section*{References}\label{references}
 \addcontentsline{toc}{section}{References}
@@ -1223,12 +1245,6 @@ Fasihi Harandi, Tayebeh, Maryam Mohammad Taghinasab, and Tayebeh Dehghan
 Nayeri. 2017. {``The Correlation of Social Support with Mental Health: A
 Meta-Analysis.''} \emph{Electronic Physician} 9 (9): 5212--22.
 \url{https://doi.org/10.19082/5212}.
-
-\bibitem[\citeproctext]{ref-Fletcher2013}
-Fletcher, David, and Mustafa Sarkar. 2013. {``Psychological Resilience:
-A Review and Critique of Definitions, Concepts, and Theory.''}
-\emph{European Psychologist} 18 (1): 12--23.
-\url{https://doi.org/10.1027/1016-9040/a000124}.
 
 \bibitem[\citeproctext]{ref-gbd2022global}
 GBD Collaborators. 2022. {``Global, Regional, and National Burden of 12
@@ -1288,13 +1304,6 @@ Troy, Allison S, Emily C Willroth, Amanda J Shallcross, Nicole R
 Giuliani, James J Gross, and Iris B Mauss. 2023. {``Psychological
 Resilience: An Affect-Regulation Framework.''} \emph{Annual Review of
 Psychology} 74 (1): 547--76.
-
-\bibitem[\citeproctext]{ref-Waldeck2021}
-Waldeck, Daniel, Luca Pancani, Andrew Holliman, Maria Karekla, and Ian
-Tyndall. 2021. {``Adaptability and Psychological Flexibility:
-Overlapping Constructs?''} \emph{Journal of Contextual Behavioral
-Science} 19 (January): 72--78.
-\url{https://doi.org/10.1016/j.jcbs.2021.01.002}.
 
 \bibitem[\citeproctext]{ref-Yan2017}
 Yan, Gang, Neo D. Martinez, and Yang-Yu Liu. 2017. {``Degree
