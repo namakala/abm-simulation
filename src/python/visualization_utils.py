@@ -9,7 +9,7 @@ and statistical summaries.
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 
 # Visualization imports
 try:
@@ -38,7 +38,7 @@ except ImportError:
 
 
 def create_visualization_report(
-    data: pd.DataFrame,
+    data: Union[pd.DataFrame, List],
     output_dir: str = "outputs",
     filename: Optional[str] = None,
     style_config: Optional[Dict[str, Any]] = None
@@ -47,7 +47,8 @@ def create_visualization_report(
     Create comprehensive visualization report for psychological data analysis.
 
     Args:
-        data: DataFrame with columns for resilience, affect, stress, and PSS-10 scores
+        data: DataFrame with columns for resilience, affect, stress, and PSS-10 scores,
+              or list of Person agents with resilience, affect, current_stress, and pss10 attributes
         output_dir: Directory to save the visualization
         filename: Optional filename for saving the report (defaults to PDF)
         style_config: Optional dictionary for customizing plot styling
@@ -85,6 +86,19 @@ def create_visualization_report(
     plt.rcParams['font.size'] = style_config.get('font_size', 12)
     plt.rcParams['axes.titlesize'] = style_config.get('title_font_size', 16)
 
+    # Convert list of agents to DataFrame if needed
+    if isinstance(data, list):
+        # Assume list of Person agents with required attributes
+        try:
+            data = pd.DataFrame({
+                'resilience': [getattr(agent, 'resilience', 0.0) for agent in data],
+                'affect': [getattr(agent, 'affect', 0.0) for agent in data],
+                'stress': [getattr(agent, 'current_stress', 0.0) for agent in data],
+                'pss10': [getattr(agent, 'pss10', 0.0) for agent in data]
+            })
+        except (AttributeError, TypeError) as e:
+            raise ValueError(f"Cannot convert agent list to DataFrame: {e}")
+    
     if filename is None:
         filename = f"psychological_data_report_{len(data)}_observations.pdf"
 
