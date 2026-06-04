@@ -20,7 +20,6 @@ The tests use realistic psychological scenarios grounded in theory and demonstra
 how the model creates realistic agent behavior in social network contexts.
 """
 
-import pytest
 import numpy as np
 import networkx as nx
 from unittest.mock import Mock, patch
@@ -28,20 +27,19 @@ from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.model import StressModel
 from src.python.affect_utils import (
-    update_affect_dynamics, update_resilience_dynamics,
-    AffectDynamicsConfig, ResilienceDynamicsConfig,
-    compute_peer_influence, compute_event_appraisal_effect,
-    compute_homeostasis_effect, compute_cumulative_overload
+    update_affect_dynamics,
+    update_resilience_dynamics,
+    AffectDynamicsConfig,
+    ResilienceDynamicsConfig,
+    compute_peer_influence,
+    compute_event_appraisal_effect,
+    compute_cumulative_overload,
 )
-from src.python.stress_utils import StressEvent, generate_stress_event
-from src.python.config import get_config
+from src.python.stress_utils import StressEvent
 
 
 def mock_pss10_responses_func(*args, **kwargs):
-    return {
-        1: 2, 2: 2, 3: 2, 4: 2, 5: 2,
-        6: 2, 7: 2, 8: 2, 9: 2, 10: 2
-    }  # Return valid PSS-10 responses (0-4)
+    return {1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2, 9: 2, 10: 2}  # Return valid PSS-10 responses (0-4)
 
 
 class MockModel:
@@ -77,40 +75,47 @@ class TestSocialInfluenceScenario:
         agents = []
 
         # Create central positive agent
-        central_agent = Person(model, {
-            'initial_affect_mean': 0.8,  # Very positive
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.7,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.8,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,  # No stress for this test
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        central_agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.8,  # Very positive
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.7,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.8,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,  # No stress for this test
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         # Override the affect dynamics config to reduce homeostasis for this test
         from src.python.affect_utils import AffectDynamicsConfig
+
         central_agent.affect_config = AffectDynamicsConfig(
             peer_influence_rate=0.3,  # Increased social influence
             event_appraisal_rate=0.1,
-            homeostatic_rate=0.05,   # Reduced homeostasis
-            influencing_neighbors=5
+            homeostatic_rate=0.05,  # Reduced homeostasis
+            influencing_neighbors=5,
         )
 
         # Create surrounding negative agents
         for i in range(5):
-            agent = Person(model, {
-                'initial_affect_mean': -0.4,  # Negative
-                'initial_affect_sd': 0.1,
-                'initial_resilience_mean': 0.5,
-                'initial_resilience_sd': 0.1,
-                'initial_resources_mean': 0.6,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.0,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 1
-            })
+            agent = Person(
+                model,
+                {
+                    "initial_affect_mean": -0.4,  # Negative
+                    "initial_affect_sd": 0.1,
+                    "initial_resilience_mean": 0.5,
+                    "initial_resilience_sd": 0.1,
+                    "initial_resources_mean": 0.6,
+                    "initial_resources_sd": 0.1,
+                    "stress_probability": 0.0,
+                    "coping_success_rate": 0.5,
+                    "subevents_per_day": 1,
+                },
+            )
             agents.append(agent)
 
         # Set up network connections - all agents connected to central agent
@@ -118,7 +123,6 @@ class TestSocialInfluenceScenario:
         model.grid.get_neighbors.return_value = neighbors
 
         # Record initial affects
-        initial_central_affect = central_agent.affect
         initial_neighbor_affects = [agent.affect for agent in agents]
 
         # Run multiple interaction steps
@@ -139,8 +143,9 @@ class TestSocialInfluenceScenario:
         # Neighbors should not have deteriorated significantly (social buffering)
         # Note: Some deterioration may occur due to complex social dynamics
         for i, agent in enumerate(agents):
-            assert agent.affect >= initial_neighbor_affects[i] - 0.7, \
-                f"Agent {i} affect should not deteriorate significantly"
+            assert (
+                agent.affect >= initial_neighbor_affects[i] - 0.7
+            ), f"Agent {i} affect should not deteriorate significantly"
 
         # All values should remain in valid ranges
         assert -1.0 <= central_agent.affect <= 1.0
@@ -158,38 +163,43 @@ class TestSocialInfluenceScenario:
         agents = []
 
         # Create central distressed agent
-        central_agent = Person(model, {
-            'initial_affect_mean': -0.9,  # Very negative
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.2,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.3,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        central_agent = Person(
+            model,
+            {
+                "initial_affect_mean": -0.9,  # Very negative
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.2,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.3,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         # Create surrounding positive agents
         for i in range(4):
-            agent = Person(model, {
-                'initial_affect_mean': 0.6,  # Positive
-                'initial_affect_sd': 0.1,
-                'initial_resilience_mean': 0.7,
-                'initial_resilience_sd': 0.1,
-                'initial_resources_mean': 0.8,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.0,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 1
-            })
+            agent = Person(
+                model,
+                {
+                    "initial_affect_mean": 0.6,  # Positive
+                    "initial_affect_sd": 0.1,
+                    "initial_resilience_mean": 0.7,
+                    "initial_resilience_sd": 0.1,
+                    "initial_resources_mean": 0.8,
+                    "initial_resources_sd": 0.1,
+                    "stress_probability": 0.0,
+                    "coping_success_rate": 0.5,
+                    "subevents_per_day": 1,
+                },
+            )
             agents.append(agent)
 
         # Set up network connections
         model.grid.get_neighbors.return_value = agents
 
         # Record initial affects
-        initial_central_affect = central_agent.affect
         initial_neighbor_affects = [agent.affect for agent in agents]
 
         # Run interaction steps
@@ -206,8 +216,9 @@ class TestSocialInfluenceScenario:
 
         # Neighbors should not have improved significantly (negative contagion)
         for i, agent in enumerate(agents):
-            assert agent.affect <= initial_neighbor_affects[i] + 0.4, \
-                f"Agent {i} affect should not improve significantly"
+            assert (
+                agent.affect <= initial_neighbor_affects[i] + 0.4
+            ), f"Agent {i} affect should not improve significantly"
 
     def test_influencing_neighbors_parameter_effect(self):
         """
@@ -219,33 +230,39 @@ class TestSocialInfluenceScenario:
         model = MockModel(seed=42)
 
         # Create central agent
-        central_agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        central_agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         # Create many neighbors with mixed affect
         neighbors = []
         for i in range(8):
             affect_val = 0.8 if i % 2 == 0 else -0.8  # Alternating positive/negative
-            agent = Person(model, {
-                'initial_affect_mean': affect_val,
-                'initial_affect_sd': 0.1,
-                'initial_resilience_mean': 0.5,
-                'initial_resilience_sd': 0.1,
-                'initial_resources_mean': 0.6,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.0,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 1
-            })
+            agent = Person(
+                model,
+                {
+                    "initial_affect_mean": affect_val,
+                    "initial_affect_sd": 0.1,
+                    "initial_resilience_mean": 0.5,
+                    "initial_resilience_sd": 0.1,
+                    "initial_resources_mean": 0.6,
+                    "initial_resources_sd": 0.1,
+                    "stress_probability": 0.0,
+                    "coping_success_rate": 0.5,
+                    "subevents_per_day": 1,
+                },
+            )
             neighbors.append(agent)
 
         # Test with different influencing neighbor limits
@@ -256,9 +273,7 @@ class TestSocialInfluenceScenario:
             config = AffectDynamicsConfig(influencing_neighbors=limit)
             neighbor_affects = [agent.affect for agent in neighbors[:limit]]
 
-            expected_influence = compute_peer_influence(
-                central_agent.affect, neighbor_affects, config
-            )
+            expected_influence = compute_peer_influence(central_agent.affect, neighbor_affects, config)
 
             # The influence should be based only on the limited neighbors
             assert isinstance(expected_influence, (int, float))
@@ -282,45 +297,45 @@ class TestStressEventScenario:
         resilience due to the motivating nature of challenges.
         """
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': -0.2,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": -0.2,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         initial_affect = agent.affect
-        initial_resilience = agent.resilience
 
         # Process challenge event
-        with patch('src.python.agent.generate_stress_event') as mock_generate:
+        with patch("src.python.agent.generate_stress_event") as mock_generate:
             challenge_event = StressEvent(controllability=0.9, overload=0.1)
             mock_generate.return_value = challenge_event
 
-            with patch.object(agent, '_rng') as mock_rng:
+            with patch.object(agent, "_rng") as mock_rng:
                 mock_rng.random.return_value = 0.3  # Coping succeeds
 
                 # Mock all the nested function calls comprehensively
-                with patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dim_scores, \
-                     patch('src.python.stress_utils.generate_pss10_item_response') as mock_item_response, \
-                     patch('src.python.stress_utils.generate_pss10_responses') as mock_pss10_responses:
-                    
+                with (
+                    patch("src.python.stress_utils.generate_pss10_dimension_scores") as mock_dim_scores,
+                    patch("src.python.stress_utils.generate_pss10_item_response") as mock_item_response,
+                    patch("src.python.stress_utils.generate_pss10_responses") as mock_pss10_responses,
+                ):
                     # Mock dimension scores
                     mock_dim_scores.return_value = (0.8, 0.2)
-                    
+
                     # Mock item response to return consistent values
                     mock_item_response.return_value = 2  # Neutral response
-                    
+
                     # Mock full responses
-                    mock_pss10_responses.return_value = {
-                        1: 2, 2: 2, 3: 2, 4: 3, 5: 3,
-                        6: 2, 7: 3, 8: 3, 9: 2, 10: 2
-                    }
+                    mock_pss10_responses.return_value = {1: 2, 2: 2, 3: 2, 4: 3, 5: 3, 6: 2, 7: 3, 8: 3, 9: 2, 10: 2}
 
                     agent.stressful_event()
 
@@ -337,22 +352,25 @@ class TestStressEventScenario:
         demonstrating realistic stress response patterns.
         """
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.2,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.2,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         initial_affect = agent.affect
 
         # Process hindrance event
-        with patch('src.python.agent.generate_stress_event') as mock_generate:
+        with patch("src.python.agent.generate_stress_event") as mock_generate:
             # Create a proper StressEvent with actual float values
             hindrance_event = StressEvent(controllability=0.1, overload=0.9)
             # Ensure the attributes are actual floats, not MagicMock objects
@@ -361,25 +379,23 @@ class TestStressEventScenario:
             mock_generate.return_value = hindrance_event
 
             # Mock failed coping and PSS-10 generation
-            with patch.object(agent, '_rng') as mock_rng:
+            with patch.object(agent, "_rng") as mock_rng:
                 mock_rng.random.return_value = 0.7  # Greater than resilience, so coping fails
 
                 # Mock the entire generate_pss10_responses function to avoid complex rng mocking
-                with patch('src.python.stress_utils.generate_pss10_responses') as mock_pss10_responses, \
-                     patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dimension_scores, \
-                     patch('src.python.stress_utils.generate_pss10_item_response') as mock_item_response:
-                    
+                with (
+                    patch("src.python.stress_utils.generate_pss10_responses") as mock_pss10_responses,
+                    patch("src.python.stress_utils.generate_pss10_dimension_scores") as mock_dimension_scores,
+                    patch("src.python.stress_utils.generate_pss10_item_response") as mock_item_response,
+                ):
                     # Mock dimension scores to return valid float tuples
                     mock_dimension_scores.return_value = (0.2, 0.8)  # Valid controllability, overload
-                    
+
                     # Mock item response to return consistent values
                     mock_item_response.return_value = 2  # Neutral response
-                    
+
                     # Mock full responses
-                    mock_pss10_responses.return_value = {
-                        1: 2, 2: 2, 3: 2, 4: 3, 5: 3,
-                        6: 2, 7: 3, 8: 3, 9: 2, 10: 2
-                    }
+                    mock_pss10_responses.return_value = {1: 2, 2: 2, 3: 2, 4: 3, 5: 3, 6: 2, 7: 3, 8: 3, 9: 2, 10: 2}
 
                     agent.stressful_event()
 
@@ -400,21 +416,15 @@ class TestStressEventScenario:
         config = AffectDynamicsConfig(event_appraisal_rate=0.1)
 
         # Test pure challenge event
-        challenge_effect = compute_event_appraisal_effect(
-            1.0, 0.0, 0.0, config
-        )
+        challenge_effect = compute_event_appraisal_effect(1.0, 0.0, 0.0, config)
         assert challenge_effect > 0  # Should improve affect
 
         # Test pure hindrance event
-        hindrance_effect = compute_event_appraisal_effect(
-            0.0, 1.0, 0.0, config
-        )
+        hindrance_effect = compute_event_appraisal_effect(0.0, 1.0, 0.0, config)
         assert hindrance_effect < 0  # Should worsen affect
 
         # Test balanced event
-        balanced_effect = compute_event_appraisal_effect(
-            0.5, 0.5, 0.0, config
-        )
+        balanced_effect = compute_event_appraisal_effect(0.5, 0.5, 0.0, config)
         # Should be close to zero (challenge and hindrance cancel out)
         assert abs(balanced_effect) < 0.05
 
@@ -445,7 +455,7 @@ class TestRecoveryScenario:
             neighbor_affects=[],  # No social influence
             challenge=0.0,
             hindrance=0.0,
-            affect_config=config
+            affect_config=config,
         )
 
         # Should be pulled back toward baseline
@@ -459,7 +469,7 @@ class TestRecoveryScenario:
             neighbor_affects=[],
             challenge=0.0,
             hindrance=0.0,
-            affect_config=config
+            affect_config=config,
         )
 
         # Should be pulled back toward baseline
@@ -477,16 +487,16 @@ class TestRecoveryScenario:
             coping_success_rate=0.1,
             social_support_rate=0.2,  # Strong social support effect
             overload_threshold=5,
-            influencing_hindrance=3
+            influencing_hindrance=3,
         )
 
         # Agent with low resilience receiving social support
         resilience = update_resilience_dynamics(
             current_resilience=0.3,
-            coped_successfully=True,      # Successful coping
-            received_social_support=True, # Social support
-            consecutive_hindrances=0,     # No overload
-            resilience_config=config
+            coped_successfully=True,  # Successful coping
+            received_social_support=True,  # Social support
+            consecutive_hindrances=0,  # No overload
+            resilience_config=config,
         )
 
         # Should improve significantly due to social support + coping success
@@ -502,38 +512,41 @@ class TestRecoveryScenario:
         """
         # Setup agent in stressed state
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': -0.8,  # Very negative
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.2,  # Very low
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.4,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": -0.8,  # Very negative
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.2,  # Very low
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.4,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         # Create supportive social environment
         supportive_neighbors = []
         for i in range(3):
-            neighbor = Person(model, {
-                'initial_affect_mean': 0.6,  # Positive neighbors
-                'initial_affect_sd': 0.1,
-                'initial_resilience_mean': 0.8,
-                'initial_resilience_sd': 0.1,
-                'initial_resources_mean': 0.8,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.0,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 1
-            })
+            neighbor = Person(
+                model,
+                {
+                    "initial_affect_mean": 0.6,  # Positive neighbors
+                    "initial_affect_sd": 0.1,
+                    "initial_resilience_mean": 0.8,
+                    "initial_resilience_sd": 0.1,
+                    "initial_resources_mean": 0.8,
+                    "initial_resources_sd": 0.1,
+                    "stress_probability": 0.0,
+                    "coping_success_rate": 0.5,
+                    "subevents_per_day": 1,
+                },
+            )
             supportive_neighbors.append(neighbor)
 
         model.grid.get_neighbors.return_value = supportive_neighbors
-
-        initial_affect = agent.affect
-        initial_resilience = agent.resilience
 
         # Run recovery steps (interactions only, no stress)
         for _ in range(3):
@@ -565,7 +578,7 @@ class TestCumulativeOverloadScenario:
         """
         config = ResilienceDynamicsConfig(
             overload_threshold=3,
-            influencing_hindrance=2  # Lower threshold for testing
+            influencing_hindrance=2,  # Lower threshold for testing
         )
 
         # Test below threshold - no overload effect
@@ -589,24 +602,27 @@ class TestCumulativeOverloadScenario:
         realistic chronic stress patterns.
         """
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.8,  # Start with high resilience
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.8,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.8,  # Start with high resilience
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.8,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         initial_resilience = agent.resilience
 
         # Simulate multiple hindrance events
         # Simulate multiple hindrance events
         for i in range(5):
-            with patch('src.python.agent.generate_stress_event') as mock_generate:
+            with patch("src.python.agent.generate_stress_event") as mock_generate:
                 # Create a proper StressEvent with actual float values
                 hindrance_event = StressEvent(controllability=0.1, overload=0.9)
                 # Ensure the attributes are actual floats, not MagicMock objects
@@ -615,31 +631,40 @@ class TestCumulativeOverloadScenario:
                 mock_generate.return_value = hindrance_event
 
                 # Mock coping failure to simulate stress and PSS-10 generation
-                with patch.object(agent, '_rng') as mock_rng:
+                with patch.object(agent, "_rng") as mock_rng:
                     mock_rng.random.return_value = 0.9  # Greater than resilience, coping fails
 
                     # Mock the entire generate_pss10_responses function to avoid complex rng mocking
-                    with patch('src.python.stress_utils.generate_pss10_responses') as mock_pss10_responses, \
-                         patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dimension_scores, \
-                         patch('src.python.stress_utils.generate_pss10_item_response') as mock_item_response:
-                        
+                    with (
+                        patch("src.python.stress_utils.generate_pss10_responses") as mock_pss10_responses,
+                        patch("src.python.stress_utils.generate_pss10_dimension_scores") as mock_dimension_scores,
+                        patch("src.python.stress_utils.generate_pss10_item_response") as mock_item_response,
+                    ):
                         # Mock dimension scores to return valid float tuples
                         mock_dimension_scores.return_value = (0.8, 0.2)  # Valid controllability, overload
-                        
+
                         # Mock item response to return consistent values
                         mock_item_response.return_value = 2  # Neutral response
-                        
+
                         # Mock full responses
                         mock_pss10_responses.return_value = {
-                            1: 2, 2: 2, 3: 2, 4: 2, 5: 2,
-                            6: 2, 7: 2, 8: 2, 9: 2, 10: 2
+                            1: 2,
+                            2: 2,
+                            3: 2,
+                            4: 2,
+                            5: 2,
+                            6: 2,
+                            7: 2,
+                            8: 2,
+                            9: 2,
+                            10: 2,
                         }  # Return valid PSS-10 responses (0-4)
 
                         agent.stressful_event()
                         mock_pss10_responses.side_effect = mock_pss10_responses_func
 
                         # Also need to mock the generate_pss10_dimension_scores function directly
-                        with patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dimension_scores:
+                        with patch("src.python.stress_utils.generate_pss10_dimension_scores") as mock_dimension_scores:
                             mock_dimension_scores.return_value = (0.8, 0.2)  # Return valid float values
                             agent.stressful_event()
 
@@ -658,21 +683,24 @@ class TestCumulativeOverloadScenario:
         the cumulative overload should reset, allowing recovery.
         """
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.6,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.6,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         # Simulate overload condition (multiple consecutive hindrances)
         for i in range(4):
-            with patch('src.python.agent.generate_stress_event') as mock_generate:
+            with patch("src.python.agent.generate_stress_event") as mock_generate:
                 # Create a proper StressEvent with actual float values
                 hindrance_event = StressEvent(controllability=0.1, overload=0.9)
                 # Ensure the attributes are actual floats, not MagicMock objects
@@ -680,27 +708,35 @@ class TestCumulativeOverloadScenario:
                 hindrance_event.overload = 0.9
                 mock_generate.return_value = hindrance_event
 
-                with patch.object(agent, '_rng') as mock_rng:
+                with patch.object(agent, "_rng") as mock_rng:
                     mock_rng.random.return_value = 0.8  # Coping fails
 
                     # Mock ALL nested functions called by generate_pss10_responses
-                    with patch('src.python.stress_utils.generate_pss10_responses') as mock_pss10_responses, \
-                         patch('src.python.stress_utils.generate_pss10_dimension_scores') as mock_dimension_scores, \
-                         patch('src.python.stress_utils.generate_pss10_item_response') as mock_item_response:
-                        
+                    with (
+                        patch("src.python.stress_utils.generate_pss10_responses") as mock_pss10_responses,
+                        patch("src.python.stress_utils.generate_pss10_dimension_scores") as mock_dimension_scores,
+                        patch("src.python.stress_utils.generate_pss10_item_response") as mock_item_response,
+                    ):
                         # Create a side_effect function that returns valid PSS-10 responses
                         def mock_pss10_responses_func(*args, **kwargs):
                             return {
-                                1: 2, 2: 2, 3: 2, 4: 2, 5: 2,
-                                6: 2, 7: 2, 8: 2, 9: 2, 10: 2
+                                1: 2,
+                                2: 2,
+                                3: 2,
+                                4: 2,
+                                5: 2,
+                                6: 2,
+                                7: 2,
+                                8: 2,
+                                9: 2,
+                                10: 2,
                             }  # Return valid PSS-10 responses (0-4)
+
                         mock_pss10_responses.side_effect = mock_pss10_responses_func
                         mock_dimension_scores.return_value = (0.2, 0.8)  # Valid controllability, overload
                         mock_item_response.return_value = 2  # Valid PSS-10 response (0-4)
 
                         agent.stressful_event()
-
-        resilience_after_overload = agent.resilience
 
         # Now simulate recovery period (no stress events)
         # In a real scenario, this would involve multiple steps with no hindrance events
@@ -742,17 +778,20 @@ class TestNetworkTopologyEffects:
         for node in G.nodes():
             # Create mix of positive and negative agents
             affect_sign = 1 if node % 3 == 0 else -1
-            agent = Person(model, {
-                'initial_affect_mean': 0.5 * affect_sign,
-                'initial_affect_sd': 0.1,
-                'initial_resilience_mean': 0.5 + 0.2 * (node % 2),
-                'initial_resilience_sd': 0.1,
-                'initial_resources_mean': 0.6,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.0,  # No stress for topology test
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 1
-            })
+            agent = Person(
+                model,
+                {
+                    "initial_affect_mean": 0.5 * affect_sign,
+                    "initial_affect_sd": 0.1,
+                    "initial_resilience_mean": 0.5 + 0.2 * (node % 2),
+                    "initial_resilience_sd": 0.1,
+                    "initial_resources_mean": 0.6,
+                    "initial_resources_sd": 0.1,
+                    "stress_probability": 0.0,  # No stress for topology test
+                    "coping_success_rate": 0.5,
+                    "subevents_per_day": 1,
+                },
+            )
             agents.append(agent)
             model.grid.place_agent(agent, node)
 
@@ -782,17 +821,20 @@ class TestNetworkTopologyEffects:
         # Create agents
         agents = []
         for node in G.nodes():
-            agent = Person(model, {
-                'initial_affect_mean': 0.0,
-                'initial_affect_sd': 0.1,
-                'initial_resilience_mean': 0.5,
-                'initial_resilience_sd': 0.1,
-                'initial_resources_mean': 0.6,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.0,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 1
-            })
+            agent = Person(
+                model,
+                {
+                    "initial_affect_mean": 0.0,
+                    "initial_affect_sd": 0.1,
+                    "initial_resilience_mean": 0.5,
+                    "initial_resilience_sd": 0.1,
+                    "initial_resources_mean": 0.6,
+                    "initial_resources_sd": 0.1,
+                    "stress_probability": 0.0,
+                    "coping_success_rate": 0.5,
+                    "subevents_per_day": 1,
+                },
+            )
             agents.append(agent)
             model.grid.place_agent(agent, node)
 
@@ -822,17 +864,20 @@ class TestEdgeCasesAndMathematicalConsistency:
         mechanisms (homeostasis, stress events) without social influence.
         """
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': -0.5,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.3,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.4,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": -0.5,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.3,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.4,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         # Ensure no neighbors
         model.grid.get_neighbors.return_value = []
@@ -869,38 +914,41 @@ class TestEdgeCasesAndMathematicalConsistency:
         realistic recovery trajectories.
         """
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': -0.9,  # Very distressed
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.1,  # Very low resilience
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.2,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,  # No new stress during recovery
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 1
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": -0.9,  # Very distressed
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.1,  # Very low resilience
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.2,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,  # No new stress during recovery
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 1,
+            },
+        )
 
         # Create supportive social environment
         supportive_neighbors = []
         for i in range(3):
-            neighbor = Person(model, {
-                'initial_affect_mean': 0.7,
-                'initial_affect_sd': 0.1,
-                'initial_resilience_mean': 0.8,
-                'initial_resilience_sd': 0.1,
-                'initial_resources_mean': 0.8,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.0,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 1
-            })
+            neighbor = Person(
+                model,
+                {
+                    "initial_affect_mean": 0.7,
+                    "initial_affect_sd": 0.1,
+                    "initial_resilience_mean": 0.8,
+                    "initial_resilience_sd": 0.1,
+                    "initial_resources_mean": 0.8,
+                    "initial_resources_sd": 0.1,
+                    "stress_probability": 0.0,
+                    "coping_success_rate": 0.5,
+                    "subevents_per_day": 1,
+                },
+            )
             supportive_neighbors.append(neighbor)
 
         model.grid.get_neighbors.return_value = supportive_neighbors
-
-        initial_affect = agent.affect
-        initial_resilience = agent.resilience
 
         # Run recovery period
         for _ in range(5):
@@ -921,32 +969,38 @@ class TestEdgeCasesAndMathematicalConsistency:
         and don't produce invalid states over extended simulation periods.
         """
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.0,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 2
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.0,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 2,
+            },
+        )
 
         # Create stable social environment
         neighbors = []
         for i in range(3):
-            neighbor = Person(model, {
-                'initial_affect_mean': 0.1 * (i - 1),  # Mix of affects around baseline
-                'initial_affect_sd': 0.1,
-                'initial_resilience_mean': 0.5,
-                'initial_resilience_sd': 0.1,
-                'initial_resources_mean': 0.6,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.0,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 2
-            })
+            neighbor = Person(
+                model,
+                {
+                    "initial_affect_mean": 0.1 * (i - 1),  # Mix of affects around baseline
+                    "initial_affect_sd": 0.1,
+                    "initial_resilience_mean": 0.5,
+                    "initial_resilience_sd": 0.1,
+                    "initial_resources_mean": 0.6,
+                    "initial_resources_sd": 0.1,
+                    "stress_probability": 0.0,
+                    "coping_success_rate": 0.5,
+                    "subevents_per_day": 2,
+                },
+            )
             neighbors.append(neighbor)
 
         model.grid.get_neighbors.return_value = neighbors
@@ -988,18 +1042,10 @@ class TestConfigurationIntegration:
         to parameter settings.
         """
         # Test with high influence configuration
-        high_config = AffectDynamicsConfig(
-            peer_influence_rate=0.3,
-            event_appraisal_rate=0.2,
-            homeostatic_rate=0.05
-        )
+        high_config = AffectDynamicsConfig(peer_influence_rate=0.3, event_appraisal_rate=0.2, homeostatic_rate=0.05)
 
         # Test with low influence configuration
-        low_config = AffectDynamicsConfig(
-            peer_influence_rate=0.05,
-            event_appraisal_rate=0.02,
-            homeostatic_rate=0.01
-        )
+        low_config = AffectDynamicsConfig(peer_influence_rate=0.05, event_appraisal_rate=0.02, homeostatic_rate=0.01)
 
         # Same inputs should produce different outputs
         current_affect = 0.0
@@ -1007,13 +1053,9 @@ class TestConfigurationIntegration:
         challenge = 0.3
         hindrance = 0.1
 
-        high_result = update_affect_dynamics(
-            current_affect, 0.0, neighbor_affects, challenge, hindrance, high_config
-        )
+        high_result = update_affect_dynamics(current_affect, 0.0, neighbor_affects, challenge, hindrance, high_config)
 
-        low_result = update_affect_dynamics(
-            current_affect, 0.0, neighbor_affects, challenge, hindrance, low_config
-        )
+        low_result = update_affect_dynamics(current_affect, 0.0, neighbor_affects, challenge, hindrance, low_config)
 
         # High configuration should produce larger magnitude changes
         assert abs(high_result) > abs(low_result)
@@ -1029,7 +1071,7 @@ class TestConfigurationIntegration:
         config = AffectDynamicsConfig(
             peer_influence_rate=0.5,  # High influence
             event_appraisal_rate=0.3,
-            homeostatic_rate=0.2
+            homeostatic_rate=0.2,
         )
 
         # Test with extreme inputs
@@ -1039,7 +1081,7 @@ class TestConfigurationIntegration:
             neighbor_affects=[-1.0, 1.0],  # Extreme neighbors
             challenge=1.0,  # Maximum challenge
             hindrance=1.0,  # Maximum hindrance
-            affect_config=config
+            affect_config=config,
         )
 
         # Should handle extreme inputs gracefully

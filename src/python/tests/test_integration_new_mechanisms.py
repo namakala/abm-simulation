@@ -16,8 +16,9 @@ from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.model import StressModel
 from src.python.affect_utils import (
-    determine_coping_outcome_and_psychological_impact, StressProcessingConfig,
-    compute_coping_probability, compute_daily_affect_reset, compute_stress_decay
+    determine_coping_outcome_and_psychological_impact,
+    StressProcessingConfig,
+    compute_coping_probability,
 )
 from src.python.stress_utils import generate_stress_event, StressEvent
 from src.python.config import get_config
@@ -44,8 +45,7 @@ class TestAgentIntegration:
         agent.consecutive_hindrances = 0
 
         # Mock stress event generation to avoid RNG issues
-        with patch.object(agent, 'stressful_event', return_value=(0.5, 0.5)) as mock_stress:
-
+        with patch.object(agent, "stressful_event", return_value=(0.5, 0.5)):
             # Call stressful_event method
             challenge, hindrance = agent.stressful_event()
 
@@ -54,13 +54,13 @@ class TestAgentIntegration:
             assert 0.0 <= hindrance <= 1.0
 
             # Check that agent state was updated
-            assert hasattr(agent, 'current_stress')
-            assert hasattr(agent, 'daily_stress_events')
-            assert hasattr(agent, 'consecutive_hindrances')
+            assert hasattr(agent, "current_stress")
+            assert hasattr(agent, "daily_stress_events")
+            assert hasattr(agent, "consecutive_hindrances")
 
             # Check that stress event was recorded (may be 0 if no stress occurred)
             # The important thing is that the attribute exists and the method completed
-            assert hasattr(agent, 'daily_stress_events')
+            assert hasattr(agent, "daily_stress_events")
 
     def test_agent_daily_reset_integration(self):
         """Test that agent's daily reset uses new mechanisms correctly."""
@@ -76,15 +76,16 @@ class TestAgentIntegration:
         agent.current_stress = 0.6
         agent.last_reset_day = 1
         agent.daily_stress_events = [
-            {'stress_level': 0.5, 'coped_successfully': True},
-            {'stress_level': 0.7, 'coped_successfully': False}
+            {"stress_level": 0.5, "coped_successfully": True},
+            {"stress_level": 0.7, "coped_successfully": False},
         ]
         agent.consecutive_hindrances = 2
 
         # Mock the _daily_reset method call
-        with patch('src.python.agent.compute_daily_affect_reset') as mock_reset, \
-             patch('src.python.agent.compute_stress_decay') as mock_decay:
-
+        with (
+            patch("src.python.agent.compute_daily_affect_reset") as mock_reset,
+            patch("src.python.agent.compute_stress_decay") as mock_decay,
+        ):
             mock_reset.return_value = 0.4
             mock_decay.return_value = 0.3
 
@@ -96,7 +97,7 @@ class TestAgentIntegration:
             mock_decay.assert_called_once()
 
             # Check that stress history was updated
-            assert hasattr(agent, 'stress_history')
+            assert hasattr(agent, "stress_history")
             assert len(agent.stress_history) > 0
 
             # Check that daily stress events were reset
@@ -150,14 +151,10 @@ class TestModelIntegration:
     def test_model_step_integration(self):
         """Test that model step integrates new stress processing correctly."""
         # Create a simple model for testing
-        config = get_config()
+        get_config()
 
         # Create model with small number of agents (uses N parameter)
-        model = StressModel(
-            N=5,
-            max_days=3,
-            seed=42
-        )
+        model = StressModel(N=5, max_days=3, seed=42)
 
         # Run a few steps to test integration
         for step in range(3):
@@ -171,9 +168,9 @@ class TestModelIntegration:
                 assert 0.0 <= agent.current_stress <= 1.0
 
                 # Check that new stress processing attributes exist
-                assert hasattr(agent, 'daily_stress_events')
-                assert hasattr(agent, 'stress_history')
-                assert hasattr(agent, 'consecutive_hindrances')
+                assert hasattr(agent, "daily_stress_events")
+                assert hasattr(agent, "stress_history")
+                assert hasattr(agent, "consecutive_hindrances")
 
     def test_model_configuration_integration(self):
         """Test that model uses configuration for new stress processing."""
@@ -182,14 +179,14 @@ class TestModelIntegration:
 
         # Check that configuration contains new stress processing parameters using get() method
         try:
-            config.get('threshold', 'stress_threshold')
-            config.get('threshold', 'affect_threshold')
-            config.get('coping', 'base_probability')
-            config.get('coping', 'social_influence')
-            config.get('coping', 'challenge_bonus')
-            config.get('coping', 'hindrance_penalty')
-            config.get('affect_dynamics', 'homeostatic_rate')
-            config.get('resilience_dynamics', 'homeostatic_rate')
+            config.get("threshold", "stress_threshold")
+            config.get("threshold", "affect_threshold")
+            config.get("coping", "base_probability")
+            config.get("coping", "social_influence")
+            config.get("coping", "challenge_bonus")
+            config.get("coping", "hindrance_penalty")
+            config.get("affect_dynamics", "homeostatic_rate")
+            config.get("resilience_dynamics", "homeostatic_rate")
         except Exception as e:
             pytest.fail(f"Configuration parameters not found: {e}")
 
@@ -218,11 +215,10 @@ class TestEndToEndWorkflows:
         neighbor_affects = [0.2, 0.4]
 
         # Use deterministic RNG for coping probability
-        with patch('numpy.random.random', return_value=0.4):
+        with patch("numpy.random.random", return_value=0.4):
             new_affect, new_resilience, new_stress, coped_successfully = (
                 determine_coping_outcome_and_psychological_impact(
-                    current_affect, current_resilience, current_stress,
-                    challenge, hindrance, neighbor_affects, config
+                    current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
                 )
             )
 
@@ -253,11 +249,12 @@ class TestEndToEndWorkflows:
         agent.last_reset_day = 0
 
         # Mock stress event generation and processing
-        with patch.object(agent, 'stressful_event', return_value=(0.5, 0.5)) as mock_stress, \
-             patch('src.python.agent.compute_daily_affect_reset', return_value=0.3) as mock_affect_reset, \
-             patch('src.python.agent.compute_stress_decay', return_value=0.2) as mock_stress_decay, \
-             patch('numpy.random.random', return_value=0.5):
-
+        with (
+            patch.object(agent, "stressful_event", return_value=(0.5, 0.5)),
+            patch("src.python.agent.compute_daily_affect_reset", return_value=0.3) as mock_affect_reset,
+            patch("src.python.agent.compute_stress_decay", return_value=0.2) as mock_stress_decay,
+            patch("numpy.random.random", return_value=0.5),
+        ):
             # Execute one step (one day)
             agent.step()
             agent._daily_reset(model.current_day)
@@ -287,15 +284,11 @@ class TestEndToEndWorkflows:
         agent.current_stress = 0.2
 
         # Mock multiple stress events
-        stress_events = [
-            (0.8, 0.2),  # High challenge, low hindrance
-            (0.3, 0.7),  # Low challenge, high hindrance
-            (0.5, 0.5)   # Balanced
-        ]
 
-        with patch.object(agent, 'stressful_event', return_value=(0.5, 0.5)) as mock_stress, \
-             patch('numpy.random.random', return_value=0.5):
-
+        with (
+            patch.object(agent, "stressful_event", return_value=(0.5, 0.5)),
+            patch("numpy.random.random", return_value=0.5),
+        ):
             # Execute step with multiple stress events
             agent.step()
 
@@ -306,9 +299,9 @@ class TestEndToEndWorkflows:
             # The important thing is that the step completed and state is valid
 
             # Verify final state
-            assert 0.0  <= agent.resilience <= 1.0
+            assert 0.0 <= agent.resilience <= 1.0
             assert -1.0 <= agent.affect <= 1.0
-            assert 0.0  <= agent.current_stress <= 1.0
+            assert 0.0 <= agent.current_stress <= 1.0
 
 
 class TestConfigurationIntegration:
@@ -323,11 +316,11 @@ class TestConfigurationIntegration:
 
         # Check that values match global configuration where applicable
         try:
-            expected_threshold = config.get('threshold', 'base_threshold')
+            config.get("threshold", "base_threshold")
             # Note: The config might use different parameter names, so we check reasonable ranges
             assert 0.0 <= stress_config.stress_threshold <= 1.0
 
-            expected_base_prob = config.get('coping', 'base_probability')
+            config.get("coping", "base_probability")
             assert 0.0 <= stress_config.base_coping_probability <= 1.0
         except Exception:
             # If parameters don't exist in config, just check that stress_config has reasonable values
@@ -338,10 +331,10 @@ class TestConfigurationIntegration:
         """Test that configuration parameters are validated."""
         # Test with invalid configuration values
         try:
-            invalid_config = StressProcessingConfig(
+            StressProcessingConfig(
                 base_coping_probability=1.5,  # Invalid: > 1.0
-                challenge_bonus=-0.1,         # Invalid: negative
-                stress_decay_rate=1.5         # Invalid: > 1.0
+                challenge_bonus=-0.1,  # Invalid: negative
+                stress_decay_rate=1.5,  # Invalid: > 1.0
             )
             # If we get here, validation might not be implemented yet
             # This is expected for current implementation
@@ -351,7 +344,7 @@ class TestConfigurationIntegration:
 
     def test_configuration_consistency(self):
         """Test that configuration parameters are consistent across components."""
-        config = get_config()
+        get_config()
         stress_config = StressProcessingConfig()
 
         # Check that related parameters are consistent
@@ -382,8 +375,7 @@ class TestErrorHandling:
         agent.current_stress = 0.3
 
         # Should handle gracefully with no neighbors
-        with patch('numpy.random.random', return_value=0.5):
-
+        with patch("numpy.random.random", return_value=0.5):
             # Should not raise an error
             challenge, hindrance = agent.stressful_event()
 
@@ -396,11 +388,11 @@ class TestErrorHandling:
         # Test with extreme configuration values
         config = StressProcessingConfig(
             base_coping_probability=0.0,  # No base coping ability
-            challenge_bonus=1.0,          # Very high challenge bonus
-            hindrance_penalty=1.0,        # Very high hindrance penalty
-            social_influence_factor=1.0,   # Very high social influence
-            daily_decay_rate=1.0,         # Complete daily reset
-            stress_decay_rate=1.0         # Complete stress decay
+            challenge_bonus=1.0,  # Very high challenge bonus
+            hindrance_penalty=1.0,  # Very high hindrance penalty
+            social_influence_factor=1.0,  # Very high social influence
+            daily_decay_rate=1.0,  # Complete daily reset
+            stress_decay_rate=1.0,  # Complete stress decay
         )
 
         current_affect = 0.0
@@ -411,11 +403,8 @@ class TestErrorHandling:
         neighbor_affects = [1.0, 1.0, 1.0]
 
         # Should handle extreme values gracefully
-        new_affect, new_resilience, new_stress, coped_successfully = (
-            determine_coping_outcome_and_psychological_impact(
-                current_affect, current_resilience, current_stress,
-                challenge, hindrance, neighbor_affects, config
-            )
+        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
+            current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
         )
 
         # All values should still be in valid ranges
@@ -428,7 +417,7 @@ class TestErrorHandling:
         config = StressProcessingConfig()
 
         # Test with NaN values (if they occur)
-        challenge = float('nan')
+        challenge = float("nan")
         hindrance = 0.5
 
         # Should handle gracefully or raise appropriate error
@@ -447,11 +436,7 @@ class TestPerformanceIntegration:
     def test_large_network_stress_processing(self):
         """Test stress processing performance with large networks."""
         # Create model with more agents (uses N parameter)
-        model = StressModel(
-            N=50,
-            max_days=5,
-            seed=42
-        )
+        model = StressModel(N=50, max_days=5, seed=42)
 
         # Run multiple steps to test performance
         for step in range(5):
@@ -466,15 +451,11 @@ class TestPerformanceIntegration:
 
     def test_memory_usage_integration(self):
         """Test that stress processing doesn't cause memory leaks."""
-        model = StressModel(
-            N=20,
-            max_days=10,
-            seed=42
-        )
+        model = StressModel(N=20, max_days=10, seed=42)
 
         # Track initial memory state (simplified check)
         initial_stress_history_lengths = [len(agent.stress_history) for agent in model.agents]
-        initial_daily_events_lengths = [len(agent.daily_stress_events) for agent in model.agents]
+        [len(agent.daily_stress_events) for agent in model.agents]
 
         # Run multiple steps
         for step in range(10):

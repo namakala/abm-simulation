@@ -4,10 +4,17 @@ Simple test to isolate threshold evaluation issue.
 """
 
 import sys
-sys.path.append('.')
+
+sys.path.append(".")
 
 from src.python.config import get_config
-from src.python.stress_utils import generate_stress_event, apply_weights, evaluate_stress_threshold, ThresholdParams, AppraisalWeights
+from src.python.stress_utils import (
+    generate_stress_event,
+    apply_weights,
+    evaluate_stress_threshold,
+    ThresholdParams,
+    AppraisalWeights,
+)
 from src.python.math_utils import create_rng
 
 # Get configuration
@@ -35,9 +42,11 @@ print(f"Is stressed: {is_stressed}")
 print(f"Type: {type(is_stressed)}")
 
 # Manual calculation
-effective_threshold = (threshold_params.base_threshold +
-                      threshold_params.challenge_scale * challenge -
-                      threshold_params.hindrance_scale * hindrance)
+effective_threshold = (
+    threshold_params.base_threshold
+    + threshold_params.challenge_scale * challenge
+    - threshold_params.hindrance_scale * hindrance
+)
 effective_threshold = max(0.0, min(1.0, effective_threshold))
 print(f"Effective threshold: {effective_threshold}")
 print(f"Manual comparison: {appraised_stress} > {effective_threshold} = {appraised_stress > effective_threshold}\n")

@@ -24,15 +24,12 @@ Usage:
 """
 
 import sys
-import numpy as np
 import pandas as pd
-from pathlib import Path
 
 # Add project root to path for imports
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.model import StressModel
-from src.python.config import get_config
 
 
 def run_simulation_and_get_data(days: int = 100, agents: int = 30, seed: int = 42):
@@ -63,8 +60,8 @@ def run_simulation_and_get_data(days: int = 100, agents: int = 30, seed: int = 4
         return pd.DataFrame()
 
     # Filter for the final epoch (maximum step)
-    final_step = agent_data['Step'].max()
-    final_epoch_data = agent_data[agent_data['Step'] == final_step].copy()
+    final_step = agent_data["Step"].max()
+    final_epoch_data = agent_data[agent_data["Step"] == final_step].copy()
 
     print(f"Simulation completed. Final epoch data shape: {final_epoch_data.shape}")
     return final_epoch_data
@@ -93,7 +90,7 @@ def calculate_correlation_matrix(agent_data: pd.DataFrame, variables: list):
 
     # Extract the variables and calculate correlation
     correlation_data = agent_data[variables]
-    correlation_matrix = correlation_data.corr(method='pearson')
+    correlation_matrix = correlation_data.corr(method="pearson")
 
     return correlation_matrix
 
@@ -105,16 +102,16 @@ def print_correlation_matrix(corr_matrix: pd.DataFrame):
     Args:
         corr_matrix: Correlation matrix DataFrame
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("AGENT-LEVEL CORRELATION MATRIX (Final Epoch)")
-    print("="*60)
+    print("=" * 60)
 
     # Print the matrix with nice formatting
-    print(corr_matrix.to_string(float_format='%.4f'))
+    print(corr_matrix.to_string(float_format="%.4f"))
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("INTERPRETATION")
-    print("="*60)
+    print("=" * 60)
 
     # Provide interpretation of key correlations
     variables = corr_matrix.columns.tolist()
@@ -136,9 +133,9 @@ def print_summary_statistics(agent_data: pd.DataFrame, variables: list):
         agent_data: DataFrame containing agent data from final epoch
         variables: List of variable names to analyze
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SUMMARY STATISTICS (Final Epoch)")
-    print("="*60)
+    print("=" * 60)
 
     for var in variables:
         if var in agent_data.columns:
@@ -165,13 +162,13 @@ def main():
 
     # Variables to analyze (agent-level from final epoch)
     variables_of_interest = [
-        'pss10',
-        'resilience',
-        'affect',
-        'resources',
-        'current_stress',
-        'stress_controllability',
-        'stress_overload'
+        "pss10",
+        "resilience",
+        "affect",
+        "resources",
+        "current_stress",
+        "stress_controllability",
+        "stress_overload",
     ]
 
     try:
@@ -201,6 +198,7 @@ def main():
     except Exception as e:
         print(f"Error running agent correlation analysis demo: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

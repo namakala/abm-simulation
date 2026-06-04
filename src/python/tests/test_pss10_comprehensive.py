@@ -15,7 +15,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from src.python.config import Config, ConfigurationError
+from src.python.config import Config
 
 
 def test_bracket_notation_parsing():
@@ -27,7 +27,7 @@ def test_bracket_notation_parsing():
         env_content = """PSS10_ITEM_MEAN=[2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
 PSS10_ITEM_SD=[1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8]
 """
-        env_file = Path(temp_dir) / '.env'
+        env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
         # Test configuration loading
@@ -52,7 +52,7 @@ def test_backward_compatibility():
         env_content = """PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 1.5
 PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
 """
-        env_file = Path(temp_dir) / '.env'
+        env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
         # Test configuration loading
@@ -77,7 +77,7 @@ def test_mixed_format_usage():
         env_content = """PSS10_ITEM_MEAN=[2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
 PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
 """
-        env_file = Path(temp_dir) / '.env'
+        env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
         # Test configuration loading
@@ -102,7 +102,7 @@ def test_whitespace_handling():
         env_content = """PSS10_ITEM_MEAN= [ 2.1 , 1.8 , 2.3 , 1.9 , 2.2 , 1.7 , 2.0 , 1.6 , 2.4 , 1.5 ]
 PSS10_ITEM_SD= [1.1,  0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8 ]
 """
-        env_file = Path(temp_dir) / '.env'
+        env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
         # Test configuration loading
@@ -138,7 +138,7 @@ def test_default_values():
             assert config.pss10_item_sds == expected_sds
 
             # Test with empty .env file
-            env_file = Path(temp_dir) / '.env'
+            env_file = Path(temp_dir) / ".env"
             env_file.touch()
             config2 = Config()
 
@@ -159,15 +159,15 @@ def test_integration():
     config = Config()
 
     # Test PSS-10 access
-    pss10_means = config.get('pss10', 'item_means')
-    pss10_sds = config.get('pss10', 'item_sds')
+    pss10_means = config.get("pss10", "item_means")
+    pss10_sds = config.get("pss10", "item_sds")
     assert len(pss10_means) == 10
     assert len(pss10_sds) == 10
 
     # Test that other config sections still work
-    assert config.get('simulation', 'num_agents') > 0
-    assert config.get('network', 'watts_k') >= 2
-    assert config.get('agent', 'initial_resilience_mean') >= 0
+    assert config.get("simulation", "num_agents") > 0
+    assert config.get("network", "watts_k") >= 2
+    assert config.get("agent", "initial_resilience_mean") >= 0
 
     # Test validation
     config.validate()  # Should not raise any exceptions

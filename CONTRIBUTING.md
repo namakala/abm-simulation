@@ -206,8 +206,9 @@ pixi shell
 pixi run python --version
 
 # Set up pre-commit hooks (optional)
-pre-commit install
-pre-commit run --all-files
+git config core.hooksPath .githooks
+
+The hook runs `pixi run precommit` which checks: formatting (ruff + black), linting (ruff check), and tests (coverage + config).
 ```
 
 ### Running Tests During Development

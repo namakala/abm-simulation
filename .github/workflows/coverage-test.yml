@@ -16,15 +16,7 @@ jobs:
       with:
         activate-environment: true
 
-    - name: Create .env file for testing
-      run: |
-        if [ -f .env.example ]; then cp .env.example .env; fi
-
-    - name: Run tests with coverage
-      run: |
-        echo "Python path: $(which python)"
-        echo "Python version: $(python --version)"
-        echo "Pixi environment: $(pixi info)"
-        python -c "import pytest; print('pytest version:', pytest.__version__)"
-        pixi run test-cov
-        pixi run test-config
+    - name: Run precommit checks
+      env:
+        DOTENV_FILE: .env.example
+      run: pixi run precommit

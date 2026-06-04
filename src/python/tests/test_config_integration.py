@@ -7,14 +7,14 @@ all modules and that environment variables propagate properly.
 
 import os
 import pytest
-import numpy as np
-from src.python.affect_utils import (
-    InteractionConfig, ProtectiveFactors, ResourceParams,
-    compute_social_influence
-)
+from src.python.affect_utils import InteractionConfig, ProtectiveFactors, ResourceParams, compute_social_influence
 from src.python.stress_utils import (
-    StressEvent, AppraisalWeights, ThresholdParams,
-    generate_stress_event, apply_weights, evaluate_stress_threshold
+    StressEvent,
+    AppraisalWeights,
+    ThresholdParams,
+    generate_stress_event,
+    apply_weights,
+    evaluate_stress_threshold,
 )
 from src.python.math_utils import RNGConfig, clamp
 
@@ -64,19 +64,17 @@ class TestModuleIntegration:
         # Test threshold evaluation
         appraised_stress = 0.6
         threshold_params = ThresholdParams()
-        is_stressed = evaluate_stress_threshold(
-            appraised_stress, challenge, hindrance, threshold_params
-        )
+        is_stressed = evaluate_stress_threshold(appraised_stress, challenge, hindrance, threshold_params)
         # Handle both Python bool and numpy bool
-        assert hasattr(is_stressed, '__bool__') or isinstance(is_stressed, bool)
+        assert hasattr(is_stressed, "__bool__") or isinstance(is_stressed, bool)
 
     @pytest.mark.integration
     def test_agent_config_values(self, config):
         """Test that agent configuration values are in valid ranges."""
         # Test that agent config values match global config
-        expected_resilience = config.get('agent', 'initial_resilience_mean')
-        expected_affect = config.get('agent', 'initial_affect_mean')
-        expected_resources = config.get('agent', 'initial_resources_mean')
+        expected_resilience = config.get("agent", "initial_resilience_mean")
+        expected_affect = config.get("agent", "initial_affect_mean")
+        expected_resources = config.get("agent", "initial_resources_mean")
 
         assert 0 <= expected_resilience <= 1
         assert -1 <= expected_affect <= 1
@@ -85,9 +83,9 @@ class TestModuleIntegration:
     @pytest.mark.integration
     def test_model_config_values(self, config):
         """Test that model configuration values are in valid ranges."""
-        expected_num_agents = config.get('simulation', 'num_agents')
-        expected_network_k = config.get('network', 'watts_k')
-        expected_network_p = config.get('network', 'watts_p')
+        expected_num_agents = config.get("simulation", "num_agents")
+        expected_network_k = config.get("network", "watts_k")
+        expected_network_p = config.get("network", "watts_p")
 
         assert expected_num_agents > 0
         assert expected_network_k >= 2
@@ -106,9 +104,7 @@ class TestModuleIntegration:
 
         # Evaluate threshold
         appraised_stress = 0.5  # Mock appraised stress
-        is_stressed = evaluate_stress_threshold(
-            appraised_stress, challenge, hindrance, threshold_params
-        )
+        is_stressed = evaluate_stress_threshold(appraised_stress, challenge, hindrance, threshold_params)
 
         # Use in social interaction if not stressed
         if not is_stressed:
@@ -124,12 +120,12 @@ class TestConfigConsistency:
     @pytest.mark.config
     def test_parameter_ranges(self, config):
         """Test that all configuration parameters are in valid ranges."""
-        assert config.get('simulation', 'num_agents') > 0
-        assert config.get('network', 'watts_k') >= 2
-        assert 0 <= config.get('network', 'watts_p') <= 1
-        assert 0 <= config.get('agent', 'initial_resilience_mean') <= 1
-        assert -1 <= config.get('agent', 'initial_affect_mean') <= 1
-        assert 0 <= config.get('agent', 'initial_resources_mean') <= 1
+        assert config.get("simulation", "num_agents") > 0
+        assert config.get("network", "watts_k") >= 2
+        assert 0 <= config.get("network", "watts_p") <= 1
+        assert 0 <= config.get("agent", "initial_resilience_mean") <= 1
+        assert -1 <= config.get("agent", "initial_affect_mean") <= 1
+        assert 0 <= config.get("agent", "initial_resources_mean") <= 1
 
 
 class TestEnvironmentVariablePropagation:
@@ -139,11 +135,7 @@ class TestEnvironmentVariablePropagation:
     def test_environment_override(self, config, clean_env, reload_config_fixture):
         """Test that environment variables properly override defaults."""
         # Set test environment variables
-        test_env_vars = {
-            'SIMULATION_NUM_AGENTS': '30',
-            'AGENT_INITIAL_RESILIENCE_MEAN': '0.8',
-            'NETWORK_WATTS_K': '6'
-        }
+        test_env_vars = {"SIMULATION_NUM_AGENTS": "30", "AGENT_INITIAL_RESILIENCE_MEAN": "0.8", "NETWORK_WATTS_K": "6"}
 
         for key, value in test_env_vars.items():
             os.environ[key] = value
@@ -159,7 +151,7 @@ class TestEnvironmentVariablePropagation:
 
             # Test that dataclasses pick up new values
             interaction_config = InteractionConfig()
-            assert interaction_config.influence_rate == new_config.get('interaction', 'influence_rate')
+            assert interaction_config.influence_rate == new_config.get("interaction", "influence_rate")
 
         finally:
             # Clean up environment variables
@@ -174,7 +166,7 @@ class TestErrorHandling:
     @pytest.mark.config
     def test_invalid_environment_variable(self, clean_env, reload_config_fixture):
         """Test that invalid environment variables raise appropriate errors."""
-        os.environ['SIMULATION_NUM_AGENTS'] = 'invalid_number'
+        os.environ["SIMULATION_NUM_AGENTS"] = "invalid_number"
 
         try:
             with pytest.raises(Exception) as exc_info:
@@ -182,5 +174,5 @@ class TestErrorHandling:
             assert "Invalid value" in str(exc_info.value)
         finally:
             # Clean up
-            if 'SIMULATION_NUM_AGENTS' in os.environ:
-                del os.environ['SIMULATION_NUM_AGENTS']
+            if "SIMULATION_NUM_AGENTS" in os.environ:
+                del os.environ["SIMULATION_NUM_AGENTS"]

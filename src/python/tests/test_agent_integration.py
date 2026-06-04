@@ -10,8 +10,7 @@ import numpy as np
 from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.config import get_config
-from src.python.affect_utils import InteractionConfig
-from src.python.stress_utils import StressEvent, AppraisalWeights, ThresholdParams
+from src.python.stress_utils import StressEvent
 
 
 class MockModel:
@@ -40,27 +39,27 @@ class TestAgentInitialization:
         assert -1.0 <= agent.affect <= 1.0
         assert 0.0 <= agent.resources <= 1.0
         assert len(agent.protective_factors) == 4
-        assert hasattr(agent, '_rng')
+        assert hasattr(agent, "_rng")
 
         # Verify transformation pipeline is being used (values should not equal means)
         # The transformation should produce different values than the raw means
         assert agent.resilience != 0.5  # Should be sigmoid transformed
-        assert agent.affect != 0.0      # Should be tanh transformed
-        assert agent.resources != 0.6   # Should be sigmoid transformed
+        assert agent.affect != 0.0  # Should be tanh transformed
+        assert agent.resources != 0.6  # Should be sigmoid transformed
 
     def test_agent_initialization_with_config(self):
         """Test agent initialization with custom configuration."""
         model = MockModel()
         config = {
-            'initial_resilience_mean': 0.8,
-            'initial_affect_mean': 0.2,
-            'initial_resources_mean': 0.9,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_sd': 0.1,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.3,
-            'coping_success_rate': 0.7,
-            'subevents_per_day': 5
+            "initial_resilience_mean": 0.8,
+            "initial_affect_mean": 0.2,
+            "initial_resources_mean": 0.9,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_sd": 0.1,
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.3,
+            "coping_success_rate": 0.7,
+            "subevents_per_day": 5,
         }
 
         agent = Person(model, config)
@@ -74,21 +73,21 @@ class TestAgentInitialization:
         # Verify transformation is being used (values should not equal means for small SD)
         # With small SD, values should be close to but not exactly equal to means
         assert abs(agent.resilience - 0.8) < 0.9  # Should be reasonably close to mean
-        assert abs(agent.affect - 0.2) < 0.9      # Should be reasonably close to mean
-        assert abs(agent.resources - 0.9) < 0.9   # Should be reasonably close to mean
+        assert abs(agent.affect - 0.2) < 0.9  # Should be reasonably close to mean
+        assert abs(agent.resources - 0.9) < 0.9  # Should be reasonably close to mean
 
     def test_agent_reproducible_initialization(self):
         """Test that agent initialization is reproducible with same seed."""
         config = {
-            'initial_resilience_mean': 0.7,
-            'initial_affect_mean': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_sd': 0.1,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.7,
+            "initial_affect_mean": 0.1,
+            "initial_resources_mean": 0.6,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_sd": 0.1,
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         # Two agents with same model seed should behave identically
@@ -109,7 +108,7 @@ class TestAgentInitialization:
 class TestAgentStepBehavior:
     """Test agent step behavior and event processing."""
 
-    @patch('src.python.agent.sample_poisson')
+    @patch("src.python.agent.sample_poisson")
     def test_agent_step_calls_utility_functions(self, mock_sample_poisson):
         """Test that agent.step() correctly calls utility functions."""
         # Setup mocks
@@ -134,11 +133,11 @@ class TestAgentStepBehavior:
 
         # Set extreme values
         agent.resilience = 1.5  # Above valid range
-        agent.affect = -2.0     # Below valid range
+        agent.affect = -2.0  # Below valid range
         agent.resources = -0.5  # Below valid range
 
         # Mock no events for this test
-        with patch('src.python.agent.sample_poisson', return_value=0):
+        with patch("src.python.agent.sample_poisson", return_value=0):
             agent.step()
 
         # Values should be clamped to valid ranges (transformation pipeline ensures this)
@@ -156,37 +155,39 @@ class TestAgentInteractions:
         model = MockModel(seed=42)
 
         # Create two agents
-        agent1 = Person(model, {
-            'initial_affect_mean': 0.5,
-            'initial_resilience_mean': 0.6,
-            'initial_resources_mean': 0.6,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
-        agent2 = Person(model, {
-            'initial_affect_mean': -0.3,
-            'initial_resilience_mean': 0.4,
-            'initial_resources_mean': 0.6,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent1 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.5,
+                "initial_resilience_mean": 0.6,
+                "initial_resources_mean": 0.6,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
+        agent2 = Person(
+            model,
+            {
+                "initial_affect_mean": -0.3,
+                "initial_resilience_mean": 0.4,
+                "initial_resources_mean": 0.6,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Setup neighbor relationship
         model.grid.get_neighbors.return_value = [agent2]
 
         # Record initial states
-        initial_affect1 = agent1.affect
-        initial_affect2 = agent2.affect
-        initial_resilience1 = agent1.resilience
-        initial_resilience2 = agent2.resilience
 
         # Execute interaction
         agent1.interact()
@@ -220,8 +221,8 @@ class TestAgentInteractions:
 class TestAgentStressEvents:
     """Test agent stress event processing."""
 
-    @patch('src.python.agent.process_stress_event')
-    @patch('src.python.agent.generate_stress_event')
+    @patch("src.python.agent.process_stress_event")
+    @patch("src.python.agent.generate_stress_event")
     def test_agent_stressful_event_processing(self, mock_generate_stress, mock_process_stress):
         """Test that stressful events are processed correctly."""
         # Setup mocks
@@ -233,9 +234,6 @@ class TestAgentStressEvents:
         agent = Person(model)
 
         # Record initial state
-        initial_affect = agent.affect
-        initial_resilience = agent.resilience
-        initial_resources = agent.resources
 
         # Execute stressful event
         agent.stressful_event()
@@ -255,9 +253,6 @@ class TestAgentStressEvents:
         agent = Person(model)
 
         # Record initial state
-        initial_affect = agent.affect
-        initial_resilience = agent.resilience
-        initial_resources = agent.resources
 
         # Execute stressful event (no stress should occur)
         agent.stressful_event()
@@ -276,65 +271,72 @@ class TestAgentResourceManagement:
     def test_agent_resource_usage_during_coping(self):
         """Test that resources are used when coping successfully."""
         model = MockModel(seed=42)
-        
+
         # Use explicit config to avoid any config loading issues
         config = {
-            'initial_resources_mean': 1.0,  # Start with full resources
-            'initial_resilience_mean': 1.0,  # Maximum resilience for guaranteed coping success
-            'initial_affect_mean': 0.0,
-            'initial_resources_sd': 0.1,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resources_mean": 1.0,  # Start with full resources
+            "initial_resilience_mean": 1.0,  # Maximum resilience for guaranteed coping success
+            "initial_affect_mean": 0.0,
+            "initial_resources_sd": 0.1,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_sd": 0.1,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
-        
+
         agent = Person(model, config)
         initial_resources = agent.resources
-        
+
         # Simplify the mocking - use fewer layers
-        with patch('src.python.agent.process_stress_event', return_value=(True, 0.8, 0.2)), \
-             patch('src.python.affect_utils.determine_coping_outcome_and_psychological_impact', return_value=(0.1, 0.9, 0.15, True)), \
-             patch('src.python.agent.generate_stress_event', return_value=StressEvent(0.1, 0.7)), \
-             patch.object(agent, '_allocate_protective_factors'):  # Prevent additional consumption
-        
+        with (
+            patch("src.python.agent.process_stress_event", return_value=(True, 0.8, 0.2)),
+            patch(
+                "src.python.affect_utils.determine_coping_outcome_and_psychological_impact",
+                return_value=(0.1, 0.9, 0.15, True),
+            ),
+            patch("src.python.agent.generate_stress_event", return_value=StressEvent(0.1, 0.7)),
+            patch.object(agent, "_allocate_protective_factors"),
+        ):  # Prevent additional consumption
             agent.stressful_event()
-        
+
         # Simple assertion that should work
-        assert agent.resources < initial_resources, (
-            f"Resources should be reduced. Initial: {initial_resources}, Final: {agent.resources}"
-        )
+        assert (
+            agent.resources < initial_resources
+        ), f"Resources should be reduced. Initial: {initial_resources}, Final: {agent.resources}"
         assert agent.resources >= 0.0, "Resources should not be negative"
 
     @pytest.mark.config
     def test_agent_resource_consumption_direct(self):
         """Test resource consumption by calling the logic directly."""
         model = MockModel(seed=42)
-        
-        agent = Person(model, {
-            'initial_resources_mean': 1.0,  # Start with full resources
-            'initial_resilience_mean': 1.0,  # Maximum resilience for guaranteed coping success
-            'initial_affect_mean': 0.0,
-            'initial_resources_sd': 0.1,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+
+        agent = Person(
+            model,
+            {
+                "initial_resources_mean": 1.0,  # Start with full resources
+                "initial_resilience_mean": 1.0,  # Maximum resilience for guaranteed coping success
+                "initial_affect_mean": 0.0,
+                "initial_resources_sd": 0.1,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         initial_resources = agent.resources
-        
+
         # Test the resource consumption logic directly
         cfg = get_config()
-        resource_cost = cfg.get('agent', 'resource_cost')
-        
+        resource_cost = cfg.get("agent", "resource_cost")
+
         # Simulate successful coping
         coped_successfully = True
         if coped_successfully:
             agent.resources = max(0.0, agent.resources - resource_cost)
-        
+
         # Verify the consumption worked
         expected_resources = initial_resources - resource_cost
         assert abs(agent.resources - expected_resources) < 1e-10
@@ -343,23 +345,27 @@ class TestAgentResourceManagement:
     def test_agent_resource_preservation_when_not_stressed(self):
         """Test that resources are preserved when not stressed."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_resources_mean': 0.8,
-            'initial_resilience_mean': 0.5,
-            'initial_affect_mean': 0.0,
-            'initial_resources_sd': 0.1,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_resources_mean": 0.8,
+                "initial_resilience_mean": 0.5,
+                "initial_affect_mean": 0.0,
+                "initial_resources_sd": 0.1,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Mock no stress scenario - create event that won't trigger stress
-        with patch('src.python.stress_utils.generate_stress_event') as mock_stress_event, \
-              patch('src.python.agent.process_stress_event') as mock_process_stress, \
-              patch('src.python.affect_utils.determine_coping_outcome_and_psychological_impact') as mock_new_mechanism:
-
+        with (
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
+            patch("src.python.agent.process_stress_event") as mock_process_stress,
+            patch("src.python.affect_utils.determine_coping_outcome_and_psychological_impact") as mock_new_mechanism,
+        ):
             # Create event with low magnitude that won't exceed threshold
             mock_stress_event.return_value = StressEvent(0.5, 0.1)
             # Ensure the event doesn't trigger stress
@@ -390,14 +396,14 @@ class TestAgentConfiguration:
     def test_agent_with_high_resilience_config(self):
         """Test agent behavior with high resilience configuration."""
         config = {
-            'initial_resilience_mean': 0.9,
-            'initial_affect_mean': 0.0,
-            'initial_resources_mean': 0.8,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_sd': 0.1,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.2,  # Lower stress probability
-            'coping_success_rate': 0.9   # High coping success
+            "initial_resilience_mean": 0.9,
+            "initial_affect_mean": 0.0,
+            "initial_resources_mean": 0.8,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_sd": 0.1,
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.2,  # Lower stress probability
+            "coping_success_rate": 0.9,  # High coping success
         }
 
         model = MockModel(seed=42)
@@ -413,14 +419,14 @@ class TestAgentConfiguration:
     def test_agent_with_low_resilience_config(self):
         """Test agent behavior with low resilience configuration."""
         config = {
-            'initial_resilience_mean': 0.1,
-            'initial_affect_mean': 0.0,
-            'initial_resources_mean': 0.3,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_sd': 0.1,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.8,  # High stress probability
-            'coping_success_rate': 0.2   # Low coping success
+            "initial_resilience_mean": 0.1,
+            "initial_affect_mean": 0.0,
+            "initial_resources_mean": 0.3,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_sd": 0.1,
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.8,  # High stress probability
+            "coping_success_rate": 0.2,  # Low coping success
         }
 
         model = MockModel(seed=42)
@@ -430,7 +436,7 @@ class TestAgentConfiguration:
         assert 0.0 <= agent.resilience <= 1.0
         assert 0.0 <= agent.resources <= 1.0
         assert abs(agent.resilience - 0.1) < 0.7  # Should be reasonably close to mean
-        assert abs(agent.resources - 0.3) < 0.7   # Should be reasonably close to mean
+        assert abs(agent.resources - 0.3) < 0.7  # Should be reasonably close to mean
 
 
 # Example of how to run integration tests:

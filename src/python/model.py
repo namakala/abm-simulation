@@ -5,8 +5,7 @@ import numpy as np
 import pandas as pd
 import mesa
 import logging
-from typing import Dict, List, Any
-from collections import defaultdict
+from typing import Dict, Any
 
 from mesa.space import NetworkGrid
 from mesa import DataCollector
@@ -18,6 +17,7 @@ from src.python.config import get_config
 config = get_config()
 
 # Initialize the model
+
 
 class StressModel(mesa.Model):
     """
@@ -75,11 +75,11 @@ class StressModel(mesa.Model):
 
         # Use config values if parameters not provided
         if N is None:
-            N = config.get('simulation', 'num_agents')
+            N = config.get("simulation", "num_agents")
         if max_days is None:
-            max_days = config.get('simulation', 'max_days')
+            max_days = config.get("simulation", "max_days")
         if seed is None:
-            seed = config.get('simulation', 'seed')
+            seed = config.get("simulation", "seed")
 
         self.max_days = max_days
         self.num_agents = N
@@ -88,11 +88,7 @@ class StressModel(mesa.Model):
         self._initialize_datacollector()
 
         # Build social network
-        G = nx.watts_strogatz_graph(
-            n=N,
-            k=config.get('network', 'watts_k'),
-            p=config.get('network', 'watts_p')
-        )
+        G = nx.watts_strogatz_graph(n=N, k=config.get("network", "watts_k"), p=config.get("network", "watts_p"))
         self.grid = NetworkGrid(G)
 
         # Create and register agents with enhanced capabilities
@@ -129,40 +125,61 @@ class StressModel(mesa.Model):
         # Core mental health metrics for research and analysis
         model_reporters = {
             # Primary outcome measures
-            'avg_pss10': lambda m: m.get_avg_pss10(),  # Population average Perceived Stress Scale-10
-            'avg_resilience': lambda m: m.get_avg_resilience(),  # Population average resilience score
-            'avg_affect': lambda m: m.get_avg_affect(),  # Population average affect (positive/negative)
-
+            "avg_pss10": lambda m: m.get_avg_pss10(),  # Population average Perceived Stress Scale-10
+            "avg_resilience": lambda m: m.get_avg_resilience(),  # Population average resilience score
+            "avg_affect": lambda m: m.get_avg_affect(),  # Population average affect (positive/negative)
             # Coping and stress processing metrics
-            'coping_success_rate': lambda m: m.get_success_rate(),  # Success rate in coping with stress events
-            'avg_resources': lambda m: np.mean([agent.resources for agent in m.agents]) if m.agents else 0.0,  # Average resource levels
-            'avg_stress': lambda m: np.mean([getattr(agent, 'current_stress', 0.0) for agent in m.agents]) if m.agents else 0.0,  # Average current stress
-
+            "coping_success_rate": lambda m: m.get_success_rate(),  # Success rate in coping with stress events
+            "avg_resources": lambda m: (
+                np.mean([agent.resources for agent in m.agents]) if m.agents else 0.0
+            ),  # Average resource levels
+            "avg_stress": lambda m: (
+                np.mean([getattr(agent, "current_stress", 0.0) for agent in m.agents]) if m.agents else 0.0
+            ),  # Average current stress
             # Social network and support metrics
-            'social_support_rate': lambda m: m._calculate_social_support_rate(),  # Rate of social support exchanges
-            'stress_events': lambda m: sum(len(getattr(agent, 'daily_stress_events', [])) for agent in m.agents),  # Total stress events per day
-            'network_density': lambda m: m._calculate_network_density(),  # Network connectivity measure
-
+            "social_support_rate": lambda m: m._calculate_social_support_rate(),  # Rate of social support exchanges
+            "stress_events": lambda m: sum(
+                len(getattr(agent, "daily_stress_events", [])) for agent in m.agents
+            ),  # Total stress events per day
+            "network_density": lambda m: m._calculate_network_density(),  # Network connectivity measure
             # Population health categories (for cost-effectiveness analysis)
-            'stress_prevalence': lambda m: sum(1 for agent in m.agents if getattr(agent, 'stressed', False)) / len(m.agents) if m.agents else 0.0,  # Proportion with high stress (PSS-10 based)
-            'low_resilience': lambda m: sum(1 for agent in m.agents if agent.resilience < 0.3) if m.agents else 0,  # Count with low resilience
-            'high_resilience': lambda m: sum(1 for agent in m.agents if agent.resilience > 0.7) if m.agents else 0,  # Count with high resilience
-
+            "stress_prevalence": lambda m: (
+                sum(1 for agent in m.agents if getattr(agent, "stressed", False)) / len(m.agents) if m.agents else 0.0
+            ),  # Proportion with high stress (PSS-10 based)
+            "low_resilience": lambda m: (
+                sum(1 for agent in m.agents if agent.resilience < 0.3) if m.agents else 0
+            ),  # Count with low resilience
+            "high_resilience": lambda m: (
+                sum(1 for agent in m.agents if agent.resilience > 0.7) if m.agents else 0
+            ),  # Count with high resilience
             # Challenge/Hindrance appraisal metrics (key to theoretical model)
-            'avg_challenge': lambda m: m._get_avg_challenge(),  # Average challenge appraisal across events
-            'avg_hindrance': lambda m: m._get_avg_hindrance(),  # Average hindrance appraisal across events
-            'challenge_hindrance_ratio': lambda m: m._get_challenge_hindrance_ratio(),  # Balance between challenge and hindrance
-            'avg_consecutive_hindrances': lambda m: m._get_avg_consecutive_hindrances(),  # Average consecutive hindrance events
-
+            "avg_challenge": lambda m: m._get_avg_challenge(),  # Average challenge appraisal across events
+            "avg_hindrance": lambda m: m._get_avg_hindrance(),  # Average hindrance appraisal across events
+            "challenge_hindrance_ratio": lambda m: (
+                m._get_challenge_hindrance_ratio()
+            ),  # Balance between challenge and hindrance
+            "avg_consecutive_hindrances": lambda m: (
+                m._get_avg_consecutive_hindrances()
+            ),  # Average consecutive hindrance events
             # Daily activity statistics for intervention modeling
-            'total_stress_events': lambda m: sum(len(getattr(agent, 'daily_stress_events', [])) for agent in m.agents),  # Total stress events
-            'successful_coping': lambda m: sum(sum(1 for event in getattr(agent, 'daily_stress_events', []) if event.get('coped_successfully', False)) for agent in m.agents),  # Successful coping instances
-            'social_interactions': lambda m: sum(getattr(agent, 'daily_interactions', 0) for agent in m.agents),  # Total social interactions
-            'support_exchanges': lambda m: sum(getattr(agent, 'daily_support_exchanges', 0) for agent in m.agents),  # Total support exchanges
-
+            "total_stress_events": lambda m: sum(
+                len(getattr(agent, "daily_stress_events", [])) for agent in m.agents
+            ),  # Total stress events
+            "successful_coping": lambda m: sum(
+                sum(1 for event in getattr(agent, "daily_stress_events", []) if event.get("coped_successfully", False))
+                for agent in m.agents
+            ),  # Successful coping instances
+            "social_interactions": lambda m: sum(
+                getattr(agent, "daily_interactions", 0) for agent in m.agents
+            ),  # Total social interactions
+            "support_exchanges": lambda m: sum(
+                getattr(agent, "daily_support_exchanges", 0) for agent in m.agents
+            ),  # Total support exchanges
             # Cumulative tracking via DataCollector
-            'total_interactions': lambda m: getattr(m, 'total_interactions', 0),  # Cumulative social interactions
-            'social_support_exchanges': lambda m: getattr(m, 'social_support_exchanges', 0)  # Cumulative support exchanges
+            "total_interactions": lambda m: getattr(m, "total_interactions", 0),  # Cumulative social interactions
+            "social_support_exchanges": lambda m: getattr(
+                m, "social_support_exchanges", 0
+            ),  # Cumulative support exchanges
         }
 
         # Define agent reporters (agent-level metrics)
@@ -171,18 +188,16 @@ class StressModel(mesa.Model):
         # Essential for studying individual differences and intervention effects
         agent_reporters = {
             # Core individual outcome measures
-            'pss10': lambda a: a.pss10,  # Individual Perceived Stress Scale-10 score
-            'resilience': lambda a: a.resilience,  # Individual resilience capacity
-            'affect': lambda a: a.affect,  # Individual positive/negative affect balance
-            'resources': lambda a: a.resources,  # Individual resource availability
-
+            "pss10": lambda a: a.pss10,  # Individual Perceived Stress Scale-10 score
+            "resilience": lambda a: a.resilience,  # Individual resilience capacity
+            "affect": lambda a: a.affect,  # Individual positive/negative affect balance
+            "resources": lambda a: a.resources,  # Individual resource availability
             # Individual stress processing state
-            'current_stress': lambda a: getattr(a, 'current_stress', 0.0),  # Current stress level
-            'stress_controllability': lambda a: getattr(a, 'stress_controllability', 0.5),  # Perceived controllability
-            'stress_overload': lambda a: getattr(a, 'stress_overload', 0.5),  # Perceived overload
-
+            "current_stress": lambda a: getattr(a, "current_stress", 0.0),  # Current stress level
+            "stress_controllability": lambda a: getattr(a, "stress_controllability", 0.5),  # Perceived controllability
+            "stress_overload": lambda a: getattr(a, "stress_overload", 0.5),  # Perceived overload
             # Individual stress event tracking
-            'consecutive_hindrances': lambda a: getattr(a, 'consecutive_hindrances', 0)  # Consecutive hindrance events
+            "consecutive_hindrances": lambda a: getattr(a, "consecutive_hindrances", 0),  # Consecutive hindrance events
         }
 
         # Initialize DataCollector with comprehensive metrics
@@ -190,17 +205,17 @@ class StressModel(mesa.Model):
         # Provides optimized storage and standardized access patterns
         self.datacollector = DataCollector(
             model_reporters=model_reporters,  # Population-level metrics (20+ indicators)
-            agent_reporters=agent_reporters   # Individual-level metrics (8+ per agent)
+            agent_reporters=agent_reporters,  # Individual-level metrics (8+ per agent)
         )
 
         # Maintain daily stats for backward compatibility with existing code
         # These are now populated from DataCollector data rather than manual tracking
         # TODO: Phase out in favor of direct DataCollector access for better performance
         self.daily_stats = {
-            'total_stress_events': 0,    # Now derived from DataCollector model data
-            'successful_coping': 0,      # Now derived from DataCollector model data
-            'social_interactions': 0,    # Now derived from DataCollector model data
-            'support_exchanges': 0       # Now derived from DataCollector model data
+            "total_stress_events": 0,  # Now derived from DataCollector model data
+            "successful_coping": 0,  # Now derived from DataCollector model data
+            "social_interactions": 0,  # Now derived from DataCollector model data
+            "support_exchanges": 0,  # Now derived from DataCollector model data
         }
 
     def step(self):
@@ -233,8 +248,8 @@ class StressModel(mesa.Model):
         self.agents.shuffle_do("step")
 
         # Update cumulative counters before data collection to ensure social_support_rate is calculated correctly
-        daily_social_interactions = sum(getattr(agent, 'daily_interactions', 0) for agent in self.agents)
-        daily_support_exchanges = sum(getattr(agent, 'daily_support_exchanges', 0) for agent in self.agents)
+        daily_social_interactions = sum(getattr(agent, "daily_interactions", 0) for agent in self.agents)
+        daily_support_exchanges = sum(getattr(agent, "daily_support_exchanges", 0) for agent in self.agents)
         self.total_interactions += daily_social_interactions
         self.social_support_exchanges += daily_support_exchanges
 
@@ -249,7 +264,7 @@ class StressModel(mesa.Model):
 
         # Apply daily reset to all agents AFTER data collection
         for agent in self.agents:
-            if hasattr(agent, '_daily_reset'):
+            if hasattr(agent, "_daily_reset"):
                 agent._daily_reset(self.day)
 
         # Increment simulation day counter
@@ -262,10 +277,10 @@ class StressModel(mesa.Model):
     def _reset_daily_stats(self):
         """Reset daily statistics tracking."""
         self.daily_stats = {
-            'total_stress_events': 0,
-            'successful_coping': 0,
-            'social_interactions': 0,
-            'support_exchanges': 0
+            "total_stress_events": 0,
+            "successful_coping": 0,
+            "social_interactions": 0,
+            "support_exchanges": 0,
         }
 
     def _calculate_social_support_rate(self) -> float:
@@ -303,7 +318,7 @@ class StressModel(mesa.Model):
         adaptation_count = 0
         for agent in self.agents:
             # Check if agent performed network adaptation (tracked via attribute)
-            if hasattr(agent, '_adapted_network') and agent._adapted_network:
+            if hasattr(agent, "_adapted_network") and agent._adapted_network:
                 adaptation_count += 1
                 agent._adapted_network = False  # Reset for next day
 
@@ -311,20 +326,18 @@ class StressModel(mesa.Model):
 
     def get_network_adaptation_summary(self) -> Dict[str, Any]:
         """Get summary of network adaptation across the population."""
-        total_adaptations = 0
         agents_adapting = 0
 
         for agent in self.agents:
             # Count agents who have adapted their network recently
-            stress_breach_count = getattr(agent, 'stress_breach_count', 0)
+            stress_breach_count = getattr(agent, "stress_breach_count", 0)
             if stress_breach_count >= 3:  # Adaptation threshold
                 agents_adapting += 1
 
         return {
-            'agents_considering_adaptation': agents_adapting,
-            'adaptation_rate': agents_adapting / max(1, len(self.agents))
+            "agents_considering_adaptation": agents_adapting,
+            "adaptation_rate": agents_adapting / max(1, len(self.agents)),
         }
-
 
     def get_population_summary(self) -> Dict[str, Any]:
         """
@@ -378,7 +391,7 @@ class StressModel(mesa.Model):
         if not self.agents:
             return {}
 
-        if not hasattr(self, 'datacollector') or self.datacollector is None:
+        if not hasattr(self, "datacollector") or self.datacollector is None:
             return {}
 
         try:
@@ -393,65 +406,65 @@ class StressModel(mesa.Model):
             agent_data = self.datacollector.get_agent_vars_dataframe()
 
             # Current averages from DataCollector
-            current_pss10 = latest_data.get('avg_pss10', 0.0)
-            current_affect = latest_data.get('avg_affect', 0.0)
-            current_resilience = latest_data.get('avg_resilience', 0.0)
-            current_resources = latest_data.get('avg_resources', 0.0)
-            current_stress = latest_data.get('avg_stress', 0.0)
+            current_pss10 = latest_data.get("avg_pss10", 0.0)
+            current_affect = latest_data.get("avg_affect", 0.0)
+            current_resilience = latest_data.get("avg_resilience", 0.0)
+            current_resources = latest_data.get("avg_resources", 0.0)
+            current_stress = latest_data.get("avg_stress", 0.0)
 
             # Distribution statistics
             if not agent_data.empty:
-                affect_std = agent_data['affect'].std() if 'affect' in agent_data.columns else 0.0
-                resilience_std = agent_data['resilience'].std() if 'resilience' in agent_data.columns else 0.0
-                stress_std = agent_data['current_stress'].std() if 'current_stress' in agent_data.columns else 0.0
+                affect_std = agent_data["affect"].std() if "affect" in agent_data.columns else 0.0
+                resilience_std = agent_data["resilience"].std() if "resilience" in agent_data.columns else 0.0
+                stress_std = agent_data["current_stress"].std() if "current_stress" in agent_data.columns else 0.0
             else:
                 affect_std = 0.0
                 resilience_std = 0.0
                 stress_std = 0.0
 
             # Stress prevalence
-            stress_prevalence = latest_data.get('stress_prevalence', 0.0)
+            stress_prevalence = latest_data.get("stress_prevalence", 0.0)
 
             # Resilience categories
-            low_resilience = latest_data.get('low_resilience', 0)
-            high_resilience = latest_data.get('high_resilience', 0)
+            low_resilience = latest_data.get("low_resilience", 0)
+            high_resilience = latest_data.get("high_resilience", 0)
             medium_resilience = len(self.agents) - low_resilience - high_resilience
 
             return {
-                'day': self.day,
-                'num_agents': len(self.agents),
-                'avg_pss10': current_pss10,
-                'avg_affect': current_affect,
-                'affect_std': affect_std,
-                'avg_resilience': current_resilience,
-                'resilience_std': resilience_std,
-                'avg_resources': current_resources,
-                'avg_stress': current_stress,
-                'stress_std': stress_std,
-                'stress_prevalence': stress_prevalence,
-                'resilience_distribution': {
-                    'low': low_resilience,
-                    'medium': medium_resilience,
-                    'high': high_resilience
+                "day": self.day,
+                "num_agents": len(self.agents),
+                "avg_pss10": current_pss10,
+                "avg_affect": current_affect,
+                "affect_std": affect_std,
+                "avg_resilience": current_resilience,
+                "resilience_std": resilience_std,
+                "avg_resources": current_resources,
+                "avg_stress": current_stress,
+                "stress_std": stress_std,
+                "stress_prevalence": stress_prevalence,
+                "resilience_distribution": {
+                    "low": low_resilience,
+                    "medium": medium_resilience,
+                    "high": high_resilience,
                 },
-                'social_support_rate': latest_data.get('social_support_rate', 0.0),
-                'total_interactions': latest_data.get('total_interactions', 0),
-                'network_density': latest_data.get('network_density', 0.0),
+                "social_support_rate": latest_data.get("social_support_rate", 0.0),
+                "total_interactions": latest_data.get("total_interactions", 0),
+                "network_density": latest_data.get("network_density", 0.0),
                 # Enhanced integrated metrics
-                'mental_health_index': (current_affect + current_resilience) / 2,  # Combined mental health score
-                'recovery_potential': high_resilience / max(1, len(self.agents)),  # Proportion with high resilience
-                'vulnerability_index': low_resilience / max(1, len(self.agents)),   # Proportion with low resilience
+                "mental_health_index": (current_affect + current_resilience) / 2,  # Combined mental health score
+                "recovery_potential": high_resilience / max(1, len(self.agents)),  # Proportion with high resilience
+                "vulnerability_index": low_resilience / max(1, len(self.agents)),  # Proportion with low resilience
                 # New stress processing metrics
-                'avg_challenge': latest_data.get('avg_challenge', 0.0),
-                'avg_hindrance': latest_data.get('avg_hindrance', 0.0),
-                'challenge_hindrance_ratio': latest_data.get('challenge_hindrance_ratio', 0.0),
-                'coping_success_rate': latest_data.get('coping_success_rate', 0.0),
-                'avg_consecutive_hindrances': latest_data.get('avg_consecutive_hindrances', 0.0),
+                "avg_challenge": latest_data.get("avg_challenge", 0.0),
+                "avg_hindrance": latest_data.get("avg_hindrance", 0.0),
+                "challenge_hindrance_ratio": latest_data.get("challenge_hindrance_ratio", 0.0),
+                "coping_success_rate": latest_data.get("coping_success_rate", 0.0),
+                "avg_consecutive_hindrances": latest_data.get("avg_consecutive_hindrances", 0.0),
                 # Daily statistics from new reporters
-                'total_stress_events': latest_data.get('total_stress_events', 0),
-                'successful_coping': latest_data.get('successful_coping', 0),
-                'social_interactions': latest_data.get('social_interactions', 0),
-                'support_exchanges': latest_data.get('support_exchanges', 0)
+                "total_stress_events": latest_data.get("total_stress_events", 0),
+                "successful_coping": latest_data.get("successful_coping", 0),
+                "social_interactions": latest_data.get("social_interactions", 0),
+                "support_exchanges": latest_data.get("support_exchanges", 0),
             }
         except Exception:
             # Return empty dict if DataCollector fails
@@ -491,7 +504,7 @@ class StressModel(mesa.Model):
             - Population distributions (stress prevalence, resilience categories)
         """
         # Use DataCollector to get model data
-        if not hasattr(self, 'datacollector') or self.datacollector is None:
+        if not hasattr(self, "datacollector") or self.datacollector is None:
             return pd.DataFrame()
 
         # Get data from DataCollector - single method call replaces manual collection
@@ -500,6 +513,7 @@ class StressModel(mesa.Model):
             return pd.DataFrame()
 
         return model_data
+
     def export_results(self, filename: str = None) -> str:
         """
         Export simulation results to CSV file using DataCollector outputs.
@@ -598,7 +612,7 @@ class StressModel(mesa.Model):
             return 0.0
 
         try:
-            resilience_values = [float(agent.resilience) for agent in self.agents if hasattr(agent, 'resilience')]
+            resilience_values = [float(agent.resilience) for agent in self.agents if hasattr(agent, "resilience")]
             if not resilience_values:
                 return 0.0
             return sum(resilience_values) / len(resilience_values)
@@ -611,7 +625,7 @@ class StressModel(mesa.Model):
             return 0.0
 
         try:
-            affect_values = [float(agent.affect) for agent in self.agents if hasattr(agent, 'affect')]
+            affect_values = [float(agent.affect) for agent in self.agents if hasattr(agent, "affect")]
             if not affect_values:
                 return 0.0
             return sum(affect_values) / len(affect_values)
@@ -628,7 +642,7 @@ class StressModel(mesa.Model):
 
         try:
             for agent in self.agents:
-                if not hasattr(agent, 'daily_stress_events'):
+                if not hasattr(agent, "daily_stress_events"):
                     continue
 
                 daily_events = agent.daily_stress_events
@@ -639,9 +653,9 @@ class StressModel(mesa.Model):
                     if not isinstance(event, dict):
                         continue
 
-                    if 'coped_successfully' in event:
+                    if "coped_successfully" in event:
                         total_attempts += 1
-                        if event['coped_successfully']:
+                        if event["coped_successfully"]:
                             total_successes += 1
 
             if total_attempts == 0:
@@ -657,9 +671,9 @@ class StressModel(mesa.Model):
         total_events = 0
 
         for agent in self.agents:
-            daily_events = getattr(agent, 'daily_stress_events', [])
+            daily_events = getattr(agent, "daily_stress_events", [])
             for event in daily_events:
-                total_challenge += event.get('challenge', 0.0)
+                total_challenge += event.get("challenge", 0.0)
                 total_events += 1
 
         return total_challenge / total_events if total_events > 0 else 0.0
@@ -670,9 +684,9 @@ class StressModel(mesa.Model):
         total_events = 0
 
         for agent in self.agents:
-            daily_events = getattr(agent, 'daily_stress_events', [])
+            daily_events = getattr(agent, "daily_stress_events", [])
             for event in daily_events:
-                total_hindrance += event.get('hindrance', 0.0)
+                total_hindrance += event.get("hindrance", 0.0)
                 total_events += 1
 
         return total_hindrance / total_events if total_events > 0 else 0.0
@@ -684,16 +698,20 @@ class StressModel(mesa.Model):
         total_events = 0
 
         for agent in self.agents:
-            daily_events = getattr(agent, 'daily_stress_events', [])
+            daily_events = getattr(agent, "daily_stress_events", [])
             for event in daily_events:
-                total_challenge += event.get('challenge', 0.0)
-                total_hindrance += event.get('hindrance', 0.0)
+                total_challenge += event.get("challenge", 0.0)
+                total_hindrance += event.get("hindrance", 0.0)
                 total_events += 1
 
         if total_events > 0:
             avg_challenge = total_challenge / total_events
             avg_hindrance = total_hindrance / total_events
-            return (avg_challenge - avg_hindrance) / (avg_challenge + avg_hindrance) if (avg_challenge + avg_hindrance) > 0 else 0.0
+            return (
+                (avg_challenge - avg_hindrance) / (avg_challenge + avg_hindrance)
+                if (avg_challenge + avg_hindrance) > 0
+                else 0.0
+            )
 
         return 0.0
 
@@ -703,7 +721,7 @@ class StressModel(mesa.Model):
         valid_agents = 0
 
         for agent in self.agents:
-            consecutive = getattr(agent, 'consecutive_hindrances', 0)
+            consecutive = getattr(agent, "consecutive_hindrances", 0)
             if consecutive > 0:
                 total_consecutive += consecutive
                 valid_agents += 1
@@ -745,7 +763,7 @@ class StressModel(mesa.Model):
             patterns = agent_data.groupby('AgentID')[features].mean()
             clusters = KMeans(n_clusters=3).fit(patterns)
         """
-        if not hasattr(self, 'datacollector') or self.datacollector is None:
+        if not hasattr(self, "datacollector") or self.datacollector is None:
             return pd.DataFrame()
 
         # Get agent data from DataCollector - comprehensive individual trajectories
@@ -760,25 +778,24 @@ class StressModel(mesa.Model):
             agent_data = agent_data.reset_index()
 
             # Rename columns to match expected format
-            if 'AgentID' in agent_data.columns and 'Step' in agent_data.columns:
+            if "AgentID" in agent_data.columns and "Step" in agent_data.columns:
                 # Columns are already properly named
                 pass
             else:
                 # Handle different possible column naming from Mesa
                 # The index levels should contain AgentID and Step information
-                logger = logging.getLogger('simulation')
+                logger = logging.getLogger("simulation")
                 logger.warning("Unexpected DataFrame structure from DataCollector, attempting to fix...")
 
                 # Try to reconstruct the DataFrame with proper columns
-                if hasattr(agent_data.index, 'names') and agent_data.index.names:
+                if hasattr(agent_data.index, "names") and agent_data.index.names:
                     # Multi-index case - reconstruct with proper column names
                     agent_data = agent_data.reset_index()
                     if len(agent_data.index.names) >= 2:
                         # Assume first level is AgentID, second is Step
-                        agent_data = agent_data.rename(columns={
-                            agent_data.columns[0]: 'AgentID',
-                            agent_data.columns[1]: 'Step'
-                        })
+                        agent_data = agent_data.rename(
+                            columns={agent_data.columns[0]: "AgentID", agent_data.columns[1]: "Step"}
+                        )
                 else:
                     # Single index case - need to add missing columns
                     # Create AgentID column based on row patterns
@@ -792,7 +809,7 @@ class StressModel(mesa.Model):
                         agent_id = i // steps_per_agent
                         agent_ids.append(agent_id)
 
-                    agent_data.insert(0, 'AgentID', agent_ids)
+                    agent_data.insert(0, "AgentID", agent_ids)
 
                     # Create Step column
                     steps = []
@@ -800,14 +817,14 @@ class StressModel(mesa.Model):
                         step = i % steps_per_agent
                         steps.append(step)
 
-                    agent_data.insert(1, 'Step', steps)
+                    agent_data.insert(1, "Step", steps)
 
             return agent_data
 
         except Exception as e:
             # If there's any error in processing, return the original data
             # This ensures backward compatibility
-            logger = logging.getLogger('simulation')
+            logger = logging.getLogger("simulation")
             logger.warning(f"Error processing agent data structure: {e}")
             return agent_data
 
@@ -822,7 +839,7 @@ class StressModel(mesa.Model):
             DataFrame with model variables - raw DataCollector output for
             population-level metrics across all time steps
         """
-        if not hasattr(self, 'datacollector') or self.datacollector is None:
+        if not hasattr(self, "datacollector") or self.datacollector is None:
             return pd.DataFrame()
 
         return self.datacollector.get_model_vars_dataframe()
@@ -838,7 +855,7 @@ class StressModel(mesa.Model):
             DataFrame with agent variables - raw DataCollector output for
             individual-level metrics across all time steps and all agents
         """
-        if not hasattr(self, 'datacollector') or self.datacollector is None:
+        if not hasattr(self, "datacollector") or self.datacollector is None:
             return pd.DataFrame()
 
         return self.datacollector.get_agent_vars_dataframe()

@@ -3,7 +3,6 @@
 Debug script to check threshold evaluation function.
 """
 
-import sys
 from src.python.config import get_config
 from src.python.stress_utils import StressEvent, ThresholdParams, evaluate_stress_threshold
 
@@ -32,9 +31,11 @@ print(f"Result: {result}")
 print(f"Result type: {type(result)}")
 
 # Calculate effective threshold manually
-effective_threshold = (threshold_params.base_threshold +
-                      threshold_params.challenge_scale * challenge -
-                      threshold_params.hindrance_scale * hindrance)
+effective_threshold = (
+    threshold_params.base_threshold
+    + threshold_params.challenge_scale * challenge
+    - threshold_params.hindrance_scale * hindrance
+)
 effective_threshold = max(0.0, min(1.0, effective_threshold))
 
 print(f"Effective threshold: {effective_threshold}")

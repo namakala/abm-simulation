@@ -9,7 +9,7 @@ This module contains stateless mathematical functions for:
 """
 
 import numpy as np
-from typing import Optional, List, Union, Tuple
+from typing import Optional, List
 from dataclasses import dataclass
 from src.python.config import get_config
 
@@ -20,6 +20,7 @@ config = get_config()
 @dataclass
 class RNGConfig:
     """Configuration for random number generation."""
+
     seed: Optional[int] = None
     generator: Optional[np.random.Generator] = None
 
@@ -53,11 +54,7 @@ def clamp(value: float, min_val: float = 0.0, max_val: float = 1.0) -> float:
 
 
 def normalize_to_range(
-    value: float,
-    old_min: float,
-    old_max: float,
-    new_min: float = 0.0,
-    new_max: float = 1.0
+    value: float, old_min: float, old_max: float, new_min: float = 0.0, new_max: float = 1.0
 ) -> float:
     """
     Normalize a value from one range to another.
@@ -93,7 +90,7 @@ def sigmoid(x: float, gamma: float = None) -> float:
         Sigmoid output in [0,1]
     """
     if gamma is None:
-        gamma = config.get('appraisal', 'gamma')  # Use existing gamma parameter
+        gamma = config.get("appraisal", "gamma")  # Use existing gamma parameter
     return 1.0 / (1.0 + np.exp(-gamma * x))
 
 
@@ -109,7 +106,7 @@ def softmax(x: np.ndarray, temperature: float = None) -> np.ndarray:
         Softmax probabilities
     """
     if temperature is None:
-        temperature = config.get('utility', 'softmax_temperature')
+        temperature = config.get("utility", "softmax_temperature")
     if temperature == 0:
         # Handle temperature = 0 case (returns one-hot of max)
         max_idx = np.argmax(x)
@@ -123,11 +120,7 @@ def softmax(x: np.ndarray, temperature: float = None) -> np.ndarray:
     return x_exp / np.sum(x_exp)
 
 
-def sample_poisson(
-    lam: float,
-    rng: Optional[np.random.Generator] = None,
-    min_value: int = None
-) -> int:
+def sample_poisson(lam: float, rng: Optional[np.random.Generator] = None, min_value: int = None) -> int:
     """
     Sample from Poisson distribution with minimum value constraint.
 
@@ -148,11 +141,7 @@ def sample_poisson(
     return max(sample, min_value)
 
 
-def sample_beta(
-    alpha: float,
-    beta: float,
-    rng: Optional[np.random.Generator] = None
-) -> float:
+def sample_beta(alpha: float, beta: float, rng: Optional[np.random.Generator] = None) -> float:
     """
     Sample from Beta distribution in [0,1].
 
@@ -170,11 +159,7 @@ def sample_beta(
     return rng.beta(alpha, beta)
 
 
-def sample_exponential(
-    scale: float,
-    rng: Optional[np.random.Generator] = None,
-    max_value: float = None
-) -> float:
+def sample_exponential(scale: float, rng: Optional[np.random.Generator] = None, max_value: float = None) -> float:
     """
     Sample from exponential distribution capped at max_value.
 
@@ -200,7 +185,7 @@ def sample_normal(
     std: float = 1.0,
     rng: Optional[np.random.Generator] = None,
     min_value: float = None,
-    max_value: float = None
+    max_value: float = None,
 ) -> float:
     """
     Sample from normal distribution with optional clamping.
@@ -230,12 +215,7 @@ def sample_normal(
     return sample
 
 
-def compute_running_average(
-    current_avg: float,
-    new_value: float,
-    count: int,
-    alpha: Optional[float] = None
-) -> float:
+def compute_running_average(current_avg: float, new_value: float, count: int, alpha: Optional[float] = None) -> float:
     """
     Compute running average using either count-based or exponential moving average.
 
@@ -256,11 +236,7 @@ def compute_running_average(
         return ((count - 1) * current_avg + new_value) / count
 
 
-def compute_percentile(
-    values: List[float],
-    percentile: float,
-    interpolation: str = 'linear'
-) -> float:
+def compute_percentile(values: List[float], percentile: float, interpolation: str = "linear") -> float:
     """
     Compute percentile of a list of values.
 
@@ -279,12 +255,7 @@ def compute_percentile(
     return np.percentile(sorted_values, percentile, method=interpolation)
 
 
-def compute_z_score(
-    value: float,
-    mean: float,
-    std: float,
-    ddof: int = 1
-) -> float:
+def compute_z_score(value: float, mean: float, std: float, ddof: int = 1) -> float:
     """
     Compute z-score (standard score).
 
@@ -303,12 +274,7 @@ def compute_z_score(
     return (value - mean) / std
 
 
-def logistic_function(
-    x: float,
-    L: float = 1.0,
-    k: float = 1.0,
-    x0: float = 0.0
-) -> float:
+def logistic_function(x: float, L: float = 1.0, k: float = 1.0, x0: float = 0.0) -> float:
     """
     General logistic function.
 
@@ -324,13 +290,7 @@ def logistic_function(
     return L / (1 + np.exp(-k * (x - x0)))
 
 
-def linear_interpolation(
-    x: float,
-    x1: float,
-    y1: float,
-    x2: float,
-    y2: float
-) -> float:
+def linear_interpolation(x: float, x1: float, y1: float, x2: float, y2: float) -> float:
     """
     Linear interpolation between two points.
 
@@ -372,11 +332,7 @@ def calculate_entropy(probabilities: np.ndarray) -> float:
     return -np.sum(probs * np.log(probs))
 
 
-def tanh_transform(
-    mean: float = 0.0,
-    std: float = 1.0,
-    rng: Optional[np.random.Generator] = None
-) -> float:
+def tanh_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.random.Generator] = None) -> float:
     """
     Transform normal distribution sample to [-1,1] bounds using tanh.
 
@@ -414,11 +370,7 @@ def tanh_transform(
     return result
 
 
-def sigmoid_transform(
-    mean: float = 0.0,
-    std: float = 1.0,
-    rng: Optional[np.random.Generator] = None
-) -> float:
+def sigmoid_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.random.Generator] = None) -> float:
     """
     Transform normal distribution sample to [0,1] bounds using sigmoid.
 
@@ -456,11 +408,7 @@ def sigmoid_transform(
     return result
 
 
-def inverse_tanh_transform(
-    value: float,
-    mean: float = 0.0,
-    std: float = 1.0
-) -> float:
+def inverse_tanh_transform(value: float, mean: float = 0.0, std: float = 1.0) -> float:
     """
     Inverse transformation of tanh_transform.
 
@@ -494,11 +442,7 @@ def inverse_tanh_transform(
     return original
 
 
-def inverse_sigmoid_transform(
-    value: float,
-    mean: float = 0.0,
-    std: float = 1.0
-) -> float:
+def inverse_sigmoid_transform(value: float, mean: float = 0.0, std: float = 1.0) -> float:
     """
     Inverse transformation of sigmoid_transform.
 
@@ -532,11 +476,7 @@ def inverse_sigmoid_transform(
     return original
 
 
-def normalize_probabilities(
-    values: np.ndarray,
-    temperature: float = 1.0,
-    method: str = 'softmax'
-) -> np.ndarray:
+def normalize_probabilities(values: np.ndarray, temperature: float = 1.0, method: str = "softmax") -> np.ndarray:
     """
     Normalize values to probabilities using specified method.
 
@@ -548,16 +488,16 @@ def normalize_probabilities(
     Returns:
         Normalized probabilities
     """
-    if method == 'softmax':
+    if method == "softmax":
         return softmax(values, temperature)
-    elif method == 'clip':
+    elif method == "clip":
         # Simple clipping to [0,1] and renormalization
         clipped = np.clip(values, 0, 1)
         total = np.sum(clipped)
         if total == 0:
             return np.ones_like(values) / len(values)
         return clipped / total
-    elif method == 'linear':
+    elif method == "linear":
         # Linear normalization to [0,1]
         min_val, max_val = np.min(values), np.max(values)
         if min_val == max_val:

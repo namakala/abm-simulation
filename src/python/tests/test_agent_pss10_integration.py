@@ -10,14 +10,15 @@ Tests the integration of PSS-10 score generation with agent lifecycle:
 """
 
 import numpy as np
-import pytest
 from unittest.mock import Mock, patch
 
 from src.python.agent import Person
-from src.python.model import StressModel
 from src.python.stress_utils import (
-    generate_pss10_responses, compute_pss10_score, generate_stress_event,
-    apply_weights, StressEvent, AppraisalWeights
+    compute_pss10_score,
+    generate_stress_event,
+    apply_weights,
+    StressEvent,
+    AppraisalWeights,
 )
 
 
@@ -34,10 +35,10 @@ class TestAgentPSS10Initialization:
         agent = Person(model)
 
         # Check that PSS-10 state variables are initialized
-        assert hasattr(agent, 'stress_controllability')
-        assert hasattr(agent, 'stress_overload')
-        assert hasattr(agent, 'pss10')
-        assert hasattr(agent, 'pss10_responses')
+        assert hasattr(agent, "stress_controllability")
+        assert hasattr(agent, "stress_overload")
+        assert hasattr(agent, "pss10")
+        assert hasattr(agent, "pss10_responses")
 
         # Check that values are in valid ranges
         assert 0 <= agent.stress_controllability <= 1
@@ -106,18 +107,17 @@ class TestAgentPSS10StepIntegration:
         agent = Person(model)
 
         # Store initial PSS-10 state
-        initial_pss10 = agent.pss10
-        initial_responses = agent.pss10_responses.copy()
-        initial_controllability = agent.stress_controllability
-        initial_overload = agent.stress_overload
+        agent.pss10_responses.copy()
 
         # Patch stressful_event to simulate PSS-10 update
-        with patch.object(agent, 'stressful_event') as mock_stressful_event:
+        with patch.object(agent, "stressful_event") as mock_stressful_event:
+
             def side_effect():
                 # Simulate stress event updating PSS-10 and appending to daily scores
                 agent.pss10 = 15  # New PSS-10 score
                 agent.daily_pss10_scores.append(15)
                 return 0.5, 0.5
+
             mock_stressful_event.side_effect = side_effect
 
             # Execute one step
@@ -228,12 +228,12 @@ class TestPSS10StressMechanismIntegration:
         event = generate_stress_event(rng)
 
         # Should only have controllability and overload
-        assert hasattr(event, 'controllability')
-        assert hasattr(event, 'overload')
+        assert hasattr(event, "controllability")
+        assert hasattr(event, "overload")
 
         # Should not have predictability or magnitude
-        assert not hasattr(event, 'predictability')
-        assert not hasattr(event, 'magnitude')
+        assert not hasattr(event, "predictability")
+        assert not hasattr(event, "magnitude")
 
         # All values should be in valid range
         assert 0 <= event.controllability <= 1
@@ -243,10 +243,7 @@ class TestPSS10StressMechanismIntegration:
         """Test that apply_weights function works without predictability."""
 
         # Create stress event without predictability or magnitude
-        event = StressEvent(
-            controllability=0.6,
-            overload=0.4
-        )
+        event = StressEvent(controllability=0.6, overload=0.4)
 
         # Create weights (without omega_p)
         weights = AppraisalWeights(omega_c=1.0, omega_o=1.0, bias=0.0, gamma=6.0)
@@ -287,10 +284,12 @@ class TestPSS10StressMechanismIntegration:
         # If stress event triggered (challenge > 0 or hindrance > 0), then PSS-10 should be updated
         if challenge > 0 or hindrance > 0:
             # Stress event occurred, so PSS-10 should be updated
-            pss10_updated = (agent.pss10 != initial_pss10 or
-                           agent.pss10_responses != initial_responses or
-                           agent.stress_controllability != initial_stress_levels[0] or
-                           agent.stress_overload != initial_stress_levels[1])
+            pss10_updated = (
+                agent.pss10 != initial_pss10
+                or agent.pss10_responses != initial_responses
+                or agent.stress_controllability != initial_stress_levels[0]
+                or agent.stress_overload != initial_stress_levels[1]
+            )
             assert pss10_updated, "PSS-10 or stress levels should be updated when stress event occurs"
         else:
             # No stress event occurred (threshold not met), which is also valid
@@ -314,14 +313,13 @@ class TestPSS10StressMechanismIntegration:
         agent = Person(model)
 
         # Store initial state
-        initial_stress = agent.current_stress
-        initial_pss10 = agent.pss10
 
         # Simulate daily PSS-10 scores being collected
         agent.daily_pss10_scores = [15, 18, 20, 22]  # Moderate stress scores
 
         # Patch step to ensure PSS-10 consolidation happens
-        with patch.object(agent, 'step') as mock_step:
+        with patch.object(agent, "step") as mock_step:
+
             def side_effect():
                 # Simulate the consolidation logic from step()
                 if agent.daily_pss10_scores:
@@ -331,10 +329,12 @@ class TestPSS10StressMechanismIntegration:
                     # Update stress from daily PSS-10 with smoothing
                     new_stress_level = rounded_score / 40.0
                     smoothing_factor = 0.7
-                    agent.current_stress = (smoothing_factor * new_stress_level +
-                                           (1.0 - smoothing_factor) * agent.current_stress)
+                    agent.current_stress = (
+                        smoothing_factor * new_stress_level + (1.0 - smoothing_factor) * agent.current_stress
+                    )
                 # Clear daily scores
                 agent.daily_pss10_scores = []
+
             mock_step.side_effect = side_effect
 
             # Execute step
@@ -389,7 +389,7 @@ def run_all_tests():
         TestAgentPSS10Initialization(),
         TestAgentPSS10StepIntegration(),
         TestStressLevelPSS10Mapping(),
-        TestPSS10StressMechanismIntegration()
+        TestPSS10StressMechanismIntegration(),
     ]
 
     total_tests = 0
@@ -400,7 +400,7 @@ def run_all_tests():
         print(f"\n{class_name}:")
 
         # Get all test methods
-        test_methods = [method for method in dir(test_class) if method.startswith('test_')]
+        test_methods = [method for method in dir(test_class) if method.startswith("test_")]
 
         for test_method in test_methods:
             total_tests += 1

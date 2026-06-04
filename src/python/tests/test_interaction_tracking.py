@@ -18,9 +18,8 @@ Test Coverage Areas:
 6. DataCollector Integration Tests - Test data collection and aggregation
 """
 
-import pytest
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.model import StressModel
 
@@ -45,8 +44,8 @@ class TestAgentInitialization:
         agent = Person(model)
 
         # Verify attributes exist and are initialized to 0
-        assert hasattr(agent, 'daily_interactions')
-        assert hasattr(agent, 'daily_support_exchanges')
+        assert hasattr(agent, "daily_interactions")
+        assert hasattr(agent, "daily_support_exchanges")
         assert agent.daily_interactions == 0
         assert agent.daily_support_exchanges == 0
 
@@ -54,15 +53,15 @@ class TestAgentInitialization:
         """Test interaction tracking attributes with custom configuration."""
         model = MockModel(seed=42)
         config = {
-            'initial_resilience_mean': 0.8,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.2,
-            'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.9,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.3,
-            'coping_success_rate': 0.7,
-            'subevents_per_day': 5
+            "initial_resilience_mean": 0.8,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_mean": 0.2,
+            "initial_affect_sd": 0.1,
+            "initial_resources_mean": 0.9,
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.3,
+            "coping_success_rate": 0.7,
+            "subevents_per_day": 5,
         }
 
         agent = Person(model, config)
@@ -74,15 +73,15 @@ class TestAgentInitialization:
     def test_interaction_attributes_reproducible_initialization(self):
         """Test that interaction tracking initialization is reproducible with same seed."""
         config = {
-            'initial_resilience_mean': 0.7,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.1,
-            'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.7,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_mean": 0.1,
+            "initial_affect_sd": 0.1,
+            "initial_resources_mean": 0.6,
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         # Two agents with same model seed should have identical interaction tracking
@@ -103,34 +102,48 @@ class TestInteractionTracking:
     def test_interaction_tracking_increment(self):
         """Test that daily_interactions increments when interact() is called."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Mock neighbors for interaction
-        neighbor = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        neighbor = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
         model.grid.get_neighbors.return_value = [neighbor]
 
         # Initial state
-        initial_interactions = agent.daily_interactions
-        initial_support_exchanges = agent.daily_support_exchanges
 
         # Execute interaction
         result = agent.interact()
 
         # The counter increment happens in step(), not interact()
         # But we can test that interact() returns proper result structure
-        assert 'support_exchange' in result
-        assert 'affect_change' in result
-        assert 'resilience_change' in result
+        assert "support_exchange" in result
+        assert "affect_change" in result
+        assert "resilience_change" in result
 
     def test_interaction_tracking_no_neighbors(self):
         """Test interaction tracking when no neighbors are present."""
@@ -146,7 +159,7 @@ class TestInteractionTracking:
         result = agent.interact()
 
         # Should return indication of no interaction
-        assert result['support_exchange'] == False
+        assert not result["support_exchange"]
         assert agent.daily_interactions == initial_interactions  # Should not increment
 
     def test_interaction_tracking_bounds_checking(self):
@@ -159,12 +172,20 @@ class TestInteractionTracking:
         agent.daily_support_exchanges = 999999
 
         # Mock neighbor for interaction
-        neighbor = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        neighbor = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
         model.grid.get_neighbors.return_value = [neighbor]
 
         # Execute interaction
@@ -185,18 +206,34 @@ class TestSupportExchangeDetection:
         model = MockModel(seed=42)
 
         # Create agents with different affect/resilience levels
-        agent1 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
-        agent2 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent1 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
+        agent2 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Setup neighbor relationship
         model.grid.get_neighbors.return_value = [agent2]
@@ -212,7 +249,6 @@ class TestSupportExchangeDetection:
         # Calculate changes that would result from the mocked interaction
         original_affect = agent1.affect
         original_resilience = agent1.resilience
-        original_resources = agent1.resources
 
         # Simulate the changes that process_interaction would produce
         new_affect = 0.1  # agent1's new affect
@@ -233,38 +269,54 @@ class TestSupportExchangeDetection:
         # Test the support exchange detection logic directly
         support_threshold = 0.05
         support_exchange = (
-            affect_change > support_threshold or
-            resilience_change > support_threshold or
-            resource_transfer > support_threshold or
-            partner_affect_change > support_threshold or
-            partner_resilience_change > support_threshold or
-            received_resources > support_threshold
+            affect_change > support_threshold
+            or resilience_change > support_threshold
+            or resource_transfer > support_threshold
+            or partner_affect_change > support_threshold
+            or partner_resilience_change > support_threshold
+            or received_resources > support_threshold
         )
 
         # Should detect support exchange due to significant positive changes
-        assert support_exchange == True
+        assert support_exchange
 
     def test_support_exchange_detection_below_threshold(self):
         """Test support exchange detection when changes are below 0.05 threshold."""
         model = MockModel(seed=42)
 
-        agent1 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
-        agent2 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent1 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
+        agent2 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         model.grid.get_neighbors.return_value = [agent2]
 
         # Mock interaction processing to return minor changes
-        with patch('src.python.agent.process_interaction') as mock_interact:
+        with patch("src.python.agent.process_interaction") as mock_interact:
             # Return changes below 0.05 threshold
             mock_interact.return_value = (0.02, 0.0, 0.51, 0.5)  # Small changes
 
@@ -273,25 +325,41 @@ class TestSupportExchangeDetection:
             result = agent1.interact()
 
             # Should not detect support exchange due to minor changes
-            assert result['support_exchange'] == False
+            assert not result["support_exchange"]
             assert agent1.daily_support_exchanges == initial_support_exchanges
 
     def test_support_exchange_detection_mixed_changes(self):
         """Test support exchange detection with mixed positive and negative changes."""
         model = MockModel(seed=42)
 
-        agent1 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
-        agent2 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent1 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
+        agent2 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         model.grid.get_neighbors.return_value = [agent2]
 
@@ -306,7 +374,6 @@ class TestSupportExchangeDetection:
         # Calculate changes that would result from the mocked interaction
         original_affect = agent1.affect
         original_resilience = agent1.resilience
-        original_resources = agent1.resources
 
         # Simulate the changes that process_interaction would produce
         new_affect = 0.1  # agent1's new affect
@@ -327,33 +394,49 @@ class TestSupportExchangeDetection:
         # Test the support exchange detection logic directly
         support_threshold = 0.05
         support_exchange = (
-            affect_change > support_threshold or
-            resilience_change > support_threshold or
-            resource_transfer > support_threshold or
-            partner_affect_change > support_threshold or
-            partner_resilience_change > support_threshold or
-            received_resources > support_threshold
+            affect_change > support_threshold
+            or resilience_change > support_threshold
+            or resource_transfer > support_threshold
+            or partner_affect_change > support_threshold
+            or partner_resilience_change > support_threshold
+            or received_resources > support_threshold
         )
 
         # Should detect support exchange because agent1 benefited significantly
-        assert support_exchange == True
+        assert support_exchange
 
     def test_support_exchange_detection_threshold_exactly(self):
         """Test support exchange detection at exactly 0.05 threshold."""
         model = MockModel(seed=42)
 
-        agent1 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
-        agent2 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent1 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
+        agent2 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         model.grid.get_neighbors.return_value = [agent2]
 
@@ -368,7 +451,6 @@ class TestSupportExchangeDetection:
         # Calculate changes that would result from the mocked interaction
         original_affect = agent1.affect
         original_resilience = agent1.resilience
-        original_resources = agent1.resources
 
         # Simulate the changes that process_interaction would produce
         new_affect = 0.051  # agent1's new affect
@@ -389,16 +471,16 @@ class TestSupportExchangeDetection:
         # Test the support exchange detection logic directly
         support_threshold = 0.05
         support_exchange = (
-            affect_change > support_threshold or
-            resilience_change > support_threshold or
-            resource_transfer > support_threshold or
-            partner_affect_change > support_threshold or
-            partner_resilience_change > support_threshold or
-            received_resources > support_threshold
+            affect_change > support_threshold
+            or resilience_change > support_threshold
+            or resource_transfer > support_threshold
+            or partner_affect_change > support_threshold
+            or partner_resilience_change > support_threshold
+            or received_resources > support_threshold
         )
 
         # Should detect support exchange above 0.05 threshold
-        assert support_exchange == True
+        assert support_exchange
 
 
 class TestDailyReset:
@@ -423,15 +505,23 @@ class TestDailyReset:
     def test_daily_reset_validation_error(self):
         """Test that daily reset method exists and can be called."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Verify method exists
-        assert hasattr(agent, '_daily_reset')
+        assert hasattr(agent, "_daily_reset")
         assert callable(agent._daily_reset)
 
         # Set non-zero values
@@ -447,12 +537,20 @@ class TestDailyReset:
     def test_daily_reset_preserves_other_attributes(self):
         """Test that daily reset only affects interaction counters, not other attributes."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_resilience_mean': 0.7, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.2, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.8, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.7,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.2,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.8,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Set various attribute values
         agent.resilience = 0.7
@@ -470,7 +568,7 @@ class TestDailyReset:
         assert agent.resilience == 0.7  # Should be preserved
         # Affect may be adjusted by homeostatic mechanisms, so check it's still reasonable
         assert -1.0 <= agent.affect <= 1.0  # Should be in valid range
-        assert agent.resources == 0.8    # Should be preserved
+        assert agent.resources == 0.8  # Should be preserved
 
     def test_daily_reset_tracking(self):
         """Test that daily reset properly tracks the last reset day."""
@@ -490,12 +588,20 @@ class TestEdgeCases:
     def test_no_interactions_scenario(self):
         """Test behavior when agent has no interactions throughout the day."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # No neighbors available
         model.grid.get_neighbors.return_value = []
@@ -503,9 +609,10 @@ class TestEdgeCases:
         # Simulate multiple step() calls with no interactions
         for day in range(10):
             # Mock step to only do interactions (no stress events)
-            with patch('src.python.agent.sample_poisson', return_value=1), \
-                 patch.object(agent, 'stressful_event') as mock_stress:
-
+            with (
+                patch("src.python.agent.sample_poisson", return_value=1),
+                patch.object(agent, "stressful_event") as mock_stress,
+            ):
                 mock_stress.return_value = (0.0, 0.0)  # No stress
                 agent.step()
                 agent._daily_reset(current_day=day)
@@ -518,20 +625,36 @@ class TestEdgeCases:
     def test_maximum_interactions_scenario(self):
         """Test behavior with maximum possible interactions."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Mock neighbor for interaction
-        neighbor = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        neighbor = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
         model.grid.get_neighbors.return_value = [neighbor]
 
         # Simulate many interactions
@@ -547,18 +670,34 @@ class TestEdgeCases:
         """Test support exchange detection with negative changes."""
         model = MockModel(seed=42)
 
-        agent1 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
-        agent2 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent1 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
+        agent2 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         model.grid.get_neighbors.return_value = [agent2]
 
@@ -566,7 +705,6 @@ class TestEdgeCases:
         # Calculate changes that would result from the mocked interaction
         original_affect = agent1.affect
         original_resilience = agent1.resilience
-        original_resources = agent1.resources
 
         # Simulate the changes that process_interaction would produce
         new_affect = -0.1  # agent1's new affect
@@ -587,33 +725,49 @@ class TestEdgeCases:
         # Test the support exchange detection logic directly
         support_threshold = 0.05
         support_exchange = (
-            affect_change > support_threshold or
-            resilience_change > support_threshold or
-            resource_transfer > support_threshold or
-            partner_affect_change > support_threshold or
-            partner_resilience_change > support_threshold or
-            received_resources > support_threshold
+            affect_change > support_threshold
+            or resilience_change > support_threshold
+            or resource_transfer > support_threshold
+            or partner_affect_change > support_threshold
+            or partner_resilience_change > support_threshold
+            or received_resources > support_threshold
         )
 
         # Should not detect support exchange when both decline
-        assert support_exchange == False
+        assert not support_exchange
 
     def test_zero_change_support_detection(self):
         """Test support exchange detection with zero changes."""
         model = MockModel(seed=42)
 
-        agent1 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
-        agent2 = Person(model, {
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent1 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
+        agent2 = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         model.grid.get_neighbors.return_value = [agent2]
 
@@ -621,7 +775,6 @@ class TestEdgeCases:
         # Calculate changes that would result from the mocked interaction
         original_affect = agent1.affect
         original_resilience = agent1.resilience
-        original_resources = agent1.resources
 
         # Simulate the changes that process_interaction would produce
         new_affect = 0.0  # agent1's new affect (same as original)
@@ -642,16 +795,16 @@ class TestEdgeCases:
         # Test the support exchange detection logic directly
         support_threshold = 0.05
         support_exchange = (
-            affect_change > support_threshold or
-            resilience_change > support_threshold or
-            resource_transfer > support_threshold or
-            partner_affect_change > support_threshold or
-            partner_resilience_change > support_threshold or
-            received_resources > support_threshold
+            affect_change > support_threshold
+            or resilience_change > support_threshold
+            or resource_transfer > support_threshold
+            or partner_affect_change > support_threshold
+            or partner_resilience_change > support_threshold
+            or received_resources > support_threshold
         )
 
         # Should not detect support exchange with no changes
-        assert support_exchange == False
+        assert not support_exchange
 
 
 class TestDataCollectorIntegration:
@@ -669,12 +822,12 @@ class TestDataCollectorIntegration:
         model_data = model.datacollector.get_model_vars_dataframe()
 
         # Should have collected interaction data
-        assert 'social_interactions' in model_data.columns
-        assert 'support_exchanges' in model_data.columns
+        assert "social_interactions" in model_data.columns
+        assert "support_exchanges" in model_data.columns
 
         # Values should be non-negative
-        assert model_data['social_interactions'].iloc[0] >= 0
-        assert model_data['support_exchanges'].iloc[0] >= 0
+        assert model_data["social_interactions"].iloc[0] >= 0
+        assert model_data["support_exchanges"].iloc[0] >= 0
 
     def test_datacollector_agent_level_data(self):
         """Test that DataCollector can access agent interaction attributes."""
@@ -685,13 +838,13 @@ class TestDataCollectorIntegration:
         model.step()
 
         # Get agent data
-        agent_data = model.datacollector.get_agent_vars_dataframe()
+        model.datacollector.get_agent_vars_dataframe()
 
         # Agent data should not include interaction tracking (agent reporters don't include them)
         # But model data should aggregate them
         model_data = model.datacollector.get_model_vars_dataframe()
-        assert 'social_interactions' in model_data.columns
-        assert 'support_exchanges' in model_data.columns
+        assert "social_interactions" in model_data.columns
+        assert "support_exchanges" in model_data.columns
 
     def test_datacollector_aggregation_accuracy(self):
         """Test that DataCollector aggregation matches manual calculation."""
@@ -710,8 +863,8 @@ class TestDataCollectorIntegration:
 
         # Get DataCollector results
         model_data = model.datacollector.get_model_vars_dataframe()
-        collected_interactions = model_data['social_interactions'].iloc[0]
-        collected_support_exchanges = model_data['support_exchanges'].iloc[0]
+        model_data["social_interactions"].iloc[0]
+        model_data["support_exchanges"].iloc[0]
 
         # Should match manual calculation (before reset)
         # Note: DataCollector collects before daily reset, so it gets the day's totals
@@ -731,12 +884,12 @@ class TestDataCollectorIntegration:
 
         # Should have consistent data for all time steps
         assert len(model_data) == 3  # Three days of data
-        assert 'social_interactions' in model_data.columns
-        assert 'support_exchanges' in model_data.columns
+        assert "social_interactions" in model_data.columns
+        assert "support_exchanges" in model_data.columns
 
         # All values should be non-negative
-        assert all(model_data['social_interactions'] >= 0)
-        assert all(model_data['support_exchanges'] >= 0)
+        assert all(model_data["social_interactions"] >= 0)
+        assert all(model_data["support_exchanges"] >= 0)
 
 
 class TestConfigurationIntegration:
@@ -745,30 +898,46 @@ class TestConfigurationIntegration:
     def test_interaction_tracking_with_different_subevents(self):
         """Test interaction tracking with different numbers of subevents per day."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
-        neighbor = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        neighbor = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
         model.grid.get_neighbors.return_value = [neighbor]
 
         # Test with different subevent counts
         for subevents in [1, 5, 10]:
-            with patch('src.python.agent.sample_poisson', return_value=subevents):
+            with patch("src.python.agent.sample_poisson", return_value=subevents):
                 # Reset counters before each test
                 agent.daily_interactions = 0
                 agent.daily_support_exchanges = 0
 
                 # Mock stress events to focus on interactions
-                with patch.object(agent, 'stressful_event') as mock_stress:
+                with patch.object(agent, "stressful_event") as mock_stress:
                     mock_stress.return_value = (0.0, 0.0)
 
                     agent.step()
@@ -784,33 +953,42 @@ class TestConfigurationIntegration:
     def test_interaction_tracking_with_mixed_actions(self):
         """Test interaction tracking when actions include both interactions and stress events."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
-        neighbor = Person(model, {
-            'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0, 'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.6, 'initial_resources_sd': 0.1,
-            'stress_probability': 0.5, 'coping_success_rate': 0.5, 'subevents_per_day': 3
-        })
+        neighbor = Person(
+            model,
+            {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
         model.grid.get_neighbors.return_value = [neighbor]
 
         # Mock specific sequence of actions
-        action_sequence = ["interact", "stress", "interact", "interact", "stress"]
 
-        with patch('src.python.agent.sample_poisson', return_value=5), \
-             patch('src.python.agent.random') as mock_random:
-
-            # Mock shuffle to preserve our sequence
-            mock_random.shuffle = lambda x: None
-            mock_random.choice = lambda x: x[0]  # Always return first element
-
+        with patch("src.python.agent.sample_poisson", return_value=5):
             # Mock stress events
-            with patch.object(agent, 'stressful_event') as mock_stress:
+            with patch.object(agent, "stressful_event") as mock_stress:
                 mock_stress.return_value = (0.3, 0.2)
 
                 agent.step()

@@ -16,8 +16,7 @@ Test Coverage:
 """
 
 import pytest
-import numpy as np
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from src.python.agent import Person
 from src.python.model import StressModel
@@ -49,8 +48,8 @@ class TestDailyResetFunctionality:
         agent.baseline_affect = 0.0
         agent.baseline_resilience = 0.5
         agent.daily_stress_events = [
-            {'stress_level': 0.2, 'coped_successfully': True},
-            {'stress_level': 0.4, 'coped_successfully': False}
+            {"stress_level": 0.2, "coped_successfully": True},
+            {"stress_level": 0.4, "coped_successfully": False},
         ]
         agent.stress_history = []
         agent.consecutive_hindrances = 2
@@ -83,10 +82,10 @@ class TestBasicResetFunctionality(TestDailyResetFunctionality):
     def test_reset_with_various_counter_values(self, sample_agent):
         """Test reset functionality with different initial counter values."""
         test_cases = [
-            (0, 0),      # Already zero
-            (1, 1),      # Small values
-            (100, 50),   # Large values
-            (1000, 999), # Very large values
+            (0, 0),  # Already zero
+            (1, 1),  # Small values
+            (100, 50),  # Large values
+            (1000, 999),  # Very large values
         ]
 
         for interactions, support_exchanges in test_cases:
@@ -99,7 +98,9 @@ class TestBasicResetFunctionality(TestDailyResetFunctionality):
 
             # Verify reset
             assert sample_agent.daily_interactions == 0, f"daily_interactions should be 0, was {interactions}"
-            assert sample_agent.daily_support_exchanges == 0, f"daily_support_exchanges should be 0, was {support_exchanges}"
+            assert (
+                sample_agent.daily_support_exchanges == 0
+            ), f"daily_support_exchanges should be 0, was {support_exchanges}"
 
     def test_no_exceptions_during_reset(self, sample_agent):
         """Test that reset completes without exceptions."""
@@ -135,8 +136,12 @@ class TestAttributePreservation(TestDailyResetFunctionality):
         # Verify preservation (affect and current_stress are modified by reset functions)
         assert sample_agent.resilience == original_resilience, "resilience should be preserved during reset"
         assert sample_agent.resources == original_resources, "resources should be preserved during reset"
-        assert sample_agent.baseline_affect == original_baseline_affect, "baseline_affect should be preserved during reset"
-        assert sample_agent.baseline_resilience == original_baseline_resilience, "baseline_resilience should be preserved during reset"
+        assert (
+            sample_agent.baseline_affect == original_baseline_affect
+        ), "baseline_affect should be preserved during reset"
+        assert (
+            sample_agent.baseline_resilience == original_baseline_resilience
+        ), "baseline_resilience should be preserved during reset"
 
         # Verify that affect reset function was called (affect should change toward baseline)
         assert sample_agent.affect != 0.2 or sample_agent.affect == 0.2, "affect reset function should be called"
@@ -153,7 +158,9 @@ class TestAttributePreservation(TestDailyResetFunctionality):
         sample_agent._daily_reset(current_day=1)
 
         # Verify preservation
-        assert sample_agent.protective_factors == original_protective_factors, "protective_factors should be preserved during reset"
+        assert (
+            sample_agent.protective_factors == original_protective_factors
+        ), "protective_factors should be preserved during reset"
 
     def test_pss10_attributes_preserved(self, sample_agent):
         """Test that PSS-10 attributes are preserved during reset."""
@@ -168,9 +175,15 @@ class TestAttributePreservation(TestDailyResetFunctionality):
 
         # Verify preservation
         assert sample_agent.pss10 == original_pss10, "pss10 should be preserved during reset"
-        assert sample_agent.stress_controllability == original_stress_controllability, "stress_controllability should be preserved during reset"
-        assert sample_agent.stress_overload == original_stress_overload, "stress_overload should be preserved during reset"
-        assert sample_agent.pss10_responses == original_pss10_responses, "pss10_responses should be preserved during reset"
+        assert (
+            sample_agent.stress_controllability == original_stress_controllability
+        ), "stress_controllability should be preserved during reset"
+        assert (
+            sample_agent.stress_overload == original_stress_overload
+        ), "stress_overload should be preserved during reset"
+        assert (
+            sample_agent.pss10_responses == original_pss10_responses
+        ), "pss10_responses should be preserved during reset"
 
     def test_stress_history_updated(self, sample_agent):
         """Test that stress history is properly updated during reset."""
@@ -182,18 +195,20 @@ class TestAttributePreservation(TestDailyResetFunctionality):
 
         # Verify stress history was updated
         assert len(sample_agent.stress_history) == 1, "stress_history should contain one entry after reset"
-        assert sample_agent.stress_history[0]['day'] == 1, "stress_history should record the correct day"
-        assert 'avg_stress' in sample_agent.stress_history[0], "stress_history should contain avg_stress"
-        assert 'max_stress' in sample_agent.stress_history[0], "stress_history should contain max_stress"
-        assert 'num_events' in sample_agent.stress_history[0], "stress_history should contain num_events"
-        assert 'coping_success_rate' in sample_agent.stress_history[0], "stress_history should contain coping_success_rate"
+        assert sample_agent.stress_history[0]["day"] == 1, "stress_history should record the correct day"
+        assert "avg_stress" in sample_agent.stress_history[0], "stress_history should contain avg_stress"
+        assert "max_stress" in sample_agent.stress_history[0], "stress_history should contain max_stress"
+        assert "num_events" in sample_agent.stress_history[0], "stress_history should contain num_events"
+        assert (
+            "coping_success_rate" in sample_agent.stress_history[0]
+        ), "stress_history should contain coping_success_rate"
 
     def test_daily_stress_events_reset(self, sample_agent):
         """Test that daily_stress_events is reset after recording to history."""
         # Set some stress events
         sample_agent.daily_stress_events = [
-            {'stress_level': 0.2, 'coped_successfully': True},
-            {'stress_level': 0.4, 'coped_successfully': False}
+            {"stress_level": 0.2, "coped_successfully": True},
+            {"stress_level": 0.4, "coped_successfully": False},
         ]
 
         # Apply reset
@@ -222,8 +237,8 @@ class TestResetTiming(TestDailyResetFunctionality):
             agent.daily_support_exchanges = 3
 
         # Store initial values before step
-        initial_interactions = [agent.daily_interactions for agent in model_with_agents.agents]
-        initial_support_exchanges = [agent.daily_support_exchanges for agent in model_with_agents.agents]
+        [agent.daily_interactions for agent in model_with_agents.agents]
+        [agent.daily_support_exchanges for agent in model_with_agents.agents]
 
         # Execute one model step (which includes data collection and reset)
         model_with_agents.step()
@@ -234,7 +249,9 @@ class TestResetTiming(TestDailyResetFunctionality):
 
         # All agents should have counters reset to 0
         assert all(count == 0 for count in final_interactions), "All agents should have daily_interactions reset to 0"
-        assert all(count == 0 for count in final_support_exchanges), "All agents should have daily_support_exchanges reset to 0"
+        assert all(
+            count == 0 for count in final_support_exchanges
+        ), "All agents should have daily_support_exchanges reset to 0"
 
         # Verify that other attributes are preserved
         for agent in model_with_agents.agents:
@@ -282,7 +299,7 @@ class TestEdgeCases(TestDailyResetFunctionality):
     def test_reset_with_maximum_values(self, sample_agent):
         """Test reset with maximum possible counter values."""
         # Set maximum values
-        sample_agent.daily_interactions = float('inf')
+        sample_agent.daily_interactions = float("inf")
         sample_agent.daily_support_exchanges = 999999
 
         # Apply reset
@@ -343,7 +360,7 @@ class TestIntegrationWithModel(TestDailyResetFunctionality):
 
         # Manually call the daily reset as the model would
         for agent in model_with_agents.agents:
-            if hasattr(agent, '_daily_reset'):
+            if hasattr(agent, "_daily_reset"):
                 agent._daily_reset(model_with_agents.day)
 
         # Verify all agents were reset
@@ -365,7 +382,7 @@ class TestIntegrationWithModel(TestDailyResetFunctionality):
 
         # Apply daily reset - should not raise exception
         for agent in model_with_agents.agents:
-            if hasattr(agent, '_daily_reset'):
+            if hasattr(agent, "_daily_reset"):
                 agent._daily_reset(model_with_agents.day)
 
         # Mock agent should be unchanged since it has no _daily_reset method
@@ -383,7 +400,7 @@ class TestIntegrationWithModel(TestDailyResetFunctionality):
 
         # Apply daily reset
         for agent in model_with_agents.agents:
-            if hasattr(agent, '_daily_reset'):
+            if hasattr(agent, "_daily_reset"):
                 agent._daily_reset(model_with_agents.day)
 
         # Person agents should be reset
@@ -411,7 +428,7 @@ class TestMultiAgentScenarios(TestDailyResetFunctionality):
 
         # Apply reset through model
         for agent in model_with_agents.agents:
-            if hasattr(agent, '_daily_reset'):
+            if hasattr(agent, "_daily_reset"):
                 agent._daily_reset(model_with_agents.day)
 
         # Verify all agents were reset
@@ -432,7 +449,7 @@ class TestMultiAgentScenarios(TestDailyResetFunctionality):
 
         # Reset only some agents
         for agent in agents_to_reset:
-            if hasattr(agent, '_daily_reset'):
+            if hasattr(agent, "_daily_reset"):
                 agent._daily_reset(model_with_agents.day)
 
         # Verify only reset agents were affected
@@ -453,9 +470,8 @@ class TestMultiAgentScenarios(TestDailyResetFunctionality):
             agent.daily_support_exchanges = (i + 1) * 2
 
         # Reset all agents concurrently (simulating real scenario)
-        reset_futures = []
         for agent in model_with_agents.agents:
-            if hasattr(agent, '_daily_reset'):
+            if hasattr(agent, "_daily_reset"):
                 # In real scenario, this would be concurrent
                 agent._daily_reset(model_with_agents.day)
 
@@ -483,10 +499,10 @@ class TestResetValidation(TestDailyResetFunctionality):
 
             def __setattr__(self, key, value):
                 # Fail to set daily counters to 0, but allow other attributes
-                if key == 'daily_interactions' and value == 0:
+                if key == "daily_interactions" and value == 0:
                     # Don't actually set it to 0, keep the old value
                     return
-                elif key == 'daily_support_exchanges' and value == 0:
+                elif key == "daily_support_exchanges" and value == 0:
                     # Don't actually set it to 0, keep the old value
                     return
                 else:
@@ -543,7 +559,9 @@ class TestStressDecayAndAffectReset(TestDailyResetFunctionality):
         sample_agent._daily_reset(current_day=1)
 
         # Stress should be reduced (exact value depends on decay function)
-        assert sample_agent.current_stress <= initial_stress, "current_stress should be reduced or maintained during reset"
+        assert (
+            sample_agent.current_stress <= initial_stress
+        ), "current_stress should be reduced or maintained during reset"
         assert sample_agent.current_stress >= 0.0, "current_stress should not go below 0"
 
     def test_affect_reset_to_baseline(self, sample_agent):
@@ -553,12 +571,11 @@ class TestStressDecayAndAffectReset(TestDailyResetFunctionality):
         sample_agent.baseline_affect = 0.0
 
         # Apply reset
-        original_affect = sample_agent.affect
         sample_agent._daily_reset(current_day=1)
 
         # Affect should move toward baseline (exact behavior depends on reset function)
         # The important thing is that the reset function is called
-        assert hasattr(sample_agent, 'affect'), "affect should still exist after reset"
+        assert hasattr(sample_agent, "affect"), "affect should still exist after reset"
         assert isinstance(sample_agent.affect, (int, float)), "affect should be numeric"
 
     def test_consecutive_hindrances_decay(self, sample_agent):
@@ -571,7 +588,9 @@ class TestStressDecayAndAffectReset(TestDailyResetFunctionality):
         sample_agent._daily_reset(current_day=1)
 
         # Consecutive hindrances should decay
-        assert sample_agent.consecutive_hindrances <= initial_hindrances, "consecutive_hindrances should decay or stay same"
+        assert (
+            sample_agent.consecutive_hindrances <= initial_hindrances
+        ), "consecutive_hindrances should decay or stay same"
         assert sample_agent.consecutive_hindrances >= 0.0, "consecutive_hindrances should not go below 0"
 
 

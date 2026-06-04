@@ -8,11 +8,19 @@ using pytest and dependency injection for reproducible testing.
 import pytest
 import numpy as np
 from src.python.stress_utils import (
-    generate_stress_event, process_stress_event, apply_weights,
-    compute_appraised_stress, evaluate_stress_threshold,
-    StressEvent, AppraisalWeights, ThresholdParams,
-    create_pss10_mapping, map_agent_stress_to_pss10, compute_pss10_score,
-    interpret_pss10_score, PSS10Item, sigmoid
+    generate_stress_event,
+    process_stress_event,
+    apply_weights,
+    evaluate_stress_threshold,
+    StressEvent,
+    AppraisalWeights,
+    ThresholdParams,
+    create_pss10_mapping,
+    map_agent_stress_to_pss10,
+    compute_pss10_score,
+    interpret_pss10_score,
+    PSS10Item,
+    sigmoid,
 )
 
 
@@ -44,12 +52,7 @@ class TestStressEventGeneration:
     def test_generate_stress_event_with_config(self):
         """Test stress event generation with custom configuration."""
         rng = np.random.default_rng(456)
-        config = {
-            'controllability_mean': 0.8,
-            'controllability_sd': 0.2,
-            'overload_mean': 0.6,
-            'overload_sd': 0.2
-        }
+        config = {"controllability_mean": 0.8, "controllability_sd": 0.2, "overload_mean": 0.6, "overload_sd": 0.2}
 
         # Generate multiple events and check statistical properties
         events = [generate_stress_event(rng=rng, config=config) for _ in range(1000)]
@@ -69,7 +72,7 @@ class TestStressAppraisal:
         """Test basic weight application for challenge/hindrance mapping."""
         event = StressEvent(
             controllability=1.0,  # High controllability
-            overload=0.0         # Low overload
+            overload=0.0,  # Low overload
         )
 
         weights = AppraisalWeights(omega_c=1.0, omega_o=1.0, bias=0.0, gamma=6.0)
@@ -113,27 +116,17 @@ class TestStressThreshold:
 
     def test_threshold_evaluation_basic(self):
         """Test basic threshold evaluation."""
-        threshold_params = ThresholdParams(
-            base_threshold=0.5,
-            challenge_scale=0.1,
-            hindrance_scale=0.2
-        )
+        threshold_params = ThresholdParams(base_threshold=0.5, challenge_scale=0.1, hindrance_scale=0.2)
 
         # Case 1: Stress below threshold
         is_stressed = evaluate_stress_threshold(
-            appraised_stress=0.3,
-            challenge=0.5,
-            hindrance=0.5,
-            threshold_params=threshold_params
+            appraised_stress=0.3, challenge=0.5, hindrance=0.5, threshold_params=threshold_params
         )
         assert not is_stressed
 
         # Case 2: Stress above threshold
         is_stressed = evaluate_stress_threshold(
-            appraised_stress=0.7,
-            challenge=0.5,
-            hindrance=0.5,
-            threshold_params=threshold_params
+            appraised_stress=0.7, challenge=0.5, hindrance=0.5, threshold_params=threshold_params
         )
         assert is_stressed
 
@@ -144,37 +137,31 @@ class TestStressThreshold:
         hindrance_scale = 0.3
 
         threshold_params = ThresholdParams(
-            base_threshold=base_threshold,
-            challenge_scale=challenge_scale,
-            hindrance_scale=hindrance_scale
+            base_threshold=base_threshold, challenge_scale=challenge_scale, hindrance_scale=hindrance_scale
         )
 
         # High challenge should increase effective threshold
-        effective_threshold_high_challenge = (
-            base_threshold + challenge_scale * 1.0 - hindrance_scale * 0.0
-        )
+        effective_threshold_high_challenge = base_threshold + challenge_scale * 1.0 - hindrance_scale * 0.0
 
         # High hindrance should decrease effective threshold
-        effective_threshold_high_hindrance = (
-            base_threshold + challenge_scale * 0.0 - hindrance_scale * 1.0
-        )
+        effective_threshold_high_hindrance = base_threshold + challenge_scale * 0.0 - hindrance_scale * 1.0
 
         assert effective_threshold_high_challenge > base_threshold
         assert effective_threshold_high_hindrance < base_threshold
 
         # Test actual evaluation
-        is_stressed_high_challenge = evaluate_stress_threshold(
+        evaluate_stress_threshold(
             appraised_stress=0.6,  # Above base threshold
-            challenge=1.0,         # High challenge
-            hindrance=0.0,         # Low hindrance
-            threshold_params=threshold_params
+            challenge=1.0,  # High challenge
+            hindrance=0.0,  # Low hindrance
+            threshold_params=threshold_params,
         )
 
-        is_stressed_high_hindrance = evaluate_stress_threshold(
+        evaluate_stress_threshold(
             appraised_stress=0.4,  # Below base threshold
-            challenge=0.0,         # Low challenge
-            hindrance=1.0,         # High hindrance
-            threshold_params=threshold_params
+            challenge=0.0,  # Low challenge
+            hindrance=1.0,  # High hindrance
+            threshold_params=threshold_params,
         )
 
         # High challenge might prevent stress even with high appraised stress
@@ -188,30 +175,17 @@ class TestCompleteStressProcessing:
     def test_process_stress_event_pipeline(self):
         """Test the complete stress event processing pipeline."""
         # Create a specific stress event
-        event = StressEvent(
-            controllability=0.8,
-            overload=0.2
-        )
+        event = StressEvent(controllability=0.8, overload=0.2)
 
-        threshold_params = ThresholdParams(
-            base_threshold=0.5,
-            challenge_scale=0.15,
-            hindrance_scale=0.25
-        )
+        threshold_params = ThresholdParams(base_threshold=0.5, challenge_scale=0.15, hindrance_scale=0.25)
 
-        weights = AppraisalWeights(
-            omega_c=1.0, omega_o=1.0,
-            bias=0.0, gamma=6.0
-        )
+        weights = AppraisalWeights(omega_c=1.0, omega_o=1.0, bias=0.0, gamma=6.0)
 
         rng = np.random.default_rng(789)
 
         # Process the event
         is_stressed, challenge, hindrance = process_stress_event(
-            event=event,
-            threshold_params=threshold_params,
-            weights=weights,
-            rng=rng
+            event=event, threshold_params=threshold_params, weights=weights, rng=rng
         )
 
         # Verify outputs are in valid ranges
@@ -260,13 +234,13 @@ class TestPSS10Mapping:
         assert not mapping[1].reverse_scored  # Item 1: not reverse scored
         assert not mapping[2].reverse_scored  # Item 2: not reverse scored
         assert not mapping[3].reverse_scored  # Item 3: not reverse scored
-        assert mapping[4].reverse_scored     # Item 4: reverse scored
-        assert mapping[5].reverse_scored     # Item 5: reverse scored
+        assert mapping[4].reverse_scored  # Item 4: reverse scored
+        assert mapping[5].reverse_scored  # Item 5: reverse scored
         assert not mapping[6].reverse_scored  # Item 6: not reverse scored
-        assert mapping[7].reverse_scored     # Item 7: reverse scored
-        assert mapping[8].reverse_scored     # Item 8: reverse scored
+        assert mapping[7].reverse_scored  # Item 7: reverse scored
+        assert mapping[8].reverse_scored  # Item 8: reverse scored
         assert not mapping[9].reverse_scored  # Item 9: not reverse scored
-        assert not mapping[10].reverse_scored # Item 10: not reverse scored
+        assert not mapping[10].reverse_scored  # Item 10: not reverse scored
 
         # Check that controllability items have appropriate weights
         assert mapping[2].weight_controllability > 0.5  # Item 2: high controllability weight
@@ -338,7 +312,9 @@ class TestPSS10Mapping:
         # Mixed responses
         responses_mixed = {1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 2, 7: 1, 8: 0, 9: 3, 10: 4}
         score_mixed = compute_pss10_score(responses_mixed)
-        expected_mixed = 0+1+2+(4-3)+(4-4)+2+(4-1)+(4-0)+3+4  # Apply reverse scoring: items 4,5,7,8 are reversed
+        expected_mixed = (
+            0 + 1 + 2 + (4 - 3) + (4 - 4) + 2 + (4 - 1) + (4 - 0) + 3 + 4
+        )  # Apply reverse scoring: items 4,5,7,8 are reversed
         assert score_mixed == expected_mixed
 
     def test_compute_pss10_score_missing_items(self):

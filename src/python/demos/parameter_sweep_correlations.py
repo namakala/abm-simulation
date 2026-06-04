@@ -21,18 +21,16 @@ import os
 import sys
 import numpy as np
 import pandas as pd
-from scipy import stats
-from pathlib import Path
 
 # Add project root to path for imports
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.model import StressModel
-from src.python.config import get_config
 
 # Try to import LHS sampler, fallback to random sampling
 try:
     from pyDOE import lhs
+
     HAS_PYDOE = True
 except ImportError:
     HAS_PYDOE = False
@@ -44,7 +42,7 @@ def latin_hypercube_sampling(n_samples, param_ranges):
     if HAS_PYDOE:
         # Use proper LHS
         n_params = len(param_ranges)
-        lhs_samples = lhs(n_params, samples=n_samples, criterion='maximin')
+        lhs_samples = lhs(n_params, samples=n_samples, criterion="maximin")
 
         samples = {}
         for i, (param_name, (min_val, max_val)) in enumerate(param_ranges.items()):
@@ -77,28 +75,28 @@ def run_simulation_with_params(params, n_agents=30, max_days=30, seed=42):
 
         # Get final agent data
         agent_data = model.get_agent_time_series_data()
-        final_epoch = agent_data[agent_data['Step'] == agent_data['Step'].max()]
+        final_epoch = agent_data[agent_data["Step"] == agent_data["Step"].max()]
 
         # Calculate key correlations
         correlations = {}
         key_pairs = [
-            ('pss10', 'current_stress'),
-            ('pss10', 'resilience'),
-            ('pss10', 'affect'),
-            ('pss10', 'resources'),
-            ('resilience', 'affect'),
-            ('resilience', 'resources'),
-            ('affect', 'resources'),
-            ('current_stress', 'affect'),
-            ('current_stress', 'resources')
+            ("pss10", "current_stress"),
+            ("pss10", "resilience"),
+            ("pss10", "affect"),
+            ("pss10", "resources"),
+            ("resilience", "affect"),
+            ("resilience", "resources"),
+            ("affect", "resources"),
+            ("current_stress", "affect"),
+            ("current_stress", "resources"),
         ]
 
         for var1, var2 in key_pairs:
             if var1 in final_epoch.columns and var2 in final_epoch.columns:
                 corr = final_epoch[var1].corr(final_epoch[var2])
-                correlations[f'{var1}_{var2}'] = corr
+                correlations[f"{var1}_{var2}"] = corr
             else:
-                correlations[f'{var1}_{var2}'] = np.nan
+                correlations[f"{var1}_{var2}"] = np.nan
 
         return correlations
 
@@ -111,19 +109,18 @@ def run_simulation_with_params(params, n_agents=30, max_days=30, seed=42):
                 os.environ[key] = value
 
 
-
 def validate_correlations(correlations):
     """Validate that correlations are within expected theoretical ranges."""
     expected_ranges = {
-        'pss10_current_stress': (0.2, 0.9),       # Positive
-        'pss10_resilience': (-1.0, 0.5),          # Negative to weak
-        'pss10_affect': (-0.3, 0.3),              # Weak
-        'pss10_resources': (-0.5, 0.5),           # Variable
-        'resilience_affect': (-0.5, 0.5),         # Variable
-        'resilience_resources': (-1.0, 1.0),      # Any correlation
-        'affect_resources': (-0.2, 0.4),          # Weak
-        'current_stress_affect': (-0.2, 0.2),     # Weak
-        'current_stress_resources': (-0.8, 0.1)   # Negative to weak
+        "pss10_current_stress": (0.2, 0.9),  # Positive
+        "pss10_resilience": (-1.0, 0.5),  # Negative to weak
+        "pss10_affect": (-0.3, 0.3),  # Weak
+        "pss10_resources": (-0.5, 0.5),  # Variable
+        "resilience_affect": (-0.5, 0.5),  # Variable
+        "resilience_resources": (-1.0, 1.0),  # Any correlation
+        "affect_resources": (-0.2, 0.4),  # Weak
+        "current_stress_affect": (-0.2, 0.2),  # Weak
+        "current_stress_resources": (-0.8, 0.1),  # Negative to weak
     }
 
     violations = []
@@ -143,11 +140,11 @@ def main():
 
     # Define parameter ranges to sweep
     param_ranges = {
-        'omega_c': (0.5, 2.0),      # Controllability weight
-        'omega_o': (0.5, 2.0),      # Overload weight
-        'gamma': (3.0, 10.0),       # Sigmoid steepness
-        'lambda_shock': (0.01, 0.2), # Shock arrival rate
-        'alpha_soc': (0.01, 0.2)    # Social support efficacy
+        "omega_c": (0.5, 2.0),  # Controllability weight
+        "omega_o": (0.5, 2.0),  # Overload weight
+        "gamma": (3.0, 10.0),  # Sigmoid steepness
+        "lambda_shock": (0.01, 0.2),  # Shock arrival rate
+        "alpha_soc": (0.01, 0.2),  # Social support efficacy
     }
 
     # Number of parameter sets to test
@@ -167,7 +164,7 @@ def main():
 
     # Run simulations for each parameter set
     for i, params in param_df.iterrows():
-        print(f"Running simulation {i+1}/{n_samples} with params: {params.to_dict()}")
+        print(f"Running simulation {i + 1}/{n_samples} with params: {params.to_dict()}")
 
         try:
             # Run simulation
@@ -179,8 +176,8 @@ def main():
             # Store results
             result = params.to_dict()
             result.update(correlations)
-            result['violations'] = len(violations)
-            result['violation_details'] = '; '.join(violations) if violations else 'None'
+            result["violations"] = len(violations)
+            result["violation_details"] = "; ".join(violations) if violations else "None"
             results.append(result)
 
             if violations:

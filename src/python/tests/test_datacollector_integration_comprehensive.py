@@ -16,22 +16,17 @@ Tests cover:
 8. Cross-validation between different data access methods
 """
 
-import json
 import os
 import tempfile
 import time
-import unittest.mock
 import pytest
 import numpy as np
 import pandas as pd
 import networkx as nx
 import psutil
-from pathlib import Path
-from unittest.mock import Mock, patch
 
 from mesa.space import NetworkGrid
 from src.python.model import StressModel
-from src.python.config import get_config
 
 
 class TestDataCollectorEndToEndIntegration:
@@ -44,7 +39,6 @@ class TestDataCollectorEndToEndIntegration:
 
         # Track initial state
         initial_agents = len(model.agents)
-        initial_day = model.day
 
         # Run complete simulation
         while model.running:
@@ -69,12 +63,26 @@ class TestDataCollectorEndToEndIntegration:
 
         # Verify all expected metrics are present
         expected_model_metrics = [
-            'avg_pss10', 'avg_resilience', 'avg_affect', 'coping_success_rate',
-            'avg_resources', 'avg_stress', 'social_support_rate', 'stress_events',
-            'network_density', 'stress_prevalence', 'low_resilience', 'high_resilience',
-            'avg_challenge', 'avg_hindrance', 'challenge_hindrance_ratio',
-            'avg_consecutive_hindrances', 'total_stress_events', 'successful_coping',
-            'social_interactions', 'support_exchanges'
+            "avg_pss10",
+            "avg_resilience",
+            "avg_affect",
+            "coping_success_rate",
+            "avg_resources",
+            "avg_stress",
+            "social_support_rate",
+            "stress_events",
+            "network_density",
+            "stress_prevalence",
+            "low_resilience",
+            "high_resilience",
+            "avg_challenge",
+            "avg_hindrance",
+            "challenge_hindrance_ratio",
+            "avg_consecutive_hindrances",
+            "total_stress_events",
+            "successful_coping",
+            "social_interactions",
+            "support_exchanges",
         ]
 
         for metric in expected_model_metrics:
@@ -87,9 +95,9 @@ class TestDataCollectorEndToEndIntegration:
     def test_simulation_with_different_configurations(self):
         """Test simulation runs with different model configurations."""
         configurations = [
-            {'N': 5, 'max_days': 3, 'seed': 42},
-            {'N': 15, 'max_days': 4, 'seed': 123},
-            {'N': 8, 'max_days': 6, 'seed': 456},
+            {"N": 5, "max_days": 3, "seed": 42},
+            {"N": 15, "max_days": 4, "seed": 123},
+            {"N": 8, "max_days": 6, "seed": 456},
         ]
 
         for config in configurations:
@@ -103,11 +111,15 @@ class TestDataCollectorEndToEndIntegration:
             model_data = model.datacollector.get_model_vars_dataframe()
             agent_data = model.datacollector.get_agent_vars_dataframe()
 
-            expected_model_records = config['max_days']
-            expected_agent_records = config['N'] * config['max_days']
+            expected_model_records = config["max_days"]
+            expected_agent_records = config["N"] * config["max_days"]
 
-            assert len(model_data) == expected_model_records, f"Config {config}: Expected {expected_model_records} model records"
-            assert len(agent_data) == expected_agent_records, f"Config {config}: Expected {expected_agent_records} agent records"
+            assert (
+                len(model_data) == expected_model_records
+            ), f"Config {config}: Expected {expected_model_records} model records"
+            assert (
+                len(agent_data) == expected_agent_records
+            ), f"Config {config}: Expected {expected_agent_records} agent records"
 
             # Verify data quality
             assert not model_data.isnull().any().any(), f"Config {config}: Model data should not contain null values"
@@ -126,20 +138,26 @@ class TestDataCollectorEndToEndIntegration:
                 model_data = model.datacollector.get_model_vars_dataframe()
                 agent_data = model.datacollector.get_agent_vars_dataframe()
 
-                checkpoints.append({
-                    'day': day,
-                    'model_records': len(model_data),
-                    'agent_records': len(agent_data),
-                    'data_quality': not (model_data.isnull().any().any() or agent_data.isnull().any().any())
-                })
+                checkpoints.append(
+                    {
+                        "day": day,
+                        "model_records": len(model_data),
+                        "agent_records": len(agent_data),
+                        "data_quality": not (model_data.isnull().any().any() or agent_data.isnull().any().any()),
+                    }
+                )
 
         # Verify checkpoints
         assert len(checkpoints) == 4, "Should have 4 checkpoints"
 
         for checkpoint in checkpoints:
-            assert checkpoint['model_records'] == checkpoint['day'] + 1, f"Model records should match days at checkpoint {checkpoint['day']}"
-            assert checkpoint['agent_records'] == 20 * (checkpoint['day'] + 1), f"Agent records should match at checkpoint {checkpoint['day']}"
-            assert checkpoint['data_quality'], f"Data quality should be maintained at checkpoint {checkpoint['day']}"
+            assert (
+                checkpoint["model_records"] == checkpoint["day"] + 1
+            ), f"Model records should match days at checkpoint {checkpoint['day']}"
+            assert checkpoint["agent_records"] == 20 * (
+                checkpoint["day"] + 1
+            ), f"Agent records should match at checkpoint {checkpoint['day']}"
+            assert checkpoint["data_quality"], f"Data quality should be maintained at checkpoint {checkpoint['day']}"
 
         # Final verification
         final_model_data = model.datacollector.get_model_vars_dataframe()
@@ -229,7 +247,7 @@ class TestDataCollectorExportFunctionality:
             pd.testing.assert_frame_equal(
                 original_model_data.reset_index(drop=True),
                 exported_model_data.reset_index(drop=True),
-                check_dtype=False  # Allow minor dtype differences from CSV serialization
+                check_dtype=False,  # Allow minor dtype differences from CSV serialization
             )
 
             # For agent data, we need to handle the MultiIndex structure
@@ -240,9 +258,7 @@ class TestDataCollectorExportFunctionality:
             # Compare key columns (excluding index columns that may differ in naming)
             common_columns = [col for col in original_agent_reset.columns if col in exported_agent_reset.columns]
             pd.testing.assert_frame_equal(
-                original_agent_reset[common_columns],
-                exported_agent_reset[common_columns],
-                check_dtype=False
+                original_agent_reset[common_columns], exported_agent_reset[common_columns], check_dtype=False
             )
 
     def test_export_with_missing_data(self):
@@ -288,8 +304,12 @@ class TestDataCollectorMultiAgentScenarios:
             expected_model_records = 3
             expected_agent_records = N * 3
 
-            assert len(model_data) == expected_model_records, f"N={N}: Should have {expected_model_records} model records"
-            assert len(agent_data) == expected_agent_records, f"N={N}: Should have {expected_agent_records} agent records"
+            assert (
+                len(model_data) == expected_model_records
+            ), f"N={N}: Should have {expected_model_records} model records"
+            assert (
+                len(agent_data) == expected_agent_records
+            ), f"N={N}: Should have {expected_agent_records} agent records"
 
             # Verify data quality scales
             assert not model_data.isnull().any().any(), f"N={N}: Model data should not contain null values"
@@ -299,9 +319,9 @@ class TestDataCollectorMultiAgentScenarios:
         """Test data collection with different network topologies."""
         # Test with different Watts-Strogatz parameters (ensure k < N)
         network_configs = [
-            {'watts_k': 2, 'watts_p': 0.1},
-            {'watts_k': 4, 'watts_p': 0.3},
-            {'watts_k': 6, 'watts_p': 0.5},
+            {"watts_k": 2, "watts_p": 0.1},
+            {"watts_k": 4, "watts_p": 0.3},
+            {"watts_k": 6, "watts_p": 0.5},
         ]
 
         for net_config in network_configs:
@@ -309,11 +329,7 @@ class TestDataCollectorMultiAgentScenarios:
             model = StressModel(N=12, max_days=3, seed=42)
 
             # Manually override network parameters after creation
-            model.grid = NetworkGrid(nx.watts_strogatz_graph(
-                n=12,
-                k=net_config['watts_k'],
-                p=net_config['watts_p']
-            ))
+            model.grid = NetworkGrid(nx.watts_strogatz_graph(n=12, k=net_config["watts_k"], p=net_config["watts_p"]))
 
             while model.running:
                 model.step()
@@ -326,8 +342,10 @@ class TestDataCollectorMultiAgentScenarios:
             assert len(agent_data) == 36, f"Network config {net_config}: Should have 36 agent records"
 
             # Verify network density is reasonable for the configuration
-            network_density_values = model_data['network_density'].values
-            assert all(0 <= d <= 1 for d in network_density_values), f"Network config {net_config}: Network density should be in [0,1]"
+            network_density_values = model_data["network_density"].values
+            assert all(
+                0 <= d <= 1 for d in network_density_values
+            ), f"Network config {net_config}: Network density should be in [0,1]"
 
     def test_agents_with_different_initial_conditions(self):
         """Test data collection with agents having different initial states."""
@@ -351,23 +369,23 @@ class TestDataCollectorMultiAgentScenarios:
         agent_data = model.datacollector.get_agent_vars_dataframe()
 
         # Check that we have diversity in resilience values
-        resilience_values = agent_data['resilience'].values
+        resilience_values = agent_data["resilience"].values
         unique_resilience = np.unique(resilience_values)
         assert len(unique_resilience) > 5, "Should have diverse resilience values across agents"
 
         # Check that we have both positive and negative affect values
-        affect_values = agent_data['affect'].values
+        affect_values = agent_data["affect"].values
         assert np.min(affect_values) < -0.1, "Should have negative affect values"
         assert np.max(affect_values) > 0.1, "Should have positive affect values"
 
         # Verify model-level aggregations reflect the diversity
-        model_data = model.datacollector.get_model_vars_dataframe()
+        model.datacollector.get_model_vars_dataframe()
         resilience_std_values = []
 
         for day in range(4):
-            day_data = agent_data[agent_data.index.get_level_values('Step') == day + 1]
+            day_data = agent_data[agent_data.index.get_level_values("Step") == day + 1]
             if not day_data.empty:
-                resilience_std_values.append(day_data['resilience'].std())
+                resilience_std_values.append(day_data["resilience"].std())
 
         # Should have some variation in resilience across days
         assert any(std > 0.1 for std in resilience_std_values), "Should have variation in resilience across agents"
@@ -389,28 +407,34 @@ class TestDataCollectorTimeSeriesAnalysis:
             model_data = model.datacollector.get_model_vars_dataframe()
             agent_data = model.datacollector.get_agent_vars_dataframe()
 
-            step_data.append({
-                'day': day,
-                'model_records': len(model_data),
-                'agent_records': len(agent_data),
-                'model_data_shape': model_data.shape,
-                'agent_data_shape': agent_data.shape
-            })
+            step_data.append(
+                {
+                    "day": day,
+                    "model_records": len(model_data),
+                    "agent_records": len(agent_data),
+                    "model_data_shape": model_data.shape,
+                    "agent_data_shape": agent_data.shape,
+                }
+            )
 
         # Verify continuity
         for i, data in enumerate(step_data):
             expected_model_records = i + 1
             expected_agent_records = 8 * (i + 1)
 
-            assert data['model_records'] == expected_model_records, f"Step {i}: Expected {expected_model_records} model records"
-            assert data['agent_records'] == expected_agent_records, f"Step {i}: Expected {expected_agent_records} agent records"
+            assert (
+                data["model_records"] == expected_model_records
+            ), f"Step {i}: Expected {expected_model_records} model records"
+            assert (
+                data["agent_records"] == expected_agent_records
+            ), f"Step {i}: Expected {expected_agent_records} agent records"
 
         # Verify final data integrity
         final_model_data = model.datacollector.get_model_vars_dataframe()
-        final_agent_data = model.datacollector.get_agent_vars_dataframe()
+        model.datacollector.get_agent_vars_dataframe()
 
         # Check for reasonable time series patterns
-        resilience_trend = final_model_data['avg_resilience'].values
+        resilience_trend = final_model_data["avg_resilience"].values
         assert len(resilience_trend) == 10, "Should have 10 days of resilience data"
 
         # Resilience should be relatively stable (not extreme fluctuations)
@@ -431,7 +455,7 @@ class TestDataCollectorTimeSeriesAnalysis:
 
         direct_agent_data = model.datacollector.get_agent_vars_dataframe()
         method_agent_data = model.get_agent_vars_dataframe()
-        agent_time_series_data = model.get_agent_time_series_data()
+        model.get_agent_time_series_data()
 
         # Verify consistency between direct and method access
         pd.testing.assert_frame_equal(direct_model_data, method_model_data)
@@ -439,7 +463,7 @@ class TestDataCollectorTimeSeriesAnalysis:
 
         # Verify time series methods return same data
         pd.testing.assert_frame_equal(direct_model_data, time_series_data)
-        #pd.testing.assert_frame_equal(direct_agent_data, agent_time_series_data)
+        # pd.testing.assert_frame_equal(direct_agent_data, agent_time_series_data)
 
     def test_cross_validation_of_aggregated_metrics(self):
         """Test that aggregated metrics are consistent across different calculations."""
@@ -454,23 +478,23 @@ class TestDataCollectorTimeSeriesAnalysis:
 
         # Cross-validate key metrics for the final day
         final_day = 3
-        final_day_agent_data = agent_data[agent_data.index.get_level_values('Step') == final_day]
+        final_day_agent_data = agent_data[agent_data.index.get_level_values("Step") == final_day]
 
         # Test resilience aggregation
-        manual_avg_resilience = final_day_agent_data['resilience'].mean()
-        collected_avg_resilience = model_data.loc[final_day - 1, 'avg_resilience']  # 0-based indexing
+        manual_avg_resilience = final_day_agent_data["resilience"].mean()
+        collected_avg_resilience = model_data.loc[final_day - 1, "avg_resilience"]  # 0-based indexing
 
         assert abs(manual_avg_resilience - collected_avg_resilience) < 1e-10, "Resilience aggregation should match"
 
         # Test affect aggregation
-        manual_avg_affect = final_day_agent_data['affect'].mean()
-        collected_avg_affect = model_data.loc[final_day - 1, 'avg_affect']
+        manual_avg_affect = final_day_agent_data["affect"].mean()
+        collected_avg_affect = model_data.loc[final_day - 1, "avg_affect"]
 
         assert abs(manual_avg_affect - collected_avg_affect) < 1e-10, "Affect aggregation should match"
 
         # Test stress prevalence calculation
-        manual_stress_prevalence = (final_day_agent_data['pss10'] >= 27).sum() / len(final_day_agent_data)
-        collected_stress_prevalence = model_data.loc[final_day - 1, 'stress_prevalence']
+        manual_stress_prevalence = (final_day_agent_data["pss10"] >= 27).sum() / len(final_day_agent_data)
+        collected_stress_prevalence = model_data.loc[final_day - 1, "stress_prevalence"]
 
         assert abs(manual_stress_prevalence - collected_stress_prevalence) < 1e-10, "Stress prevalence should match"
 
@@ -486,8 +510,8 @@ class TestDataCollectorErrorHandling:
         agents_list = list(model.agents)
         for i in [0, 2, 5]:  # Corrupt every 3rd agent
             agent = agents_list[i]
-            agent.resilience = float('nan')  # Introduce NaN values
-            agent.affect = float('inf')      # Introduce infinite values
+            agent.resilience = float("nan")  # Introduce NaN values
+            agent.affect = float("inf")  # Introduce infinite values
 
         # Should handle corrupted data gracefully
         model.step()
@@ -500,13 +524,13 @@ class TestDataCollectorErrorHandling:
         assert not agent_data.empty, "Agent data should be collected despite corrupted agents"
 
         # Check that non-corrupted agents still have valid data
-        valid_agents_data = agent_data[agent_data.index.get_level_values('AgentID') != 0]
-        valid_agents_data = valid_agents_data[valid_agents_data.index.get_level_values('AgentID') != 2]
-        valid_agents_data = valid_agents_data[valid_agents_data.index.get_level_values('AgentID') != 5]
+        valid_agents_data = agent_data[agent_data.index.get_level_values("AgentID") != 0]
+        valid_agents_data = valid_agents_data[valid_agents_data.index.get_level_values("AgentID") != 2]
+        valid_agents_data = valid_agents_data[valid_agents_data.index.get_level_values("AgentID") != 5]
 
         # Valid agents should have finite values
-        assert np.all(np.isfinite(valid_agents_data['resilience'])), "Valid agents should have finite resilience"
-        assert np.all(np.isfinite(valid_agents_data['affect'])), "Valid agents should have finite affect"
+        assert np.all(np.isfinite(valid_agents_data["resilience"])), "Valid agents should have finite resilience"
+        assert np.all(np.isfinite(valid_agents_data["affect"])), "Valid agents should have finite affect"
 
     def test_simulation_recovery_from_datacollector_errors(self):
         """Test simulation recovery when DataCollector encounters errors."""
@@ -568,8 +592,8 @@ class TestDataCollectorErrorHandling:
         # Test population summary with minimal data
         summary = model.get_population_summary()
         assert isinstance(summary, dict), "Should return summary dictionary"
-        assert 'num_agents' in summary, "Summary should contain agent count"
-        assert summary['num_agents'] == 4, "Summary should reflect correct agent count"
+        assert "num_agents" in summary, "Summary should contain agent count"
+        assert summary["num_agents"] == 4, "Summary should reflect correct agent count"
 
 
 class TestDataCollectorPerformanceValidation:
@@ -588,7 +612,9 @@ class TestDataCollectorPerformanceValidation:
         collection_time = time.time() - start_time
 
         # Verify reasonable performance (adjust threshold as needed)
-        assert collection_time < 30.0, f"Large simulation should complete in reasonable time, took {collection_time:.2f}s"
+        assert (
+            collection_time < 30.0
+        ), f"Large simulation should complete in reasonable time, took {collection_time:.2f}s"
 
         # Verify data integrity for large simulation
         model_data = model.datacollector.get_model_vars_dataframe()
@@ -653,19 +679,19 @@ class TestDataCollectorIntegrationValidation:
             expected_agent_records = 7 * (day + 1)
 
             sync_check = {
-                'day': day,
-                'model_records_match': len(model_data) == expected_model_records,
-                'agent_records_match': len(agent_data) == expected_agent_records,
-                'data_quality_ok': not (model_data.isnull().any().any() or agent_data.isnull().any().any())
+                "day": day,
+                "model_records_match": len(model_data) == expected_model_records,
+                "agent_records_match": len(agent_data) == expected_agent_records,
+                "data_quality_ok": not (model_data.isnull().any().any() or agent_data.isnull().any().any()),
             }
 
             sync_checks.append(sync_check)
 
         # Verify all synchronization checks passed
         for check in sync_checks:
-            assert check['model_records_match'], f"Model records should match at day {check['day']}"
-            assert check['agent_records_match'], f"Agent records should match at day {check['day']}"
-            assert check['data_quality_ok'], f"Data quality should be maintained at day {check['day']}"
+            assert check["model_records_match"], f"Model records should match at day {check['day']}"
+            assert check["agent_records_match"], f"Agent records should match at day {check['day']}"
+            assert check["data_quality_ok"], f"Data quality should be maintained at day {check['day']}"
 
     def test_cross_component_data_consistency(self):
         """Test consistency between different data collection components."""
@@ -683,18 +709,28 @@ class TestDataCollectorIntegrationValidation:
         final_model_data = model_data.iloc[-1]  # Last day
 
         # Test consistency between model data and population summary
-        assert abs(final_model_data['avg_resilience'] - population_summary['avg_resilience']) < 1e-10, "Resilience should match between sources"
-        assert abs(final_model_data['avg_affect'] - population_summary['avg_affect']) < 1e-10, "Affect should match between sources"
-        assert abs(final_model_data['avg_resources'] - population_summary['avg_resources']) < 1e-10, "Resources should match between sources"
+        assert (
+            abs(final_model_data["avg_resilience"] - population_summary["avg_resilience"]) < 1e-10
+        ), "Resilience should match between sources"
+        assert (
+            abs(final_model_data["avg_affect"] - population_summary["avg_affect"]) < 1e-10
+        ), "Affect should match between sources"
+        assert (
+            abs(final_model_data["avg_resources"] - population_summary["avg_resources"]) < 1e-10
+        ), "Resources should match between sources"
 
         # Test consistency with agent data aggregations
-        final_day_agent_data = agent_data[agent_data.index.get_level_values('Step') == 4]  # Mesa uses 1-based indexing
+        final_day_agent_data = agent_data[agent_data.index.get_level_values("Step") == 4]  # Mesa uses 1-based indexing
 
-        manual_avg_resilience = final_day_agent_data['resilience'].mean()
-        assert abs(manual_avg_resilience - final_model_data['avg_resilience']) < 1e-10, "Agent aggregation should match model data"
+        manual_avg_resilience = final_day_agent_data["resilience"].mean()
+        assert (
+            abs(manual_avg_resilience - final_model_data["avg_resilience"]) < 1e-10
+        ), "Agent aggregation should match model data"
 
-        manual_avg_affect = final_day_agent_data['affect'].mean()
-        assert abs(manual_avg_affect - final_model_data['avg_affect']) < 1e-10, "Affect aggregation should match model data"
+        manual_avg_affect = final_day_agent_data["affect"].mean()
+        assert (
+            abs(manual_avg_affect - final_model_data["avg_affect"]) < 1e-10
+        ), "Affect aggregation should match model data"
 
     def test_data_collection_pipeline_completeness(self):
         """Test completeness of the entire data collection pipeline."""
@@ -705,8 +741,8 @@ class TestDataCollectorIntegrationValidation:
             model.step()
 
         # Test complete pipeline: collection → access → export → analysis
-        model_data = model.datacollector.get_model_vars_dataframe()
-        agent_data = model.datacollector.get_agent_vars_dataframe()
+        model.datacollector.get_model_vars_dataframe()
+        model.datacollector.get_agent_vars_dataframe()
 
         # Test export pipeline
         with tempfile.TemporaryDirectory() as temp_dir:

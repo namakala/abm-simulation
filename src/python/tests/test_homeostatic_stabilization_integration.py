@@ -11,7 +11,6 @@ import numpy as np
 from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.model import StressModel
-from src.python.config import get_config
 
 
 def mock_normal(*args, **kwargs):
@@ -57,34 +56,36 @@ class TestHomeostaticStabilizationIntegration:
             assert -1.0 <= agent.affect <= 1.0
             assert 0.0 <= agent.resilience <= 1.0
             assert 0.0 <= agent.resources <= 1.0
-            assert hasattr(agent, 'baseline_affect')
-            assert hasattr(agent, 'baseline_resilience')
+            assert hasattr(agent, "baseline_affect")
+            assert hasattr(agent, "baseline_resilience")
 
     def test_affect_resilience_respond_to_disruptions(self):
         """Test that affect and resilience still respond to external disruptions despite homeostasis."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Record initial state
-        initial_affect = agent.affect
-        initial_resilience = agent.resilience
 
         # Mock a stress event that should cause disruption
-        with patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch('src.python.agent.process_stress_event') as mock_process_stress, \
-             patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch.object(agent, '_rng') as mock_rng:
-
+        with (
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.agent.process_stress_event") as mock_process_stress,
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch.object(agent, "_rng") as mock_rng,
+        ):
             # Create a high-overload stress event that will trigger stress
             mock_stress_event.return_value = Mock()
             mock_stress_event.return_value.controllability = 0.2
@@ -119,17 +120,20 @@ class TestHomeostaticStabilizationIntegration:
     def test_monotonic_drift_elimination_over_multiple_days(self):
         """Test that monotonic drift is eliminated over multiple days."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Set up agent with extreme values to test drift elimination
         agent.affect = 0.8  # Far above baseline
@@ -141,10 +145,11 @@ class TestHomeostaticStabilizationIntegration:
         affect_values = [agent.affect]
         resilience_values = [agent.resilience]
 
-        with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch.object(agent, '_rng') as mock_rng:
-
+        with (
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch.object(agent, "_rng") as mock_rng,
+        ):
             # Mock no events for several days
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
@@ -182,29 +187,35 @@ class TestHomeostaticStabilizationIntegration:
         model = MockModel(seed=42)
 
         # Create agents with different homeostatic rates
-        agent_low = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent_low = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
-        agent_high = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent_high = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Set extreme starting values
         for agent in [agent_low, agent_high]:
@@ -217,11 +228,12 @@ class TestHomeostaticStabilizationIntegration:
         low_rate_affect = [agent_low.affect]
         high_rate_affect = [agent_high.affect]
 
-        with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch.object(agent_low, '_rng') as mock_rng_low, \
-             patch.object(agent_high, '_rng') as mock_rng_high:
-
+        with (
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch.object(agent_low, "_rng") as mock_rng_low,
+            patch.object(agent_high, "_rng") as mock_rng_high,
+        ):
             # Mock no events
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
@@ -258,27 +270,28 @@ class TestHomeostaticStabilizationIntegration:
     def test_homeostasis_doesnt_interfere_with_daily_logic(self):
         """Test that homeostatic mechanism doesn't interfere with existing daily update logic."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Track all state changes through one step
-        initial_affect = agent.affect
-        initial_resilience = agent.resilience
-        initial_resources = agent.resources
 
-        with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-             patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-             patch.object(agent, '_rng') as mock_rng:
-
+        with (
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch.object(agent, "_rng") as mock_rng,
+        ):
             # Mock no events for clean testing
             mock_sample_poisson.return_value = 0  # No subevents
             mock_stress_event.return_value = None  # No stress events
@@ -321,26 +334,30 @@ class TestHomeostaticStabilizationIntegration:
     def test_realistic_affect_resilience_trajectories_possible(self):
         """Test that agents can still experience realistic affect/resilience trajectories."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Track trajectories over multiple days with no events (simpler test)
         affect_trajectory = [agent.affect]
         resilience_trajectory = [agent.resilience]
 
-        with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-               patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-               patch.object(agent, '_rng') as mock_rng:
-
+        with (
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch.object(agent, "_rng") as mock_rng,
+        ):
             # Mock no events for multiple days
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
@@ -373,39 +390,43 @@ class TestHomeostaticStabilizationIntegration:
     def test_extreme_stress_events_and_recovery_patterns(self):
         """Test edge cases with extreme stress events and recovery patterns."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Test extreme stress scenario
         agent.affect = 0.9  # Very high positive affect initially
         agent.resilience = 0.1  # Very low resilience initially
 
-        with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-               patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-               patch('src.python.agent.process_stress_event') as mock_process_stress, \
-               patch.object(agent, '_rng') as mock_rng:
-
+        with (
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.agent.process_stress_event") as mock_process_stress,
+            patch.object(agent, "_rng") as mock_rng,
+        ):
             # Create extreme stress event
             mock_sample_poisson.return_value = 1
             # Mock the multivariate_normal call in affect_utils and PSS-10 computation
             mock_rng.multivariate_normal.return_value = np.array([0.5, 0.5])
             mock_rng.random.return_value = 0.5  # Consistent random values
-            mock_rng.choice.return_value = 'stress'
+            mock_rng.choice.return_value = "stress"
             # Mock normal calls that happen in PSS-10 item response generation
             mock_rng.normal.side_effect = mock_normal
 
             mock_stress_event.return_value = Mock()
             mock_stress_event.return_value.controllability = 0.0  # No control
-            mock_stress_event.return_value.overload = 1.0      # Maximum overload
+            mock_stress_event.return_value.overload = 1.0  # Maximum overload
 
             mock_process_stress.return_value = (True, 0.0, 1.0)  # Pure hindrance
 
@@ -421,10 +442,11 @@ class TestHomeostaticStabilizationIntegration:
         recovery_resilience = [agent.resilience]
 
         # Run recovery days with no events
-        with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-               patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-               patch.object(agent, '_rng') as mock_rng:
-
+        with (
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch.object(agent, "_rng") as mock_rng,
+        ):
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
             mock_rng.random.return_value = 0.5
@@ -453,7 +475,9 @@ class TestHomeostaticStabilizationIntegration:
         # Values should not show extreme monotonic drift away from baselines
         # Allow some temporary deviation but should show overall stabilization trend
         assert final_affect_distance <= max(0.5, initial_affect_distance + 0.2)  # More lenient for extreme cases
-        assert final_resilience_distance <= max(0.5, initial_resilience_distance + 0.2)  # More lenient for extreme cases
+        assert final_resilience_distance <= max(
+            0.5, initial_resilience_distance + 0.2
+        )  # More lenient for extreme cases
 
     def test_homeostatic_behavior_with_social_network(self):
         """Test homeostatic behavior in the context of a full social network."""
@@ -462,7 +486,7 @@ class TestHomeostaticStabilizationIntegration:
 
         # Set up specific agent states to test social influence with homeostasis
         agents = list(model.agents)
-        agents[0].affect = 0.8   # Very high affect
+        agents[0].affect = 0.8  # Very high affect
         agents[0].resilience = 0.2  # Very low resilience
 
         for i in range(1, 5):
@@ -490,8 +514,8 @@ class TestHomeostaticStabilizationIntegration:
         final_resiliences = [agent.resilience for agent in model.agents]
 
         # Variance should not have increased dramatically (homeostasis working)
-        affect_variance = np.var(final_affects)
-        resilience_variance = np.var(final_resiliences)
+        np.var(final_affects)
+        np.var(final_resiliences)
 
         # Values should be reasonable (not all at extremes)
         assert not all(abs(a) > 0.8 for a in final_affects)  # Not all at extremes
@@ -504,17 +528,20 @@ class TestHomeostaticStabilizationEdgeCases:
     def test_zero_homeostatic_rate_effect(self):
         """Test behavior when homeostatic rate is effectively zero."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Set extreme values
         agent.affect = 0.9
@@ -526,10 +553,11 @@ class TestHomeostaticStabilizationEdgeCases:
         affect_values = [agent.affect]
         resilience_values = [agent.resilience]
 
-        with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-                patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-                patch.object(agent, '_rng') as mock_rng:
-
+        with (
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch.object(agent, "_rng") as mock_rng,
+        ):
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
             # Mock the multivariate_normal call in affect_utils and PSS-10 computation
@@ -551,17 +579,20 @@ class TestHomeostaticStabilizationEdgeCases:
     def test_maximum_homeostatic_rate_behavior(self):
         """Test behavior with maximum homeostatic rate."""
         model = MockModel(seed=42)
-        agent = Person(model, {
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
-        })
+        agent = Person(
+            model,
+            {
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.1,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.1,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        )
 
         # Set extreme values
         agent.affect = -0.8
@@ -570,10 +601,11 @@ class TestHomeostaticStabilizationEdgeCases:
         affect_values = [agent.affect]
         resilience_values = [agent.resilience]
 
-        with patch('src.python.agent.sample_poisson') as mock_sample_poisson, \
-            patch('src.python.agent.generate_stress_event') as mock_stress_event, \
-            patch.object(agent, '_rng') as mock_rng:
-
+        with (
+            patch("src.python.agent.sample_poisson") as mock_sample_poisson,
+            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch.object(agent, "_rng") as mock_rng,
+        ):
             mock_sample_poisson.return_value = 0
             mock_stress_event.return_value = None
             # Mock the multivariate_normal call in affect_utils and PSS-10 computation

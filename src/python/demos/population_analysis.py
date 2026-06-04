@@ -12,18 +12,17 @@ from pathlib import Path
 from typing import Dict, List, Any
 from dataclasses import dataclass
 
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.agent import Person
-from src.python.config import get_config
-from src.python.math_utils import sigmoid_transform, tanh_transform, create_rng
 
 # Optional visualization imports
 try:
     import matplotlib.pyplot as plt
     import seaborn as sns
+
     HAS_MATPLOTLIB = True
-    plt.style.use('default')
+    plt.style.use("default")
     sns.set_palette("husl")
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -32,6 +31,7 @@ except ImportError:
 @dataclass
 class PopulationStatistics:
     """Container for population statistical analysis results."""
+
     mean: float
     std: float
     min_val: float
@@ -66,10 +66,7 @@ class PopulationAnalyzer:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_agent_population(
-        self,
-        config: Dict[str, Any],
-        population_size: int,
-        seed_start: int = 1000
+        self, config: Dict[str, Any], population_size: int, seed_start: int = 1000
     ) -> List[Person]:
         """Generate a population of agents."""
         agents = []
@@ -109,7 +106,7 @@ class PopulationAnalyzer:
             kurtosis=kurtosis,
             cv=cv,
             range=np.max(values) - np.min(values),
-            iqr=np.percentile(values, 75) - np.percentile(values, 25)
+            iqr=np.percentile(values, 75) - np.percentile(values, 25),
         )
 
     def _compute_skewness(self, values: np.ndarray) -> float:
@@ -119,7 +116,7 @@ class PopulationAnalyzer:
         if std_val == 0 or len(values) < 3:
             return 0.0
         n = len(values)
-        skewness = (n / ((n-1) * (n-2))) * np.sum(((values - mean_val) / std_val) ** 3)
+        skewness = (n / ((n - 1) * (n - 2))) * np.sum(((values - mean_val) / std_val) ** 3)
         return skewness
 
     def _compute_kurtosis(self, values: np.ndarray) -> float:
@@ -129,8 +126,8 @@ class PopulationAnalyzer:
         if std_val == 0 or len(values) < 4:
             return 0.0
         n = len(values)
-        kurtosis = (n * (n+1)) / ((n-1) * (n-2) * (n-3)) * np.sum(((values - mean_val) / std_val) ** 4)
-        kurtosis -= 3 * (n-1)**2 / ((n-2) * (n-3))
+        kurtosis = (n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3)) * np.sum(((values - mean_val) / std_val) ** 4)
+        kurtosis -= 3 * (n - 1) ** 2 / ((n - 2) * (n - 3))
         return kurtosis
 
     def analyze_population(self, agents: List[Person]) -> Dict[str, PopulationStatistics]:
@@ -144,10 +141,10 @@ class PopulationAnalyzer:
         pss10_values = np.array([agent.pss10 for agent in agents])
 
         return {
-            'resilience': self.compute_population_statistics(resilience_values),
-            'affect': self.compute_population_statistics(affect_values),
-            'resources': self.compute_population_statistics(resources_values),
-            'pss10': self.compute_population_statistics(pss10_values)
+            "resilience": self.compute_population_statistics(resilience_values),
+            "affect": self.compute_population_statistics(affect_values),
+            "resources": self.compute_population_statistics(resources_values),
+            "pss10": self.compute_population_statistics(pss10_values),
         }
 
 
@@ -161,15 +158,15 @@ def main():
 
     # Standard configuration for demonstration
     demo_config = {
-        'initial_resilience_mean': 0.6,
-        'initial_resilience_sd': 0.15,
-        'initial_affect_mean': 0.1,
-        'initial_affect_sd': 0.25,
-        'initial_resources_mean': 0.7,
-        'initial_resources_sd': 0.12,
-        'stress_probability': 0.5,
-        'coping_success_rate': 0.5,
-        'subevents_per_day': 3
+        "initial_resilience_mean": 0.6,
+        "initial_resilience_sd": 0.15,
+        "initial_affect_mean": 0.1,
+        "initial_affect_sd": 0.25,
+        "initial_resources_mean": 0.7,
+        "initial_resources_sd": 0.12,
+        "stress_probability": 0.5,
+        "coping_success_rate": 0.5,
+        "subevents_per_day": 3,
     }
 
     print("Generating demonstration population (500 agents)...")
@@ -189,10 +186,7 @@ def main():
     # Test bounds enforcement
     print("\nTesting bounds enforcement...")
     all_in_bounds = all(
-        0 <= agent.resilience <= 1 and
-        -1 <= agent.affect <= 1 and
-        0 <= agent.resources <= 1
-        for agent in agents
+        0 <= agent.resilience <= 1 and -1 <= agent.affect <= 1 and 0 <= agent.resources <= 1 for agent in agents
     )
     print(f"✓ All agents within bounds: {all_in_bounds}")
 
@@ -212,34 +206,31 @@ def main():
     stats2 = analyzer.analyze_population(agents2)
 
     reproducible = (
-        abs(stats['resilience'].mean - stats2['resilience'].mean) < 1e-10 and
-        abs(stats['affect'].mean - stats2['affect'].mean) < 1e-10 and
-        abs(stats['resources'].mean - stats2['resources'].mean) < 1e-10
+        abs(stats["resilience"].mean - stats2["resilience"].mean) < 1e-10
+        and abs(stats["affect"].mean - stats2["affect"].mean) < 1e-10
+        and abs(stats["resources"].mean - stats2["resources"].mean) < 1e-10
     )
     print(f"✓ Reproducible with same seeds: {reproducible}")
 
     # Test edge cases
     print("\nTesting edge case handling...")
     extreme_config = {
-        'initial_resilience_mean': 2.0,  # Out of bounds mean
-        'initial_resilience_sd': 0.1,
-        'initial_affect_mean': -2.0,     # Out of bounds mean
-        'initial_affect_sd': 0.1,
-        'initial_resources_mean': -1.0,  # Out of bounds mean
-        'initial_resources_sd': 0.1,
-        'stress_probability': 0.5,
-        'coping_success_rate': 0.5,
-        'subevents_per_day': 3
+        "initial_resilience_mean": 2.0,  # Out of bounds mean
+        "initial_resilience_sd": 0.1,
+        "initial_affect_mean": -2.0,  # Out of bounds mean
+        "initial_affect_sd": 0.1,
+        "initial_resources_mean": -1.0,  # Out of bounds mean
+        "initial_resources_sd": 0.1,
+        "stress_probability": 0.5,
+        "coping_success_rate": 0.5,
+        "subevents_per_day": 3,
     }
 
     extreme_agents = analyzer.generate_agent_population(extreme_config, 100)
 
     # Verify bounds are still enforced despite extreme input parameters
     extreme_bounds_ok = all(
-        0 <= agent.resilience <= 1 and
-        -1 <= agent.affect <= 1 and
-        0 <= agent.resources <= 1
-        for agent in extreme_agents
+        0 <= agent.resilience <= 1 and -1 <= agent.affect <= 1 and 0 <= agent.resources <= 1 for agent in extreme_agents
     )
 
     print(f"✓ Bounds enforcement with extreme parameters: {extreme_bounds_ok}")

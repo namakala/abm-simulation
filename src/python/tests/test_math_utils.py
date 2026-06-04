@@ -8,11 +8,27 @@ with edge cases, boundary conditions, and reproducible testing.
 import pytest
 import numpy as np
 from src.python.math_utils import (
-    create_rng, clamp, normalize_to_range, sigmoid, softmax, sample_poisson,
-    sample_beta, sample_exponential, sample_normal, compute_running_average, compute_percentile,
-    compute_z_score, logistic_function, linear_interpolation, calculate_entropy,
-    normalize_probabilities, RNGConfig, tanh_transform, sigmoid_transform,
-    inverse_tanh_transform, inverse_sigmoid_transform
+    create_rng,
+    clamp,
+    normalize_to_range,
+    sigmoid,
+    softmax,
+    sample_poisson,
+    sample_beta,
+    sample_exponential,
+    sample_normal,
+    compute_running_average,
+    compute_percentile,
+    compute_z_score,
+    logistic_function,
+    linear_interpolation,
+    calculate_entropy,
+    normalize_probabilities,
+    RNGConfig,
+    tanh_transform,
+    sigmoid_transform,
+    inverse_tanh_transform,
+    inverse_sigmoid_transform,
 )
 
 
@@ -32,7 +48,7 @@ class TestRandomNumberGeneration:
         """Test RNG creation without seed."""
         rng = create_rng()
         assert rng is not None
-        assert hasattr(rng, 'random')
+        assert hasattr(rng, "random")
 
     def test_rng_config_dataclass(self):
         """Test RNGConfig dataclass."""
@@ -53,7 +69,7 @@ class TestClampingAndNormalization:
         """Test basic clamping functionality."""
         assert clamp(0.5) == 0.5  # Within default range
         assert clamp(-0.1) == 0.0  # Below minimum
-        assert clamp(1.5) == 1.0   # Above maximum
+        assert clamp(1.5) == 1.0  # Above maximum
 
     def test_clamp_custom_bounds(self):
         """Test clamping with custom bounds."""
@@ -163,7 +179,7 @@ class TestActivationFunctions:
         result = softmax(x)
 
         # All should be equal
-        expected = np.array([1/3, 1/3, 1/3])
+        expected = np.array([1 / 3, 1 / 3, 1 / 3])
         np.testing.assert_array_almost_equal(result, expected)
 
 
@@ -387,7 +403,7 @@ class TestMathematicalFunctions:
     def test_normalize_probabilities_softmax(self):
         """Test probability normalization with softmax method."""
         values = np.array([1.0, 2.0, 3.0])
-        probs = normalize_probabilities(values, method='softmax')
+        probs = normalize_probabilities(values, method="softmax")
 
         assert abs(np.sum(probs) - 1.0) < 1e-10
         assert np.all(probs > 0)
@@ -395,7 +411,7 @@ class TestMathematicalFunctions:
     def test_normalize_probabilities_clip(self):
         """Test probability normalization with clip method."""
         values = np.array([0.5, -0.1, 1.5])
-        probs = normalize_probabilities(values, method='clip')
+        probs = normalize_probabilities(values, method="clip")
 
         assert abs(np.sum(probs) - 1.0) < 1e-10
         assert np.all(probs >= 0)
@@ -403,7 +419,7 @@ class TestMathematicalFunctions:
     def test_normalize_probabilities_linear(self):
         """Test probability normalization with linear method."""
         values = np.array([1.0, 3.0, 2.0])
-        probs = normalize_probabilities(values, method='linear')
+        probs = normalize_probabilities(values, method="linear")
 
         assert abs(np.sum(probs) - 1.0) < 1e-10
         assert np.all(probs >= 0)
@@ -411,9 +427,9 @@ class TestMathematicalFunctions:
     def test_normalize_probabilities_identical_values(self):
         """Test probability normalization with identical values."""
         values = np.array([2.0, 2.0, 2.0])
-        probs = normalize_probabilities(values, method='linear')
+        probs = normalize_probabilities(values, method="linear")
 
-        expected = np.array([1/3, 1/3, 1/3])
+        expected = np.array([1 / 3, 1 / 3, 1 / 3])
         np.testing.assert_array_almost_equal(probs, expected)
 
     def test_normalize_probabilities_unknown_method(self):
@@ -421,7 +437,7 @@ class TestMathematicalFunctions:
         values = np.array([1.0, 2.0, 3.0])
 
         with pytest.raises(ValueError, match="Unknown normalization method"):
-            normalize_probabilities(values, method='unknown')
+            normalize_probabilities(values, method="unknown")
 
 
 class TestTransformationFunctions:
@@ -463,7 +479,7 @@ class TestTransformationFunctions:
 
         assert all(-1.0 <= r <= 1.0 for r in results)
         assert min(results) > -1.0  # Should be strictly greater than -1
-        assert max(results) < 1.0   # Should be strictly less than 1
+        assert max(results) < 1.0  # Should be strictly less than 1
 
     def test_tanh_transform_zero_std_special_case(self):
         """Test tanh transformation with zero standard deviation."""
@@ -547,7 +563,7 @@ class TestTransformationFunctions:
 
         assert all(0.0 <= r <= 1.0 for r in results)
         assert min(results) > 0.0  # Should be strictly greater than 0
-        assert max(results) < 1.0   # Should be strictly less than 1
+        assert max(results) < 1.0  # Should be strictly less than 1
 
     def test_sigmoid_transform_zero_std_special_case(self):
         """Test sigmoid transformation with zero standard deviation."""
@@ -728,20 +744,17 @@ class TestTransformationFunctions:
     def test_transformation_mathematical_correctness(self):
         """Test mathematical correctness of transformation functions."""
         # Test that transformation functions produce expected output ranges
-        rng = create_rng(42)
+        create_rng(42)
 
         # Test multiple parameter combinations
-        param_combinations = [
-            (0.0, 1.0),
-            (5.0, 2.0),
-            (-3.0, 0.5),
-            (100.0, 10.0)
-        ]
+        param_combinations = [(0.0, 1.0), (5.0, 2.0), (-3.0, 0.5), (100.0, 10.0)]
 
         for mean_val, std_val in param_combinations:
             # Generate samples
             tanh_samples = [tanh_transform(mean=mean_val, std=std_val, rng=create_rng(i)) for i in range(50)]
-            sigmoid_samples = [sigmoid_transform(mean=mean_val, std=std_val, rng=create_rng(i + 100)) for i in range(50)]
+            sigmoid_samples = [
+                sigmoid_transform(mean=mean_val, std=std_val, rng=create_rng(i + 100)) for i in range(50)
+            ]
 
             # Check bounds
             assert all(-1.0 <= s <= 1.0 for s in tanh_samples)
@@ -782,7 +795,7 @@ class TestTransformationFunctions:
     def test_transformation_functions_statistical_properties(self):
         """Test statistical properties of transformation functions."""
         # Test that transformations produce expected statistical properties
-        rng = create_rng(42)
+        create_rng(42)
 
         # Test with mean=0, std=1 (should be approximately symmetric for tanh)
         tanh_samples = [tanh_transform(mean=0.0, std=1.0, rng=create_rng(i)) for i in range(1000)]
@@ -809,8 +822,7 @@ class TestTransformationFunctions:
 
         # Test that tanh transformation is odd around 0
         # I.e., tanh_transform(-x) = -tanh_transform(x) for mean=0, std=1
-        pos_sample = sample_normal(mean=0.0, std=1.0, rng=rng)
-        neg_sample = -pos_sample
+        sample_normal(mean=0.0, std=1.0, rng=rng)
 
         # Create separate RNG for each to ensure same random sequence
         rng_pos = create_rng(rng.integers(0, 2**32))
@@ -821,8 +833,8 @@ class TestTransformationFunctions:
         # when mean=0 and input is symmetric
 
         # Test with manual samples
-        pos_transformed = tanh_transform(mean=0.0, std=1.0, rng=rng_pos)
-        neg_transformed = tanh_transform(mean=0.0, std=1.0, rng=rng_neg)
+        tanh_transform(mean=0.0, std=1.0, rng=rng_pos)
+        tanh_transform(mean=0.0, std=1.0, rng=rng_neg)
 
         # For symmetric inputs around mean, the transformation should preserve symmetry
         # This is a statistical property that should hold approximately
@@ -836,7 +848,7 @@ class TestTransformationFunctions:
         std_val = 1.5
 
         # Generate sample using sample_normal
-        normal_sample = sample_normal(mean=mean_val, std=std_val, rng=rng)
+        sample_normal(mean=mean_val, std=std_val, rng=rng)
 
         # Apply transformation
         tanh_result = tanh_transform(mean=mean_val, std=std_val, rng=rng)
@@ -848,7 +860,7 @@ class TestTransformationFunctions:
 
         # Test with different parameter combinations
         for mean_test, std_test in [(0.0, 1.0), (5.0, 2.0), (-2.0, 0.5), (100.0, 10.0)]:
-            sample = sample_normal(mean=mean_test, std=std_test, rng=rng)
+            sample_normal(mean=mean_test, std=std_test, rng=rng)
             tanh_trans = tanh_transform(mean=mean_test, std=std_test, rng=rng)
             sigmoid_trans = sigmoid_transform(mean=mean_test, std=std_test, rng=rng)
 
@@ -862,8 +874,8 @@ class TestTransformationFunctions:
         # Test with extreme values that might cause numerical issues
         extreme_params = [
             (1000.0, 0.001),  # Large mean, small std
-            (-1000.0, 0.001), # Negative large mean, small std
-            (0.0, 1000.0),    # Zero mean, large std
+            (-1000.0, 0.001),  # Negative large mean, small std
+            (0.0, 1000.0),  # Zero mean, large std
             (0.001, 1000.0),  # Small mean, large std
         ]
 
@@ -989,7 +1001,7 @@ class TestTransformationFunctions:
 
         # Test boundary values for tanh
         result_neg_bound = inverse_tanh_transform(-0.999, mean=0.0, std=1.0)  # Use -0.999 instead of -1.0
-        result_pos_bound = inverse_tanh_transform(0.999, mean=0.0, std=1.0)   # Use 0.999 instead of 1.0
+        result_pos_bound = inverse_tanh_transform(0.999, mean=0.0, std=1.0)  # Use 0.999 instead of 1.0
 
         # Should produce finite values (may be large)
         assert np.isfinite(result_neg_bound)
@@ -997,7 +1009,7 @@ class TestTransformationFunctions:
 
         # Test boundary values for sigmoid
         result_zero_bound = inverse_sigmoid_transform(0.001, mean=0.0, std=1.0)  # Use 0.001 instead of 0.0
-        result_one_bound = inverse_sigmoid_transform(0.999, mean=0.0, std=1.0)   # Use 0.999 instead of 1.0
+        result_one_bound = inverse_sigmoid_transform(0.999, mean=0.0, std=1.0)  # Use 0.999 instead of 1.0
 
         # Should produce finite values (may be large)
         assert np.isfinite(result_zero_bound)
@@ -1040,7 +1052,7 @@ class TestTransformationFunctions:
 
     def test_transformation_functions_numerical_precision(self):
         """Test numerical precision of transformation functions."""
-        rng = create_rng(42)
+        create_rng(42)
 
         # Test that repeated calls with same parameters produce consistent results
         results_tanh = [tanh_transform(mean=1.0, std=0.5, rng=create_rng(42)) for _ in range(5)]
@@ -1076,13 +1088,7 @@ class TestTransformationFunctions:
         seed = 999
 
         # Test multiple parameter combinations
-        param_combinations = [
-            (0.0, 1.0),
-            (5.0, 2.0),
-            (-3.0, 0.5),
-            (100.0, 10.0),
-            (0.001, 0.001)
-        ]
+        param_combinations = [(0.0, 1.0), (5.0, 2.0), (-3.0, 0.5), (100.0, 10.0), (0.001, 0.001)]
 
         for mean_val, std_val in param_combinations:
             rng1 = create_rng(seed)
@@ -1100,7 +1106,7 @@ class TestTransformationFunctions:
 
     def test_transformation_functions_monotonic_properties(self):
         """Test monotonic properties of transformation functions."""
-        rng = create_rng(42)
+        create_rng(42)
 
         # Test that increasing mean shifts the distribution
         samples_low_mean = [tanh_transform(mean=-1.0, std=1.0, rng=create_rng(i)) for i in range(100)]
@@ -1194,7 +1200,7 @@ class TestTransformationFunctions:
         import threading
         import queue
 
-        rng = create_rng(42)
+        create_rng(42)
         results_queue = queue.Queue()
 
         def generate_samples(seed_offset):

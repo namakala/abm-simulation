@@ -14,10 +14,9 @@ Tests cover:
 import numpy as np
 import pandas as pd
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from src.python.model import StressModel
-from src.python.config import get_config
 
 
 class TestDataCollectorAgentLevel:
@@ -40,14 +39,19 @@ class TestDataCollectorAgentLevel:
 
         # DataCollector uses MultiIndex with Step and AgentID
         assert isinstance(agent_data.index, pd.MultiIndex), "Agent data should have MultiIndex"
-        assert 'Step' in agent_data.index.names, "Step should be in index names"
-        assert 'AgentID' in agent_data.index.names, "AgentID should be in index names"
+        assert "Step" in agent_data.index.names, "Step should be in index names"
+        assert "AgentID" in agent_data.index.names, "AgentID should be in index names"
 
         # Verify expected agent variables are present as columns
         expected_agent_vars = [
-            'pss10', 'resilience', 'affect', 'resources',
-            'current_stress', 'stress_controllability', 'stress_overload',
-            'consecutive_hindrances'
+            "pss10",
+            "resilience",
+            "affect",
+            "resources",
+            "current_stress",
+            "stress_controllability",
+            "stress_overload",
+            "consecutive_hindrances",
         ]
 
         for var in expected_agent_vars:
@@ -64,18 +68,23 @@ class TestDataCollectorAgentLevel:
         agent_data = model.datacollector.get_agent_vars_dataframe()
 
         # Test data types
-        assert agent_data['pss10'].dtype in [np.dtype('float64'), np.dtype('int64')], "pss10 should be numeric"
-        assert agent_data['resilience'].dtype in [np.dtype('float64'), np.dtype('int64')], "resilience should be numeric"
-        assert agent_data['affect'].dtype in [np.dtype('float64'), np.dtype('int64')], "affect should be numeric"
-        assert agent_data['resources'].dtype in [np.dtype('float64'), np.dtype('int64')], "resources should be numeric"
+        assert agent_data["pss10"].dtype in [np.dtype("float64"), np.dtype("int64")], "pss10 should be numeric"
+        assert agent_data["resilience"].dtype in [
+            np.dtype("float64"),
+            np.dtype("int64"),
+        ], "resilience should be numeric"
+        assert agent_data["affect"].dtype in [np.dtype("float64"), np.dtype("int64")], "affect should be numeric"
+        assert agent_data["resources"].dtype in [np.dtype("float64"), np.dtype("int64")], "resources should be numeric"
 
         # Test value ranges
-        assert agent_data['resilience'].between(0.0, 1.0).all(), "All resilience values should be in [0, 1]"
-        assert agent_data['affect'].between(-1.0, 1.0).all(), "All affect values should be in [-1, 1]"
-        assert agent_data['resources'].between(0.0, 1.0).all(), "All resources values should be in [0, 1]"
-        assert agent_data['current_stress'].between(0.0, 1.0).all(), "All current_stress values should be in [0, 1]"
-        assert agent_data['stress_controllability'].between(0.0, 1.0).all(), "All stress_controllability values should be in [0, 1]"
-        assert agent_data['stress_overload'].between(0.0, 1.0).all(), "All stress_overload values should be in [0, 1]"
+        assert agent_data["resilience"].between(0.0, 1.0).all(), "All resilience values should be in [0, 1]"
+        assert agent_data["affect"].between(-1.0, 1.0).all(), "All affect values should be in [-1, 1]"
+        assert agent_data["resources"].between(0.0, 1.0).all(), "All resources values should be in [0, 1]"
+        assert agent_data["current_stress"].between(0.0, 1.0).all(), "All current_stress values should be in [0, 1]"
+        assert (
+            agent_data["stress_controllability"].between(0.0, 1.0).all()
+        ), "All stress_controllability values should be in [0, 1]"
+        assert agent_data["stress_overload"].between(0.0, 1.0).all(), "All stress_overload values should be in [0, 1]"
 
     def test_agent_data_across_steps(self):
         """Test that agent data is collected correctly across multiple steps."""
@@ -94,7 +103,7 @@ class TestDataCollectorAgentLevel:
         assert len(agent_data) == expected_total_records, f"Should have {expected_total_records} total agent records"
 
         # Check that we have data for steps 1-5 (Mesa's 1-based indexing)
-        unique_steps = sorted(agent_data.index.get_level_values('Step').unique())
+        unique_steps = sorted(agent_data.index.get_level_values("Step").unique())
         assert unique_steps == [1, 2, 3, 4, 5], f"Should have steps 1-5, got {unique_steps}"
 
     def test_agent_data_consistency(self):
@@ -142,10 +151,10 @@ class TestDataCollectorAgentLevel:
 
         # Check that data was still collected (with None/NaN values where appropriate)
         agent_data = model.datacollector.get_agent_vars_dataframe()
-        mock_agent_data = agent_data[agent_data.index.get_level_values('AgentID') == 999]
+        mock_agent_data = agent_data[agent_data.index.get_level_values("AgentID") == 999]
 
         assert len(mock_agent_data) == 1, "Mock agent data should be present"
-        assert mock_agent_data['resilience'].iloc[0] == 0.5, "Available attributes should be collected correctly"
+        assert mock_agent_data["resilience"].iloc[0] == 0.5, "Available attributes should be collected correctly"
 
 
 class TestDataCollectorModelLevel:
@@ -169,12 +178,26 @@ class TestDataCollectorModelLevel:
         # Model data uses default RangeIndex, not named index
         # Verify expected model variables are present as columns
         expected_model_vars = [
-            'avg_pss10', 'avg_resilience', 'avg_affect', 'coping_success_rate',
-            'avg_resources', 'avg_stress', 'social_support_rate', 'stress_events',
-            'network_density', 'stress_prevalence', 'low_resilience', 'high_resilience',
-            'avg_challenge', 'avg_hindrance', 'challenge_hindrance_ratio',
-            'avg_consecutive_hindrances', 'total_stress_events', 'successful_coping',
-            'social_interactions', 'support_exchanges'
+            "avg_pss10",
+            "avg_resilience",
+            "avg_affect",
+            "coping_success_rate",
+            "avg_resources",
+            "avg_stress",
+            "social_support_rate",
+            "stress_events",
+            "network_density",
+            "stress_prevalence",
+            "low_resilience",
+            "high_resilience",
+            "avg_challenge",
+            "avg_hindrance",
+            "challenge_hindrance_ratio",
+            "avg_consecutive_hindrances",
+            "total_stress_events",
+            "successful_coping",
+            "social_interactions",
+            "support_exchanges",
         ]
 
         for var in expected_model_vars:
@@ -194,25 +217,31 @@ class TestDataCollectorModelLevel:
 
         # Get agent data for manual verification (Mesa uses 1-based indexing)
         agent_data = model.datacollector.get_agent_vars_dataframe()
-        step_agent_data = agent_data[agent_data.index.get_level_values('Step') == 1]  # Latest step (step 1)
+        step_agent_data = agent_data[agent_data.index.get_level_values("Step") == 1]  # Latest step (step 1)
 
         # Test specific aggregations
-        manual_avg_resilience = step_agent_data['resilience'].mean()
-        collected_avg_resilience = latest_data['avg_resilience']
+        manual_avg_resilience = step_agent_data["resilience"].mean()
+        collected_avg_resilience = latest_data["avg_resilience"]
 
         # Handle potential NaN values
         if not pd.isna(manual_avg_resilience) and not pd.isna(collected_avg_resilience):
-            assert abs(manual_avg_resilience - collected_avg_resilience) < 1e-10, "Average resilience should match manual calculation"
+            assert (
+                abs(manual_avg_resilience - collected_avg_resilience) < 1e-10
+            ), "Average resilience should match manual calculation"
 
-        manual_avg_affect = step_agent_data['affect'].mean()
-        collected_avg_affect = latest_data['avg_affect']
+        manual_avg_affect = step_agent_data["affect"].mean()
+        collected_avg_affect = latest_data["avg_affect"]
         if not pd.isna(manual_avg_affect) and not pd.isna(collected_avg_affect):
-            assert abs(manual_avg_affect - collected_avg_affect) < 1e-10, "Average affect should match manual calculation"
+            assert (
+                abs(manual_avg_affect - collected_avg_affect) < 1e-10
+            ), "Average affect should match manual calculation"
 
-        manual_avg_resources = step_agent_data['resources'].mean()
-        collected_avg_resources = latest_data['avg_resources']
+        manual_avg_resources = step_agent_data["resources"].mean()
+        collected_avg_resources = latest_data["avg_resources"]
         if not pd.isna(manual_avg_resources) and not pd.isna(collected_avg_resources):
-            assert abs(manual_avg_resources - collected_avg_resources) < 1e-10, "Average resources should match manual calculation"
+            assert (
+                abs(manual_avg_resources - collected_avg_resources) < 1e-10
+            ), "Average resources should match manual calculation"
 
     def test_model_data_across_steps(self):
         """Test that model data is collected correctly across multiple steps."""
@@ -245,23 +274,36 @@ class TestDataCollectorModelLevel:
 
         # Test data types
         numeric_columns = [
-            'avg_pss10', 'avg_resilience', 'avg_affect', 'coping_success_rate',
-            'avg_resources', 'avg_stress', 'social_support_rate', 'network_density',
-            'stress_prevalence', 'avg_challenge', 'avg_hindrance', 'challenge_hindrance_ratio',
-            'avg_consecutive_hindrances'
+            "avg_pss10",
+            "avg_resilience",
+            "avg_affect",
+            "coping_success_rate",
+            "avg_resources",
+            "avg_stress",
+            "social_support_rate",
+            "network_density",
+            "stress_prevalence",
+            "avg_challenge",
+            "avg_hindrance",
+            "challenge_hindrance_ratio",
+            "avg_consecutive_hindrances",
         ]
 
         for col in numeric_columns:
-            assert model_data[col].dtype in [np.dtype('float64'), np.dtype('int64')], f"{col} should be numeric"
+            assert model_data[col].dtype in [np.dtype("float64"), np.dtype("int64")], f"{col} should be numeric"
 
         # Test value ranges
-        assert model_data['avg_resilience'].between(0.0, 1.0).all(), "All avg_resilience values should be in [0, 1]"
-        assert model_data['avg_affect'].between(-1.0, 1.0).all(), "All avg_affect values should be in [-1, 1]"
-        assert model_data['avg_resources'].between(0.0, 1.0).all(), "All avg_resources values should be in [0, 1]"
-        assert model_data['avg_stress'].between(0.0, 1.0).all(), "All avg_stress values should be in [0, 1]"
-        assert model_data['coping_success_rate'].between(0.0, 1.0).all(), "All coping_success_rate values should be in [0, 1]"
-        assert model_data['network_density'].between(0.0, 1.0).all(), "All network_density values should be in [0, 1]"
-        assert model_data['stress_prevalence'].between(0.0, 1.0).all(), "All stress_prevalence values should be in [0, 1]"
+        assert model_data["avg_resilience"].between(0.0, 1.0).all(), "All avg_resilience values should be in [0, 1]"
+        assert model_data["avg_affect"].between(-1.0, 1.0).all(), "All avg_affect values should be in [-1, 1]"
+        assert model_data["avg_resources"].between(0.0, 1.0).all(), "All avg_resources values should be in [0, 1]"
+        assert model_data["avg_stress"].between(0.0, 1.0).all(), "All avg_stress values should be in [0, 1]"
+        assert (
+            model_data["coping_success_rate"].between(0.0, 1.0).all()
+        ), "All coping_success_rate values should be in [0, 1]"
+        assert model_data["network_density"].between(0.0, 1.0).all(), "All network_density values should be in [0, 1]"
+        assert (
+            model_data["stress_prevalence"].between(0.0, 1.0).all()
+        ), "All stress_prevalence values should be in [0, 1]"
 
 
 class TestDataCollectorConsistency:
@@ -288,10 +330,14 @@ class TestDataCollectorConsistency:
 
         # Check step numbering (agent data uses 1-based, model data uses 0-based)
         expected_agent_steps = list(range(1, 11))  # 1-10
-        assert sorted(agent_data.index.get_level_values('Step').unique()) == expected_agent_steps, f"Agent data steps should be {expected_agent_steps}"
+        assert (
+            sorted(agent_data.index.get_level_values("Step").unique()) == expected_agent_steps
+        ), f"Agent data steps should be {expected_agent_steps}"
 
         expected_model_indices = list(range(10))  # 0-9
-        assert list(model_data.index) == expected_model_indices, f"Model data indices should be {expected_model_indices}"
+        assert (
+            list(model_data.index) == expected_model_indices
+        ), f"Model data indices should be {expected_model_indices}"
 
     def test_no_data_loss_over_time(self):
         """Test that no data is lost or corrupted over multiple steps."""
@@ -317,14 +363,13 @@ class TestDataCollectorConsistency:
 
         # Check that initial step data is unchanged (agent data uses 1-based indexing)
         pd.testing.assert_frame_equal(
-            final_agent_data[final_agent_data.index.get_level_values('Step') == 1].reset_index(drop=True),
-            initial_agent_data.reset_index(drop=True)
+            final_agent_data[final_agent_data.index.get_level_values("Step") == 1].reset_index(drop=True),
+            initial_agent_data.reset_index(drop=True),
         )
 
         # Check that initial model data is unchanged (model data uses 0-based indexing)
         pd.testing.assert_frame_equal(
-            final_model_data.iloc[0:1].reset_index(drop=True),
-            initial_model_data.reset_index(drop=True)
+            final_model_data.iloc[0:1].reset_index(drop=True), initial_model_data.reset_index(drop=True)
         )
 
     def test_step_numbers_recorded_correctly(self):
@@ -341,9 +386,11 @@ class TestDataCollectorConsistency:
 
         # Agent data uses 1-based indexing
         for step in [1, 2, 3]:  # Mesa's 1-based steps
-            step_agent_data = agent_data[agent_data.index.get_level_values('Step') == step]
+            step_agent_data = agent_data[agent_data.index.get_level_values("Step") == step]
             assert len(step_agent_data) == 5, f"Step {step} should have 5 agent records"
-            assert (step_agent_data.index.get_level_values('Step') == step).all(), f"All agent records for step {step} should have correct step number"
+            assert (
+                step_agent_data.index.get_level_values("Step") == step
+            ).all(), f"All agent records for step {step} should have correct step number"
 
         # Model data uses 0-based indexing
         for step in [0, 1, 2]:  # Python's 0-based indices
@@ -375,7 +422,7 @@ class TestDataCollectorEdgeCases:
         assert len(model_data) == 1, "Should have 1 model record for single step"
 
         # Agent data uses 1-based indexing (Mesa), model data uses 0-based indexing (pandas)
-        assert (agent_data.index.get_level_values('Step') == 1).all(), "All agent data should be for step 1"
+        assert (agent_data.index.get_level_values("Step") == 1).all(), "All agent data should be for step 1"
         assert model_data.index[0] == 0, "Model data should be for index 0"
 
     def test_large_number_of_agents(self):
@@ -415,8 +462,12 @@ class TestDataCollectorDataIntegrity:
 
         # Agent data - non-negative columns
         non_negative_agent_cols = [
-            'resilience', 'resources', 'current_stress',
-            'stress_controllability', 'stress_overload', 'pss10'
+            "resilience",
+            "resources",
+            "current_stress",
+            "stress_controllability",
+            "stress_overload",
+            "pss10",
         ]
 
         for col in non_negative_agent_cols:
@@ -424,10 +475,20 @@ class TestDataCollectorDataIntegrity:
 
         # Model data - non-negative columns
         non_negative_model_cols = [
-            'avg_resilience', 'avg_resources', 'avg_stress', 'coping_success_rate',
-            'social_support_rate', 'network_density', 'stress_prevalence',
-            'avg_challenge', 'avg_hindrance', 'avg_consecutive_hindrances',
-            'total_stress_events', 'successful_coping', 'social_interactions', 'support_exchanges'
+            "avg_resilience",
+            "avg_resources",
+            "avg_stress",
+            "coping_success_rate",
+            "social_support_rate",
+            "network_density",
+            "stress_prevalence",
+            "avg_challenge",
+            "avg_hindrance",
+            "avg_consecutive_hindrances",
+            "total_stress_events",
+            "successful_coping",
+            "social_interactions",
+            "support_exchanges",
         ]
 
         for col in non_negative_model_cols:
@@ -483,16 +544,16 @@ class TestDataCollectorDataIntegrity:
         for i, agent in enumerate(model.agents):
             if i == 0:
                 agent.resilience = 0.0  # Minimum resilience
-                agent.affect = -1.0     # Minimum affect
-                agent.resources = 0.0   # Minimum resources
-                agent.baseline_resilience = 0.0 # Set corresponding baseline
-                agent.baseline_affect = -1.0    # Set corresponding baseline
+                agent.affect = -1.0  # Minimum affect
+                agent.resources = 0.0  # Minimum resources
+                agent.baseline_resilience = 0.0  # Set corresponding baseline
+                agent.baseline_affect = -1.0  # Set corresponding baseline
             elif i == 1:
                 agent.resilience = 1.0  # Maximum resilience
-                agent.affect = 1.0      # Maximum affect
-                agent.resources = 1.0   # Maximum resources
-                agent.baseline_resilience = 1.0 # Set corresponding baseline
-                agent.baseline_affect = 1.0     # Set corresponding baseline
+                agent.affect = 1.0  # Maximum affect
+                agent.resources = 1.0  # Maximum resources
+                agent.baseline_resilience = 1.0  # Set corresponding baseline
+                agent.baseline_affect = 1.0  # Set corresponding baseline
             # i == 2, 3, 4: Keep default values
 
         # Run steps
@@ -504,8 +565,8 @@ class TestDataCollectorDataIntegrity:
         model_data = model.datacollector.get_model_vars_dataframe()
 
         # Check that we have values across the full range (agents may modify values during simulation)
-        resilience_values = agent_data['resilience'].values
-        affect_values = agent_data['affect'].values
+        resilience_values = agent_data["resilience"].values
+        affect_values = agent_data["affect"].values
 
         # Debug logging for resilience values
         min_resilience = np.min(resilience_values)
@@ -568,7 +629,7 @@ class TestDataCollectorErrorHandling:
 
         # Data should still be collected for other agents
         agent_data = model.datacollector.get_agent_vars_dataframe()
-        complete_agents_data = agent_data[agent_data.index.get_level_values('AgentID') != 999]
+        complete_agents_data = agent_data[agent_data.index.get_level_values("AgentID") != 999]
 
         assert len(complete_agents_data) == 4, "Should have data for 4 complete agents"
 

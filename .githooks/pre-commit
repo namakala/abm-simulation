@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+export DOTENV_FILE=.env.example
+
+echo "==> Running pre-commit checks..."
+pixi run precommit
+
+# Re-stage files auto-formatted by ruff/black
+git add src/python/
+
+echo "==> All pre-commit checks passed!"

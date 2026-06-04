@@ -46,9 +46,9 @@ class TestPSS10ConfigurationDefaults:
                 assert len(config.pss10_item_sds) == 10
 
                 # Test dictionary access
-                pss10_dict = config.get('pss10')
-                assert pss10_dict['item_means'] == expected_means
-                assert pss10_dict['item_sds'] == expected_sds
+                pss10_dict = config.get("pss10")
+                assert pss10_dict["item_means"] == expected_means
+                assert pss10_dict["item_sds"] == expected_sds
 
                 # Test individual element access
                 assert config.pss10_item_means[0] == 2.1
@@ -70,7 +70,7 @@ class TestPSS10ConfigurationDefaults:
                 os.environ.clear()
 
                 # Create empty .env file
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.touch()
 
                 # Create config with empty .env file
@@ -105,7 +105,7 @@ class TestPSS10ConfigurationBracketNotation:
                 env_content = """PSS10_ITEM_MEAN=[2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
 PSS10_ITEM_SD=[1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8]
 """
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Create config with .env file
@@ -119,9 +119,9 @@ PSS10_ITEM_SD=[1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8]
                 assert config.pss10_item_sds == expected_sds
 
                 # Test dictionary access
-                pss10_dict = config.get('pss10')
-                assert pss10_dict['item_means'] == expected_means
-                assert pss10_dict['item_sds'] == expected_sds
+                pss10_dict = config.get("pss10")
+                assert pss10_dict["item_means"] == expected_means
+                assert pss10_dict["item_sds"] == expected_sds
 
                 # Test individual element access
                 assert config.pss10_item_means[0] == 2.1
@@ -147,7 +147,7 @@ PSS10_ITEM_SD=[1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8]
                 env_content = """PSS10_ITEM_MEAN= [ 2.1 , 1.8 , 2.3 , 1.9 , 2.2 , 1.7 , 2.0 , 1.6 , 2.4 , 1.5 ]
 PSS10_ITEM_SD= [1.1,  0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8 ]
 """
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should handle whitespace correctly
@@ -176,7 +176,7 @@ PSS10_ITEM_SD= [1.1,  0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8 ]
                 env_content = """PSS10_ITEM_MEAN=[2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
 PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
 """
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should load successfully with mixed formats
@@ -210,7 +210,7 @@ class TestPSS10ConfigurationValidValues:
                 env_content = """PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 1.5
 PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
 """
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Create config with .env file
@@ -224,9 +224,9 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
                 assert config.pss10_item_sds == expected_sds
 
                 # Test dictionary access
-                pss10_dict = config.get('pss10')
-                assert pss10_dict['item_means'] == expected_means
-                assert pss10_dict['item_sds'] == expected_sds
+                pss10_dict = config.get("pss10")
+                assert pss10_dict["item_means"] == expected_means
+                assert pss10_dict["item_sds"] == expected_sds
 
                 # Test individual element access
                 assert config.pss10_item_means[0] == 2.1
@@ -252,7 +252,7 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
                 env_content = """PSS10_ITEM_MEAN=0.0 4.0 0.0 4.0 0.0 4.0 0.0 4.0 0.0 4.0
 PSS10_ITEM_SD=0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1
 """
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Create config with .env file
@@ -285,7 +285,7 @@ class TestPSS10ConfigurationInvalidValues:
 
                 # Create .env file with wrong number of values (9 instead of 10)
                 env_content = "PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4"
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should raise ConfigurationError for wrong length during validation
@@ -307,7 +307,7 @@ class TestPSS10ConfigurationInvalidValues:
 
                 # Create .env file with too many values (11 instead of 10)
                 env_content = "PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 1.5 2.0"
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should raise ConfigurationError for wrong length during validation
@@ -329,7 +329,7 @@ class TestPSS10ConfigurationInvalidValues:
 
                 # Create .env file with invalid mean values (outside [0,4] range)
                 env_content = "PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 5.0"
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should raise ConfigurationError for invalid mean value during validation
@@ -354,12 +354,14 @@ class TestPSS10ConfigurationInvalidValues:
                 env_content = """PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 3.0
 PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.0
 """
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should raise ConfigurationError for invalid SD value during validation
                 config = Config(str(env_file))
-                with pytest.raises(ConfigurationError, match="PSS-10 item standard deviation at index 9 must be positive"):
+                with pytest.raises(
+                    ConfigurationError, match="PSS-10 item standard deviation at index 9 must be positive"
+                ):
                     config.validate()
 
             finally:
@@ -377,7 +379,7 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.0
 
                 # Create .env file with non-numeric values
                 env_content = "PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 invalid"
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should raise ConfigurationError for invalid float conversion during Config creation
@@ -398,8 +400,8 @@ class TestPSS10ConfigurationAccessMethods:
         config = Config()
 
         # Test that properties exist and are accessible
-        assert hasattr(config, 'pss10_item_means')
-        assert hasattr(config, 'pss10_item_sds')
+        assert hasattr(config, "pss10_item_means")
+        assert hasattr(config, "pss10_item_sds")
 
         # Test that they are lists
         assert isinstance(config.pss10_item_means, list)
@@ -421,14 +423,14 @@ class TestPSS10ConfigurationAccessMethods:
         config = Config()
 
         # Test section access
-        pss10_section = config.get('pss10')
+        pss10_section = config.get("pss10")
         assert isinstance(pss10_section, dict)
-        assert 'item_means' in pss10_section
-        assert 'item_sds' in pss10_section
+        assert "item_means" in pss10_section
+        assert "item_sds" in pss10_section
 
         # Test individual array access
-        item_means = config.get('pss10', 'item_means')
-        item_sds = config.get('pss10', 'item_sds')
+        item_means = config.get("pss10", "item_means")
+        item_sds = config.get("pss10", "item_sds")
 
         assert isinstance(item_means, list)
         assert isinstance(item_sds, list)
@@ -465,7 +467,7 @@ class TestPSS10ConfigurationAccessMethods:
 
         # Test invalid section
         with pytest.raises(ConfigurationError, match="Configuration section 'invalid_section' not found"):
-            config.get('invalid_section')
+            config.get("invalid_section")
 
     def test_pss10_invalid_key_access(self):
         """Test error handling for invalid key access."""
@@ -474,7 +476,7 @@ class TestPSS10ConfigurationAccessMethods:
 
         # Test invalid key within valid section
         with pytest.raises(ConfigurationError, match="Configuration key 'invalid_key' not found in section 'pss10'"):
-            config.get('pss10', 'invalid_key')
+            config.get("pss10", "invalid_key")
 
 
 @pytest.mark.config
@@ -485,8 +487,8 @@ class TestPSS10ConfigurationIntegration:
         """Test PSS-10 configuration works with global config system."""
         # Test with default config
         config1 = get_config()
-        assert hasattr(config1, 'pss10_item_means')
-        assert hasattr(config1, 'pss10_item_sds')
+        assert hasattr(config1, "pss10_item_means")
+        assert hasattr(config1, "pss10_item_sds")
         assert len(config1.pss10_item_means) == 10
 
         # Test reload functionality
@@ -518,13 +520,13 @@ class TestPSS10ConfigurationIntegration:
         config = Config()
 
         # Test that PSS-10 config doesn't interfere with other sections
-        assert config.get('simulation', 'num_agents') > 0
-        assert config.get('network', 'watts_k') >= 2
-        assert config.get('agent', 'initial_resilience') >= 0
+        assert config.get("simulation", "num_agents") > 0
+        assert config.get("network", "watts_k") >= 2
+        assert config.get("agent", "initial_resilience") >= 0
 
         # Test that PSS-10 config is accessible
-        pss10_means = config.get('pss10', 'item_means')
-        pss10_sds = config.get('pss10', 'item_sds')
+        pss10_means = config.get("pss10", "item_means")
+        pss10_sds = config.get("pss10", "item_sds")
         assert len(pss10_means) == 10
         assert len(pss10_sds) == 10
 
@@ -544,7 +546,7 @@ class TestPSS10ConfigurationEdgeCases:
                 env_content = """PSS10_ITEM_MEAN=  2.1   1.8  2.3 1.9	2.2	1.7 2.0 1.6 2.4 1.5
 PSS10_ITEM_SD=1.1  0.9	1.2  1.0 1.1 0.8 1.0 0.9 1.3 0.8
 """
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should handle whitespace correctly
@@ -573,7 +575,7 @@ PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 1.5
 PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
 AGENT_INITIAL_RESILIENCE_MEAN=0.8
 """
-                env_file = Path(temp_dir) / '.env'
+                env_file = Path(temp_dir) / ".env"
                 env_file.write_text(env_content)
 
                 # Should load successfully
@@ -607,7 +609,7 @@ def run_pss10_config_tests():
     except Exception as e:
         print(f"✗ Default values test failed: {e}")
     finally:
-        if 'original_cwd' in locals():
+        if "original_cwd" in locals():
             os.chdir(original_cwd)
 
     # Test 2: Valid .env file
@@ -617,7 +619,7 @@ def run_pss10_config_tests():
             original_cwd = os.getcwd()
             os.chdir(temp_dir)
             env_content = "PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 1.5\nPSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8"
-            (Path(temp_dir) / '.env').write_text(env_content)
+            (Path(temp_dir) / ".env").write_text(env_content)
             config = Config()
             expected_means = [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
             assert config.pss10_item_means == expected_means
@@ -625,7 +627,7 @@ def run_pss10_config_tests():
     except Exception as e:
         print(f"✗ Valid .env file test failed: {e}")
     finally:
-        if 'original_cwd' in locals():
+        if "original_cwd" in locals():
             os.chdir(original_cwd)
 
     # Test 3: Invalid array length
@@ -635,7 +637,7 @@ def run_pss10_config_tests():
             original_cwd = os.getcwd()
             os.chdir(temp_dir)
             env_content = "PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4"
-            (Path(temp_dir) / '.env').write_text(env_content)
+            (Path(temp_dir) / ".env").write_text(env_content)
             Config()
             print("✗ Invalid array length test failed: should have raised ConfigurationError")
     except ConfigurationError as e:
@@ -646,7 +648,7 @@ def run_pss10_config_tests():
     except Exception as e:
         print(f"✗ Invalid array length test failed: unexpected error: {e}")
     finally:
-        if 'original_cwd' in locals():
+        if "original_cwd" in locals():
             os.chdir(original_cwd)
 
     # Test 4: Invalid array values
@@ -656,7 +658,7 @@ def run_pss10_config_tests():
             original_cwd = os.getcwd()
             os.chdir(temp_dir)
             env_content = "PSS10_ITEM_MEAN=2.1 1.8 2.3 1.9 2.2 1.7 2.0 1.6 2.4 5.0"
-            (Path(temp_dir) / '.env').write_text(env_content)
+            (Path(temp_dir) / ".env").write_text(env_content)
             Config()
             print("✗ Invalid array values test failed: should have raised ConfigurationError")
     except ConfigurationError as e:
@@ -667,7 +669,7 @@ def run_pss10_config_tests():
     except Exception as e:
         print(f"✗ Invalid array values test failed: unexpected error: {e}")
     finally:
-        if 'original_cwd' in locals():
+        if "original_cwd" in locals():
             os.chdir(original_cwd)
 
     # Test 5: Array access methods
@@ -681,8 +683,8 @@ def run_pss10_config_tests():
         assert len(means) == 10 and len(sds) == 10
 
         # Test dictionary access
-        pss10_dict = config.get('pss10')
-        assert 'item_means' in pss10_dict and 'item_sds' in pss10_dict
+        pss10_dict = config.get("pss10")
+        assert "item_means" in pss10_dict and "item_sds" in pss10_dict
 
         # Test individual element access
         first_mean = config.pss10_item_means[0]
@@ -698,13 +700,13 @@ def run_pss10_config_tests():
     try:
         # Test global config access
         global_config = get_config()
-        assert hasattr(global_config, 'pss10_item_means')
+        assert hasattr(global_config, "pss10_item_means")
 
         # Test validation
         global_config.validate()
 
         # Test that PSS-10 doesn't interfere with other config
-        num_agents = global_config.get('simulation', 'num_agents')
+        num_agents = global_config.get("simulation", "num_agents")
         assert isinstance(num_agents, int) and num_agents > 0
 
         print("✓ Integration test passed")

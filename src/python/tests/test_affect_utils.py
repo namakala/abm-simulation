@@ -4,18 +4,25 @@ Example unit tests for affect_utils.py
 This file demonstrates testing patterns for affect dynamics and social interactions.
 """
 
-import pytest
 import numpy as np
 from unittest.mock import patch
 from src.python.affect_utils import (
-    process_interaction, compute_stress_impact_on_affect,
-    compute_stress_impact_on_resilience, clamp, allocate_protective_resources,
-    compute_resource_regeneration, compute_allocation_cost,
-    InteractionConfig, ProtectiveFactors, ResourceParams,
+    process_interaction,
+    compute_stress_impact_on_affect,
+    compute_stress_impact_on_resilience,
+    clamp,
+    allocate_protective_resources,
+    compute_resource_regeneration,
+    compute_allocation_cost,
+    InteractionConfig,
+    ProtectiveFactors,
+    ResourceParams,
     # New stress processing functions
-    compute_coping_probability, compute_challenge_hindrance_resilience_effect,
-    compute_daily_affect_reset, compute_stress_decay,
-    determine_coping_outcome_and_psychological_impact, StressProcessingConfig
+    compute_coping_probability,
+    compute_daily_affect_reset,
+    compute_stress_decay,
+    determine_coping_outcome_and_psychological_impact,
+    StressProcessingConfig,
 )
 
 
@@ -31,12 +38,8 @@ class TestSocialInteractions:
         self_resilience = 0.6
         partner_resilience = 0.4
 
-        new_self_affect, new_partner_affect, new_self_resilience, new_partner_resilience = (
-            process_interaction(
-                self_affect, partner_affect,
-                self_resilience, partner_resilience,
-                config
-            )
+        new_self_affect, new_partner_affect, new_self_resilience, new_partner_resilience = process_interaction(
+            self_affect, partner_affect, self_resilience, partner_resilience, config
         )
 
         # Check that values are in valid ranges
@@ -66,9 +69,7 @@ class TestSocialInteractions:
         self_affect = 0.3
         partner_affect = 0.3
 
-        new_self_affect, new_partner_affect, _, _ = process_interaction(
-            self_affect, partner_affect, 0.5, 0.5, config
-        )
+        new_self_affect, new_partner_affect, _, _ = process_interaction(self_affect, partner_affect, 0.5, 0.5, config)
 
         # With same affect, there should be minimal change
         assert abs(new_self_affect - self_affect) < config.influence_rate
@@ -80,39 +81,33 @@ class TestStressImpact:
 
     def test_stress_impact_on_affect_coping_success(self):
         """Test affect change when coping successfully with stress."""
-        config = {'coping_improvement': 0.1, 'coping_deterioration': 0.1, 'no_stress_effect': 0.0}
+        config = {"coping_improvement": 0.1, "coping_deterioration": 0.1, "no_stress_effect": 0.0}
 
         current_affect = 0.0
 
         # Successful coping should improve affect
         affect_change = compute_stress_impact_on_affect(
-            current_affect=current_affect,
-            is_stressed=True,
-            coped_successfully=True,
-            config=config
+            current_affect=current_affect, is_stressed=True, coped_successfully=True, config=config
         )
 
-        assert affect_change == config['coping_improvement']
+        assert affect_change == config["coping_improvement"]
 
     def test_stress_impact_on_affect_coping_failure(self):
         """Test affect change when coping fails."""
-        config = {'coping_improvement': 0.1, 'coping_deterioration': 0.1, 'no_stress_effect': 0.0}
+        config = {"coping_improvement": 0.1, "coping_deterioration": 0.1, "no_stress_effect": 0.0}
 
         current_affect = 0.0
 
         # Failed coping should deteriorate affect
         affect_change = compute_stress_impact_on_affect(
-            current_affect=current_affect,
-            is_stressed=True,
-            coped_successfully=False,
-            config=config
+            current_affect=current_affect, is_stressed=True, coped_successfully=False, config=config
         )
 
-        assert affect_change == -config['coping_deterioration']
+        assert affect_change == -config["coping_deterioration"]
 
     def test_stress_impact_on_affect_no_stress(self):
         """Test that no stress event produces no affect change."""
-        config = {'coping_improvement': 0.1, 'coping_deterioration': 0.1, 'no_stress_effect': 0.0}
+        config = {"coping_improvement": 0.1, "coping_deterioration": 0.1, "no_stress_effect": 0.0}
 
         current_affect = 0.5
 
@@ -121,35 +116,29 @@ class TestStressImpact:
             current_affect=current_affect,
             is_stressed=False,
             coped_successfully=True,  # This shouldn't matter
-            config=config
+            config=config,
         )
 
-        assert affect_change == config['no_stress_effect']
+        assert affect_change == config["no_stress_effect"]
 
     def test_stress_impact_on_resilience(self):
         """Test resilience changes due to stress outcomes."""
-        config = {'coping_improvement': 0.08, 'coping_deterioration': 0.08, 'no_stress_effect': 0.0}
+        config = {"coping_improvement": 0.08, "coping_deterioration": 0.08, "no_stress_effect": 0.0}
 
         current_resilience = 0.5
 
         # Successful coping should improve resilience
         resilience_change_success = compute_stress_impact_on_resilience(
-            current_resilience=current_resilience,
-            is_stressed=True,
-            coped_successfully=True,
-            config=config
+            current_resilience=current_resilience, is_stressed=True, coped_successfully=True, config=config
         )
 
         # Failed coping should deteriorate resilience
         resilience_change_failure = compute_stress_impact_on_resilience(
-            current_resilience=current_resilience,
-            is_stressed=True,
-            coped_successfully=False,
-            config=config
+            current_resilience=current_resilience, is_stressed=True, coped_successfully=False, config=config
         )
 
-        assert resilience_change_success == config['coping_improvement']
-        assert resilience_change_failure == -config['coping_deterioration']
+        assert resilience_change_success == config["coping_improvement"]
+        assert resilience_change_failure == -config["coping_deterioration"]
 
 
 class TestResourceAllocation:
@@ -159,16 +148,11 @@ class TestResourceAllocation:
         """Test basic resource allocation across protective factors."""
         available_resources = 0.5
         protective_factors = ProtectiveFactors(
-            social_support=0.8,
-            family_support=0.6,
-            formal_intervention=0.4,
-            psychological_capital=0.2
+            social_support=0.8, family_support=0.6, formal_intervention=0.4, psychological_capital=0.2
         )
 
         rng = np.random.default_rng(42)
-        allocations = allocate_protective_resources(
-            available_resources, protective_factors, rng
-        )
+        allocations = allocate_protective_resources(available_resources, protective_factors, rng)
 
         # Check that allocations sum to available resources
         total_allocated = sum(allocations.values())
@@ -177,7 +161,7 @@ class TestResourceAllocation:
         # Check that all factors get non-negative allocation
         for factor, allocation in allocations.items():
             assert allocation >= 0.0
-            assert factor in ['social_support', 'family_support', 'formal_intervention', 'psychological_capital']
+            assert factor in ["social_support", "family_support", "formal_intervention", "psychological_capital"]
 
     def test_allocate_protective_resources_deterministic(self):
         """Test that allocation is deterministic with fixed RNG."""
@@ -222,8 +206,8 @@ class TestResourceAllocation:
         cost_large = compute_allocation_cost(large_allocation, config)
 
         # Larger allocation should have disproportionately higher cost (convex)
-        expected_cost_small = 0.1 * (0.2 ** 2.0)  # 0.1 * 0.04 = 0.004
-        expected_cost_large = 0.1 * (0.8 ** 2.0)  # 0.1 * 0.64 = 0.064
+        expected_cost_small = 0.1 * (0.2**2.0)  # 0.1 * 0.04 = 0.004
+        expected_cost_large = 0.1 * (0.8**2.0)  # 0.1 * 0.64 = 0.064
 
         assert abs(cost_small - expected_cost_small) < 1e-10
         assert abs(cost_large - expected_cost_large) < 1e-10
@@ -238,7 +222,7 @@ class TestUtilityFunctions:
         # Test basic clamping
         assert clamp(0.5, 0.0, 1.0) == 0.5
         assert clamp(-0.1, 0.0, 1.0) == 0.0  # Below minimum
-        assert clamp(1.5, 0.0, 1.0) == 1.0   # Above maximum
+        assert clamp(1.5, 0.0, 1.0) == 1.0  # Above maximum
 
         # Test custom bounds
         assert clamp(5, 0, 10) == 5
@@ -270,15 +254,11 @@ class TestIntegrationScenarios:
 
         # Apply stress impact
         affect_change = compute_stress_impact_on_affect(
-            current_affect=affect,
-            is_stressed=is_stressed,
-            coped_successfully=coped_successfully
+            current_affect=affect, is_stressed=is_stressed, coped_successfully=coped_successfully
         )
 
         resilience_change = compute_stress_impact_on_resilience(
-            current_resilience=resilience,
-            is_stressed=is_stressed,
-            coped_successfully=coped_successfully
+            current_resilience=resilience, is_stressed=is_stressed, coped_successfully=coped_successfully
         )
 
         affect += affect_change
@@ -288,8 +268,8 @@ class TestIntegrationScenarios:
         partner_affect = 0.8
         partner_resilience = 0.7
 
-        new_affect, new_partner_affect, new_resilience, new_partner_resilience = (
-            process_interaction(affect, partner_affect, resilience, partner_resilience, config)
+        new_affect, new_partner_affect, new_resilience, new_partner_resilience = process_interaction(
+            affect, partner_affect, resilience, partner_resilience, config
         )
 
         # Agent should have improved due to positive social interaction
@@ -310,10 +290,7 @@ class TestNewStressProcessingMechanisms:
     def test_compute_coping_probability_basic(self):
         """Test basic coping probability computation with new mechanism."""
         config = StressProcessingConfig(
-            base_coping_probability=0.5,
-            challenge_bonus=0.2,
-            hindrance_penalty=0.3,
-            social_influence_factor=0.1
+            base_coping_probability=0.5, challenge_bonus=0.2, hindrance_penalty=0.3, social_influence_factor=0.1
         )
 
         challenge = 0.7
@@ -373,11 +350,10 @@ class TestNewStressProcessingMechanisms:
         neighbor_affects = [0.2, 0.4, 0.6]
 
         # Use deterministic RNG for testing
-        with patch('numpy.random.random', return_value=0.5):
+        with patch("numpy.random.random", return_value=0.5):
             new_affect, new_resilience, new_stress, coped_successfully = (
                 determine_coping_outcome_and_psychological_impact(
-                    current_affect, current_resilience, current_stress,
-                    challenge, hindrance, neighbor_affects, config
+                    current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
                 )
             )
 
@@ -395,12 +371,12 @@ class TestNewStressProcessingMechanisms:
         config = StressProcessingConfig()
 
         # Should have all required attributes
-        assert hasattr(config, 'base_coping_probability')
-        assert hasattr(config, 'challenge_bonus')
-        assert hasattr(config, 'hindrance_penalty')
-        assert hasattr(config, 'social_influence_factor')
-        assert hasattr(config, 'daily_decay_rate')
-        assert hasattr(config, 'stress_decay_rate')
+        assert hasattr(config, "base_coping_probability")
+        assert hasattr(config, "challenge_bonus")
+        assert hasattr(config, "hindrance_penalty")
+        assert hasattr(config, "social_influence_factor")
+        assert hasattr(config, "daily_decay_rate")
+        assert hasattr(config, "stress_decay_rate")
 
         # All values should be in reasonable ranges
         assert 0.0 <= config.base_coping_probability <= 1.0
