@@ -208,7 +208,7 @@ pixi run python --version
 # Set up pre-commit hooks (optional)
 git config core.hooksPath .githooks
 
-The hook runs `pixi run precommit` which checks: formatting (ruff + black), linting (ruff check), and tests (coverage + config).
+The hook runs `pixi run prettify && pixi run format && pixi run lint` always, and only runs tests (`pixi run test-cov && pixi run test-config`) when `*.py` files are staged.
 ```
 
 ### Running Tests During Development

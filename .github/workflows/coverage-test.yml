@@ -19,4 +19,4 @@ jobs:
     - name: Run precommit checks
       env:
         DOTENV_FILE: .env.example
-      run: pixi run precommit
+      run: pixi run prettify && pixi run format && pixi run lint && pixi run test-cov && pixi run test-config

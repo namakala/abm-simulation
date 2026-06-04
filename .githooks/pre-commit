@@ -4,7 +4,16 @@ set -e
 export DOTENV_FILE=.env.example
 
 echo "==> Running pre-commit checks..."
-pixi run precommit
+
+# Always run lint/format
+pixi run prettify && pixi run format && pixi run lint
+
+# Only run tests if .py files were staged
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '\.py$'; then
+    pixi run test-cov && pixi run test-config
+else
+    echo "==> No Python files changed, skipping tests."
+fi
 
 # Re-stage files auto-formatted by ruff/black
 git add src/python/
