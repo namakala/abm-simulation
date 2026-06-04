@@ -12,20 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Cache conda environment
-      uses: actions/cache@v3
+    - uses: prefix-dev/setup-pixi@v0
       with:
-        path: ${{ env.CONDA }}/envs
-        key: ${{ runner.os }}-conda-${{ hashFiles('environment.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-conda-
-
-    - name: Set up conda
-      uses: conda-incubator/setup-miniconda@v3
-      with:
-        miniconda-version: 'latest'
-        environment-file: environment.yml
-        activate-environment: ABM
+        activate-environment: true
 
     - name: Create .env file for testing
       run: |
@@ -33,12 +22,9 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        # Activate conda environment and run tests
-        source ${{ env.CONDA }}/etc/profile.d/conda.sh
-        conda activate ABM
         echo "Python path: $(which python)"
         echo "Python version: $(python --version)"
-        echo "Conda environment: $(conda env list)"
+        echo "Pixi environment: $(pixi info)"
         python -c "import pytest; print('pytest version:', pytest.__version__)"
-        python -m pytest src/python/tests -m "not config" -q --tb=no --disable-warnings
-        python -m pytest src/python/tests -m "config" --no-cov -q --tb=no --disable-warnings
+        pixi run test-cov
+        pixi run test-config

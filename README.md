@@ -43,11 +43,13 @@ cp .env.example .env
 nano .env  # or your preferred editor
 ```
 
-### 3. Create Conda Environment
+### 3. Set Up Pixi Environment
+
+This project uses [pixi](https://pixi.sh) for environment management (a fast, reproducible replacement for conda).
+
 ```bash
-# Create and activate the environment
-conda env create -f environment.yml
-conda activate ABM
+# Install dependencies (creates environment from pixi.toml + pixi.lock)
+pixi install
 
 # Verify installation
 python -c "import mesa, networkx, numpy, pandas; print('All dependencies installed successfully')"
@@ -56,22 +58,22 @@ python -c "import mesa, networkx, numpy, pandas; print('All dependencies install
 ### 4. Run Simulation
 ```bash
 # Run the simulation
-python simulate.py
+pixi run simulate
 
 # Run with custom parameters
-python simulate.py --days 100 --agents 500 --seed 42
+pixi run simulate -- --days 100 --agents 500 --seed 42
 ```
 
 ### 5. Run Tests
 ```bash
 # Run all tests
-python -m pytest src/python/tests
+pixi run test
 
 # Run with coverage report
-python -m pytest src/python/tests --cov=src/python --cov-report=html
+pixi run test-cov
 
 # Run specific test file
-python -m pytest src/python/tests/test_agent_integration.py -v
+pixi run test -- -v src/python/tests/test_agent_integration.py
 ```
 
 ## Command-Line Arguments
@@ -119,7 +121,9 @@ All parameters are documented in `CONFIGURATION.md` with usage scenarios and res
 
 ```
 abm-simulation/
-├── src/python/           # Core ABM implementation
+├── pixi.toml            # Pixi project manifest (dependencies, tasks)
+├── pixi.lock            # Reproducible environment lockfile
+├── src/python/          # Core ABM implementation
 │   ├── agent.py         # Person agent with stress/social dynamics
 │   ├── model.py         # Main simulation model with DataCollector
 │   ├── stress_utils.py  # Stress event generation and processing
