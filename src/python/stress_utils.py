@@ -1,14 +1,14 @@
 """
 You are an expert in Python simulation design and psychometrics. Your task is to implement empirically grounded PSS-10 score generation for initializing and updating agent stress in an agent-based model.
 
-2. **Score Generation**  
-   - Implement a function to generate PSS-10 item scores:  
-     - Each item is sampled from a normal distribution defined by its mean and standard deviation obtained from `PSS10_ITEM_MEAN` and `PSS10_ITEM_SD`.  
-     - Values must be rounded to the nearest integer and bounded to `[0, 4]` with `clamp`.  
+2. **Score Generation**
+   - Implement a function to generate PSS-10 item scores:
+     - Each item is sampled from a normal distribution defined by its mean and standard deviation obtained from `PSS10_ITEM_MEAN` and `PSS10_ITEM_SD`.
+     - Values must be rounded to the nearest integer and bounded to `[0, 4]` with `clamp`.
      - Use `PSS10Item` dataclass
    - Dimension correlation:
-     - Controllability dimension: items 4, 5, 7, 8.  
-     - Overload dimension: items 1, 2, 3, 5, 6, 9, 10.  
+     - Controllability dimension: items 4, 5, 7, 8.
+     - Overload dimension: items 1, 2, 3, 5, 6, 9, 10.
      - The correlation of these dimension are configured with `PSS10_BIFACTOR_COR`.
      - Preserve empirical correlation between controllability and overload (e.g., by sampling from a multivariate distribution or correlated random draws).
 Stress-related utility functions for agent-based mental health simulation.
@@ -23,11 +23,11 @@ This module contains stateless functions for:
 
 import hashlib
 import numpy as np
-from typing import Tuple, Optional, Dict, Any, List
+from typing import Tuple, Optional, Dict, Any
 from dataclasses import dataclass, field
 
 from src.python.config import get_config
-from src.python.math_utils import clamp, sigmoid, inverse_sigmoid_transform
+from src.python.math_utils import clamp
 
 # Load configuration
 config = get_config()
@@ -36,30 +36,36 @@ config = get_config()
 @dataclass
 class StressEvent:
     """Represents a stress event with controllability and overload."""
-    controllability: float # c ∈ [0,1]
-    overload: float        # o ∈ [0,1]
+
+    controllability: float  # c ∈ [0,1]
+    overload: float  # o ∈ [0,1]
 
 
 @dataclass
 class AppraisalWeights:
     """Weights for the apply-weight function in stress appraisal."""
-    omega_c: float = field(default_factory=lambda: get_config().get('appraisal', 'omega_c')) # Weight for controllability
-    omega_o: float = field(default_factory=lambda: get_config().get('appraisal', 'omega_o')) # Weight for overload
-    bias: float    = field(default_factory=lambda: get_config().get('appraisal', 'bias')) # Bias term
-    gamma: float   = field(default_factory=lambda: get_config().get('appraisal', 'gamma')) # Sigmoid steepness
+
+    omega_c: float = field(
+        default_factory=lambda: get_config().get("appraisal", "omega_c")
+    )  # Weight for controllability
+    omega_o: float = field(default_factory=lambda: get_config().get("appraisal", "omega_o"))  # Weight for overload
+    bias: float = field(default_factory=lambda: get_config().get("appraisal", "bias"))  # Bias term
+    gamma: float = field(default_factory=lambda: get_config().get("appraisal", "gamma"))  # Sigmoid steepness
 
 
 @dataclass
 class ThresholdParams:
     """Parameters for stress threshold evaluation."""
-    base_threshold: float  = field(default_factory=lambda: get_config().get('threshold', 'base_threshold'))
-    challenge_scale: float = field(default_factory=lambda: get_config().get('threshold', 'challenge_scale'))
-    hindrance_scale: float = field(default_factory=lambda: get_config().get('threshold', 'hindrance_scale'))
+
+    base_threshold: float = field(default_factory=lambda: get_config().get("threshold", "base_threshold"))
+    challenge_scale: float = field(default_factory=lambda: get_config().get("threshold", "challenge_scale"))
+    hindrance_scale: float = field(default_factory=lambda: get_config().get("threshold", "hindrance_scale"))
 
 
 @dataclass
 class PSS10Item:
     """Represents a PSS-10 questionnaire item with empirically grounded factor loadings."""
+
     text: str = ""
     reverse_scored: bool = False
     weight_controllability: float = 0.0
@@ -67,8 +73,7 @@ class PSS10Item:
 
 
 def generate_stress_event(
-    rng: Optional[np.random.Generator] = None,
-    config: Optional[Dict[str, Any]] = None
+    rng: Optional[np.random.Generator] = None, config: Optional[Dict[str, Any]] = None
 ) -> StressEvent:
     """
     Generate a random stress event with controllability and overload.
@@ -88,25 +93,22 @@ def generate_stress_event(
 
     if config is None:
         config = {
-            'controllability_mean': cfg.get('stress', 'controllability_mean'),
-            'controllability_sd': cfg.get('stress', 'controllability_sd'),
-            'overload_mean': cfg.get('stress', 'overload_mean'),
-            'overload_sd': cfg.get('stress', 'overload_sd')
+            "controllability_mean": cfg.get("stress", "controllability_mean"),
+            "controllability_sd": cfg.get("stress", "controllability_sd"),
+            "overload_mean": cfg.get("stress", "overload_mean"),
+            "overload_sd": cfg.get("stress", "overload_sd"),
         }
 
     # Generate event attributes using truncated normal distribution for bounded [0,1] values
     # Use mean and SD from config instead of fixed beta distribution
-    controllability_raw = rng.normal(config['controllability_mean'], config['controllability_sd'])
-    overload_raw = rng.normal(config['overload_mean'], config['overload_sd'])
+    controllability_raw = rng.normal(config["controllability_mean"], config["controllability_sd"])
+    overload_raw = rng.normal(config["overload_mean"], config["overload_sd"])
 
     # Clamp to [0,1] range to ensure valid values
     controllability = max(0.0, min(1.0, controllability_raw))
     overload = max(0.0, min(1.0, overload_raw))
 
-    return StressEvent(
-        controllability=controllability,
-        overload=overload
-    )
+    return StressEvent(controllability=controllability, overload=overload)
 
 
 def sigmoid(x: float, gamma: float = 6.0) -> float:
@@ -123,10 +125,7 @@ def sigmoid(x: float, gamma: float = 6.0) -> float:
     return 1.0 / (1.0 + np.exp(-gamma * x))
 
 
-def apply_weights(
-    event: StressEvent,
-    weights: Optional[AppraisalWeights] = None
-) -> Tuple[float, float]:
+def apply_weights(event: StressEvent, weights: Optional[AppraisalWeights] = None) -> Tuple[float, float]:
     """
     Apply weights to stress event attributes to compute challenge and hindrance.
 
@@ -141,9 +140,7 @@ def apply_weights(
         weights = AppraisalWeights()
 
     # Compute weighted sum: z = ωc*c - ωo*o + b (removed predictability term)
-    z = (weights.omega_c * event.controllability -
-         weights.omega_o * event.overload +
-         weights.bias)
+    z = weights.omega_c * event.controllability - weights.omega_o * event.overload + weights.bias
 
     # Apply sigmoid to get challenge
     challenge = sigmoid(z, weights.gamma)
@@ -153,10 +150,7 @@ def apply_weights(
 
 
 def compute_appraised_stress(
-    event: StressEvent,
-    challenge: float,
-    hindrance: float,
-    config: Optional[Dict[str, float]] = None
+    event: StressEvent, challenge: float, hindrance: float, config: Optional[Dict[str, float]] = None
 ) -> float:
     """
     Compute overall appraised stress load from event and challenge/hindrance.
@@ -175,22 +169,17 @@ def compute_appraised_stress(
     if config is None:
         # Get fresh config instance to avoid global config issues
         cfg = get_config()
-        config = {
-            'delta': cfg.get('stress_params', 'delta')
-        }
+        config = {"delta": cfg.get("stress_params", "delta")}
 
     # Theoretical specification: L = 1 + δ*(hindrance - challenge) (removed magnitude)
-    polarity_effect = config['delta'] * (hindrance - challenge)
+    polarity_effect = config["delta"] * (hindrance - challenge)
     stress_load = 1.0 + polarity_effect
 
     return min(stress_load, 1.0)  # Cap at 1.0
 
 
 def evaluate_stress_threshold(
-    appraised_stress: float,
-    challenge: float,
-    hindrance: float,
-    threshold_params: Optional[ThresholdParams] = None
+    appraised_stress: float, challenge: float, hindrance: float, threshold_params: Optional[ThresholdParams] = None
 ) -> bool:
     """
     Evaluate whether an agent becomes stressed based on appraised stress and threshold.
@@ -208,15 +197,17 @@ def evaluate_stress_threshold(
         # Get fresh config instance to avoid global config issues
         cfg = get_config()
         threshold_params = ThresholdParams(
-            base_threshold=cfg.get('threshold', 'base_threshold'),
-            challenge_scale=cfg.get('threshold', 'challenge_scale'),
-            hindrance_scale=cfg.get('threshold', 'hindrance_scale')
+            base_threshold=cfg.get("threshold", "base_threshold"),
+            challenge_scale=cfg.get("threshold", "challenge_scale"),
+            hindrance_scale=cfg.get("threshold", "hindrance_scale"),
         )
 
     # Effective threshold: T_eff = T_base + λ_C*challenge - λ_H*hindrance
-    effective_threshold = (threshold_params.base_threshold +
-                          threshold_params.challenge_scale * challenge -
-                          threshold_params.hindrance_scale * hindrance)
+    effective_threshold = (
+        threshold_params.base_threshold
+        + threshold_params.challenge_scale * challenge
+        - threshold_params.hindrance_scale * hindrance
+    )
 
     # Clamp effective threshold to [0,1]
     effective_threshold = max(0.0, min(1.0, effective_threshold))
@@ -229,7 +220,7 @@ def process_stress_event(
     threshold_params: Optional[ThresholdParams] = None,
     weights: Optional[AppraisalWeights] = None,
     rng: Optional[np.random.Generator] = None,
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[Dict[str, Any]] = None,
 ) -> Tuple[bool, float, float]:
     """
     Complete stress event processing pipeline.
@@ -251,9 +242,7 @@ def process_stress_event(
     appraised_stress = compute_appraised_stress(event, challenge, hindrance, config)
 
     # Evaluate threshold
-    is_stressed = evaluate_stress_threshold(
-        appraised_stress, challenge, hindrance, threshold_params
-    )
+    is_stressed = evaluate_stress_threshold(appraised_stress, challenge, hindrance, threshold_params)
 
     return is_stressed, challenge, hindrance
 
@@ -270,69 +259,67 @@ def create_pss10_mapping() -> Dict[int, PSS10Item]:
             text="In the last month, how often have you been upset because of something that happened unexpectedly?",
             reverse_scored=False,
             weight_controllability=0.2,  # Low controllability loading
-            weight_overload=0.7         # High overload loading
+            weight_overload=0.7,  # High overload loading
         ),
         2: PSS10Item(
             text="In the last month, how often have you felt that you were unable to control the important things in your life?",
             reverse_scored=False,
             weight_controllability=0.8,  # High controllability loading
-            weight_overload=0.3         # Medium overload loading
+            weight_overload=0.3,  # Medium overload loading
         ),
         3: PSS10Item(
             text="In the last month, how often have you felt nervous and 'stressed'?",
             reverse_scored=False,
             weight_controllability=0.1,  # Low controllability loading
-            weight_overload=0.8         # High overload loading
+            weight_overload=0.8,  # High overload loading
         ),
         4: PSS10Item(
             text="In the last month, how often have you felt confident about your ability to handle your personal problems?",
             reverse_scored=True,  # Reverse scored item
             weight_controllability=0.7,  # High controllability loading
-            weight_overload=0.2         # Low overload loading
+            weight_overload=0.2,  # Low overload loading
         ),
         5: PSS10Item(
             text="In the last month, how often have you felt that things were going your way?",
             reverse_scored=True,  # Reverse scored item
             weight_controllability=0.6,  # Medium-high controllability loading
-            weight_overload=0.4         # Medium overload loading
+            weight_overload=0.4,  # Medium overload loading
         ),
         6: PSS10Item(
             text="In the last month, how often have you found that you could not cope with all the things that you had to do?",
             reverse_scored=False,
             weight_controllability=0.1,  # Low controllability loading
-            weight_overload=0.9         # Very high overload loading
+            weight_overload=0.9,  # Very high overload loading
         ),
         7: PSS10Item(
             text="In the last month, how often have you been able to control irritations in your life?",
             reverse_scored=True,  # Reverse scored item
             weight_controllability=0.8,  # High controllability loading
-            weight_overload=0.2         # Low overload loading
+            weight_overload=0.2,  # Low overload loading
         ),
         8: PSS10Item(
             text="In the last month, how often have you felt that you were on top of things?",
             reverse_scored=True,  # Reverse scored item
             weight_controllability=0.6,  # Medium-high controllability loading
-            weight_overload=0.3         # Low-medium overload loading
+            weight_overload=0.3,  # Low-medium overload loading
         ),
         9: PSS10Item(
             text="In the last month, how often have you been angered because of things that were outside of your control?",
             reverse_scored=False,
             weight_controllability=0.7,  # High controllability loading
-            weight_overload=0.4         # Medium overload loading
+            weight_overload=0.4,  # Medium overload loading
         ),
         10: PSS10Item(
             text="In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?",
             reverse_scored=False,
             weight_controllability=0.1,  # Low controllability loading
-            weight_overload=0.9         # Very high overload loading
-        )
+            weight_overload=0.9,  # Very high overload loading
+        ),
     }
 
 
 def map_agent_stress_to_pss10(
-    controllability: float,
-    overload: float,
-    rng: Optional[np.random.Generator] = None
+    controllability: float, overload: float, rng: Optional[np.random.Generator] = None
 ) -> Dict[int, int]:
     """
     Map agent stress state to PSS-10 item responses using empirically grounded bifactor model.
@@ -386,7 +373,7 @@ def compute_pss10_score(responses: Dict[int, int]) -> int:
         response = responses[item_num]
         if item_num in reverse_items:
             # Reverse score: 0→4, 1→3, 2→2, 3→1, 4→0
-            total_score += (4 - response)
+            total_score += 4 - response
         else:
             total_score += response
 
@@ -422,7 +409,7 @@ def generate_pss10_dimension_scores(
     overload: float,
     correlation: Optional[float] = None,
     rng: Optional[np.random.Generator] = None,
-    deterministic: bool = False
+    deterministic: bool = False,
 ) -> Tuple[float, float]:
     """
     Generate correlated controllability and overload dimension scores using multivariate normal distribution.
@@ -442,11 +429,11 @@ def generate_pss10_dimension_scores(
 
     # Use config correlation if not provided
     if correlation is None:
-        correlation = cfg.get('pss10', 'bifactor_correlation')
+        correlation = cfg.get("pss10", "bifactor_correlation")
 
     # Get regularized standard deviations from config
-    controllability_sd = cfg.get('pss10', 'controllability_sd') / 4
-    overload_sd = cfg.get('pss10', 'overload_sd') / 4
+    controllability_sd = cfg.get("pss10", "controllability_sd") / 4
+    overload_sd = cfg.get("pss10", "overload_sd") / 4
 
     if deterministic:
         # Create a deterministic seed from input parameters
@@ -460,18 +447,15 @@ def generate_pss10_dimension_scores(
 
     # Create covariance matrix for bivariate normal distribution
     # Use regularized standard deviations from config
-    var_c = controllability_sd ** 2  # Variance for controllability dimension
-    var_o = overload_sd ** 2         # Variance for overload dimension
+    var_c = controllability_sd**2  # Variance for controllability dimension
+    var_o = overload_sd**2  # Variance for overload dimension
     cov = correlation * np.sqrt(var_c * var_o)  # Covariance term
 
     # Mean vector for the bivariate distribution
     mean_vector = np.array([controllability, overload])
 
     # Covariance matrix
-    cov_matrix = np.array([
-        [var_c, cov],
-        [cov, var_o]
-    ])
+    cov_matrix = np.array([[var_c, cov], [cov, var_o]])
 
     # Sample from multivariate normal distribution
     correlated_scores = local_rng.multivariate_normal(mean_vector, cov_matrix)
@@ -492,7 +476,7 @@ def generate_pss10_item_response(
     overload_score: float,
     reverse_scored: bool,
     rng: Optional[np.random.Generator] = None,
-    deterministic: bool = False
+    deterministic: bool = False,
 ) -> int:
     """
     Generate a single PSS-10 item response using empirically grounded factor loadings.
@@ -524,8 +508,8 @@ def generate_pss10_item_response(
     # Higher controllability → lower stress response (unless reverse scored)
     # Higher overload → higher stress response
     stress_component = (
-        controllability_loading * (1.0 - controllability_score) + # Low controllability = high stress
-        overload_loading * overload_score                         # High overload = high stress
+        controllability_loading * (1.0 - controllability_score)  # Low controllability = high stress
+        + overload_loading * overload_score  # High overload = high stress
     )
 
     # Normalize by total loading (avoid division by zero)
@@ -535,7 +519,7 @@ def generate_pss10_item_response(
     # Transform from normal distribution around the empirically observed mean
     # Adjust mean based on current stress level, normalized to [0, 4]
     adjusted_mean = normalized_stress * 4
-    raw_response  = clamp(adjusted_mean, 0, 4) # Limit to range [0, 4]
+    raw_response = clamp(adjusted_mean, 0, 4)  # Limit to range [0, 4]
 
     # Add small amount of measurement error using local RNG
     measurement_error = local_rng.normal(0, 0.1)
@@ -557,7 +541,7 @@ def generate_pss10_responses(
     overload: float,
     rng: Optional[np.random.Generator] = None,
     config: Optional[Dict[str, Any]] = None,
-    deterministic: bool = False
+    deterministic: bool = False,
 ) -> Dict[int, int]:
     """
     Generate complete PSS-10 responses for an agent using empirically grounded bifactor model.
@@ -580,16 +564,16 @@ def generate_pss10_responses(
 
     if config is None:
         config = {
-            'item_means': cfg.get('pss10', 'item_means'),
-            'item_sds': cfg.get('pss10', 'item_sds'),
-            'load_controllability': cfg.get('pss10', 'load_controllability'),
-            'load_overload': cfg.get('pss10', 'load_overload'),
-            'bifactor_correlation': cfg.get('pss10', 'bifactor_correlation')
+            "item_means": cfg.get("pss10", "item_means"),
+            "item_sds": cfg.get("pss10", "item_sds"),
+            "load_controllability": cfg.get("pss10", "load_controllability"),
+            "load_overload": cfg.get("pss10", "load_overload"),
+            "bifactor_correlation": cfg.get("pss10", "bifactor_correlation"),
         }
 
     # Generate correlated dimension scores using merged function with deterministic behavior
     correlated_controllability, correlated_overload = generate_pss10_dimension_scores(
-        controllability, overload, config['bifactor_correlation'], rng, deterministic
+        controllability, overload, config["bifactor_correlation"], rng, deterministic
     )
 
     # Get PSS-10 item mapping
@@ -601,15 +585,15 @@ def generate_pss10_responses(
         item = pss10_items[item_num]
 
         response = generate_pss10_item_response(
-            item_mean=config['item_means'][item_num - 1],
-            item_sd=config['item_sds'][item_num - 1],
+            item_mean=config["item_means"][item_num - 1],
+            item_sd=config["item_sds"][item_num - 1],
             controllability_loading=item.weight_controllability,
             overload_loading=item.weight_overload,
             controllability_score=correlated_controllability,
             overload_score=correlated_overload,
             reverse_scored=item.reverse_scored,
             rng=rng,
-            deterministic=deterministic
+            deterministic=deterministic,
         )
 
         responses[item_num] = response
@@ -621,7 +605,7 @@ def initialize_pss10_from_items(
     controllability_score: float,
     overload_score: float,
     rng: np.random.Generator,
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Initialize PSS-10 responses and derived stress dimensions from item responses.
@@ -640,13 +624,13 @@ def initialize_pss10_from_items(
 
     if config is None:
         config = {
-            'controllability_sd': cfg.get('pss10', 'controllability_sd') / 4,
-            'overload_sd': cfg.get('pss10', 'overload_sd') / 4,
-            'item_means': cfg.get('pss10', 'item_means'),
-            'item_sds': cfg.get('pss10', 'item_sds'),
-            'load_controllability': cfg.get('pss10', 'load_controllability'),
-            'load_overload': cfg.get('pss10', 'load_overload'),
-            'threshold': cfg.get('pss10', 'threshold')
+            "controllability_sd": cfg.get("pss10", "controllability_sd") / 4,
+            "overload_sd": cfg.get("pss10", "overload_sd") / 4,
+            "item_means": cfg.get("pss10", "item_means"),
+            "item_sds": cfg.get("pss10", "item_sds"),
+            "load_controllability": cfg.get("pss10", "load_controllability"),
+            "load_overload": cfg.get("pss10", "load_overload"),
+            "threshold": cfg.get("pss10", "threshold"),
         }
 
     # Clamp input scores to [0,1] range
@@ -660,10 +644,10 @@ def initialize_pss10_from_items(
         reverse_scored = item_num in [4, 5, 7, 8]
 
         # Get item parameters from configuration
-        item_mean = config['item_means'][item_num - 1]
-        item_sd = config['item_sds'][item_num - 1]
-        controllability_loading = config['load_controllability'][item_num - 1]
-        overload_loading = config['load_overload'][item_num - 1]
+        item_mean = config["item_means"][item_num - 1]
+        item_sd = config["item_sds"][item_num - 1]
+        controllability_loading = config["load_controllability"][item_num - 1]
+        overload_loading = config["load_overload"][item_num - 1]
 
         # Generate item response
         response = generate_pss10_item_response(
@@ -674,7 +658,7 @@ def initialize_pss10_from_items(
             controllability_score=controllability_score,
             overload_score=overload_score,
             reverse_scored=reverse_scored,
-            rng=rng
+            rng=rng,
         )
 
         pss10_responses[item_num] = response
@@ -703,15 +687,15 @@ def initialize_pss10_from_items(
     pss10_score = compute_pss10_score(pss10_responses)
 
     # Set initial stressed status based on PSS-10 threshold
-    pss10_threshold = config['threshold']
-    stressed = (pss10_score >= pss10_threshold)
+    pss10_threshold = config["threshold"]
+    stressed = pss10_score >= pss10_threshold
 
     return {
-        'pss10_responses': pss10_responses,
-        'stress_controllability': stress_controllability,
-        'stress_overload': stress_overload,
-        'pss10_score': pss10_score,
-        'stressed': stressed
+        "pss10_responses": pss10_responses,
+        "stress_controllability": stress_controllability,
+        "stress_overload": stress_overload,
+        "pss10_score": pss10_score,
+        "stressed": stressed,
     }
 
 
@@ -721,7 +705,7 @@ def generate_pss10_from_stress_dimensions(
     recent_stress_intensity: float = 0.0,
     stress_momentum: float = 0.0,
     rng: Optional[np.random.Generator] = None,
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Generate PSS-10 responses from current stress dimensions with enhanced dynamic response.
@@ -742,9 +726,9 @@ def generate_pss10_from_stress_dimensions(
 
     if config is None:
         config = {
-            'sensitivity': cfg.get('pss10', 'sensitivity'),
-            'momentum_weight': cfg.get('pss10', 'momentum_weight'),
-            'threshold': cfg.get('pss10', 'threshold')
+            "sensitivity": cfg.get("pss10", "sensitivity"),
+            "momentum_weight": cfg.get("pss10", "momentum_weight"),
+            "threshold": cfg.get("pss10", "threshold"),
         }
 
     if rng is None:
@@ -755,34 +739,28 @@ def generate_pss10_from_stress_dimensions(
     base_overload = stress_overload
 
     # Apply recent stress intensity for immediate response
-    intensity_boost = recent_stress_intensity * config['sensitivity']
+    intensity_boost = recent_stress_intensity * config["sensitivity"]
     dynamic_controllability = clamp(base_controllability - intensity_boost, 0, 1)
     dynamic_overload = clamp(base_overload + intensity_boost, 0, 1)
 
     # Apply stress momentum for predictive response
-    momentum_adjustment = stress_momentum * config['momentum_weight']
+    momentum_adjustment = stress_momentum * config["momentum_weight"]
     dynamic_controllability = clamp(dynamic_controllability + momentum_adjustment, 0, 1)
     dynamic_overload = clamp(dynamic_overload + abs(momentum_adjustment), 0, 1)
 
     # Generate PSS-10 responses using dynamic stress state
     pss10_responses = generate_pss10_responses(
-        controllability=dynamic_controllability,
-        overload=dynamic_overload,
-        rng=rng
+        controllability=dynamic_controllability, overload=dynamic_overload, rng=rng
     )
 
     # Calculate PSS-10 score
     pss10_score = compute_pss10_score(pss10_responses)
 
     # Update stressed status based on PSS-10 threshold
-    pss10_threshold = config['threshold']
-    stressed = (pss10_score >= pss10_threshold)
+    pss10_threshold = config["threshold"]
+    stressed = pss10_score >= pss10_threshold
 
-    return {
-        'pss10_responses': pss10_responses,
-        'pss10_score': pss10_score,
-        'stressed': stressed
-    }
+    return {"pss10_responses": pss10_responses, "pss10_score": pss10_score, "stressed": stressed}
 
 
 def update_stress_dimensions_from_pss10_feedback(
@@ -790,7 +768,7 @@ def update_stress_dimensions_from_pss10_feedback(
     current_overload: float,
     pss10_responses: Dict[int, int],
     current_resources: float,
-    config: Optional[Dict[str, float]] = None
+    config: Optional[Dict[str, float]] = None,
 ) -> Tuple[float, float]:
     """
     Update stress dimensions based on PSS-10 feedback for complete theoretical loop.
@@ -810,13 +788,13 @@ def update_stress_dimensions_from_pss10_feedback(
 
     if config is None:
         config = {
-            'feedback_weight': 0.005,  # Further damped weight for PSS-10 feedback
-            'resource_cost_factor': 0.1  # Resource cost consideration
+            "feedback_weight": 0.005,  # Further damped weight for PSS-10 feedback
+            "resource_cost_factor": 0.1,  # Resource cost consideration
         }
 
     # Resource cost consideration: reduce feedback when resources are low
-    resource_cost_penalty = (1.0 - current_resources) * config['resource_cost_factor']
-    effective_feedback_weight = config['feedback_weight'] * (1.0 - resource_cost_penalty)
+    resource_cost_penalty = (1.0 - current_resources) * config["resource_cost_factor"]
+    effective_feedback_weight = config["feedback_weight"] * (1.0 - resource_cost_penalty)
 
     # Calculate controllability stress from relevant PSS-10 items
     controllability_items = [4, 5, 7, 8]  # Reverse scored items
@@ -833,8 +811,8 @@ def update_stress_dimensions_from_pss10_feedback(
         pss10_controllability = np.mean(controllability_scores)
         # Blend current stress dimension with PSS-10 feedback
         updated_controllability = (
-            current_controllability * (1.0 - effective_feedback_weight) +
-            pss10_controllability * effective_feedback_weight
+            current_controllability * (1.0 - effective_feedback_weight)
+            + pss10_controllability * effective_feedback_weight
         )
     else:
         updated_controllability = current_controllability
@@ -854,8 +832,7 @@ def update_stress_dimensions_from_pss10_feedback(
         pss10_overload = np.mean(overload_scores)
         # Blend current stress dimension with PSS-10 feedback
         updated_overload = (
-            current_overload * (1.0 - effective_feedback_weight) +
-            pss10_overload * effective_feedback_weight
+            current_overload * (1.0 - effective_feedback_weight) + pss10_overload * effective_feedback_weight
         )
     else:
         updated_overload = current_overload
@@ -867,10 +844,7 @@ def update_stress_dimensions_from_pss10_feedback(
     return updated_controllability, updated_overload
 
 
-def compute_stress_from_pss10(
-    stress_controllability: float,
-    stress_overload: float
-) -> float:
+def compute_stress_from_pss10(stress_controllability: float, stress_overload: float) -> float:
     """
     Compute stress level from PSS-10 dimensions using improved correlation formula.
 
@@ -896,7 +870,7 @@ def update_stress_dimensions_from_event(
     coped_successfully: bool,
     is_stressful: bool = True,
     volatility: float = 0.5,
-    config: Optional[Dict[str, float]] = None
+    config: Optional[Dict[str, float]] = None,
 ) -> Tuple[float, float, float, float]:
     """
     Update agent's controllability and overload dimensions based on stress event outcomes.
@@ -919,17 +893,17 @@ def update_stress_dimensions_from_event(
 
     if config is None:
         config = {
-            'controllability_update_rate': cfg.get('stress_dynamics', 'controllability_update_rate'),
-            'overload_update_rate': cfg.get('stress_dynamics', 'overload_update_rate')
+            "controllability_update_rate": cfg.get("stress_dynamics", "controllability_update_rate"),
+            "overload_update_rate": cfg.get("stress_dynamics", "overload_update_rate"),
         }
 
     # For non-stressful events, apply minimal updates
     if not is_stressful:
-        config['controllability_update_rate'] = 0.0
-        config['overload_update_rate'] = 0.0
+        config["controllability_update_rate"] = 0.0
+        config["overload_update_rate"] = 0.0
 
     # Challenge vs hindrance effects on controllability
-    controllability_change_magnitude = ((challenge * 0.10) + (hindrance * 0.05))
+    controllability_change_magnitude = (challenge * 0.10) + (hindrance * 0.05)
     if coped_successfully:
         # Successful coping: challenge and hindrance builds controllability
         controllability_change = controllability_change_magnitude
@@ -962,15 +936,13 @@ def update_stress_dimensions_from_event(
     # Move toward baseline when no strong events, but allow event-driven changes
     homeostasis_pull = (baseline_overload - current_overload) * 0.05
     event_effect = overload_change * volatility
-    #event_effect = overload_change * config['overload_update_rate']
+    # event_effect = overload_change * config['overload_update_rate']
 
     updated_overload = current_overload + homeostasis_pull + event_effect
     updated_overload = clamp(updated_overload, 0.0, 1.0)
 
     # Update recent stress intensity and momentum for dynamic PSS-10 response
-    recent_stress_intensity, stress_momentum = _update_recent_stress_intensity(
-        challenge, hindrance, coped_successfully
-    )
+    recent_stress_intensity, stress_momentum = _update_recent_stress_intensity(challenge, hindrance, coped_successfully)
 
     recent_stress_intensity *= volatility
 
@@ -983,9 +955,7 @@ def update_stress_dimensions_from_event(
 
 
 def _update_recent_stress_intensity(
-    challenge: float,
-    hindrance: float,
-    coped_successfully: bool
+    challenge: float, hindrance: float, coped_successfully: bool
 ) -> Tuple[float, float]:
     """
     Update recent stress intensity and momentum for dynamic PSS-10 calculation.
@@ -1022,10 +992,7 @@ def _update_recent_stress_intensity(
     return recent_stress_intensity, stress_momentum
 
 
-def decay_recent_stress_intensity(
-    recent_stress_intensity: float,
-    stress_momentum: float
-) -> Tuple[float, float]:
+def decay_recent_stress_intensity(recent_stress_intensity: float, stress_momentum: float) -> Tuple[float, float]:
     """
     Apply natural decay to recent stress intensity over time.
 
@@ -1049,10 +1016,7 @@ def decay_recent_stress_intensity(
     return decayed_intensity, decayed_momentum
 
 
-def estimate_pss10_from_stress_dimensions(
-    stress_controllability: float,
-    stress_overload: float
-) -> Tuple[int, int]:
+def estimate_pss10_from_stress_dimensions(stress_controllability: float, stress_overload: float) -> Tuple[int, int]:
     """
     Estimate expected PSS-10 range based on current stress dimensions.
 
@@ -1136,7 +1100,7 @@ def validate_theoretical_correlations(
     stress_controllability: float,
     stress_overload: float,
     pss10_score: int,
-    current_stress: float
+    current_stress: float,
 ) -> bool:
     """
     Validate that theoretical correlations between stress processing components are maintained.
@@ -1178,13 +1142,13 @@ def validate_theoretical_correlations(
     # This is a long-term correlation that should emerge over multiple events
     if challenge > 0.7 and coped_successfully:
         # After successful high-challenge events, controllability should trend upward
-        expected_controllability_trend = "increasing"
+        pass
         # In a full implementation, we might track trends over time
 
     # Validate 6: Theoretical correlation - high hindrance should correlate with overload
     if hindrance > 0.7:
         # High hindrance events should increase overload
-        expected_overload_trend = "increasing"
+        pass
         # In a full implementation, we might track trends over time
 
     # Validate 7: PSS-10 should reflect stress dimensions

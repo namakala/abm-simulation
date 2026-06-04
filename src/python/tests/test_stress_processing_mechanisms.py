@@ -9,12 +9,14 @@ This file tests the core stress processing functionality including:
 - Complete stress processing pipeline
 """
 
-import pytest
 import numpy as np
 from src.python.affect_utils import (
-    compute_coping_probability, compute_challenge_hindrance_resilience_effect,
-    compute_daily_affect_reset, compute_stress_decay,
-    determine_coping_outcome_and_psychological_impact, StressProcessingConfig
+    compute_coping_probability,
+    compute_challenge_hindrance_resilience_effect,
+    compute_daily_affect_reset,
+    compute_stress_decay,
+    determine_coping_outcome_and_psychological_impact,
+    StressProcessingConfig,
 )
 
 
@@ -24,10 +26,7 @@ class TestCopingProbability:
     def test_coping_probability_basic(self):
         """Test basic coping probability computation."""
         config = StressProcessingConfig(
-            base_coping_probability=0.5,
-            challenge_bonus=0.2,
-            hindrance_penalty=0.3,
-            social_influence_factor=0.1
+            base_coping_probability=0.5, challenge_bonus=0.2, hindrance_penalty=0.3, social_influence_factor=0.1
         )
 
         challenge = 0.8
@@ -49,10 +48,7 @@ class TestCopingProbability:
     def test_coping_probability_high_hindrance(self):
         """Test coping probability with high hindrance and negative social influence."""
         config = StressProcessingConfig(
-            base_coping_probability=0.5,
-            challenge_bonus=0.2,
-            hindrance_penalty=0.3,
-            social_influence_factor=0.1
+            base_coping_probability=0.5, challenge_bonus=0.2, hindrance_penalty=0.3, social_influence_factor=0.1
         )
 
         challenge = 0.2
@@ -67,17 +63,14 @@ class TestCopingProbability:
         # With low challenge and high hindrance, probability should be below base
         expected_base_effect = 0.5 + (0.2 * 0.2) - (0.3 * 0.8)  # 0.5 + 0.04 - 0.24 = 0.3
         expected_social_effect = 0.1 * np.mean(neighbor_affects)  # 0.1 * (-0.5) = -0.05
-        expected_prob = expected_base_effect + expected_social_effect  # 0.25
+        expected_base_effect + expected_social_effect  # 0.25
 
         assert coping_prob < 0.5  # Should be below base probability
 
     def test_coping_probability_no_neighbors(self):
         """Test coping probability with no social influence."""
         config = StressProcessingConfig(
-            base_coping_probability=0.5,
-            challenge_bonus=0.2,
-            hindrance_penalty=0.3,
-            social_influence_factor=0.1
+            base_coping_probability=0.5, challenge_bonus=0.2, hindrance_penalty=0.3, social_influence_factor=0.1
         )
 
         challenge = 0.5
@@ -96,10 +89,7 @@ class TestCopingProbability:
     def test_coping_probability_extreme_values(self):
         """Test coping probability with extreme challenge/hindrance values."""
         config = StressProcessingConfig(
-            base_coping_probability=0.5,
-            challenge_bonus=0.2,
-            hindrance_penalty=0.3,
-            social_influence_factor=0.1
+            base_coping_probability=0.5, challenge_bonus=0.2, hindrance_penalty=0.3, social_influence_factor=0.1
         )
 
         # Test with maximum challenge, minimum hindrance
@@ -142,12 +132,8 @@ class TestChallengeHindranceResilienceEffect:
         assert resilience_effect > 0
 
         # High challenge should provide more benefit than high hindrance
-        high_challenge_effect = compute_challenge_hindrance_resilience_effect(
-            1.0, 0.0, True, config
-        )
-        high_hindrance_effect = compute_challenge_hindrance_resilience_effect(
-            0.0, 1.0, True, config
-        )
+        high_challenge_effect = compute_challenge_hindrance_resilience_effect(1.0, 0.0, True, config)
+        high_hindrance_effect = compute_challenge_hindrance_resilience_effect(0.0, 1.0, True, config)
 
         # High challenge should provide more benefit
         assert high_challenge_effect > high_hindrance_effect
@@ -168,12 +154,8 @@ class TestChallengeHindranceResilienceEffect:
         assert resilience_effect < 0
 
         # High hindrance should cause more damage than high challenge
-        high_challenge_effect = compute_challenge_hindrance_resilience_effect(
-            1.0, 0.0, False, config
-        )
-        high_hindrance_effect = compute_challenge_hindrance_resilience_effect(
-            0.0, 1.0, False, config
-        )
+        high_challenge_effect = compute_challenge_hindrance_resilience_effect(1.0, 0.0, False, config)
+        high_hindrance_effect = compute_challenge_hindrance_resilience_effect(0.0, 1.0, False, config)
 
         # High hindrance should cause more damage (more negative)
         assert high_hindrance_effect < high_challenge_effect
@@ -186,14 +168,10 @@ class TestChallengeHindranceResilienceEffect:
         hindrance = 0.5
 
         # Success case
-        success_effect = compute_challenge_hindrance_resilience_effect(
-            challenge, hindrance, True, config
-        )
+        success_effect = compute_challenge_hindrance_resilience_effect(challenge, hindrance, True, config)
 
         # Failure case
-        failure_effect = compute_challenge_hindrance_resilience_effect(
-            challenge, hindrance, False, config
-        )
+        failure_effect = compute_challenge_hindrance_resilience_effect(challenge, hindrance, False, config)
 
         # Success should increase resilience, failure should decrease it
         assert success_effect > 0
@@ -359,11 +337,8 @@ class TestCompleteStressProcessingPipeline:
         hindrance = 0.3
         neighbor_affects = [0.2, 0.4, 0.6]
 
-        new_affect, new_resilience, new_stress, coped_successfully = (
-            determine_coping_outcome_and_psychological_impact(
-                current_affect, current_resilience, current_stress,
-                challenge, hindrance, neighbor_affects, config
-            )
+        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
+            current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
         )
 
         # Check that all values are in valid ranges
@@ -377,7 +352,7 @@ class TestCompleteStressProcessingPipeline:
     def test_process_stress_event_coping_success(self):
         """Test stress processing with successful coping."""
         # Use deterministic RNG for testing
-        rng = np.random.default_rng(42)
+        np.random.default_rng(42)
 
         # Patch the random function to return predictable values
         original_random = np.random.random
@@ -395,13 +370,12 @@ class TestCompleteStressProcessingPipeline:
 
             new_affect, new_resilience, new_stress, coped_successfully = (
                 determine_coping_outcome_and_psychological_impact(
-                    current_affect, current_resilience, current_stress,
-                    challenge, hindrance, neighbor_affects, config
+                    current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
                 )
             )
 
             # With high challenge and positive social influence, coping should succeed
-            assert coped_successfully == True
+            assert coped_successfully
 
             # Successful coping should generally improve resilience and affect
             assert new_resilience >= current_resilience
@@ -417,7 +391,7 @@ class TestCompleteStressProcessingPipeline:
     def test_process_stress_event_coping_failure(self):
         """Test stress processing with failed coping."""
         # Use deterministic RNG for testing
-        rng = np.random.default_rng(42)
+        np.random.default_rng(42)
 
         # Patch the random function to return predictable values
         original_random = np.random.random
@@ -435,13 +409,12 @@ class TestCompleteStressProcessingPipeline:
 
             new_affect, new_resilience, new_stress, coped_successfully = (
                 determine_coping_outcome_and_psychological_impact(
-                    current_affect, current_resilience, current_stress,
-                    challenge, hindrance, neighbor_affects, config
+                    current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
                 )
             )
 
             # With low challenge and negative social influence, coping should fail
-            assert coped_successfully == False
+            assert not coped_successfully
 
             # Failed coping should generally decrease resilience and affect
             assert new_resilience <= current_resilience
@@ -467,11 +440,8 @@ class TestCompleteStressProcessingPipeline:
         hindrance = 0.0
         neighbor_affects = [1.0, 1.0, 1.0]
 
-        new_affect, new_resilience, new_stress, coped_successfully = (
-            determine_coping_outcome_and_psychological_impact(
-                current_affect, current_resilience, current_stress,
-                challenge, hindrance, neighbor_affects, config
-            )
+        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
+            current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
         )
 
         # All values should be in valid ranges
@@ -484,11 +454,8 @@ class TestCompleteStressProcessingPipeline:
         hindrance = 1.0
         neighbor_affects = [-1.0, -1.0, -1.0]
 
-        new_affect, new_resilience, new_stress, coped_successfully = (
-            determine_coping_outcome_and_psychological_impact(
-                current_affect, current_resilience, current_stress,
-                challenge, hindrance, neighbor_affects, config
-            )
+        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
+            current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
         )
 
         # All values should be in valid ranges
@@ -507,11 +474,8 @@ class TestCompleteStressProcessingPipeline:
         hindrance = 0.5
         neighbor_affects = []
 
-        new_affect, new_resilience, new_stress, coped_successfully = (
-            determine_coping_outcome_and_psychological_impact(
-                current_affect, current_resilience, current_stress,
-                challenge, hindrance, neighbor_affects, config
-            )
+        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
+            current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
         )
 
         # Should work without neighbors
@@ -529,14 +493,14 @@ class TestStressProcessingConfig:
         config = StressProcessingConfig()
 
         # Check that all required attributes exist
-        assert hasattr(config, 'stress_threshold')
-        assert hasattr(config, 'affect_threshold')
-        assert hasattr(config, 'base_coping_probability')
-        assert hasattr(config, 'social_influence_factor')
-        assert hasattr(config, 'challenge_bonus')
-        assert hasattr(config, 'hindrance_penalty')
-        assert hasattr(config, 'daily_decay_rate')
-        assert hasattr(config, 'stress_decay_rate')
+        assert hasattr(config, "stress_threshold")
+        assert hasattr(config, "affect_threshold")
+        assert hasattr(config, "base_coping_probability")
+        assert hasattr(config, "social_influence_factor")
+        assert hasattr(config, "challenge_bonus")
+        assert hasattr(config, "hindrance_penalty")
+        assert hasattr(config, "daily_decay_rate")
+        assert hasattr(config, "stress_decay_rate")
 
         # Check that values are in reasonable ranges
         assert 0.0 <= config.base_coping_probability <= 1.0
@@ -549,10 +513,7 @@ class TestStressProcessingConfig:
     def test_config_custom_values(self):
         """Test config with custom values."""
         config = StressProcessingConfig(
-            base_coping_probability=0.3,
-            challenge_bonus=0.4,
-            hindrance_penalty=0.5,
-            social_influence_factor=0.2
+            base_coping_probability=0.3, challenge_bonus=0.4, hindrance_penalty=0.5, social_influence_factor=0.2
         )
 
         assert config.base_coping_probability == 0.3

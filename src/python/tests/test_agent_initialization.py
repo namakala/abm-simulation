@@ -5,12 +5,10 @@ This file provides complete test coverage for the Person class __init__ method
 and related initialization functionality, including PSS-10 setup and configuration integration.
 """
 
-import pytest
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock
 from src.python.agent import Person
-from src.python.config import get_config, Config
-from src.python.math_utils import sample_normal, create_rng, sigmoid_transform, tanh_transform
+from src.python.config import get_config
 
 
 class MockModel:
@@ -32,15 +30,15 @@ class TestAgentInitializationCore:
         """Test that agent initialization uses the new transformation pipeline correctly."""
         # Test with specific configuration parameters
         config = {
-            'initial_resilience_mean': 0.7,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.2,
-            'initial_affect_sd': 0.15,
-            'initial_resources_mean': 0.8,
-            'initial_resources_sd': 0.05,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.7,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_mean": 0.2,
+            "initial_affect_sd": 0.15,
+            "initial_resources_mean": 0.8,
+            "initial_resources_sd": 0.05,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         model = MockModel(seed=42)
@@ -58,22 +56,22 @@ class TestAgentInitializationCore:
         # Verify transformation functions are being used (values should be different from means due to transformation)
         # With transformation pipeline, even with same seed, values will be transformed
         assert agent.resilience != 0.7  # Should be transformed from normal distribution
-        assert agent.affect != 0.2     # Should be transformed from normal distribution
+        assert agent.affect != 0.2  # Should be transformed from normal distribution
         assert agent.resources != 0.8  # Should be transformed from normal distribution
 
     def test_agent_initialization_bounds_enforcement(self):
         """Test that transformation pipeline enforces proper bounds regardless of input parameters."""
         # Test with extreme mean values that would be out of bounds without transformation
         config = {
-            'initial_resilience_mean': 2.0,  # Above valid range
-            'initial_resilience_sd': 0.1,
-            'initial_affect_mean': -3.0,     # Below valid range
-            'initial_affect_sd': 0.1,
-            'initial_resources_mean': -1.0,  # Below valid range
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 2.0,  # Above valid range
+            "initial_resilience_sd": 0.1,
+            "initial_affect_mean": -3.0,  # Below valid range
+            "initial_affect_sd": 0.1,
+            "initial_resources_mean": -1.0,  # Below valid range
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         model = MockModel(seed=42)
@@ -90,15 +88,15 @@ class TestAgentInitializationCore:
 
         # Test with very large standard deviations
         config_large_sd = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 10.0,  # Very large SD
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 5.0,      # Very large SD
-            'initial_resources_mean': 0.5,
-            'initial_resources_sd': 8.0,    # Very large SD
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 10.0,  # Very large SD
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 5.0,  # Very large SD
+            "initial_resources_mean": 0.5,
+            "initial_resources_sd": 8.0,  # Very large SD
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         agent_large_sd = Person(MockModel(seed=42), config_large_sd)
@@ -111,15 +109,15 @@ class TestAgentInitializationCore:
     def test_agent_initialization_realistic_variation(self):
         """Test that different agents get realistically varied initial values."""
         config = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.2,
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.3,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.15,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 0.2,
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.3,
+            "initial_resources_mean": 0.6,
+            "initial_resources_sd": 0.15,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         # Create multiple agents with different model seeds
@@ -147,8 +145,8 @@ class TestAgentInitializationCore:
 
         # Should have variation across agents (high probability with different seeds)
         assert len(set(resilience_values_rounded)) >= 2  # At least 2 different resilience values
-        assert len(set(affect_values_rounded)) >= 2      # At least 2 different affect values
-        assert len(set(resources_values_rounded)) >= 2   # At least 2 different resource values
+        assert len(set(affect_values_rounded)) >= 2  # At least 2 different affect values
+        assert len(set(resources_values_rounded)) >= 2  # At least 2 different resource values
 
         # Test that variation is realistic (not all extreme values)
         resilience_array = np.array(resilience_values)
@@ -161,21 +159,21 @@ class TestAgentInitializationCore:
         resources_std = np.std(resources_array)
 
         assert 0.01 < resilience_std < 0.5  # Reasonable variation range
-        assert 0.01 < affect_std < 0.8       # Reasonable variation range
-        assert 0.01 < resources_std < 0.4    # Reasonable variation range
+        assert 0.01 < affect_std < 0.8  # Reasonable variation range
+        assert 0.01 < resources_std < 0.4  # Reasonable variation range
 
     def test_agent_initialization_reproducible_with_transformation(self):
         """Test reproducible initialization with same seed using transformation pipeline."""
         config = {
-            'initial_resilience_mean': 0.6,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.1,
-            'initial_affect_sd': 0.2,
-            'initial_resources_mean': 0.7,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.6,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_mean": 0.1,
+            "initial_affect_sd": 0.2,
+            "initial_resources_mean": 0.7,
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         # Create two agents with identical configuration and model seed
@@ -202,28 +200,28 @@ class TestAgentInitializationCore:
         """Test integration with configuration system."""
         # Test that agent uses configuration values correctly
         config = {
-            'initial_resilience_mean': 0.8,
-            'initial_resilience_sd': 0.05,
-            'initial_affect_mean': -0.1,
-            'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.9,
-            'initial_resources_sd': 0.02,
-            'stress_probability': 0.3,
-            'coping_success_rate': 0.7,
-            'subevents_per_day': 5
+            "initial_resilience_mean": 0.8,
+            "initial_resilience_sd": 0.05,
+            "initial_affect_mean": -0.1,
+            "initial_affect_sd": 0.1,
+            "initial_resources_mean": 0.9,
+            "initial_resources_sd": 0.02,
+            "stress_probability": 0.3,
+            "coping_success_rate": 0.7,
+            "subevents_per_day": 5,
         }
 
         model = MockModel(seed=42)
         agent = Person(model, config)
 
         # Verify configuration is stored correctly
-        assert hasattr(agent, 'stress_config')
-        assert agent.stress_config['stress_probability'] == 0.3
-        assert agent.stress_config['coping_success_rate'] == 0.7
+        assert hasattr(agent, "stress_config")
+        assert agent.stress_config["stress_probability"] == 0.3
+        assert agent.stress_config["coping_success_rate"] == 0.7
 
         # Verify interaction config is initialized
-        assert hasattr(agent, 'interaction_config')
-        assert isinstance(agent.interaction_config, Mock) or hasattr(agent.interaction_config, '__dict__')
+        assert hasattr(agent, "interaction_config")
+        assert isinstance(agent.interaction_config, Mock) or hasattr(agent.interaction_config, "__dict__")
 
     def test_agent_initialization_protective_factors(self):
         """Test that protective factors are initialized correctly."""
@@ -231,7 +229,7 @@ class TestAgentInitializationCore:
         agent = Person(model)
 
         # Check that all protective factors are initialized
-        expected_factors = ['social_support', 'family_support', 'formal_intervention', 'psychological_capital']
+        expected_factors = ["social_support", "family_support", "formal_intervention", "psychological_capital"]
         for factor in expected_factors:
             assert factor in agent.protective_factors
             assert agent.protective_factors[factor] == 0.5  # Default value
@@ -266,7 +264,7 @@ class TestAgentInitializationCore:
         agent = Person(model)
 
         # Check that RNG is created and accessible
-        assert hasattr(agent, '_rng')
+        assert hasattr(agent, "_rng")
         assert agent._rng is not None
 
         # Test that RNG produces reproducible results
@@ -314,15 +312,15 @@ class TestPSS10Initialization:
     def test_pss10_initialization_reproducible(self):
         """Test that PSS-10 initialization is reproducible with same seed."""
         config = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.1,
-            'initial_resources_mean': 0.5,
-            'initial_resources_sd': 0.1,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.1,
+            "initial_resources_mean": 0.5,
+            "initial_resources_sd": 0.1,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         model1 = MockModel(seed=123)
@@ -345,12 +343,12 @@ class TestPSS10Initialization:
 
         # Test that stressed status is based on PSS-10 threshold
         cfg = get_config()
-        pss10_threshold = cfg.get('pss10', 'threshold')
+        pss10_threshold = cfg.get("pss10", "threshold")
 
         if agent.pss10 >= pss10_threshold:
-            assert agent.stressed == True
+            assert agent.stressed
         else:
-            assert agent.stressed == False
+            assert not agent.stressed
 
 
 class TestAgentInitializationEdgeCases:
@@ -360,15 +358,15 @@ class TestAgentInitializationEdgeCases:
         """Test initialization with extreme mean values."""
         # Test with means at boundaries
         config = {
-            'initial_resilience_mean': 1.0,  # Maximum
-            'initial_resilience_sd': 0.01,
-            'initial_affect_mean': -1.0,     # Minimum
-            'initial_affect_sd': 0.01,
-            'initial_resources_mean': 0.0,  # Minimum
-            'initial_resources_sd': 0.01,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 1.0,  # Maximum
+            "initial_resilience_sd": 0.01,
+            "initial_affect_mean": -1.0,  # Minimum
+            "initial_affect_sd": 0.01,
+            "initial_resources_mean": 0.0,  # Minimum
+            "initial_resources_sd": 0.01,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         model = MockModel(seed=42)
@@ -382,15 +380,15 @@ class TestAgentInitializationEdgeCases:
     def test_agent_initialization_zero_standard_deviation(self):
         """Test initialization with zero standard deviation."""
         config = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.0,  # No variation
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.0,     # No variation
-            'initial_resources_mean': 0.7,
-            'initial_resources_sd': 0.0,   # No variation
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 0.0,  # No variation
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.0,  # No variation
+            "initial_resources_mean": 0.7,
+            "initial_resources_sd": 0.0,  # No variation
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         model = MockModel(seed=42)
@@ -424,10 +422,20 @@ class TestAgentInitializationEdgeCases:
 
         # Should have all required attributes
         required_attrs = [
-            'protective_factors', 'current_stress', 'daily_stress_events',
-            'stress_history', 'daily_interactions', 'daily_support_exchanges',
-            'pss10_responses', 'stress_controllability', 'stress_overload',
-            'pss10', 'stressed', 'stress_config', 'interaction_config', '_rng'
+            "protective_factors",
+            "current_stress",
+            "daily_stress_events",
+            "stress_history",
+            "daily_interactions",
+            "daily_support_exchanges",
+            "pss10_responses",
+            "stress_controllability",
+            "stress_overload",
+            "pss10",
+            "stressed",
+            "stress_config",
+            "interaction_config",
+            "_rng",
         ]
 
         for attr in required_attrs:
@@ -436,15 +444,15 @@ class TestAgentInitializationEdgeCases:
     def test_agent_initialization_large_standard_deviation(self):
         """Test initialization with large standard deviation."""
         config = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 10.0,  # Very large SD
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 5.0,      # Very large SD
-            'initial_resources_mean': 0.5,
-            'initial_resources_sd': 8.0,    # Very large SD
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 10.0,  # Very large SD
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 5.0,  # Very large SD
+            "initial_resources_mean": 0.5,
+            "initial_resources_sd": 8.0,  # Very large SD
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         model = MockModel(seed=42)
@@ -469,11 +477,11 @@ class TestAgentInitializationIntegration:
         cfg = get_config()
 
         # Agent should use configuration values for stress_config
-        expected_stress_prob = cfg.get('agent', 'stress_probability')
-        expected_coping_rate = cfg.get('agent', 'coping_success_rate')
+        expected_stress_prob = cfg.get("agent", "stress_probability")
+        expected_coping_rate = cfg.get("agent", "coping_success_rate")
 
-        assert agent.stress_config['stress_probability'] == expected_stress_prob
-        assert agent.stress_config['coping_success_rate'] == expected_coping_rate
+        assert agent.stress_config["stress_probability"] == expected_stress_prob
+        assert agent.stress_config["coping_success_rate"] == expected_coping_rate
 
     def test_agent_initialization_uses_transformation_functions(self):
         """Test that agent initialization uses transformation functions correctly."""
@@ -481,15 +489,15 @@ class TestAgentInitializationIntegration:
         # rather than mocking (which can be unreliable with imports)
 
         config = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.1,
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.2,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.15,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 0.1,
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.2,
+            "initial_resources_mean": 0.6,
+            "initial_resources_sd": 0.15,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         model = MockModel(seed=42)
@@ -506,8 +514,8 @@ class TestAgentInitializationIntegration:
         # Values should be different from the raw means (indicating transformation occurred)
         # With transformation pipeline, even with same seed, values will be transformed
         assert agent.resilience != 0.5  # Should be sigmoid transformed from normal distribution
-        assert agent.affect != 0.0      # Should be tanh transformed from normal distribution
-        assert agent.resources != 0.6   # Should be sigmoid transformed from normal distribution
+        assert agent.affect != 0.0  # Should be tanh transformed from normal distribution
+        assert agent.resources != 0.6  # Should be sigmoid transformed from normal distribution
 
         # Test reproducibility - same seed should produce same results
         model2 = MockModel(seed=42)
@@ -521,15 +529,15 @@ class TestAgentInitializationIntegration:
     def test_agent_initialization_different_seeds_different_results(self):
         """Test that different seeds produce different initialization results."""
         config = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.2,
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.2,
-            'initial_resources_mean': 0.5,
-            'initial_resources_sd': 0.2,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 0.2,
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.2,
+            "initial_resources_mean": 0.5,
+            "initial_resources_sd": 0.2,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         # Create agents with different seeds
@@ -537,18 +545,20 @@ class TestAgentInitializationIntegration:
         for seed in [100, 200, 300]:
             model = MockModel(seed=seed)
             agent = Person(model, config)
-            agents_data.append({
-                'seed': seed,
-                'resilience': agent.resilience,
-                'affect': agent.affect,
-                'resources': agent.resources,
-                'pss10': agent.pss10
-            })
+            agents_data.append(
+                {
+                    "seed": seed,
+                    "resilience": agent.resilience,
+                    "affect": agent.affect,
+                    "resources": agent.resources,
+                    "pss10": agent.pss10,
+                }
+            )
 
         # With high probability, different seeds should produce different results
         # (This test might occasionally fail due to random chance, but should pass most of the time)
-        resilience_values = [data['resilience'] for data in agents_data]
-        affect_values = [data['affect'] for data in agents_data]
+        resilience_values = [data["resilience"] for data in agents_data]
+        affect_values = [data["affect"] for data in agents_data]
 
         # At least two different values should exist across the agents
         unique_resilience = set(np.round(resilience_values, 2))
@@ -563,15 +573,15 @@ class TestAgentPopulationVariation:
     def test_agent_population_statistical_properties(self):
         """Test that agent population shows realistic statistical properties."""
         config = {
-            'initial_resilience_mean': 0.6,
-            'initial_resilience_sd': 0.15,
-            'initial_affect_mean': 0.1,
-            'initial_affect_sd': 0.25,
-            'initial_resources_mean': 0.7,
-            'initial_resources_sd': 0.12,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.6,
+            "initial_resilience_sd": 0.15,
+            "initial_affect_mean": 0.1,
+            "initial_affect_sd": 0.25,
+            "initial_resources_mean": 0.7,
+            "initial_resources_sd": 0.12,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         # Create a larger population for statistical analysis
@@ -604,8 +614,8 @@ class TestAgentPopulationVariation:
         # Means should be reasonably close to configured values (within 2 SD)
         # Note: Transformation affects the relationship between configured and actual parameters
         assert abs(resilience_mean - 0.6) < 0.35  # Within reasonable range for sigmoid transformation
-        assert abs(affect_mean - 0.1) < 0.5       # Within 2 SD of 0.25
-        assert abs(resources_mean - 0.7) < 0.3    # Within reasonable range for sigmoid transformation
+        assert abs(affect_mean - 0.1) < 0.5  # Within 2 SD of 0.25
+        assert abs(resources_mean - 0.7) < 0.3  # Within reasonable range for sigmoid transformation
 
         # Standard deviations should be positive (showing variation)
         assert np.std(resilience_array) > 0.01
@@ -618,21 +628,21 @@ class TestAgentPopulationVariation:
         resources_range = np.max(resources_array) - np.min(resources_array)
 
         assert resilience_range > 0.1  # Should span at least 0.1 of the range
-        assert affect_range > 0.2      # Should span at least 0.2 of the range
-        assert resources_range > 0.1   # Should span at least 0.1 of the range
+        assert affect_range > 0.2  # Should span at least 0.2 of the range
+        assert resources_range > 0.1  # Should span at least 0.1 of the range
 
     def test_agent_population_normal_distribution_characteristics(self):
         """Test that transformed values maintain normal distribution characteristics."""
         config = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.2,
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.3,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.15,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 0.2,
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.3,
+            "initial_resources_mean": 0.6,
+            "initial_resources_sd": 0.15,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         # Create large population for distribution analysis
@@ -693,31 +703,36 @@ class TestAgentPopulationVariation:
         extreme_configs = [
             # Extreme means
             {
-                'initial_resilience_mean': 5.0, 'initial_resilience_sd': 0.1,
-                'initial_affect_mean': -5.0, 'initial_affect_sd': 0.1,
-                'initial_resources_mean': -2.0, 'initial_resources_sd': 0.1,
+                "initial_resilience_mean": 5.0,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": -5.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": -2.0,
+                "initial_resources_sd": 0.1,
             },
             # Extreme standard deviations
             {
-                'initial_resilience_mean': 0.5, 'initial_resilience_sd': 10.0,
-                'initial_affect_mean': 0.0, 'initial_affect_sd': 8.0,
-                'initial_resources_mean': 0.5, 'initial_resources_sd': 12.0,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 10.0,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 8.0,
+                "initial_resources_mean": 0.5,
+                "initial_resources_sd": 12.0,
             },
             # Zero standard deviation
             {
-                'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.0,
-                'initial_affect_mean': 0.0, 'initial_affect_sd': 0.0,
-                'initial_resources_mean': 0.5, 'initial_resources_sd': 0.0,
-            }
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.0,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.0,
+                "initial_resources_mean": 0.5,
+                "initial_resources_sd": 0.0,
+            },
         ]
 
         for config in extreme_configs:
             # Add common parameters
-            config.update({
-                'stress_probability': 0.5,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 3
-            })
+            config.update({"stress_probability": 0.5, "coping_success_rate": 0.5, "subevents_per_day": 3})
 
             # Test multiple agents with this configuration
             for seed in [42, 43, 44]:
@@ -730,7 +745,7 @@ class TestAgentPopulationVariation:
                 assert 0.0 <= agent.resources <= 1.0
 
                 # For zero SD case, should get deterministic results
-                if config['initial_resilience_sd'] == 0.0:
+                if config["initial_resilience_sd"] == 0.0:
                     # With zero SD, transformation should produce deterministic results
                     # The transformation pipeline may or may not equal the mean exactly
                     # but should be consistent across runs
@@ -739,15 +754,15 @@ class TestAgentPopulationVariation:
     def test_agent_population_realistic_heterogeneity(self):
         """Test that agent population shows realistic heterogeneity patterns."""
         config = {
-            'initial_resilience_mean': 0.6,
-            'initial_resilience_sd': 0.2,
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.3,
-            'initial_resources_mean': 0.65,
-            'initial_resources_sd': 0.18,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.6,
+            "initial_resilience_sd": 0.2,
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.3,
+            "initial_resources_mean": 0.65,
+            "initial_resources_sd": 0.18,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         # Create population with realistic size
@@ -809,8 +824,8 @@ class TestAgentPopulationVariation:
 
         # Should cover substantial portion of possible range
         assert resilience_range > 0.3  # Cover > 30% of [0,1] range
-        assert affect_range > 0.8      # Cover > 80% of [-1,1] range
-        assert resources_range > 0.3   # Cover > 30% of [0,1] range
+        assert affect_range > 0.8  # Cover > 80% of [-1,1] range
+        assert resources_range > 0.3  # Cover > 30% of [0,1] range
 
 
 # Example of how to run these tests:

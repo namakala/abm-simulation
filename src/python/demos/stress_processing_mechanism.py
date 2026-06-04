@@ -11,11 +11,9 @@ This script demonstrates the complete stress processing pipeline including:
 import sys
 import numpy as np
 
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.model import StressModel
-from src.python.agent import Person
-from src.python.config import Config, get_config
 from src.python.affect_utils import (
     compute_coping_probability,
     compute_challenge_hindrance_resilience_effect,
@@ -23,9 +21,8 @@ from src.python.affect_utils import (
     compute_stress_decay,
     determine_coping_outcome_and_psychological_impact,
     compute_homeostatic_adjustment,
-    StressProcessingConfig
 )
-from src.python.stress_utils import generate_stress_event, apply_weights, StressEvent
+from src.python.stress_utils import generate_stress_event, apply_weights
 
 
 def demonstrate_stress_processing_mechanisms():
@@ -46,20 +43,22 @@ def demonstrate_stress_processing_mechanisms():
     print("Initial agent states:")
     print("-" * 50)
     for i, agent in enumerate(model.agents):
-        print(f"Agent {i}: Affect={agent.affect:.3f}, Resilience={agent.resilience:.3f}, Stress={getattr(agent, 'current_stress', 0):.3f}")
+        print(
+            f"Agent {i}: Affect={agent.affect:.3f}, Resilience={agent.resilience:.3f}, Stress={getattr(agent, 'current_stress', 0):.3f}"
+        )
     print()
 
     # Track stress processing data for analysis
     stress_processing_data = {
-        'day': [],
-        'agent_id': [],
-        'challenge': [],
-        'hindrance': [],
-        'coping_success': [],
-        'affect_change': [],
-        'resilience_change': [],
-        'stress_change': [],
-        'social_influence': []
+        "day": [],
+        "agent_id": [],
+        "challenge": [],
+        "hindrance": [],
+        "coping_success": [],
+        "affect_change": [],
+        "resilience_change": [],
+        "stress_change": [],
+        "social_influence": [],
     }
 
     print("Running simulation with stress processing tracking...")
@@ -77,7 +76,7 @@ def demonstrate_stress_processing_mechanisms():
 
         for i, agent in enumerate(model.agents):
             # Get daily stress events for this agent
-            daily_events = getattr(agent, 'daily_stress_events', [])
+            daily_events = getattr(agent, "daily_stress_events", [])
 
             if daily_events:
                 # Show the most recent stress event
@@ -88,19 +87,25 @@ def demonstrate_stress_processing_mechanisms():
                 print(f"  Stress Level: {latest_event['stress_level']:.3f}")
 
                 # Track for analysis
-                stress_processing_data['day'].append(day + 1)
-                stress_processing_data['agent_id'].append(i)
-                stress_processing_data['challenge'].append(latest_event['challenge'])
-                stress_processing_data['hindrance'].append(latest_event['hindrance'])
-                stress_processing_data['coping_success'].append(latest_event['coped_successfully'])
-                stress_processing_data['affect_change'].append(agent.affect - getattr(agent, '_prev_affect', agent.affect))
-                stress_processing_data['resilience_change'].append(agent.resilience - getattr(agent, '_prev_resilience', agent.resilience))
-                stress_processing_data['stress_change'].append(agent.current_stress - getattr(agent, '_prev_stress', agent.current_stress))
+                stress_processing_data["day"].append(day + 1)
+                stress_processing_data["agent_id"].append(i)
+                stress_processing_data["challenge"].append(latest_event["challenge"])
+                stress_processing_data["hindrance"].append(latest_event["hindrance"])
+                stress_processing_data["coping_success"].append(latest_event["coped_successfully"])
+                stress_processing_data["affect_change"].append(
+                    agent.affect - getattr(agent, "_prev_affect", agent.affect)
+                )
+                stress_processing_data["resilience_change"].append(
+                    agent.resilience - getattr(agent, "_prev_resilience", agent.resilience)
+                )
+                stress_processing_data["stress_change"].append(
+                    agent.current_stress - getattr(agent, "_prev_stress", agent.current_stress)
+                )
 
                 # Calculate social influence (simplified)
                 neighbor_affects = agent._get_neighbor_affects()
                 social_influence = np.mean(neighbor_affects) if neighbor_affects else 0.0
-                stress_processing_data['social_influence'].append(social_influence)
+                stress_processing_data["social_influence"].append(social_influence)
 
                 # Store previous values for next day
                 agent._prev_affect = agent.affect
@@ -132,18 +137,18 @@ def demonstrate_stress_processing_mechanisms():
 def analyze_stress_processing_behavior(data):
     """Analyze the stress processing behavior to verify correct operation."""
 
-    if not data['day']:
+    if not data["day"]:
         print("No data to analyze.")
         return
 
     # Convert to numpy arrays for analysis
-    challenges = np.array(data['challenge'])
-    hindrances = np.array(data['hindrance'])
-    coping_successes = np.array(data['coping_success'])
-    affect_changes = np.array(data['affect_change'])
-    resilience_changes = np.array(data['resilience_change'])
-    stress_changes = np.array(data['stress_change'])
-    social_influences = np.array(data['social_influence'])
+    challenges = np.array(data["challenge"])
+    hindrances = np.array(data["hindrance"])
+    coping_successes = np.array(data["coping_success"])
+    affect_changes = np.array(data["affect_change"])
+    resilience_changes = np.array(data["resilience_change"])
+    stress_changes = np.array(data["stress_change"])
+    social_influences = np.array(data["social_influence"])
 
     print("\nStatistical Analysis of Stress Processing:")
     print("-" * 50)
@@ -152,7 +157,7 @@ def analyze_stress_processing_behavior(data):
     print("Challenge/Hindrance Analysis:")
     print(f"  Mean Challenge: {np.mean(challenges):.4f}")
     print(f"  Mean Hindrance: {np.mean(hindrances):.4f}")
-    print(f"  Challenge/Hindrance Ratio: {np.mean(challenges)/max(np.mean(hindrances), 1e-6):.4f}")
+    print(f"  Challenge/Hindrance Ratio: {np.mean(challenges) / max(np.mean(hindrances), 1e-6):.4f}")
     print(f"  Challenge Std Dev: {np.std(challenges):.4f}")
     print(f"  Hindrance Std Dev: {np.std(hindrances):.4f}")
 
@@ -187,10 +192,10 @@ def analyze_stress_processing_behavior(data):
 
     # Trend analysis over days
     print("\nTrend Analysis:")
-    unique_days = sorted(np.unique(data['day']))
+    unique_days = sorted(np.unique(data["day"]))
 
     for day in unique_days:
-        day_mask = np.array(data['day']) == day
+        day_mask = np.array(data["day"]) == day
         if np.sum(day_mask) > 0:
             day_challenges = challenges[day_mask]
             day_hindrances = hindrances[day_mask]
@@ -235,15 +240,12 @@ def test_homeostatic_adjustment_isolation():
             initial_value=initial,
             final_value=final,
             homeostatic_rate=0.1,  # 10% adjustment rate
-            value_type='affect'
+            value_type="affect",
         )
 
         # Test resilience adjustment
         adjusted_resilience = compute_homeostatic_adjustment(
-            initial_value=initial,
-            final_value=final,
-            homeostatic_rate=0.1,
-            value_type='resilience'
+            initial_value=initial, final_value=final, homeostatic_rate=0.1, value_type="resilience"
         )
 
         print(f"{description}:")
@@ -270,7 +272,7 @@ def demonstrate_challenge_hindrance_effects():
         (0.2, 0.8, "Low Challenge, High Hindrance"),
         (0.5, 0.5, "Balanced Challenge/Hindrance"),
         (0.9, 0.1, "Extreme Challenge"),
-        (0.1, 0.9, "Extreme Hindrance")
+        (0.1, 0.9, "Extreme Hindrance"),
     ]
 
     print("Testing resilience effects for different challenge/hindrance combinations:")
@@ -357,15 +359,10 @@ def demonstrate_daily_reset_mechanisms():
         old_stress = agent.current_stress
 
         # Apply affect reset
-        agent.affect = compute_daily_affect_reset(
-            current_affect=agent.affect,
-            baseline_affect=agent.baseline_affect
-        )
+        agent.affect = compute_daily_affect_reset(current_affect=agent.affect, baseline_affect=agent.baseline_affect)
 
         # Apply stress decay
-        agent.current_stress = compute_stress_decay(
-            current_stress=agent.current_stress
-        )
+        agent.current_stress = compute_stress_decay(current_stress=agent.current_stress)
 
         # Show changes
         print("After daily reset:")
@@ -380,13 +377,13 @@ def demonstrate_daily_reset_mechanisms():
 
     # Generate a stress event
     event = generate_stress_event(rng=np.random.default_rng(42))
-    print(f"Generated stress event:")
+    print("Generated stress event:")
     print(f"  Controllability: {event.controllability:.3f}")
     print(f"  Overload: {event.overload:.3f}")
 
     # Apply appraisal weights
     challenge, hindrance = apply_weights(event)
-    print(f"\nAppraisal results:")
+    print("\nAppraisal results:")
     print(f"  Challenge: {challenge:.3f}")
     print(f"  Hindrance: {hindrance:.3f}")
 
@@ -397,7 +394,7 @@ def demonstrate_daily_reset_mechanisms():
     coping_prob_pos = compute_coping_probability(challenge, hindrance, positive_neighbors)
     coping_prob_neg = compute_coping_probability(challenge, hindrance, negative_neighbors)
 
-    print(f"\nCoping probability:")
+    print("\nCoping probability:")
     print(f"  With positive social influence: {coping_prob_pos:.3f}")
     print(f"  With negative social influence: {coping_prob_neg:.3f}")
     print(f"  Social influence effect: {coping_prob_pos - coping_prob_neg:+.3f}")
@@ -410,10 +407,10 @@ def demonstrate_daily_reset_mechanisms():
         current_stress=agent.current_stress,
         challenge=challenge,
         hindrance=hindrance,
-        neighbor_affects=neighbor_affects
+        neighbor_affects=neighbor_affects,
     )
 
-    print(f"\nComplete stress processing:")
+    print("\nComplete stress processing:")
     print(f"  Coping successful: {coped_successfully}")
     print(f"  Affect: {agent.affect:.3f} → {new_affect:.3f} (Δ={new_affect - agent.affect:+.3f})")
     print(f"  Resilience: {agent.resilience:.3f} → {new_resilience:.3f} (Δ={new_resilience - agent.resilience:+.3f})")
@@ -435,7 +432,6 @@ def run_comprehensive_stress_processing_test():
     print("\n" + "=" * 80)
     print("COMPREHENSIVE TEST RESULTS")
     print("=" * 80)
-
 
     print("✓ Stress processing pipeline demonstration completed")
     print("✓ Challenge/hindrance effects demonstration completed")

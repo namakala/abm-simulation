@@ -8,13 +8,12 @@ to create more realistic and responsive stress dynamics.
 """
 
 import sys
-import numpy as np
 
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.agent import Person
-from src.python.model import StressModel
 from src.python.config import get_config
+
 
 def test_integrated_stress_dynamics():
     """Test the integrated stress dynamics mechanisms."""
@@ -23,7 +22,7 @@ def test_integrated_stress_dynamics():
     print("=" * 70)
 
     # Create configuration
-    config = get_config()
+    get_config()
 
     # Create two agents with different characteristics for testing
     from unittest.mock import MagicMock
@@ -43,14 +42,14 @@ def test_integrated_stress_dynamics():
 
     print("\n1. INITIAL AGENT STATE:")
     print("-" * 50)
-    print(f"Agent1 (High Resilience):")
+    print("Agent1 (High Resilience):")
     print(f"  Resilience: {agent1.resilience:.2f}")
     print(f"  Resources: {agent1.resources:.2f}")
     print(f"  PSS-10 Score: {agent1.pss10}")
     print(f"  Stress Controllability: {agent1.stress_controllability:.2f}")
     print(f"  Stress Overload: {agent1.stress_overload:.2f}")
 
-    print(f"\nAgent2 (Low Resilience):")
+    print("\nAgent2 (Low Resilience):")
     print(f"  Resilience: {agent2.resilience:.2f}")
     print(f"  Resources: {agent2.resources:.2f}")
     print(f"  PSS-10 Score: {agent2.pss10}")
@@ -143,8 +142,10 @@ def test_integrated_stress_dynamics():
         pss10_history.append(test_agent.pss10)
         stress_intensity_history.append(test_agent.recent_stress_intensity)
 
-        print(f"Step {step+1}: PSS-10={initial_pss10}→{test_agent.pss10}, "
-              f"Intensity={initial_intensity:.3f}→{test_agent.recent_stress_intensity:.3f}")
+        print(
+            f"Step {step + 1}: PSS-10={initial_pss10}→{test_agent.pss10}, "
+            f"Intensity={initial_intensity:.3f}→{test_agent.recent_stress_intensity:.3f}"
+        )
 
     print("\n6. INTEGRATION TEST SUMMARY:")
     print("-" * 50)
@@ -160,6 +161,7 @@ def test_integrated_stress_dynamics():
     print("=" * 70)
 
     return True
+
 
 if __name__ == "__main__":
     test_integrated_stress_dynamics()

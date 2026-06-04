@@ -8,7 +8,6 @@ the previous affect-based logic while maintaining affect as an ephemeral state.
 
 import pytest
 import tempfile
-from pathlib import Path
 import os
 from unittest.mock import Mock
 
@@ -34,7 +33,7 @@ class TestPSS10ThresholdConfiguration:
 
                 # Verify default threshold is 27
                 assert config.pss10_threshold == 27
-                assert config.get('pss10', 'threshold') == 27
+                assert config.get("pss10", "threshold") == 27
 
             finally:
                 os.chdir(original_cwd)
@@ -47,7 +46,7 @@ class TestPSS10ThresholdConfiguration:
 
         # Verify threshold is loaded from .env file
         assert config.pss10_threshold == 27
-        assert config.get('pss10', 'threshold') == 27
+        assert config.get("pss10", "threshold") == 27
 
 
 @pytest.mark.config
@@ -69,8 +68,8 @@ class TestPSS10ThresholdEvaluation:
 
         # Update stressed status (simulating what compute_pss10_score does)
         config = Config()
-        threshold = config.get('pss10', 'threshold')
-        agent.stressed = (agent.pss10 >= threshold)
+        threshold = config.get("pss10", "threshold")
+        agent.stressed = agent.pss10 >= threshold
 
         # Assert agent is not stressed
         assert not agent.stressed
@@ -91,8 +90,8 @@ class TestPSS10ThresholdEvaluation:
 
         # Update stressed status (simulating what happens in compute_pss10_score)
         config = Config()
-        threshold = config.get('pss10', 'threshold')
-        agent.stressed = (agent.pss10 >= threshold)
+        threshold = config.get("pss10", "threshold")
+        agent.stressed = agent.pss10 >= threshold
 
         # Assert agent is stressed (27 >= 27)
         assert agent.stressed, f"PSS-10: {agent.pss10}, Threshold: {threshold}, 27 should be >= {threshold}"
@@ -113,8 +112,8 @@ class TestPSS10ThresholdEvaluation:
 
         # Update stressed status
         config = Config()
-        threshold = config.get('pss10', 'threshold')
-        agent.stressed = (agent.pss10 >= threshold)
+        threshold = config.get("pss10", "threshold")
+        agent.stressed = agent.pss10 >= threshold
 
         # Assert agent is stressed
         assert agent.stressed
@@ -134,7 +133,6 @@ class TestAffectEphemeralBehavior:
 
         # Create agent with specific initial values
         agent = Person(model)
-        initial_affect = agent.affect
         initial_pss10 = agent.pss10
 
         # Simulate affect change via events (increase affect significantly)
@@ -142,7 +140,7 @@ class TestAffectEphemeralBehavior:
 
         # Apply homeostatic decay (simulating daily reset)
         config = Config()
-        homeostatic_rate = config.get('affect_dynamics', 'homeostatic_rate')
+        homeostatic_rate = config.get("affect_dynamics", "homeostatic_rate")
         agent.affect = agent.baseline_affect + homeostatic_rate * (agent.affect - agent.baseline_affect)
 
         # PSS-10 should remain unchanged
@@ -163,12 +161,11 @@ class TestAffectEphemeralBehavior:
         agent = Person(model)
         agent.pss10 = 20  # Below threshold
         config = Config()
-        threshold = config.get('pss10', 'threshold')
-        agent.stressed = (agent.pss10 >= threshold)
+        threshold = config.get("pss10", "threshold")
+        agent.stressed = agent.pss10 >= threshold
 
         # Verify initial state
         assert not agent.stressed
-        initial_resilience = agent.resilience
 
         # Simulate affect change that should influence resilience
         original_affect = agent.affect
@@ -177,7 +174,7 @@ class TestAffectEphemeralBehavior:
         # Simulate resilience dynamics being influenced by affect
         # (This would normally happen in the step() method)
         affect_multiplier = 1.0 + 0.2 * max(0.0, agent.affect)
-        resilience_boost = 0.1 * affect_multiplier  # Simulate affect influence on resilience
+        0.1 * affect_multiplier  # Simulate affect influence on resilience
 
         # The stressed flag should remain unchanged (still False)
         assert not agent.stressed  # Should still be False
@@ -207,8 +204,8 @@ class TestIntegrationScenarios:
 
             # Update stressed status
             config = Config()
-            threshold = config.get('pss10', 'threshold')
-            agent.stressed = (agent.pss10 >= threshold)
+            threshold = config.get("pss10", "threshold")
+            agent.stressed = agent.pss10 >= threshold
 
             if agent.stressed:
                 stressed_count += 1
@@ -217,7 +214,7 @@ class TestIntegrationScenarios:
         manual_prevalence = stressed_count / len(model.agents)
 
         # Get stress prevalence from model (this uses our new PSS-10-based logic)
-        model_prevalence = sum(1 for agent in model.agents if getattr(agent, 'stressed', False)) / len(model.agents)
+        model_prevalence = sum(1 for agent in model.agents if getattr(agent, "stressed", False)) / len(model.agents)
 
         # They should match
         assert manual_prevalence == model_prevalence
@@ -236,8 +233,8 @@ class TestIntegrationScenarios:
         # Set PSS-10 above threshold initially
         agent.pss10 = 30
         config = Config()
-        threshold = config.get('pss10', 'threshold')
-        agent.stressed = (agent.pss10 >= threshold)
+        threshold = config.get("pss10", "threshold")
+        agent.stressed = agent.pss10 >= threshold
 
         # Verify initially stressed
         assert agent.stressed
@@ -245,19 +242,19 @@ class TestIntegrationScenarios:
         # Simulate multiple steps with same PSS-10 (should remain stressed)
         for _ in range(5):
             # PSS-10 stays the same
-            agent.stressed = (agent.pss10 >= threshold)
+            agent.stressed = agent.pss10 >= threshold
             assert agent.stressed  # Should remain stressed
 
         # Change PSS-10 below threshold
         agent.pss10 = 20
-        agent.stressed = (agent.pss10 >= threshold)
+        agent.stressed = agent.pss10 >= threshold
 
         # Should now be not stressed
         assert not agent.stressed
 
         # Simulate more steps (should remain not stressed)
         for _ in range(5):
-            agent.stressed = (agent.pss10 >= threshold)
+            agent.stressed = agent.pss10 >= threshold
             assert not agent.stressed  # Should remain not stressed
 
 
@@ -271,7 +268,7 @@ def run_tests():
         TestPSS10ThresholdConfiguration,
         TestPSS10ThresholdEvaluation,
         TestAffectEphemeralBehavior,
-        TestIntegrationScenarios
+        TestIntegrationScenarios,
     ]
 
     passed = 0
@@ -282,7 +279,7 @@ def run_tests():
         print("-" * len(test_class.__name__))
 
         for method_name in dir(test_class):
-            if method_name.startswith('test_'):
+            if method_name.startswith("test_"):
                 total += 1
                 try:
                     test_method = getattr(test_class, method_name)

@@ -10,7 +10,7 @@ import sys
 import numpy as np
 
 # Add the src directory to the path
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.agent import Person
 from src.python.affect_utils import (
@@ -18,11 +18,11 @@ from src.python.affect_utils import (
     compute_resilience_optimized_resource_cost,
     compute_resource_efficiency_gain,
     allocate_resilience_optimized_resources,
-    compute_resource_depletion_with_resilience
+    compute_resource_depletion_with_resilience,
 )
-from src.python.model import StressModel
 from src.python.config import get_config
 from src.python.resource_utils import process_social_resource_exchange, _calculate_resilience_optimized_willingness
+
 
 def test_resilience_resource_optimization():
     """Test the new resilience-based resource optimization mechanisms."""
@@ -31,7 +31,7 @@ def test_resilience_resource_optimization():
     print("=" * 60)
 
     # Create configuration
-    config = get_config()
+    get_config()
     resource_config = ResourceOptimizationConfig()
 
     # Test different resilience levels
@@ -49,26 +49,26 @@ def test_resilience_resource_optimization():
             current_resilience=resilience,
             challenge=challenge,
             hindrance=hindrance,
-            config=resource_config
+            config=resource_config,
         )
 
         efficiency_gain = compute_resource_efficiency_gain(resilience, 0.5, resource_config)
 
-        print(f"Resilience: {resilience:.1f} | "
-              f"Base Cost: {base_cost:.3f} | "
-              f"Optimized Cost: {optimized_cost:.3f} | "
-              f"Efficiency Gain: {efficiency_gain:.2f}x")
+        print(
+            f"Resilience: {resilience:.1f} | "
+            f"Base Cost: {base_cost:.3f} | "
+            f"Optimized Cost: {optimized_cost:.3f} | "
+            f"Efficiency Gain: {efficiency_gain:.2f}x"
+        )
 
     print("\n2. RESOURCE ALLOCATION OPTIMIZATION:")
     print("-" * 50)
 
     # Create mock protective factors
     from src.python.affect_utils import ProtectiveFactors
+
     protective_factors = ProtectiveFactors(
-        social_support=0.3,
-        family_support=0.6,
-        formal_intervention=0.4,
-        psychological_capital=0.7
+        social_support=0.3, family_support=0.6, formal_intervention=0.4, psychological_capital=0.7
     )
 
     available_resources = 0.3
@@ -80,7 +80,7 @@ def test_resilience_resource_optimization():
             baseline_resilience=0.5,
             protective_factors=protective_factors,
             rng=np.random.default_rng(42),
-            config=resource_config
+            config=resource_config,
         )
 
         print(f"\nResilience: {resilience:.1f}")
@@ -99,7 +99,7 @@ def test_resilience_resource_optimization():
             cost=base_cost,
             current_resilience=resilience,
             coping_successful=True,
-            config=resource_config
+            config=resource_config,
         )
 
         # Test failed coping
@@ -108,19 +108,19 @@ def test_resilience_resource_optimization():
             cost=base_cost,
             current_resilience=resilience,
             coping_successful=False,
-            config=resource_config
+            config=resource_config,
         )
 
-        print(f"Resilience: {resilience:.1f} | "
-              f"Success: {initial_resources:.2f} → {remaining_success:.2f} | "
-              f"Failure: {initial_resources:.2f} → {remaining_failure:.2f}")
+        print(
+            f"Resilience: {resilience:.1f} | "
+            f"Success: {initial_resources:.2f} → {remaining_success:.2f} | "
+            f"Failure: {initial_resources:.2f} → {remaining_failure:.2f}"
+        )
 
     print("\n4. SOCIAL RESOURCE EXCHANGE TEST:")
     print("-" * 50)
 
     # Test social resource exchange mechanism
-    from src.python.agent import Person
-    from src.python.model import StressModel
 
     # Test social resource exchange mechanism directly
     print("\nTesting Social Resource Exchange Mechanism:")
@@ -151,7 +151,7 @@ def test_resilience_resource_optimization():
         partner_resources=original_resources_2,
         self_resilience=agent1.resilience,
         partner_resilience=agent2.resilience,
-        social_support_boost=1.0 + (agent1.protective_factors['social_support'] * 0.1)
+        social_support_boost=1.0 + (agent1.protective_factors["social_support"] * 0.1),
     )
 
     resource_transfer = abs(new_self_resources - original_resources_1)

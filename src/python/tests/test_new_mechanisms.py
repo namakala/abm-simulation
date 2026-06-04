@@ -3,18 +3,14 @@
 Test script to verify the new stress processing mechanisms work correctly.
 """
 
-import numpy as np
-import sys
-import os
-
 from affect_utils import (
     compute_coping_probability,
     compute_challenge_hindrance_resilience_effect,
     compute_daily_affect_reset,
     compute_stress_decay,
     determine_coping_outcome_and_psychological_impact,
-    StressProcessingConfig
 )
+
 
 def test_new_mechanisms():
     """Test the new stress processing mechanisms."""
@@ -86,8 +82,7 @@ def test_new_mechanisms():
     neighbor_affects = [0.4, 0.6]
 
     new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
-        current_affect, current_resilience, current_stress,
-        challenge, hindrance, neighbor_affects
+        current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects
     )
 
     print(f"   Challenge: {challenge}, Hindrance: {hindrance}")
@@ -102,6 +97,7 @@ def test_new_mechanisms():
     assert 0.0 <= new_stress <= 1.0, "Stress should be in valid range"
 
     print("\n✅ All new mechanisms are working correctly!")
+
 
 if __name__ == "__main__":
     test_new_mechanisms()

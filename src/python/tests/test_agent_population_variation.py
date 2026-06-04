@@ -21,18 +21,17 @@ from typing import Dict, List, Tuple, Any
 from dataclasses import dataclass
 from unittest.mock import Mock
 import json
-import warnings
 
 # Import project modules
 from src.python.agent import Person
 from src.python.config import get_config
-from src.python.math_utils import sigmoid_transform, tanh_transform, create_rng
-from src.python.visualization_utils import create_visualization_report, HAS_MATPLOTLIB, HAS_SCIPY
+from src.python.visualization_utils import create_visualization_report, HAS_MATPLOTLIB
 
 
 @dataclass
 class PopulationStatistics:
     """Container for population statistical analysis results."""
+
     mean: float
     std: float
     min_val: float
@@ -50,9 +49,10 @@ class PopulationStatistics:
 @dataclass
 class PopulationComparison:
     """Container for comparing multiple populations."""
+
     population_stats: Dict[str, PopulationStatistics]
     ks_test_pvalue: float  # Kolmogorov-Smirnov test for distribution similarity
-    effect_size: float     # Cohen's d for mean differences
+    effect_size: float  # Cohen's d for mean differences
     correlation_matrix: np.ndarray
 
 
@@ -77,10 +77,7 @@ class PopulationAnalyzer:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_agent_population(
-        self,
-        config: Dict[str, Any],
-        population_size: int,
-        seed_start: int = 1000
+        self, config: Dict[str, Any], population_size: int, seed_start: int = 1000
     ) -> List[Person]:
         """
         Generate a population of agents with specified configuration.
@@ -139,7 +136,7 @@ class PopulationAnalyzer:
             kurtosis=kurtosis,
             cv=cv,
             range=np.max(values) - np.min(values),
-            iqr=np.percentile(values, 75) - np.percentile(values, 25)
+            iqr=np.percentile(values, 75) - np.percentile(values, 25),
         )
 
     def _compute_skewness(self, values: np.ndarray) -> float:
@@ -151,7 +148,7 @@ class PopulationAnalyzer:
             return 0.0
 
         n = len(values)
-        skewness = (n / ((n-1) * (n-2))) * np.sum(((values - mean_val) / std_val) ** 3)
+        skewness = (n / ((n - 1) * (n - 2))) * np.sum(((values - mean_val) / std_val) ** 3)
         return skewness
 
     def _compute_kurtosis(self, values: np.ndarray) -> float:
@@ -163,8 +160,8 @@ class PopulationAnalyzer:
             return 0.0
 
         n = len(values)
-        kurtosis = (n * (n+1)) / ((n-1) * (n-2) * (n-3)) * np.sum(((values - mean_val) / std_val) ** 4)
-        kurtosis -= 3 * (n-1)**2 / ((n-2) * (n-3))  # Excess kurtosis
+        kurtosis = (n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3)) * np.sum(((values - mean_val) / std_val) ** 4)
+        kurtosis -= 3 * (n - 1) ** 2 / ((n - 2) * (n - 3))  # Excess kurtosis
         return kurtosis
 
     def analyze_population(self, agents: List[Person]) -> Dict[str, PopulationStatistics]:
@@ -188,19 +185,16 @@ class PopulationAnalyzer:
 
         # Compute statistics for each attribute
         stats = {
-            'resilience': self.compute_population_statistics(resilience_values),
-            'affect': self.compute_population_statistics(affect_values),
-            'resources': self.compute_population_statistics(resources_values),
-            'pss10': self.compute_population_statistics(pss10_values)
+            "resilience": self.compute_population_statistics(resilience_values),
+            "affect": self.compute_population_statistics(affect_values),
+            "resources": self.compute_population_statistics(resources_values),
+            "pss10": self.compute_population_statistics(pss10_values),
         }
 
         return stats
 
     def compare_populations(
-        self,
-        population1: List[Person],
-        population2: List[Person],
-        attribute: str = 'resilience'
+        self, population1: List[Person], population2: List[Person], attribute: str = "resilience"
     ) -> PopulationComparison:
         """
         Compare two populations using statistical tests.
@@ -228,20 +222,16 @@ class PopulationAnalyzer:
         effect_size = self._cohens_d(values1, values2)
 
         # Compute correlation matrix between attributes (using population1)
-        all_values = np.column_stack([
-            [getattr(agent, attr) for agent in population1]
-            for attr in ['resilience', 'affect', 'resources']
-        ])
+        all_values = np.column_stack(
+            [[getattr(agent, attr) for agent in population1] for attr in ["resilience", "affect", "resources"]]
+        )
         correlation_matrix = np.corrcoef(all_values.T)
 
         return PopulationComparison(
-            population_stats={
-                'population1': stats1,
-                'population2': stats2
-            },
+            population_stats={"population1": stats1, "population2": stats2},
             ks_test_pvalue=ks_pvalue,
             effect_size=effect_size,
-            correlation_matrix=correlation_matrix
+            correlation_matrix=correlation_matrix,
         )
 
     def _kolmogorov_smirnov_test(self, values1: np.ndarray, values2: np.ndarray) -> Tuple[float, float]:
@@ -269,7 +259,6 @@ class PopulationAnalyzer:
 
         return abs(mean1 - mean2) / pooled_std
 
-
     def generate_summary_report(self, agents: List[Person], config: Dict[str, Any]) -> Dict[str, Any]:
         """
         Generate comprehensive summary report of population analysis.
@@ -289,43 +278,47 @@ class PopulationAnalyzer:
 
         # Create summary report
         report = {
-            'population_size': len(agents),
-            'configuration': config,
-            'statistics': {
+            "population_size": len(agents),
+            "configuration": config,
+            "statistics": {
                 name: {
-                    'mean': stat.mean,
-                    'std': stat.std,
-                    'min': stat.min_val,
-                    'max': stat.max_val,
-                    'median': stat.median,
-                    'q25': stat.q25,
-                    'q75': stat.q75,
-                    'skewness': stat.skewness,
-                    'kurtosis': stat.kurtosis,
-                    'coefficient_of_variation': stat.cv,
-                    'range': stat.range,
-                    'iqr': stat.iqr
+                    "mean": stat.mean,
+                    "std": stat.std,
+                    "min": stat.min_val,
+                    "max": stat.max_val,
+                    "median": stat.median,
+                    "q25": stat.q25,
+                    "q75": stat.q75,
+                    "skewness": stat.skewness,
+                    "kurtosis": stat.kurtosis,
+                    "coefficient_of_variation": stat.cv,
+                    "range": stat.range,
+                    "iqr": stat.iqr,
                 }
                 for name, stat in stats.items()
             },
-            'visualization_path': viz_path,
-            'bounds_verification': {
-                'resilience_bounds_respected': all(0 <= agent.resilience <= 1 for agent in agents),
-                'affect_bounds_respected': all(-1 <= agent.affect <= 1 for agent in agents),
-                'resources_bounds_respected': all(0 <= agent.resources <= 1 for agent in agents),
-                'pss10_valid_range': all(0 <= agent.pss10 <= 40 for agent in agents)
+            "visualization_path": viz_path,
+            "bounds_verification": {
+                "resilience_bounds_respected": all(0 <= agent.resilience <= 1 for agent in agents),
+                "affect_bounds_respected": all(-1 <= agent.affect <= 1 for agent in agents),
+                "resources_bounds_respected": all(0 <= agent.resources <= 1 for agent in agents),
+                "pss10_valid_range": all(0 <= agent.pss10 <= 40 for agent in agents),
             },
-            'diversity_metrics': {
-                'unique_resilience_values': len(set(np.round([agent.resilience for agent in agents], 3))),
-                'unique_affect_values': len(set(np.round([agent.affect for agent in agents], 3))),
-                'unique_resources_values': len(set(np.round([agent.resources for agent in agents], 3))),
-                'resilience_range_coverage': (max(agent.resilience for agent in agents) -
-                                            min(agent.resilience for agent in agents)) / 1.0,  # As % of [0,1]
-                'affect_range_coverage': (max(agent.affect for agent in agents) -
-                                       min(agent.affect for agent in agents)) / 2.0,  # As % of [-1,1]
-                'resources_range_coverage': (max(agent.resources for agent in agents) -
-                                          min(agent.resources for agent in agents)) / 1.0   # As % of [0,1]
-            }
+            "diversity_metrics": {
+                "unique_resilience_values": len(set(np.round([agent.resilience for agent in agents], 3))),
+                "unique_affect_values": len(set(np.round([agent.affect for agent in agents], 3))),
+                "unique_resources_values": len(set(np.round([agent.resources for agent in agents], 3))),
+                "resilience_range_coverage": (
+                    max(agent.resilience for agent in agents) - min(agent.resilience for agent in agents)
+                )
+                / 1.0,  # As % of [0,1]
+                "affect_range_coverage": (max(agent.affect for agent in agents) - min(agent.affect for agent in agents))
+                / 2.0,  # As % of [-1,1]
+                "resources_range_coverage": (
+                    max(agent.resources for agent in agents) - min(agent.resources for agent in agents)
+                )
+                / 1.0,  # As % of [0,1]
+            },
         }
 
         # Save summary report as JSON with int64 conversion
@@ -347,7 +340,7 @@ class PopulationAnalyzer:
                 return obj
 
         json_report = convert_numpy_types(report)
-        with open(summary_path, 'w') as f:
+        with open(summary_path, "w") as f:
             json.dump(json_report, f, indent=2)
 
         return report
@@ -365,15 +358,15 @@ class TestAgentPopulationVariation:
     def sample_config(self):
         """Provide standard configuration for testing."""
         return {
-            'initial_resilience_mean': 0.6,
-            'initial_resilience_sd': 0.15,
-            'initial_affect_mean': 0.1,
-            'initial_affect_sd': 0.25,
-            'initial_resources_mean': 0.7,
-            'initial_resources_sd': 0.12,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.6,
+            "initial_resilience_sd": 0.15,
+            "initial_affect_mean": 0.1,
+            "initial_affect_sd": 0.25,
+            "initial_resources_mean": 0.7,
+            "initial_resources_sd": 0.12,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
     def test_population_generation_basic(self, analyzer, sample_config):
@@ -388,7 +381,7 @@ class TestAgentPopulationVariation:
         assert all(isinstance(agent, Person) for agent in agents)
 
         # Verify all agents have required attributes
-        required_attrs = ['resilience', 'affect', 'resources', 'pss10']
+        required_attrs = ["resilience", "affect", "resources", "pss10"]
         for agent in agents:
             for attr in required_attrs:
                 assert hasattr(agent, attr)
@@ -398,37 +391,45 @@ class TestAgentPopulationVariation:
         extreme_configs = [
             # Extreme means
             {
-                'initial_resilience_mean': 5.0, 'initial_resilience_sd': 0.1,
-                'initial_affect_mean': -5.0, 'initial_affect_sd': 0.1,
-                'initial_resources_mean': -2.0, 'initial_resources_sd': 0.1,
+                "initial_resilience_mean": 5.0,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": -5.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": -2.0,
+                "initial_resources_sd": 0.1,
             },
             # Extreme standard deviations
             {
-                'initial_resilience_mean': 0.5, 'initial_resilience_sd': 10.0,
-                'initial_affect_mean': 0.0, 'initial_affect_sd': 8.0,
-                'initial_resources_mean': 0.5, 'initial_resources_sd': 12.0,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 10.0,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 8.0,
+                "initial_resources_mean": 0.5,
+                "initial_resources_sd": 12.0,
             },
             # Zero standard deviation
             {
-                'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.0,
-                'initial_affect_mean': 0.0, 'initial_affect_sd': 0.0,
-                'initial_resources_mean': 0.5, 'initial_resources_sd': 0.0,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.0,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.0,
+                "initial_resources_mean": 0.5,
+                "initial_resources_sd": 0.0,
             },
             # Boundary values
             {
-                'initial_resilience_mean': 1.0, 'initial_resilience_sd': 0.01,
-                'initial_affect_mean': -1.0, 'initial_affect_sd': 0.01,
-                'initial_resources_mean': 0.0, 'initial_resources_sd': 0.01,
-            }
+                "initial_resilience_mean": 1.0,
+                "initial_resilience_sd": 0.01,
+                "initial_affect_mean": -1.0,
+                "initial_affect_sd": 0.01,
+                "initial_resources_mean": 0.0,
+                "initial_resources_sd": 0.01,
+            },
         ]
 
         for config in extreme_configs:
             # Add common parameters
-            config.update({
-                'stress_probability': 0.5,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 3
-            })
+            config.update({"stress_probability": 0.5, "coping_success_rate": 0.5, "subevents_per_day": 3})
 
             # Test multiple population sizes
             for pop_size in [10, 50, 100]:
@@ -449,18 +450,20 @@ class TestAgentPopulationVariation:
             stats = analyzer.analyze_population(agents)
 
             # Test resilience statistics (sigmoid transformed)
-            resilience_stat = stats['resilience']
+            resilience_stat = stats["resilience"]
             assert 0.1 < resilience_stat.mean < 0.9, f"Unrealistic resilience mean: {resilience_stat.mean}"
             assert 0.01 < resilience_stat.std < 0.4, f"Unrealistic resilience SD: {resilience_stat.std}"
-            assert resilience_stat.skewness >= -2 and resilience_stat.skewness <= 2, f"Extreme skewness: {resilience_stat.skewness}"
+            assert (
+                resilience_stat.skewness >= -2 and resilience_stat.skewness <= 2
+            ), f"Extreme skewness: {resilience_stat.skewness}"
 
             # Test affect statistics (tanh transformed)
-            affect_stat = stats['affect']
+            affect_stat = stats["affect"]
             assert -0.5 < affect_stat.mean < 0.5, f"Unrealistic affect mean: {affect_stat.mean}"
             assert 0.01 < affect_stat.std < 0.6, f"Unrealistic affect SD: {affect_stat.std}"
 
             # Test resources statistics (sigmoid transformed)
-            resources_stat = stats['resources']
+            resources_stat = stats["resources"]
             assert 0.1 < resources_stat.mean < 0.9, f"Unrealistic resources mean: {resources_stat.mean}"
             assert 0.01 < resources_stat.std < 0.4, f"Unrealistic resources SD: {resources_stat.std}"
 
@@ -477,9 +480,9 @@ class TestAgentPopulationVariation:
         stats2 = analyzer.analyze_population(agents2)
 
         # Statistics should be identical due to same seeds
-        np.testing.assert_almost_equal(stats1['resilience'].mean, stats2['resilience'].mean, decimal=10)
-        np.testing.assert_almost_equal(stats1['affect'].mean, stats2['affect'].mean, decimal=10)
-        np.testing.assert_almost_equal(stats1['resources'].mean, stats2['resources'].mean, decimal=10)
+        np.testing.assert_almost_equal(stats1["resilience"].mean, stats2["resilience"].mean, decimal=10)
+        np.testing.assert_almost_equal(stats1["affect"].mean, stats2["affect"].mean, decimal=10)
+        np.testing.assert_almost_equal(stats1["resources"].mean, stats2["resources"].mean, decimal=10)
 
         # Individual agent values should also be identical
         for agent1, agent2 in zip(agents1, agents2):
@@ -496,9 +499,9 @@ class TestAgentPopulationVariation:
             stats = analyzer.analyze_population(agents)
 
             # Test diversity metrics
-            resilience_range = stats['resilience'].range
-            affect_range = stats['affect'].range
-            resources_range = stats['resources'].range
+            resilience_range = stats["resilience"].range
+            affect_range = stats["affect"].range
+            resources_range = stats["resources"].range
 
             # Should utilize substantial portion of available range
             assert resilience_range > 0.3, f"Insufficient resilience diversity: {resilience_range}"
@@ -506,9 +509,9 @@ class TestAgentPopulationVariation:
             assert resources_range > 0.3, f"Insufficient resources diversity: {resources_range}"
 
             # Should have reasonable coefficient of variation
-            resilience_cv = stats['resilience'].cv
-            affect_cv = stats['affect'].cv
-            resources_cv = stats['resources'].cv
+            resilience_cv = stats["resilience"].cv
+            stats["affect"].cv
+            resources_cv = stats["resources"].cv
 
             assert 0.1 < resilience_cv < 1.0, f"Unrealistic resilience CV: {resilience_cv}"
             assert 0.1 < resources_cv < 1.0, f"Unrealistic resources CV: {resources_cv}"
@@ -518,36 +521,44 @@ class TestAgentPopulationVariation:
         edge_cases = [
             # Very small standard deviations
             {
-                'initial_resilience_mean': 0.5, 'initial_resilience_sd': 0.001,
-                'initial_affect_mean': 0.0, 'initial_affect_sd': 0.001,
-                'initial_resources_mean': 0.5, 'initial_resources_sd': 0.001,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.001,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.001,
+                "initial_resources_mean": 0.5,
+                "initial_resources_sd": 0.001,
             },
             # Very large standard deviations
             {
-                'initial_resilience_mean': 0.5, 'initial_resilience_sd': 5.0,
-                'initial_affect_mean': 0.0, 'initial_affect_sd': 3.0,
-                'initial_resources_mean': 0.5, 'initial_resources_sd': 4.0,
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 5.0,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 3.0,
+                "initial_resources_mean": 0.5,
+                "initial_resources_sd": 4.0,
             },
             # Means at exact boundaries
             {
-                'initial_resilience_mean': 1.0, 'initial_resilience_sd': 0.1,
-                'initial_affect_mean': -1.0, 'initial_affect_sd': 0.1,
-                'initial_resources_mean': 0.0, 'initial_resources_sd': 0.1,
+                "initial_resilience_mean": 1.0,
+                "initial_resilience_sd": 0.1,
+                "initial_affect_mean": -1.0,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.0,
+                "initial_resources_sd": 0.1,
             },
             # Mixed extreme parameters
             {
-                'initial_resilience_mean': 0.9, 'initial_resilience_sd': 0.01,
-                'initial_affect_mean': -0.9, 'initial_affect_sd': 0.5,
-                'initial_resources_mean': 0.1, 'initial_resources_sd': 0.2,
-            }
+                "initial_resilience_mean": 0.9,
+                "initial_resilience_sd": 0.01,
+                "initial_affect_mean": -0.9,
+                "initial_affect_sd": 0.5,
+                "initial_resources_mean": 0.1,
+                "initial_resources_sd": 0.2,
+            },
         ]
 
         for config in edge_cases:
-            config.update({
-                'stress_probability': 0.5,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 3
-            })
+            config.update({"stress_probability": 0.5, "coping_success_rate": 0.5, "subevents_per_day": 3})
 
             # Should handle gracefully without errors
             agents = analyzer.generate_agent_population(config, 50)
@@ -565,15 +576,15 @@ class TestAgentPopulationVariation:
 
         # Create config using actual configuration values
         config = {
-            'initial_resilience_mean': cfg.get('agent', 'initial_resilience_mean'),
-            'initial_resilience_sd': cfg.get('agent', 'initial_resilience_sd'),
-            'initial_affect_mean': cfg.get('agent', 'initial_affect_mean'),
-            'initial_affect_sd': cfg.get('agent', 'initial_affect_sd'),
-            'initial_resources_mean': cfg.get('agent', 'initial_resources_mean'),
-            'initial_resources_sd': cfg.get('agent', 'initial_resources_sd'),
-            'stress_probability': cfg.get('agent', 'stress_probability'),
-            'coping_success_rate': cfg.get('agent', 'coping_success_rate'),
-            'subevents_per_day': cfg.get('agent', 'subevents_per_day')
+            "initial_resilience_mean": cfg.get("agent", "initial_resilience_mean"),
+            "initial_resilience_sd": cfg.get("agent", "initial_resilience_sd"),
+            "initial_affect_mean": cfg.get("agent", "initial_affect_mean"),
+            "initial_affect_sd": cfg.get("agent", "initial_affect_sd"),
+            "initial_resources_mean": cfg.get("agent", "initial_resources_mean"),
+            "initial_resources_sd": cfg.get("agent", "initial_resources_sd"),
+            "stress_probability": cfg.get("agent", "stress_probability"),
+            "coping_success_rate": cfg.get("agent", "coping_success_rate"),
+            "subevents_per_day": cfg.get("agent", "subevents_per_day"),
         }
 
         # Generate population using configuration system values
@@ -601,14 +612,15 @@ class TestAgentPopulationVariation:
             # Check if the file exists and has content
             assert Path(viz_path).exists()
             assert Path(viz_path).stat().st_size > 0  # Should have some content
-            
+
             # If it's a PDF, we just check it exists and has content
-            if viz_path.endswith('.pdf'):
+            if viz_path.endswith(".pdf"):
                 # PDFs are valid output from the visualization function
                 assert True  # PDF generation successful
             else:
                 # For image files, verify they can be read
                 import matplotlib.image as mpimg
+
                 try:
                     img = mpimg.imread(viz_path)
                     assert img.shape[0] > 0  # Should have height
@@ -618,7 +630,7 @@ class TestAgentPopulationVariation:
         else:
             # If matplotlib not available, should return placeholder file
             assert viz_path.endswith("visualization_not_available.txt")
-            with open(viz_path, 'r') as f:
+            with open(viz_path, "r") as f:
                 content = f.read()
                 assert "matplotlib" in content.lower() or "not available" in content.lower()
 
@@ -631,53 +643,80 @@ class TestAgentPopulationVariation:
 
         # Verify report structure
         required_keys = [
-            'population_size', 'configuration', 'statistics',
-            'visualization_path', 'bounds_verification', 'diversity_metrics'
+            "population_size",
+            "configuration",
+            "statistics",
+            "visualization_path",
+            "bounds_verification",
+            "diversity_metrics",
         ]
 
         for key in required_keys:
             assert key in report, f"Missing key in report: {key}"
 
         # Verify statistics structure
-        for attr in ['resilience', 'affect', 'resources', 'pss10']:
-            assert attr in report['statistics']
-            stat_keys = ['mean', 'std', 'min', 'max', 'median', 'q25', 'q75',
-                        'skewness', 'kurtosis', 'coefficient_of_variation', 'range', 'iqr']
+        for attr in ["resilience", "affect", "resources", "pss10"]:
+            assert attr in report["statistics"]
+            stat_keys = [
+                "mean",
+                "std",
+                "min",
+                "max",
+                "median",
+                "q25",
+                "q75",
+                "skewness",
+                "kurtosis",
+                "coefficient_of_variation",
+                "range",
+                "iqr",
+            ]
             for stat_key in stat_keys:
-                assert stat_key in report['statistics'][attr]
+                assert stat_key in report["statistics"][attr]
 
         # Verify bounds verification
-        bounds_keys = ['resilience_bounds_respected', 'affect_bounds_respected',
-                      'resources_bounds_respected', 'pss10_valid_range']
+        bounds_keys = [
+            "resilience_bounds_respected",
+            "affect_bounds_respected",
+            "resources_bounds_respected",
+            "pss10_valid_range",
+        ]
         for key in bounds_keys:
-            assert key in report['bounds_verification']
+            assert key in report["bounds_verification"]
 
         # Verify diversity metrics
-        diversity_keys = ['unique_resilience_values', 'unique_affect_values',
-                         'unique_resources_values', 'resilience_range_coverage',
-                         'affect_range_coverage', 'resources_range_coverage']
+        diversity_keys = [
+            "unique_resilience_values",
+            "unique_affect_values",
+            "unique_resources_values",
+            "resilience_range_coverage",
+            "affect_range_coverage",
+            "resources_range_coverage",
+        ]
         for key in diversity_keys:
-            assert key in report['diversity_metrics']
+            assert key in report["diversity_metrics"]
 
     def test_population_comparison_functionality(self, analyzer, sample_config):
         """Test population comparison capabilities."""
         # Generate two different populations
         config1 = sample_config.copy()
         config2 = sample_config.copy()
-        config2.update({
-            'initial_resilience_mean': 0.8,  # Different mean
-            'initial_affect_mean': -0.1      # Different mean
-        })
+        config2.update(
+            {
+                "initial_resilience_mean": 0.8,  # Different mean
+                "initial_affect_mean": -0.1,  # Different mean
+            }
+        )
 
         pop1 = analyzer.generate_agent_population(config1, 100, seed_start=1000)
         pop2 = analyzer.generate_agent_population(config2, 100, seed_start=2000)
 
         # Compare populations
-        comparison = analyzer.compare_populations(pop1, pop2, 'resilience')
+        comparison = analyzer.compare_populations(pop1, pop2, "resilience")
 
         # Verify comparison structure
-        assert 'population1' in comparison.population_stats
-        assert 'population2' in comparison.population_stats
+        assert "population1" in comparison.population_stats
+        assert "population2" in comparison.population_stats
         assert 0.0 <= comparison.ks_test_pvalue <= 1.0
         assert comparison.effect_size >= 0.0
         assert comparison.correlation_matrix.shape == (3, 3)
@@ -689,6 +728,7 @@ class TestAgentPopulationVariation:
         for size in large_sizes:
             # Should complete within reasonable time (5 seconds for 2000 agents)
             import time
+
             start_time = time.time()
 
             # Use different seed pattern for better statistical properties
@@ -703,31 +743,31 @@ class TestAgentPopulationVariation:
             assert duration < 10.0, f"Population generation too slow for size {size}: {duration:.2f}s"
 
             # Should still maintain statistical properties with improved seeding
-            resilience_std = stats['resilience'].std
+            resilience_std = stats["resilience"].std
             # Relax the constraint slightly and ensure minimum variation
             assert 0.05 < resilience_std < 0.35, f"Poor statistical properties for large population: {resilience_std}"
 
             # Additional check for minimum variation to ensure statistical validity
-            resilience_range = stats['resilience'].range
+            resilience_range = stats["resilience"].range
             assert resilience_range > 0.2, f"Insufficient variation in large population: {resilience_range}"
 
     def test_transformation_function_verification(self, analyzer, sample_config):
         """Test that transformation functions work correctly in population context."""
         # Test with known transformation parameters
         config = {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.2,
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.3,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.15,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 0.2,
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.3,
+            "initial_resources_mean": 0.6,
+            "initial_resources_sd": 0.15,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         }
 
         agents = analyzer.generate_agent_population(config, 500)
-        stats = analyzer.analyze_population(agents)
+        analyzer.analyze_population(agents)
 
         # For sigmoid transformation of normal distribution, we expect:
         # - Values in [0,1] ✓ (already tested)
@@ -752,13 +792,13 @@ class TestAgentPopulationVariation:
 
         # Test for realistic distribution characteristics
         for attr_name, stat in stats.items():
-            if attr_name in ['resilience', 'resources']:  # Sigmoid transformed
+            if attr_name in ["resilience", "resources"]:  # Sigmoid transformed
                 # Sigmoid transformation should produce values away from boundaries
                 assert stat.mean > 0.1 and stat.mean < 0.9, f"{attr_name} mean too close to boundary: {stat.mean}"
                 # Should have moderate skewness (sigmoid can produce skewness)
                 assert -1.5 < stat.skewness < 1.5, f"{attr_name} skewness too extreme: {stat.skewness}"
 
-            elif attr_name == 'affect':  # Tanh transformed
+            elif attr_name == "affect":  # Tanh transformed
                 # Tanh transformation should be roughly symmetric around 0
                 assert abs(stat.mean) < 0.3, f"Affect mean not centered: {stat.mean}"
                 # Should utilize full [-1,1] range
@@ -791,15 +831,15 @@ if __name__ == "__main__":
 
     # Standard configuration for demonstration
     demo_config = {
-        'initial_resilience_mean': 0.6,
-        'initial_resilience_sd': 0.15,
-        'initial_affect_mean': 0.1,
-        'initial_affect_sd': 0.25,
-        'initial_resources_mean': 0.7,
-        'initial_resources_sd': 0.12,
-        'stress_probability': 0.5,
-        'coping_success_rate': 0.5,
-        'subevents_per_day': 3
+        "initial_resilience_mean": 0.6,
+        "initial_resilience_sd": 0.15,
+        "initial_affect_mean": 0.1,
+        "initial_affect_sd": 0.25,
+        "initial_resources_mean": 0.7,
+        "initial_resources_sd": 0.12,
+        "stress_probability": 0.5,
+        "coping_success_rate": 0.5,
+        "subevents_per_day": 3,
     }
 
     print("Generating demonstration population...")
@@ -825,25 +865,22 @@ if __name__ == "__main__":
 
     print("\nDemonstrating edge case handling...")
     extreme_config = {
-        'initial_resilience_mean': 2.0,  # Out of bounds mean
-        'initial_resilience_sd': 0.1,
-        'initial_affect_mean': -2.0,     # Out of bounds mean
-        'initial_affect_sd': 0.1,
-        'initial_resources_mean': -1.0,  # Out of bounds mean
-        'initial_resources_sd': 0.1,
-        'stress_probability': 0.5,
-        'coping_success_rate': 0.5,
-        'subevents_per_day': 3
+        "initial_resilience_mean": 2.0,  # Out of bounds mean
+        "initial_resilience_sd": 0.1,
+        "initial_affect_mean": -2.0,  # Out of bounds mean
+        "initial_affect_sd": 0.1,
+        "initial_resources_mean": -1.0,  # Out of bounds mean
+        "initial_resources_sd": 0.1,
+        "stress_probability": 0.5,
+        "coping_success_rate": 0.5,
+        "subevents_per_day": 3,
     }
 
     extreme_agents = analyzer.generate_agent_population(extreme_config, 100)
 
     # Verify bounds are still enforced
     all_in_bounds = all(
-        0 <= agent.resilience <= 1 and
-        -1 <= agent.affect <= 1 and
-        0 <= agent.resources <= 1
-        for agent in extreme_agents
+        0 <= agent.resilience <= 1 and -1 <= agent.affect <= 1 and 0 <= agent.resources <= 1 for agent in extreme_agents
     )
 
     print(f"Bounds enforcement with extreme parameters: {'✓ PASS' if all_in_bounds else '✗ FAIL'}")

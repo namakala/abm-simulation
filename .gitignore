@@ -76,3 +76,22 @@ Thumbs.db
 *.tmp
 *.temp
 *.log
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# agentic-boilerplate
+CLAUDE.md
+.cursorrules
+.windsurfrules
+CLAUDE.local.md
+*.local.md
+.vscode/settings.json
+*.sw[po]
+node_modules/
+vendor/
+target/
+*.pyc
+*.env*
+**/.archive/**
+!**/.archive/.gitkeep

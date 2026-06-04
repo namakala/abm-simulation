@@ -21,7 +21,7 @@ the robustness and realism of the agent diversity implementation.
 
 import sys
 import numpy as np
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict
 from pathlib import Path
 from dataclasses import dataclass
 import pandas as pd
@@ -30,24 +30,23 @@ import pandas as pd
 try:
     import matplotlib.pyplot as plt
     import seaborn as sns
+
     HAS_PLOTTING = True
-    plt.style.use('default')
+    plt.style.use("default")
     sns.set_palette("husl")
 except ImportError:
     HAS_PLOTTING = False
     print("Warning: matplotlib/seaborn not available. Running without visualizations.")
 
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.agent import Person
-from src.python.model import StressModel
-from src.python.config import get_config
-from src.python.math_utils import create_rng, sigmoid_transform, tanh_transform
 
 
 @dataclass
 class DiversityMetrics:
     """Container for diversity analysis results."""
+
     # Basic statistics
     mean: float
     std: float
@@ -72,6 +71,7 @@ class DiversityMetrics:
 @dataclass
 class AgentTrajectory:
     """Container for individual agent trajectory data."""
+
     agent_id: int
     resilience_history: List[float]
     affect_history: List[float]
@@ -172,7 +172,7 @@ class AgentDiversityAnalyzer:
         unique_values = len(np.unique(rounded_values))
 
         # Entropy (normalized)
-        hist, bin_edges = np.histogram(values, bins='auto', density=True)
+        hist, bin_edges = np.histogram(values, bins="auto", density=True)
         hist = hist[hist > 0]  # Remove zero probabilities
         entropy = -np.sum(hist * np.log(hist)) if len(hist) > 0 else 0.0
         entropy = entropy / np.log(len(hist)) if len(hist) > 1 else 0.0
@@ -195,7 +195,7 @@ class AgentDiversityAnalyzer:
             iqr=iqr,
             unique_values=unique_values,
             entropy=entropy,
-            gini_coefficient=gini
+            gini_coefficient=gini,
         )
 
     def _compute_skewness(self, values: np.ndarray) -> float:
@@ -205,7 +205,7 @@ class AgentDiversityAnalyzer:
         if std_val == 0 or len(values) < 3:
             return 0.0
         n = len(values)
-        skewness = (n / ((n-1) * (n-2))) * np.sum(((values - mean_val) / std_val) ** 3)
+        skewness = (n / ((n - 1) * (n - 2))) * np.sum(((values - mean_val) / std_val) ** 3)
         return skewness
 
     def _compute_kurtosis(self, values: np.ndarray) -> float:
@@ -215,11 +215,13 @@ class AgentDiversityAnalyzer:
         if std_val == 0 or len(values) < 4:
             return 0.0
         n = len(values)
-        kurtosis = (n * (n+1)) / ((n-1) * (n-2) * (n-3)) * np.sum(((values - mean_val) / std_val) ** 4)
-        kurtosis -= 3 * (n-1)**2 / ((n-2) * (n-3))
+        kurtosis = (n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3)) * np.sum(((values - mean_val) / std_val) ** 4)
+        kurtosis -= 3 * (n - 1) ** 2 / ((n - 2) * (n - 3))
         return kurtosis
 
-    def analyze_population_diversity(self, populations: Dict[str, List[Person]]) -> Dict[str, Dict[str, DiversityMetrics]]:
+    def analyze_population_diversity(
+        self, populations: Dict[str, List[Person]]
+    ) -> Dict[str, Dict[str, DiversityMetrics]]:
         """
         Analyze diversity metrics for multiple populations.
 
@@ -239,10 +241,10 @@ class AgentDiversityAnalyzer:
 
             # Compute diversity metrics for each attribute
             results[config_name] = {
-                'resilience': self.compute_diversity_metrics(resilience_values),
-                'affect': self.compute_diversity_metrics(affect_values),
-                'resources': self.compute_diversity_metrics(resources_values),
-                'pss10': self.compute_diversity_metrics(pss10_values)
+                "resilience": self.compute_diversity_metrics(resilience_values),
+                "affect": self.compute_diversity_metrics(affect_values),
+                "resources": self.compute_diversity_metrics(resources_values),
+                "pss10": self.compute_diversity_metrics(pss10_values),
             }
 
         return results
@@ -257,12 +259,12 @@ class AgentDiversityAnalyzer:
 
         # Compute correlation coefficients
         correlations = {
-            'resilience_affect': np.corrcoef(resilience, affect)[0, 1],
-            'resilience_resources': np.corrcoef(resilience, resources)[0, 1],
-            'resilience_pss10': np.corrcoef(resilience, pss10)[0, 1],
-            'affect_resources': np.corrcoef(affect, resources)[0, 1],
-            'affect_pss10': np.corrcoef(affect, pss10)[0, 1],
-            'resources_pss10': np.corrcoef(resources, pss10)[0, 1]
+            "resilience_affect": np.corrcoef(resilience, affect)[0, 1],
+            "resilience_resources": np.corrcoef(resilience, resources)[0, 1],
+            "resilience_pss10": np.corrcoef(resilience, pss10)[0, 1],
+            "affect_resources": np.corrcoef(affect, resources)[0, 1],
+            "affect_pss10": np.corrcoef(affect, pss10)[0, 1],
+            "resources_pss10": np.corrcoef(resources, pss10)[0, 1],
         }
 
         return correlations
@@ -278,7 +280,7 @@ class AgentDiversityAnalyzer:
                 affect_history=[agent.affect],
                 resources_history=[agent.resources],
                 stress_history=[agent.current_stress],
-                pss10_history=[agent.pss10]
+                pss10_history=[agent.pss10],
             )
 
             # Simulate steps
@@ -311,58 +313,58 @@ class AgentDiversityAnalyzer:
         overload_values = np.array(overload_scores)
 
         return {
-            'controllability': self.compute_diversity_metrics(controllability_values),
-            'overload': self.compute_diversity_metrics(overload_values)
+            "controllability": self.compute_diversity_metrics(controllability_values),
+            "overload": self.compute_diversity_metrics(overload_values),
         }
 
 
 def create_demo_configurations() -> Dict[str, Dict]:
     """Create diverse configuration scenarios for demonstration."""
     return {
-        'baseline': {
-            'initial_resilience_mean': 0.6,
-            'initial_resilience_sd': 0.15,
-            'initial_affect_mean': 0.1,
-            'initial_affect_sd': 0.25,
-            'initial_resources_mean': 0.7,
-            'initial_resources_sd': 0.12,
-            'stress_probability': 0.5,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 3
+        "baseline": {
+            "initial_resilience_mean": 0.6,
+            "initial_resilience_sd": 0.15,
+            "initial_affect_mean": 0.1,
+            "initial_affect_sd": 0.25,
+            "initial_resources_mean": 0.7,
+            "initial_resources_sd": 0.12,
+            "stress_probability": 0.5,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 3,
         },
-        'high_stress': {
-            'initial_resilience_mean': 0.4,
-            'initial_resilience_sd': 0.20,
-            'initial_affect_mean': -0.2,
-            'initial_affect_sd': 0.30,
-            'initial_resources_mean': 0.5,
-            'initial_resources_sd': 0.18,
-            'stress_probability': 0.8,
-            'coping_success_rate': 0.3,
-            'subevents_per_day': 5
+        "high_stress": {
+            "initial_resilience_mean": 0.4,
+            "initial_resilience_sd": 0.20,
+            "initial_affect_mean": -0.2,
+            "initial_affect_sd": 0.30,
+            "initial_resources_mean": 0.5,
+            "initial_resources_sd": 0.18,
+            "stress_probability": 0.8,
+            "coping_success_rate": 0.3,
+            "subevents_per_day": 5,
         },
-        'low_variation': {
-            'initial_resilience_mean': 0.7,
-            'initial_resilience_sd': 0.05,
-            'initial_affect_mean': 0.2,
-            'initial_affect_sd': 0.08,
-            'initial_resources_mean': 0.8,
-            'initial_resources_sd': 0.06,
-            'stress_probability': 0.3,
-            'coping_success_rate': 0.7,
-            'subevents_per_day': 2
+        "low_variation": {
+            "initial_resilience_mean": 0.7,
+            "initial_resilience_sd": 0.05,
+            "initial_affect_mean": 0.2,
+            "initial_affect_sd": 0.08,
+            "initial_resources_mean": 0.8,
+            "initial_resources_sd": 0.06,
+            "stress_probability": 0.3,
+            "coping_success_rate": 0.7,
+            "subevents_per_day": 2,
         },
-        'high_variation': {
-            'initial_resilience_mean': 0.5,
-            'initial_resilience_sd': 0.25,
-            'initial_affect_mean': 0.0,
-            'initial_affect_sd': 0.35,
-            'initial_resources_mean': 0.6,
-            'initial_resources_sd': 0.22,
-            'stress_probability': 0.6,
-            'coping_success_rate': 0.5,
-            'subevents_per_day': 4
-        }
+        "high_variation": {
+            "initial_resilience_mean": 0.5,
+            "initial_resilience_sd": 0.25,
+            "initial_affect_mean": 0.0,
+            "initial_affect_sd": 0.35,
+            "initial_resources_mean": 0.6,
+            "initial_resources_sd": 0.22,
+            "stress_probability": 0.6,
+            "coping_success_rate": 0.5,
+            "subevents_per_day": 4,
+        },
     }
 
 
@@ -385,9 +387,9 @@ def print_diversity_summary(results: Dict[str, Dict[str, DiversityMetrics]]):
             print(f"  Inequality: Gini coefficient={metrics.gini_coefficient:3f}")
 
 
-def create_advanced_visualizations(populations: Dict[str, List[Person]],
-                                 trajectories: List[AgentTrajectory],
-                                 correlations: Dict[str, float]):
+def create_advanced_visualizations(
+    populations: Dict[str, List[Person]], trajectories: List[AgentTrajectory], correlations: Dict[str, float]
+):
     """Create advanced visualizations of agent diversity."""
     if not HAS_PLOTTING:
         print("Matplotlib not available. Creating text-based visualizations.")
@@ -399,7 +401,7 @@ def create_advanced_visualizations(populations: Dict[str, List[Person]],
 
     # Create figure with subplots
     fig, axes = plt.subplots(3, 3, figsize=(18, 15))
-    fig.suptitle('Agent Diversity Analysis - Advanced Metrics', fontsize=16, fontweight='bold')
+    fig.suptitle("Agent Diversity Analysis - Advanced Metrics", fontsize=16, fontweight="bold")
 
     # Flatten axes for easier indexing
     axes = axes.flatten()
@@ -411,46 +413,62 @@ def create_advanced_visualizations(populations: Dict[str, List[Person]],
     ax1 = axes[0]
     for i, (config_name, agents) in enumerate(populations.items()):
         resilience_vals = [agent.resilience for agent in agents]
-        ax1.hist(resilience_vals, alpha=0.7, label=config_name, bins=20,
-                color=colors[i], density=True)
-    ax1.set_xlabel('Resilience')
-    ax1.set_ylabel('Density')
-    ax1.set_title('Resilience Distributions Across Configurations')
+        ax1.hist(resilience_vals, alpha=0.7, label=config_name, bins=20, color=colors[i], density=True)
+    ax1.set_xlabel("Resilience")
+    ax1.set_ylabel("Density")
+    ax1.set_title("Resilience Distributions Across Configurations")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
 
     # 2. Correlation heatmap
     ax2 = axes[1]
-    corr_matrix = np.array([
-        [1.0, correlations['resilience_affect'], correlations['resilience_resources'], correlations['resilience_pss10']],
-        [correlations['resilience_affect'], 1.0, correlations['affect_resources'], correlations['affect_pss10']],
-        [correlations['resilience_resources'], correlations['affect_resources'], 1.0, correlations['resources_pss10']],
-        [correlations['resilience_pss10'], correlations['affect_pss10'], correlations['resources_pss10'], 1.0]
-    ])
-    attr_names = ['Resilience', 'Affect', 'Resources', 'PSS-10']
-    im = ax2.imshow(corr_matrix, cmap='RdYlBu_r', vmin=-1, vmax=1)
+    corr_matrix = np.array(
+        [
+            [
+                1.0,
+                correlations["resilience_affect"],
+                correlations["resilience_resources"],
+                correlations["resilience_pss10"],
+            ],
+            [correlations["resilience_affect"], 1.0, correlations["affect_resources"], correlations["affect_pss10"]],
+            [
+                correlations["resilience_resources"],
+                correlations["affect_resources"],
+                1.0,
+                correlations["resources_pss10"],
+            ],
+            [correlations["resilience_pss10"], correlations["affect_pss10"], correlations["resources_pss10"], 1.0],
+        ]
+    )
+    attr_names = ["Resilience", "Affect", "Resources", "PSS-10"]
+    im = ax2.imshow(corr_matrix, cmap="RdYlBu_r", vmin=-1, vmax=1)
     ax2.set_xticks(range(4))
     ax2.set_yticks(range(4))
     ax2.set_xticklabels(attr_names)
     ax2.set_yticklabels(attr_names)
-    ax2.set_title('Attribute Correlation Matrix')
+    ax2.set_title("Attribute Correlation Matrix")
     plt.colorbar(im, ax=ax2, shrink=0.8)
 
     # Add correlation values as text
     for i in range(4):
         for j in range(4):
-            ax2.text(j, i, f'{corr_matrix[i, j]:2f}',
-                    ha='center', va='center', color='black', fontsize=10)
+            ax2.text(j, i, f"{corr_matrix[i, j]:2f}", ha="center", va="center", color="black", fontsize=10)
 
     # 3. Agent trajectory plot
     ax3 = axes[2]
     for i, trajectory in enumerate(trajectories[:5]):  # Show first 5 trajectories
         steps = range(len(trajectory.resilience_history))
-        ax3.plot(steps, trajectory.resilience_history,
-                label=f'Agent {trajectory.agent_id}', alpha=0.7, marker='o', markersize=3)
-    ax3.set_xlabel('Time Step')
-    ax3.set_ylabel('Resilience')
-    ax3.set_title('Individual Agent Resilience Trajectories')
+        ax3.plot(
+            steps,
+            trajectory.resilience_history,
+            label=f"Agent {trajectory.agent_id}",
+            alpha=0.7,
+            marker="o",
+            markersize=3,
+        )
+    ax3.set_xlabel("Time Step")
+    ax3.set_ylabel("Resilience")
+    ax3.set_title("Individual Agent Resilience Trajectories")
     ax3.legend()
     ax3.grid(True, alpha=0.3)
 
@@ -460,27 +478,27 @@ def create_advanced_visualizations(populations: Dict[str, List[Person]],
         resilience_vals = [agent.resilience for agent in agents]
         pss10_vals = [agent.pss10 for agent in agents]
         ax4.scatter(resilience_vals, pss10_vals, alpha=0.6, label=config_name, s=20)
-    ax4.set_xlabel('Resilience')
-    ax4.set_ylabel('PSS-10 Score')
-    ax4.set_title('PSS-10 Score vs Resilience')
+    ax4.set_xlabel("Resilience")
+    ax4.set_ylabel("PSS-10 Score")
+    ax4.set_title("PSS-10 Score vs Resilience")
     ax4.legend()
     ax4.grid(True, alpha=0.3)
 
     # 5. Diversity metrics comparison
     ax5 = axes[4]
     config_names = list(populations.keys())
-    cv_values = [results[config]['resilience'].cv for config in config_names]
-    entropy_values = [results[config]['resilience'].entropy for config in config_names]
+    cv_values = [results[config]["resilience"].cv for config in config_names]
+    entropy_values = [results[config]["resilience"].entropy for config in config_names]
 
     x_pos = np.arange(len(config_names))
     width = 0.35
 
-    bars1 = ax5.bar(x_pos - width/2, cv_values, width, label='CV', alpha=0.8)
-    bars2 = ax5.bar(x_pos + width/2, entropy_values, width, label='Entropy', alpha=0.8)
+    ax5.bar(x_pos - width / 2, cv_values, width, label="CV", alpha=0.8)
+    ax5.bar(x_pos + width / 2, entropy_values, width, label="Entropy", alpha=0.8)
 
-    ax5.set_xlabel('Configuration')
-    ax5.set_ylabel('Diversity Measure')
-    ax5.set_title('Diversity Metrics Comparison')
+    ax5.set_xlabel("Configuration")
+    ax5.set_ylabel("Diversity Measure")
+    ax5.set_title("Diversity Metrics Comparison")
     ax5.set_xticks(x_pos)
     ax5.set_xticklabels(config_names, rotation=45)
     ax5.legend()
@@ -495,13 +513,14 @@ def create_advanced_visualizations(populations: Dict[str, List[Person]],
     affect_vals = [agent.affect for agent in agents]
     resources_vals = [agent.resources for agent in agents]
 
-    scatter = ax6.scatter(resilience_vals, affect_vals, resources_vals,
-                         c=[agent.pss10 for agent in agents], cmap='viridis', alpha=0.6)
-    ax6.set_xlabel('Resilience')
-    ax6.set_ylabel('Affect')
-    ax6.set_zlabel('Resources')
-    ax6.set_title('Agent State Space (3D)')
-    plt.colorbar(scatter, ax=ax6, shrink=0.8, label='PSS-10 Score')
+    scatter = ax6.scatter(
+        resilience_vals, affect_vals, resources_vals, c=[agent.pss10 for agent in agents], cmap="viridis", alpha=0.6
+    )
+    ax6.set_xlabel("Resilience")
+    ax6.set_ylabel("Affect")
+    ax6.set_zlabel("Resources")
+    ax6.set_title("Agent State Space (3D)")
+    plt.colorbar(scatter, ax=ax6, shrink=0.8, label="PSS-10 Score")
 
     # 7. Box plot comparison
     ax7 = axes[6]
@@ -514,13 +533,13 @@ def create_advanced_visualizations(populations: Dict[str, List[Person]],
         config_labels.append(config_name)
 
     bp = ax7.boxplot(all_resilience_data, patch_artist=True, labels=config_labels)
-    ax7.set_ylabel('Resilience')
-    ax7.set_title('Resilience Distribution Comparison')
-    ax7.tick_params(axis='x', rotation=45)
+    ax7.set_ylabel("Resilience")
+    ax7.set_title("Resilience Distribution Comparison")
+    ax7.tick_params(axis="x", rotation=45)
     ax7.grid(True, alpha=0.3)
 
     # Color the boxes
-    for i, box in enumerate(bp['boxes']):
+    for i, box in enumerate(bp["boxes"]):
         box.set_facecolor(colors[i])
 
     # 8. Time series variability
@@ -533,11 +552,11 @@ def create_advanced_visualizations(populations: Dict[str, List[Person]],
         window = min(5, len(resilience_trend))
         if len(resilience_trend) >= window:
             rolling_mean = pd.Series(resilience_trend).rolling(window=window).mean()
-            ax8.plot(steps, rolling_mean, label=f'Agent {trajectory.agent_id} (Trend)', alpha=0.8)
+            ax8.plot(steps, rolling_mean, label=f"Agent {trajectory.agent_id} (Trend)", alpha=0.8)
 
-    ax8.set_xlabel('Time Step')
-    ax8.set_ylabel('Resilience (Trend)')
-    ax8.set_title('Agent Resilience Trends Over Time')
+    ax8.set_xlabel("Time Step")
+    ax8.set_ylabel("Resilience (Trend)")
+    ax8.set_title("Agent Resilience Trends Over Time")
     ax8.legend()
     ax8.grid(True, alpha=0.3)
 
@@ -552,19 +571,19 @@ def create_advanced_visualizations(populations: Dict[str, List[Person]],
         variability_data.append((config_name, variability))
 
     configs, variabilities = zip(*variability_data)
-    bars = ax9.bar(range(len(configs)), variabilities, color=colors[:len(configs)])
-    ax9.set_xlabel('Configuration')
-    ax9.set_ylabel('Resilience Standard Deviation')
-    ax9.set_title('Population Variability Comparison')
+    ax9.bar(range(len(configs)), variabilities, color=colors[: len(configs)])
+    ax9.set_xlabel("Configuration")
+    ax9.set_ylabel("Resilience Standard Deviation")
+    ax9.set_title("Population Variability Comparison")
     ax9.set_xticks(range(len(configs)))
     ax9.set_xticklabels(configs, rotation=45)
 
     plt.tight_layout()
 
     # Save the comprehensive visualization
-    output_path = Path('data/processed') / 'agent_diversity_analysis.png'
+    output_path = Path("data/processed") / "agent_diversity_analysis.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path, dpi=300, bbox_inches="tight")
     print(f"Comprehensive visualization saved to: {output_path}")
 
 
@@ -598,7 +617,7 @@ def run_comprehensive_diversity_demo():
 
     # Run simulation steps to engage dynamic processes before correlation analysis
     print("\nRunning 20 simulation steps to engage dynamic processes...")
-    baseline_agents = populations['baseline']
+    baseline_agents = populations["baseline"]
 
     # Run 20 steps on all agents to create realistic correlations
     for step in range(20):
@@ -658,15 +677,11 @@ def run_comprehensive_diversity_demo():
     # Test diversity (ensure realistic variation)
     print("\nTesting population diversity...")
     total_agents = sum(len(agents) for agents in populations.values())
-    unique_resilience = len(set(
-        agent.resilience
-        for agents in populations.values()
-        for agent in agents
-    ))
+    unique_resilience = len(set(agent.resilience for agents in populations.values() for agent in agents))
 
     print(f"Total agents across all configurations: {total_agents}")
     print(f"Unique resilience values: {unique_resilience}")
-    print(f"Diversity ratio: {unique_resilience/total_agents:3f}")
+    print(f"Diversity ratio: {unique_resilience / total_agents:3f}")
 
     # Final summary
     print("\n" + "=" * 80)
@@ -712,4 +727,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error running demonstration: {e}")
         import traceback
+
         traceback.print_exc()

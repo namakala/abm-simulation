@@ -12,19 +12,15 @@ Tests all requirements:
 """
 
 import numpy as np
-import pytest
 import os
-import tempfile
-from pathlib import Path
 from unittest.mock import patch
 
 import sys
-import os
+
 # Add the src/python directory to the path so we can import modules
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from stress_utils import generate_pss10_dimension_scores, generate_pss10_responses
-from config import Config, ConfigurationError
 import traceback
 
 
@@ -169,46 +165,46 @@ class TestPSS10DimensionScoresConfiguration:
     def test_configuration_bifactor_correlation(self):
         """Test that PSS10_BIFACTOR_COR configuration is used correctly."""
         # Test with mocked configuration
-        with patch('stress_utils.get_config') as mock_config:
+        with patch("stress_utils.get_config") as mock_config:
             mock_cfg = mock_config.return_value
             mock_cfg.get.return_value = 0.5  # Custom correlation
 
             corr_c, corr_o = generate_pss10_dimension_scores(0.5, 0.5, deterministic=True)
 
             # Should use the mocked correlation value
-            mock_cfg.get.assert_any_call('pss10', 'bifactor_correlation')
+            mock_cfg.get.assert_any_call("pss10", "bifactor_correlation")
 
     def test_configuration_controllability_sd(self):
         """Test that PSS10_CONTROLLABILITY_SD configuration is used correctly."""
-        with patch('stress_utils.get_config') as mock_config:
+        with patch("stress_utils.get_config") as mock_config:
             mock_cfg = mock_config.return_value
             mock_cfg.get.side_effect = lambda section, key: {
-                ('pss10', 'bifactor_correlation'): 0.0,
-                ('pss10', 'controllability_sd'): 2.0,  # Custom SD
-                ('pss10', 'overload_sd'): 1.0
+                ("pss10", "bifactor_correlation"): 0.0,
+                ("pss10", "controllability_sd"): 2.0,  # Custom SD
+                ("pss10", "overload_sd"): 1.0,
             }.get((section, key))
 
             corr_c, corr_o = generate_pss10_dimension_scores(0.5, 0.5, deterministic=True)
 
             # Should use the mocked SD values
-            mock_cfg.get.assert_any_call('pss10', 'controllability_sd')
-            mock_cfg.get.assert_any_call('pss10', 'overload_sd')
+            mock_cfg.get.assert_any_call("pss10", "controllability_sd")
+            mock_cfg.get.assert_any_call("pss10", "overload_sd")
 
     def test_configuration_overload_sd(self):
         """Test that PSS10_OVERLOAD_SD configuration is used correctly."""
-        with patch('stress_utils.get_config') as mock_config:
+        with patch("stress_utils.get_config") as mock_config:
             mock_cfg = mock_config.return_value
             mock_cfg.get.side_effect = lambda section, key: {
-                ('pss10', 'bifactor_correlation'): 0.0,
-                ('pss10', 'controllability_sd'): 1.0,
-                ('pss10', 'overload_sd'): 2.0  # Custom SD
+                ("pss10", "bifactor_correlation"): 0.0,
+                ("pss10", "controllability_sd"): 1.0,
+                ("pss10", "overload_sd"): 2.0,  # Custom SD
             }.get((section, key))
 
             corr_c, corr_o = generate_pss10_dimension_scores(0.5, 0.5, deterministic=True)
 
             # Should use the mocked SD values
-            mock_cfg.get.assert_any_call('pss10', 'controllability_sd')
-            mock_cfg.get.assert_any_call('pss10', 'overload_sd')
+            mock_cfg.get.assert_any_call("pss10", "controllability_sd")
+            mock_cfg.get.assert_any_call("pss10", "overload_sd")
 
     def test_configuration_default_values(self):
         """Test that default configuration values work correctly."""
@@ -225,20 +221,20 @@ class TestPSS10DimensionScoresRegularizedSD:
 
     def test_regularized_sd_division_by_four(self):
         """Test that standard deviations are divided by 4 as specified."""
-        with patch('stress_utils.get_config') as mock_config:
+        with patch("stress_utils.get_config") as mock_config:
             mock_cfg = mock_config.return_value
             # Mock the config to return specific SD values
             mock_cfg.get.side_effect = lambda section, key: {
-                ('pss10', 'bifactor_correlation'): 0.0,
-                ('pss10', 'controllability_sd'): 2.0,  # Should be divided by 4 → 0.5
-                ('pss10', 'overload_sd'): 4.0         # Should be divided by 4 → 1.0
+                ("pss10", "bifactor_correlation"): 0.0,
+                ("pss10", "controllability_sd"): 2.0,  # Should be divided by 4 → 0.5
+                ("pss10", "overload_sd"): 4.0,  # Should be divided by 4 → 1.0
             }.get((section, key))
 
             corr_c, corr_o = generate_pss10_dimension_scores(0.5, 0.5, deterministic=True)
 
             # Should use regularized SDs (divided by 4)
-            mock_cfg.get.assert_any_call('pss10', 'controllability_sd')
-            mock_cfg.get.assert_any_call('pss10', 'overload_sd')
+            mock_cfg.get.assert_any_call("pss10", "controllability_sd")
+            mock_cfg.get.assert_any_call("pss10", "overload_sd")
 
     def test_regularized_sd_effect_on_variance(self):
         """Test that regularized SDs produce appropriate variance."""
@@ -250,12 +246,12 @@ class TestPSS10DimensionScoresRegularizedSD:
         ]
 
         for controllability_sd, overload_sd in test_cases:
-            with patch('stress_utils.get_config') as mock_config:
+            with patch("stress_utils.get_config") as mock_config:
                 mock_cfg = mock_config.return_value
                 mock_cfg.get.side_effect = lambda section, key: {
-                    ('pss10', 'bifactor_correlation'): 0.0,
-                    ('pss10', 'controllability_sd'): controllability_sd,
-                    ('pss10', 'overload_sd'): overload_sd
+                    ("pss10", "bifactor_correlation"): 0.0,
+                    ("pss10", "controllability_sd"): controllability_sd,
+                    ("pss10", "overload_sd"): overload_sd,
                 }.get((section, key))
 
                 corr_c, corr_o = generate_pss10_dimension_scores(0.5, 0.5, deterministic=True)
@@ -401,7 +397,7 @@ def run_comprehensive_tests():
         TestPSS10DimensionScoresConfiguration(),
         TestPSS10DimensionScoresRegularizedSD(),
         TestPSS10DimensionScoresReasonableResults(),
-        TestPSS10DimensionScoresIntegration()
+        TestPSS10DimensionScoresIntegration(),
     ]
 
     total_tests = 0
@@ -413,7 +409,7 @@ def run_comprehensive_tests():
         print("-" * len(class_name))
 
         # Get all test methods
-        test_methods = [method for method in dir(test_class) if method.startswith('test_')]
+        test_methods = [method for method in dir(test_class) if method.startswith("test_")]
 
         for test_method in test_methods:
             total_tests += 1

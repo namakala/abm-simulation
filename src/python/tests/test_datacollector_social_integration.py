@@ -15,13 +15,11 @@ import os
 import sys
 import traceback
 import numpy as np
-import pandas as pd
 
 # Add src/python to path for imports
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src', 'python'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "src", "python"))
 
 from model import StressModel
-from config import get_config
 
 
 def test_basic_social_interaction_collection():
@@ -37,19 +35,20 @@ def test_basic_social_interaction_collection():
 
     # Get collected data
     model_data = model.datacollector.get_model_vars_dataframe()
-    agent_data = model.datacollector.get_agent_vars_dataframe()
+    model.datacollector.get_agent_vars_dataframe()
 
     # Check that social interaction metrics are present and valid
-    assert 'social_interactions' in model_data.columns, "social_interactions should be in model data"
-    assert 'support_exchanges' in model_data.columns, "support_exchanges should be in model data"
+    assert "social_interactions" in model_data.columns, "social_interactions should be in model data"
+    assert "support_exchanges" in model_data.columns, "support_exchanges should be in model data"
 
     # Check that metrics are non-negative
-    assert (model_data['social_interactions'] >= 0).all(), "All social_interactions should be non-negative"
-    assert (model_data['support_exchanges'] >= 0).all(), "All support_exchanges should be non-negative"
+    assert (model_data["social_interactions"] >= 0).all(), "All social_interactions should be non-negative"
+    assert (model_data["support_exchanges"] >= 0).all(), "All support_exchanges should be non-negative"
 
     # Check that support exchanges don't exceed total interactions
-    assert (model_data['support_exchanges'] <= model_data['social_interactions']).all(), \
-        "Support exchanges should not exceed total social interactions"
+    assert (
+        model_data["support_exchanges"] <= model_data["social_interactions"]
+    ).all(), "Support exchanges should not exceed total social interactions"
 
     print(f"✓ Collected {len(model_data)} days of social interaction data")
     print(f"✓ Total social interactions: {model_data['social_interactions'].sum()}")
@@ -66,8 +65,8 @@ def test_agent_attribute_access():
 
     # Check that agents have the required attributes before simulation
     for agent in model.agents:
-        assert hasattr(agent, 'daily_interactions'), "Agent should have daily_interactions attribute"
-        assert hasattr(agent, 'daily_support_exchanges'), "Agent should have daily_support_exchanges attribute"
+        assert hasattr(agent, "daily_interactions"), "Agent should have daily_interactions attribute"
+        assert hasattr(agent, "daily_support_exchanges"), "Agent should have daily_support_exchanges attribute"
 
         # Attributes should start at 0
         assert agent.daily_interactions == 0, "daily_interactions should start at 0"
@@ -78,8 +77,8 @@ def test_agent_attribute_access():
 
     # Check that attributes are still accessible after step
     for agent in model.agents:
-        assert hasattr(agent, 'daily_interactions'), "Agent should still have daily_interactions after step"
-        assert hasattr(agent, 'daily_support_exchanges'), "Agent should still have daily_support_exchanges after step"
+        assert hasattr(agent, "daily_interactions"), "Agent should still have daily_interactions after step"
+        assert hasattr(agent, "daily_support_exchanges"), "Agent should still have daily_support_exchanges after step"
 
         # Attributes should be integers
         assert isinstance(agent.daily_interactions, (int, np.integer)), "daily_interactions should be integer"
@@ -104,14 +103,18 @@ def test_data_formatting():
     model_data = model.datacollector.get_model_vars_dataframe()
 
     # Test data types
-    assert model_data['social_interactions'].dtype in [np.dtype('int64'), np.dtype('float64')], \
-        "social_interactions should be numeric"
-    assert model_data['support_exchanges'].dtype in [np.dtype('int64'), np.dtype('float64')], \
-        "support_exchanges should be numeric"
+    assert model_data["social_interactions"].dtype in [
+        np.dtype("int64"),
+        np.dtype("float64"),
+    ], "social_interactions should be numeric"
+    assert model_data["support_exchanges"].dtype in [
+        np.dtype("int64"),
+        np.dtype("float64"),
+    ], "support_exchanges should be numeric"
 
     # Test that we can perform analysis operations
-    total_interactions = model_data['social_interactions'].sum()
-    total_support = model_data['support_exchanges'].sum()
+    total_interactions = model_data["social_interactions"].sum()
+    total_support = model_data["support_exchanges"].sum()
 
     # Calculate support rate
     if total_interactions > 0:
@@ -121,8 +124,8 @@ def test_data_formatting():
         print("✓ No interactions occurred (expected for some parameter settings)")
 
     # Test aggregation operations
-    max_daily_interactions = model_data['social_interactions'].max()
-    avg_daily_interactions = model_data['social_interactions'].mean()
+    max_daily_interactions = model_data["social_interactions"].max()
+    avg_daily_interactions = model_data["social_interactions"].mean()
 
     print(f"✓ Max daily interactions: {max_daily_interactions}")
     print(f"✓ Avg daily interactions: {avg_daily_interactions:.2f}")
@@ -172,8 +175,8 @@ def test_daily_reset_mechanism():
     assert len(model_data) == 2, f"Should have 2 days of model data, got {len(model_data)}"
 
     # Check that daily totals are reasonable
-    day1_total = model_data.iloc[0]['social_interactions']
-    day2_total = model_data.iloc[1]['social_interactions']
+    day1_total = model_data.iloc[0]["social_interactions"]
+    day2_total = model_data.iloc[1]["social_interactions"]
 
     print(f"✓ Day 1 total interactions: {day1_total}")
     print(f"✓ Day 2 total interactions: {day2_total}")
@@ -208,8 +211,8 @@ def test_edge_cases():
     model_data = model.datacollector.get_model_vars_dataframe()
 
     # Check that even with potentially low interactions, data is still collected correctly
-    total_interactions = model_data['social_interactions'].sum()
-    total_support = model_data['support_exchanges'].sum()
+    total_interactions = model_data["social_interactions"].sum()
+    total_support = model_data["support_exchanges"].sum()
 
     print(f"✓ Low interaction scenario: {total_interactions} total interactions, {total_support} support exchanges")
 
@@ -217,12 +220,12 @@ def test_edge_cases():
     print("Testing data integrity...")
 
     # Check for any NaN or infinite values
-    assert not model_data['social_interactions'].isnull().any(), "No null values in social_interactions"
-    assert not model_data['support_exchanges'].isnull().any(), "No null values in support_exchanges"
+    assert not model_data["social_interactions"].isnull().any(), "No null values in social_interactions"
+    assert not model_data["support_exchanges"].isnull().any(), "No null values in support_exchanges"
 
     # Check for reasonable bounds
-    max_interactions = model_data['social_interactions'].max()
-    max_support = model_data['support_exchanges'].max()
+    max_interactions = model_data["social_interactions"].max()
+    max_support = model_data["support_exchanges"].max()
 
     # These should be reasonable for the simulation parameters
     assert max_interactions >= 0, "Max interactions should be non-negative"
@@ -251,27 +254,31 @@ def test_data_consistency():
             model.step()
 
         model_data = model.datacollector.get_model_vars_dataframe()
-        results.append({
-            'run': run + 1,
-            'total_interactions': model_data['social_interactions'].sum(),
-            'total_support': model_data['support_exchanges'].sum(),
-            'avg_daily_interactions': model_data['social_interactions'].mean(),
-            'avg_daily_support': model_data['support_exchanges'].mean()
-        })
+        results.append(
+            {
+                "run": run + 1,
+                "total_interactions": model_data["social_interactions"].sum(),
+                "total_support": model_data["support_exchanges"].sum(),
+                "avg_daily_interactions": model_data["social_interactions"].mean(),
+                "avg_daily_support": model_data["support_exchanges"].mean(),
+            }
+        )
 
     # Check that results are reasonable (not necessarily identical due to model complexity)
-    interaction_totals = [r['total_interactions'] for r in results]
-    support_totals = [r['total_support'] for r in results]
+    interaction_totals = [r["total_interactions"] for r in results]
+    support_totals = [r["total_support"] for r in results]
 
     # Check that all runs produced reasonable results
     for i, result in enumerate(results):
-        assert result['total_interactions'] >= 0, f"Run {i+1} should have non-negative interactions"
-        assert result['total_support'] >= 0, f"Run {i+1} should have non-negative support exchanges"
-        assert result['total_support'] <= result['total_interactions'], f"Run {i+1} support should not exceed interactions"
+        assert result["total_interactions"] >= 0, f"Run {i + 1} should have non-negative interactions"
+        assert result["total_support"] >= 0, f"Run {i + 1} should have non-negative support exchanges"
+        assert (
+            result["total_support"] <= result["total_interactions"]
+        ), f"Run {i + 1} support should not exceed interactions"
 
-    print("✓ Run 1: interactions={}, support={}".format(results[0]['total_interactions'], results[0]['total_support']))
-    print("✓ Run 2: interactions={}, support={}".format(results[1]['total_interactions'], results[1]['total_support']))
-    print("✓ Run 3: interactions={}, support={}".format(results[2]['total_interactions'], results[2]['total_support']))
+    print("✓ Run 1: interactions={}, support={}".format(results[0]["total_interactions"], results[0]["total_support"]))
+    print("✓ Run 2: interactions={}, support={}".format(results[1]["total_interactions"], results[1]["total_support"]))
+    print("✓ Run 3: interactions={}, support={}".format(results[2]["total_interactions"], results[2]["total_support"]))
 
     # Check that results are within reasonable bounds (allowing for some variation)
     avg_interactions = sum(interaction_totals) / len(interaction_totals)
@@ -287,9 +294,9 @@ def test_data_consistency():
 
 def test_comprehensive_integration():
     """Run comprehensive integration test."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("COMPREHENSIVE DATACOLLECTOR SOCIAL INTEGRATION TEST")
-    print("="*60)
+    print("=" * 60)
 
     try:
         # Run all tests
@@ -300,10 +307,10 @@ def test_comprehensive_integration():
         test_edge_cases()
         test_data_consistency()
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("✅ ALL TESTS PASSED!")
         print("✅ DataCollector integration for social interactions and support exchanges works correctly!")
-        print("="*60)
+        print("=" * 60)
 
         return True
 

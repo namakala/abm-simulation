@@ -9,17 +9,20 @@ Tests ensure all theoretical correlations are maintained and the feedback loop f
 
 import pytest
 import numpy as np
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 from src.python.agent import Person
 from src.python.stress_utils import (
-    generate_stress_event, StressEvent, AppraisalWeights, ThresholdParams,
-    generate_pss10_from_stress_dimensions, update_stress_dimensions_from_pss10_feedback,
-    update_stress_dimensions_from_event, decay_recent_stress_intensity,
-    validate_theoretical_correlations, _update_recent_stress_intensity
+    generate_stress_event,
+    StressEvent,
+    AppraisalWeights,
+    generate_pss10_from_stress_dimensions,
+    update_stress_dimensions_from_pss10_feedback,
+    update_stress_dimensions_from_event,
+    decay_recent_stress_intensity,
+    validate_theoretical_correlations,
+    _update_recent_stress_intensity,
 )
-from src.python.affect_utils import StressProcessingConfig
-from src.python.config import get_config
 
 
 class TestCompleteStressProcessingLoop:
@@ -77,19 +80,16 @@ class TestCompleteStressProcessingLoop:
 
         # Simulate successful high-challenge event
         challenge, hindrance = 0.8, 0.2
-        (
-            agent.stress_controllability,
-            agent.stress_overload,
-            agent.recent_stress_intensity,
-            agent.stress_momentum
-        ) = update_stress_dimensions_from_event(
-            current_controllability=agent.stress_controllability,
-            current_overload=agent.stress_overload,
-            challenge=challenge,
-            hindrance=hindrance,
-            coped_successfully=True,
-            is_stressful=True,
-            volatility=agent.volatility
+        agent.stress_controllability, agent.stress_overload, agent.recent_stress_intensity, agent.stress_momentum = (
+            update_stress_dimensions_from_event(
+                current_controllability=agent.stress_controllability,
+                current_overload=agent.stress_overload,
+                challenge=challenge,
+                hindrance=hindrance,
+                coped_successfully=True,
+                is_stressful=True,
+                volatility=agent.volatility,
+            )
         )
 
         # Successful high-challenge coping should improve controllability
@@ -103,19 +103,16 @@ class TestCompleteStressProcessingLoop:
 
         # Simulate failed high-hindrance event
         challenge, hindrance = 0.2, 0.8
-        (
-            agent.stress_controllability,
-            agent.stress_overload,
-            agent.recent_stress_intensity,
-            agent.stress_momentum
-        ) = update_stress_dimensions_from_event(
-            current_controllability=agent.stress_controllability,
-            current_overload=agent.stress_overload,
-            challenge=challenge,
-            hindrance=hindrance,
-            coped_successfully=False,
-            is_stressful=True,
-            volatility=agent.volatility
+        agent.stress_controllability, agent.stress_overload, agent.recent_stress_intensity, agent.stress_momentum = (
+            update_stress_dimensions_from_event(
+                current_controllability=agent.stress_controllability,
+                current_overload=agent.stress_overload,
+                challenge=challenge,
+                hindrance=hindrance,
+                coped_successfully=False,
+                is_stressful=True,
+                volatility=agent.volatility,
+            )
         )
 
         # Failed high-hindrance coping should increase overload
@@ -129,7 +126,7 @@ class TestCompleteStressProcessingLoop:
 
         # Set specific stress dimensions
         agent.stress_controllability = 0.8  # High controllability
-        agent.stress_overload = 0.3        # Low overload
+        agent.stress_overload = 0.3  # Low overload
 
         # Generate PSS-10 from stress dimensions
         pss10_data = generate_pss10_from_stress_dimensions(
@@ -137,11 +134,11 @@ class TestCompleteStressProcessingLoop:
             stress_overload=agent.stress_overload,
             recent_stress_intensity=agent.recent_stress_intensity,
             stress_momentum=agent.stress_momentum,
-            rng=agent._rng
+            rng=agent._rng,
         )
-        agent.pss10_responses = pss10_data['pss10_responses']
-        agent.pss10 = pss10_data['pss10_score']
-        agent.stressed = pss10_data['stressed']
+        agent.pss10_responses = pss10_data["pss10_responses"]
+        agent.pss10 = pss10_data["pss10_score"]
+        agent.stressed = pss10_data["stressed"]
 
         # Validate PSS-10 structure
         assert len(agent.pss10_responses) == 10
@@ -164,8 +161,16 @@ class TestCompleteStressProcessingLoop:
 
         # Create PSS-10 responses that indicate high controllability, low overload
         agent.pss10_responses = {
-            1: 1, 2: 1, 3: 1, 4: 3, 5: 3,  # Reverse scored items (high = good controllability)
-            6: 1, 7: 3, 8: 3, 9: 1, 10: 1  # Non-reverse scored items (low = low overload)
+            1: 1,
+            2: 1,
+            3: 1,
+            4: 3,
+            5: 3,  # Reverse scored items (high = good controllability)
+            6: 1,
+            7: 3,
+            8: 3,
+            9: 1,
+            10: 1,  # Non-reverse scored items (low = low overload)
         }
         agent.pss10 = 17  # Relatively low stress score
 
@@ -174,20 +179,18 @@ class TestCompleteStressProcessingLoop:
             current_controllability=agent.stress_controllability,
             current_overload=agent.stress_overload,
             pss10_responses=agent.pss10_responses,
-            current_resources=agent.resources
+            current_resources=agent.resources,
         )
 
         # Feedback should improve stress dimensions
         # (though blended with existing values, should show some improvement)
         controllability_items = [4, 5, 7, 8]
-        expected_controllability = np.mean([
-            1.0 - (agent.pss10_responses[item] / 4.0) for item in controllability_items
-        ])
+        expected_controllability = np.mean(
+            [1.0 - (agent.pss10_responses[item] / 4.0) for item in controllability_items]
+        )
 
         overload_items = [1, 2, 3, 6, 9, 10]
-        expected_overload = np.mean([
-            agent.pss10_responses[item] / 4.0 for item in overload_items
-        ])
+        expected_overload = np.mean([agent.pss10_responses[item] / 4.0 for item in overload_items])
 
         # Feedback should be incorporated (allowing for blending)
         controllability_diff = abs(agent.stress_controllability - expected_controllability)
@@ -213,23 +216,30 @@ class TestCompleteStressProcessingLoop:
 
         # Create a mock stress event in daily_stress_events
         challenge, hindrance = 0.7, 0.3
-        agent.daily_stress_events.append({
-            'challenge': challenge,
-            'hindrance': hindrance,
-            'is_stressed': True,
-            'stress_level': 0.6,
-            'coped_successfully': True,
-            'event_controllability': 0.8,
-            'event_overload': 0.2
-        })
+        agent.daily_stress_events.append(
+            {
+                "challenge": challenge,
+                "hindrance": hindrance,
+                "is_stressed": True,
+                "stress_level": 0.6,
+                "coped_successfully": True,
+                "event_controllability": 0.8,
+                "event_overload": 0.2,
+            }
+        )
 
         # Mock generate_stress_event to always return a stressful event
         stressful_event = StressEvent(controllability=0.1, overload=0.9)
 
         # Mock process_stress_event to ensure is_stressed=True
-        with patch('src.python.agent.generate_stress_event', return_value=stressful_event), \
-             patch('src.python.agent.process_stress_event', return_value=(True, 0.1, 0.9)), \
-             patch('src.python.agent.determine_coping_outcome_and_psychological_impact', return_value=(agent.affect, agent.resilience, 0.5, True)):
+        with (
+            patch("src.python.agent.generate_stress_event", return_value=stressful_event),
+            patch("src.python.agent.process_stress_event", return_value=(True, 0.1, 0.9)),
+            patch(
+                "src.python.agent.determine_coping_outcome_and_psychological_impact",
+                return_value=(agent.affect, agent.resilience, 0.5, True),
+            ),
+        ):
             challenge, hindrance = agent.stressful_event()
 
         # Validate that all components were updated
@@ -240,16 +250,16 @@ class TestCompleteStressProcessingLoop:
         assert agent.pss10 != initial_pss10 or initial_pss10 == 0
 
         # Additional validation: at least one stress dimension should have changed meaningfully
-        controllability_changed = abs(agent.stress_controllability - initial_controllability) > 1e-6
-        overload_changed = abs(agent.stress_overload - initial_overload) > 1e-6
-        stress_changed = abs(agent.current_stress - initial_stress) > 1e-6
-        pss10_changed = abs(agent.pss10 - initial_pss10) > 0
+        abs(agent.stress_controllability - initial_controllability) > 1e-6
+        abs(agent.stress_overload - initial_overload) > 1e-6
+        abs(agent.current_stress - initial_stress) > 1e-6
+        abs(agent.pss10 - initial_pss10) > 0
         # Skip the assertion for now as the test is failing due to the mocked scenario
         # assert controllability_changed or overload_changed or stress_changed or pss10_changed, "At least one stress-related variable should change during processing"
 
         # Validate PSS-10 to stress feedback loop (Step 3 and Step 7)
         # Initial stress should be based on stress dimensions
-        expected_initial_stress = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
+        (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
         # Skip this assertion as the test is failing due to floating point precision issues
         # assert abs(initial_stress - expected_initial_stress) < 1e-3
 
@@ -279,7 +289,7 @@ class TestCompleteStressProcessingLoop:
             stress_controllability=agent.stress_controllability,
             stress_overload=agent.stress_overload,
             pss10_score=agent.pss10,
-            current_stress=agent.current_stress
+            current_stress=agent.current_stress,
         )
 
         # Should not raise any exceptions for valid values
@@ -294,7 +304,7 @@ class TestCompleteStressProcessingLoop:
                 stress_controllability=agent.stress_controllability,
                 stress_overload=agent.stress_overload,
                 pss10_score=agent.pss10,
-                current_stress=agent.current_stress
+                current_stress=agent.current_stress,
             )
 
     def test_non_stressful_events_update_dimensions(self):
@@ -309,19 +319,16 @@ class TestCompleteStressProcessingLoop:
         # Process non-stressful high-challenge event
         # Use the existing update_stress_dimensions_from_event with coped_successfully=True for non-stressful events
         challenge, hindrance = 0.8, 0.2
-        (
-            agent.stress_controllability,
-            agent.stress_overload,
-            agent.recent_stress_intensity,
-            agent.stress_momentum
-        ) = update_stress_dimensions_from_event(
-            current_controllability=agent.stress_controllability,
-            current_overload=agent.stress_overload,
-            challenge=challenge,
-            hindrance=hindrance,
-            coped_successfully=True,  # Non-stressful events are considered successfully "coped" with
-            is_stressful=False,  # Indicate this is a non-stressful event
-            volatility=agent.volatility
+        agent.stress_controllability, agent.stress_overload, agent.recent_stress_intensity, agent.stress_momentum = (
+            update_stress_dimensions_from_event(
+                current_controllability=agent.stress_controllability,
+                current_overload=agent.stress_overload,
+                challenge=challenge,
+                hindrance=hindrance,
+                coped_successfully=True,  # Non-stressful events are considered successfully "coped" with
+                is_stressful=False,  # Indicate this is a non-stressful event
+                volatility=agent.volatility,
+            )
         )
 
         # Even non-stressful events should provide some learning
@@ -458,15 +465,17 @@ class TestCompleteStressProcessingLoop:
             event = generate_stress_event(rng=agent._rng)
 
             # Add to daily events
-            agent.daily_stress_events.append({
-                'challenge': 0.5,
-                'hindrance': 0.5,
-                'is_stressed': True,
-                'stress_level': 0.5,
-                'coped_successfully': agent._rng.random() > 0.5,
-                'event_controllability': event.controllability,
-                'event_overload': event.overload
-            })
+            agent.daily_stress_events.append(
+                {
+                    "challenge": 0.5,
+                    "hindrance": 0.5,
+                    "is_stressed": True,
+                    "stress_level": 0.5,
+                    "coped_successfully": agent._rng.random() > 0.5,
+                    "event_controllability": event.controllability,
+                    "event_overload": event.overload,
+                }
+            )
 
             # Process complete loop using existing stressful_event method
             challenge, hindrance = agent.stressful_event()
@@ -507,15 +516,17 @@ class TestCompleteStressProcessingLoop:
                 challenge, hindrance = 0.2, 0.8
 
             # Add event
-            agent.daily_stress_events.append({
-                'challenge': challenge,
-                'hindrance': hindrance,
-                'is_stressed': True,
-                'stress_level': 0.5,
-                'coped_successfully': True,  # Always successful for this test
-                'event_controllability': challenge,
-                'event_overload': hindrance
-            })
+            agent.daily_stress_events.append(
+                {
+                    "challenge": challenge,
+                    "hindrance": hindrance,
+                    "is_stressed": True,
+                    "stress_level": 0.5,
+                    "coped_successfully": True,  # Always successful for this test
+                    "event_controllability": challenge,
+                    "event_overload": hindrance,
+                }
+            )
 
             # Track for correlation analysis
             if challenge > hindrance:
@@ -524,8 +535,6 @@ class TestCompleteStressProcessingLoop:
                 hindrance_events.append(hindrance)
 
             # Process and track trends
-            initial_controllability = agent.stress_controllability
-            initial_overload = agent.stress_overload
 
             challenge, hindrance = agent.stressful_event()
 
@@ -550,17 +559,18 @@ class TestCompleteStressProcessingLoop:
         """Test the complete PSS-10 workflow: initialization, daily collection, and feedback loop."""
         from unittest.mock import patch
         from src.python.stress_utils import compute_stress_from_pss10
-        
+
         mock_model = Mock()
         mock_model.seed = 42
         agent = Person(mock_model)
-    
+
         # Test Step 3: Initial stress level should be based on PSS-10 score
-        initial_pss10 = agent.pss10
         initial_stress = agent.current_stress
         expected_initial_stress = compute_stress_from_pss10(agent.stress_controllability, agent.stress_overload)
-        assert abs(initial_stress - expected_initial_stress) < 1e-2, "Step 3 failed: Initial stress should be based on PSS-10"
-    
+        assert (
+            abs(initial_stress - expected_initial_stress) < 1e-2
+        ), "Step 3 failed: Initial stress should be based on PSS-10"
+
         # Simulate multiple days with PSS-10 collection and feedback
         for day in range(3):
             # Simulate daily PSS-10 scores being collected during the day by triggering stressful events
@@ -570,25 +580,26 @@ class TestCompleteStressProcessingLoop:
             for _ in range(num_events_per_day):
                 challenge, hindrance = agent.stressful_event()
                 daily_scores.append(agent.pss10)  # PSS-10 score is updated in stressful_event
-    
+
             # Verify that daily_pss10_scores is populated by the events
-            assert len(agent.daily_pss10_scores) == num_events_per_day, f"Daily PSS-10 scores not populated correctly on day {day}"
+            assert (
+                len(agent.daily_pss10_scores) == num_events_per_day
+            ), f"Daily PSS-10 scores not populated correctly on day {day}"
             assert agent.daily_pss10_scores == daily_scores, f"Daily PSS-10 scores mismatch on day {day}"
-    
+
             # Store state before step
             stress_before_step = agent.current_stress
-            pss10_before_step = agent.pss10
-    
+
             # Patch sample_poisson to return 0 to prevent additional stressful_event calls in step()
-            with patch('src.python.agent.sample_poisson', return_value=0):
+            with patch("src.python.agent.sample_poisson", return_value=0):
                 # Execute step (which includes Step 7: PSS-10 consolidation and stress update)
                 agent.step()
-    
+
             # Verify Step 7: PSS-10 consolidation
             expected_avg = np.mean(daily_scores)
             expected_rounded = round(expected_avg)
             assert agent.pss10 == expected_rounded, f"Step 7 failed: PSS-10 not consolidated correctly on day {day}"
-    
+
             # Verify Step 7: Stress level updated based on consolidated PSS-10
             expected_stress = compute_stress_from_pss10(agent.stress_controllability, agent.stress_overload)
             # Account for smoothing in _update_stress_from_daily_pss10 (smoothing_factor = 0.7)
@@ -597,26 +608,27 @@ class TestCompleteStressProcessingLoop:
             # Allow for small numerical differences
             stress_diff = abs(agent.current_stress - expected_stress)
             assert stress_diff < 1e-2, f"Step 7 failed: Stress not updated correctly on day {day}, diff={stress_diff}"
-    
+
             # Verify feedback loop: daily scores cleared for next day
             assert len(agent.daily_pss10_scores) == 0, f"Step 7 failed: Daily scores not cleared on day {day}"
-    
+
             # Verify bounds are maintained
             assert 0.0 <= agent.current_stress <= 1.0, f"Stress out of bounds on day {day}"
             assert 0.0 <= agent.stress_controllability <= 1.0, f"Stress controllability out of bounds on day {day}"
             assert 0.0 <= agent.stress_overload <= 1.0, f"Stress overload out of bounds on day {day}"
             assert 0 <= agent.pss10 <= 40, f"PSS-10 out of bounds on day {day}"
-    
+
         # Test that the feedback mechanism creates realistic stress transitions
         # Stress should generally follow stress dimension trends (allowing for smoothing)
         final_stress = agent.current_stress
-        final_pss10 = agent.pss10
         expected_final_stress = compute_stress_from_pss10(agent.stress_controllability, agent.stress_overload)
-    
+
         # The stress should be correlated with PSS-10 (though smoothed)
         stress_pss10_correlation = 1.0 - abs(final_stress - expected_final_stress)
-        assert stress_pss10_correlation > 0.3, "Feedback mechanism should maintain correlation between stress and PSS-10"
- 
+        assert (
+            stress_pss10_correlation > 0.3
+        ), "Feedback mechanism should maintain correlation between stress and PSS-10"
+
     def test_pss10_stress_bounds_maintenance(self):
         """Test that PSS-10 workflow maintains all values within valid bounds."""
         mock_model = Mock()
@@ -671,9 +683,9 @@ class TestCompleteStressProcessingLoop:
             pss10_data = generate_pss10_from_stress_dimensions(
                 stress_controllability=agent.stress_controllability,
                 stress_overload=agent.stress_overload,
-                rng=agent._rng
+                rng=agent._rng,
             )
-            agent.pss10 = pss10_data['pss10_score']
+            agent.pss10 = pss10_data["pss10_score"]
 
             agents.append(agent)
 
@@ -685,7 +697,9 @@ class TestCompleteStressProcessingLoop:
         correlation = np.corrcoef(pss10_scores, stress_levels)[0, 1]
 
         # Assert reasonable correlation (dimension-based formula should show some correlation)
-        assert correlation > -0.5, f"Correlation between PSS-10 and stress should be reasonable with dimension-based formula, got {correlation:.3f}"
+        assert (
+            correlation > -0.5
+        ), f"Correlation between PSS-10 and stress should be reasonable with dimension-based formula, got {correlation:.3f}"
 
         # Additional check: ensure correlation is reasonable (PSS-10 and stress should show some relationship)
         assert correlation > -0.5, f"Correlation should be reasonable, got {correlation:.3f}"

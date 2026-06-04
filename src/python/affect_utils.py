@@ -10,11 +10,11 @@ This module contains stateless functions for:
 """
 
 import numpy as np
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 from dataclasses import dataclass, field
 
 from src.python.config import get_config
-from src.python.math_utils import clamp, softmax
+from src.python.math_utils import clamp
 
 # Load configuration
 config = get_config()
@@ -23,50 +23,65 @@ config = get_config()
 @dataclass
 class InteractionConfig:
     """Configuration parameters for social interactions."""
-    influence_rate: float = field(default_factory=lambda: get_config().get('interaction', 'influence_rate'))
-    resilience_influence: float = field(default_factory=lambda: get_config().get('interaction', 'resilience_influence'))
-    max_neighbors: int = field(default_factory=lambda: get_config().get('interaction', 'max_neighbors'))
+
+    influence_rate: float = field(default_factory=lambda: get_config().get("interaction", "influence_rate"))
+    resilience_influence: float = field(default_factory=lambda: get_config().get("interaction", "resilience_influence"))
+    max_neighbors: int = field(default_factory=lambda: get_config().get("interaction", "max_neighbors"))
 
 
 @dataclass
 class ProtectiveFactors:
     """Agent's protective factors for resource allocation."""
-    social_support: float = field(default_factory=lambda: get_config().get('protective', 'social_support'))
-    family_support: float = field(default_factory=lambda: get_config().get('protective', 'family_support'))
-    formal_intervention: float = field(default_factory=lambda: get_config().get('protective', 'formal_intervention'))
-    psychological_capital: float = field(default_factory=lambda: get_config().get('protective', 'psychological_capital'))
+
+    social_support: float = field(default_factory=lambda: get_config().get("protective", "social_support"))
+    family_support: float = field(default_factory=lambda: get_config().get("protective", "family_support"))
+    formal_intervention: float = field(default_factory=lambda: get_config().get("protective", "formal_intervention"))
+    psychological_capital: float = field(
+        default_factory=lambda: get_config().get("protective", "psychological_capital")
+    )
 
 
 @dataclass
 class ResourceParams:
     """Parameters for resource dynamics."""
-    base_regeneration: float = field(default_factory=lambda: get_config().get('resource', 'base_regeneration'))
-    allocation_cost: float = field(default_factory=lambda: get_config().get('resource', 'allocation_cost'))
-    cost_exponent: float = field(default_factory=lambda: get_config().get('resource', 'cost_exponent'))
+
+    base_regeneration: float = field(default_factory=lambda: get_config().get("resource", "base_regeneration"))
+    allocation_cost: float = field(default_factory=lambda: get_config().get("resource", "allocation_cost"))
+    cost_exponent: float = field(default_factory=lambda: get_config().get("resource", "cost_exponent"))
 
 
 @dataclass
 class AffectDynamicsConfig:
     """Configuration parameters for affect dynamics."""
-    peer_influence_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'peer_influence_rate'))
-    event_appraisal_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'event_appraisal_rate'))
-    homeostatic_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostatic_rate'))
-    influencing_neighbors: int = field(default_factory=lambda: get_config().get('influence', 'influencing_neighbors'))
+
+    peer_influence_rate: float = field(
+        default_factory=lambda: get_config().get("affect_dynamics", "peer_influence_rate")
+    )
+    event_appraisal_rate: float = field(
+        default_factory=lambda: get_config().get("affect_dynamics", "event_appraisal_rate")
+    )
+    homeostatic_rate: float = field(default_factory=lambda: get_config().get("affect_dynamics", "homeostatic_rate"))
+    influencing_neighbors: int = field(default_factory=lambda: get_config().get("influence", "influencing_neighbors"))
 
 
 @dataclass
 class ResilienceDynamicsConfig:
     """Configuration parameters for resilience dynamics."""
-    coping_success_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'coping_success_rate'))
-    social_support_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'social_support_rate'))
-    overload_threshold: int = field(default_factory=lambda: get_config().get('resilience_dynamics', 'overload_threshold'))
-    influencing_hindrance: int = field(default_factory=lambda: get_config().get('influence', 'influencing_hindrance'))
+
+    coping_success_rate: float = field(
+        default_factory=lambda: get_config().get("resilience_dynamics", "coping_success_rate")
+    )
+    social_support_rate: float = field(
+        default_factory=lambda: get_config().get("resilience_dynamics", "social_support_rate")
+    )
+    overload_threshold: int = field(
+        default_factory=lambda: get_config().get("resilience_dynamics", "overload_threshold")
+    )
+    influencing_hindrance: int = field(default_factory=lambda: get_config().get("influence", "influencing_hindrance"))
 
 
 def compute_social_influence(
-    self_affect: float,
-    partner_affect: float,
-    config: Optional[InteractionConfig] = None
+    self_affect: float, partner_affect: float, config: Optional[InteractionConfig] = None
 ) -> float:
     """
     Compute affect change due to social interaction.
@@ -90,9 +105,7 @@ def compute_social_influence(
 
 
 def compute_mutual_influence(
-    self_affect: float,
-    partner_affect: float,
-    config: Optional[InteractionConfig] = None
+    self_affect: float, partner_affect: float, config: Optional[InteractionConfig] = None
 ) -> tuple[float, float]:
     """
     Compute mutual affect changes for both agents in an interaction.
@@ -115,10 +128,7 @@ def compute_mutual_influence(
     return self_influence, partner_influence
 
 
-def compute_resilience_influence(
-    partner_affect: float,
-    config: Optional[InteractionConfig] = None
-) -> float:
+def compute_resilience_influence(partner_affect: float, config: Optional[InteractionConfig] = None) -> float:
     """
     Compute resilience change due to partner's affect.
 
@@ -141,7 +151,7 @@ def process_interaction(
     partner_affect: float,
     self_resilience: float,
     partner_resilience: float,
-    config: Optional[InteractionConfig] = None
+    config: Optional[InteractionConfig] = None,
 ) -> tuple[float, float, float, float]:
     """
     Process a complete social interaction between two agents with positive/negative effects.
@@ -164,9 +174,7 @@ def process_interaction(
         config = InteractionConfig()
 
     # Compute mutual influences with asymmetric positive/negative effects
-    affect_influence_self, affect_influence_partner = compute_mutual_influence(
-        self_affect, partner_affect, config
-    )
+    affect_influence_self, affect_influence_partner = compute_mutual_influence(self_affect, partner_affect, config)
 
     # Apply asymmetric weighting: negative affects have stronger impact
     if affect_influence_self < 0:
@@ -206,7 +214,7 @@ def compute_stress_impact_on_affect(
     coped_successfully: bool,
     challenge: float = 0.5,
     hindrance: float = 0.5,
-    config: Optional[Dict[str, float]] = None
+    config: Optional[Dict[str, float]] = None,
 ) -> float:
     """
     Compute affect change due to stress event outcome using new mechanism.
@@ -226,21 +234,21 @@ def compute_stress_impact_on_affect(
         # Get fresh config instance to avoid global config issues
         cfg = get_config()
         config = {
-            'coping_improvement': cfg.get('agent', 'coping_success_rate') * 0.2,  # Scale based on success rate
-            'coping_deterioration': cfg.get('agent', 'coping_success_rate') * 0.4,  # Scale based on success rate
-            'no_stress_effect': 0.0 # No change if not stressed
+            "coping_improvement": cfg.get("agent", "coping_success_rate") * 0.2,  # Scale based on success rate
+            "coping_deterioration": cfg.get("agent", "coping_success_rate") * 0.4,  # Scale based on success rate
+            "no_stress_effect": 0.0,  # No change if not stressed
         }
 
     if not is_stressed:
-        return config['no_stress_effect']
+        return config["no_stress_effect"]
 
     # Check if using default challenge/hindrance values (backward compatibility)
     if challenge == 0.5 and hindrance == 0.5:
         # Fall back to old mechanism for backward compatibility
         if coped_successfully:
-            return config['coping_improvement']
+            return config["coping_improvement"]
         else:
-            return -config['coping_deterioration']
+            return -config["coping_deterioration"]
     else:
         # Use new mechanism with challenge/hindrance effects
         stress_config = StressProcessingConfig()
@@ -261,7 +269,7 @@ def compute_stress_impact_on_resilience(
     coped_successfully: bool,
     challenge: float = 0.5,
     hindrance: float = 0.5,
-    config: Optional[Dict[str, float]] = None
+    config: Optional[Dict[str, float]] = None,
 ) -> float:
     """
     Compute resilience change due to stress event outcome using new mechanism.
@@ -281,26 +289,24 @@ def compute_stress_impact_on_resilience(
         # Get fresh config instance to avoid global config issues
         cfg = get_config()
         config = {
-            'coping_improvement': cfg.get('agent', 'coping_success_rate') * 0.1,  # Scale based on success rate
-            'coping_deterioration': cfg.get('agent', 'coping_success_rate') * 0.2,  # Scale based on success rate
-            'no_stress_effect': 0.0 # No change if not stressed
+            "coping_improvement": cfg.get("agent", "coping_success_rate") * 0.1,  # Scale based on success rate
+            "coping_deterioration": cfg.get("agent", "coping_success_rate") * 0.2,  # Scale based on success rate
+            "no_stress_effect": 0.0,  # No change if not stressed
         }
 
     if not is_stressed:
-        return config['no_stress_effect']
+        return config["no_stress_effect"]
 
     # Check if using default challenge/hindrance values (backward compatibility)
     if challenge == 0.5 and hindrance == 0.5:
         # Fall back to old mechanism for backward compatibility
         if coped_successfully:
-            return config['coping_improvement']
+            return config["coping_improvement"]
         else:
-            return -config['coping_deterioration']
+            return -config["coping_deterioration"]
     else:
         # Use new mechanism with challenge/hindrance effects
-        resilience_effect = compute_challenge_hindrance_resilience_effect(
-            challenge, hindrance, coped_successfully
-        )
+        resilience_effect = compute_challenge_hindrance_resilience_effect(challenge, hindrance, coped_successfully)
 
         return resilience_effect
 
@@ -309,7 +315,7 @@ def allocate_protective_resources(
     available_resources: float,
     protective_factors: Optional[ProtectiveFactors] = None,
     rng: Optional[np.random.Generator] = None,
-    config: Optional[ResourceParams] = None
+    config: Optional[ResourceParams] = None,
 ) -> Dict[str, float]:
     """
     Allocate resources across protective factors using softmax decision making.
@@ -335,32 +341,26 @@ def allocate_protective_resources(
         rng = np.random.default_rng()
 
     # Create allocation weights based on efficacy
-    factors = ['social_support', 'family_support', 'formal_intervention', 'psychological_capital']
+    factors = ["social_support", "family_support", "formal_intervention", "psychological_capital"]
     efficacies = [
         protective_factors.social_support,
         protective_factors.family_support,
         protective_factors.formal_intervention,
-        protective_factors.psychological_capital
+        protective_factors.psychological_capital,
     ]
 
     # Softmax decision making with temperature from config
-    temperature = cfg.get('utility', 'softmax_temperature')
+    temperature = cfg.get("utility", "softmax_temperature")
     logits = np.array(efficacies) / temperature
     softmax_weights = np.exp(logits) / np.sum(np.exp(logits))
 
     # Allocate resources proportionally
-    allocations = {
-        factor: available_resources * weight
-        for factor, weight in zip(factors, softmax_weights)
-    }
+    allocations = {factor: available_resources * weight for factor, weight in zip(factors, softmax_weights)}
 
     return allocations
 
 
-def compute_resource_regeneration(
-    current_resources: float,
-    config: Optional[ResourceParams] = None
-) -> float:
+def compute_resource_regeneration(current_resources: float, config: Optional[ResourceParams] = None) -> float:
     """
     Compute passive resource regeneration.
 
@@ -381,10 +381,7 @@ def compute_resource_regeneration(
     return regeneration
 
 
-def compute_allocation_cost(
-    allocated_amount: float,
-    config: Optional[ResourceParams] = None
-) -> float:
+def compute_allocation_cost(allocated_amount: float, config: Optional[ResourceParams] = None) -> float:
     """
     Compute cost of allocating resources (convex cost function).
 
@@ -399,7 +396,7 @@ def compute_allocation_cost(
         config = ResourceParams()
 
     # Convex cost function: κ * allocated^γ_c
-    cost = config.allocation_cost * (allocated_amount ** config.cost_exponent)
+    cost = config.allocation_cost * (allocated_amount**config.cost_exponent)
 
     return cost
 
@@ -408,24 +405,25 @@ def compute_allocation_cost(
 # NEW STRESS PROCESSING MECHANISMS
 # ==============================================
 
+
 @dataclass
 class StressProcessingConfig:
     """Configuration parameters for new stress processing mechanisms."""
-    stress_threshold: float = field(default_factory=lambda: get_config().get('threshold', 'stress_threshold'))
-    affect_threshold: float = field(default_factory=lambda: get_config().get('threshold', 'affect_threshold'))
-    base_coping_probability: float = field(default_factory=lambda: get_config().get('coping', 'base_probability'))
-    social_influence_factor: float = field(default_factory=lambda: get_config().get('coping', 'social_influence'))
-    challenge_bonus: float = field(default_factory=lambda: get_config().get('coping', 'challenge_bonus'))
-    hindrance_penalty: float = field(default_factory=lambda: get_config().get('coping', 'hindrance_penalty'))
-    daily_decay_rate: float = field(default_factory=lambda: get_config().get('affect_dynamics', 'homeostatic_rate'))
-    stress_decay_rate: float = field(default_factory=lambda: get_config().get('resilience_dynamics', 'homeostatic_rate'))
+
+    stress_threshold: float = field(default_factory=lambda: get_config().get("threshold", "stress_threshold"))
+    affect_threshold: float = field(default_factory=lambda: get_config().get("threshold", "affect_threshold"))
+    base_coping_probability: float = field(default_factory=lambda: get_config().get("coping", "base_probability"))
+    social_influence_factor: float = field(default_factory=lambda: get_config().get("coping", "social_influence"))
+    challenge_bonus: float = field(default_factory=lambda: get_config().get("coping", "challenge_bonus"))
+    hindrance_penalty: float = field(default_factory=lambda: get_config().get("coping", "hindrance_penalty"))
+    daily_decay_rate: float = field(default_factory=lambda: get_config().get("affect_dynamics", "homeostatic_rate"))
+    stress_decay_rate: float = field(
+        default_factory=lambda: get_config().get("resilience_dynamics", "homeostatic_rate")
+    )
 
 
 def compute_coping_probability(
-    challenge: float,
-    hindrance: float,
-    neighbor_affects: List[float],
-    config: Optional[StressProcessingConfig] = None
+    challenge: float, hindrance: float, neighbor_affects: List[float], config: Optional[StressProcessingConfig] = None
 ) -> float:
     """
     Compute coping success probability based on challenge/hindrance and social influence.
@@ -469,10 +467,7 @@ def compute_coping_probability(
 
 
 def compute_challenge_hindrance_resilience_effect(
-    challenge: float,
-    hindrance: float,
-    coped_successfully: bool,
-    config: Optional[StressProcessingConfig] = None
+    challenge: float, hindrance: float, coped_successfully: bool, config: Optional[StressProcessingConfig] = None
 ) -> float:
     """
     Compute resilience change based on challenge/hindrance and coping outcome.
@@ -511,9 +506,7 @@ def compute_challenge_hindrance_resilience_effect(
 
 
 def compute_daily_affect_reset(
-    current_affect: float,
-    baseline_affect: float,
-    config: Optional[StressProcessingConfig] = None
+    current_affect: float, baseline_affect: float, config: Optional[StressProcessingConfig] = None
 ) -> float:
     """
     Reset affect toward baseline at the end of each day.
@@ -542,10 +535,7 @@ def compute_daily_affect_reset(
     return clamp(new_affect, -1.0, 1.0)
 
 
-def compute_stress_decay(
-    current_stress: float,
-    config: Optional[StressProcessingConfig] = None
-) -> float:
+def compute_stress_decay(current_stress: float, config: Optional[StressProcessingConfig] = None) -> float:
     """
     Apply natural decay to stress levels over time.
 
@@ -569,7 +559,8 @@ def compute_stress_decay(
 @dataclass
 class ResourceOptimizationConfig:
     """Configuration parameters for resilience-based resource optimization."""
-    base_resource_cost: float = field(default_factory=lambda: get_config().get('agent', 'resource_cost'))
+
+    base_resource_cost: float = field(default_factory=lambda: get_config().get("agent", "resource_cost"))
     resilience_efficiency_factor: float = 0.3  # 30% efficiency gain from resilience
     minimum_resource_threshold: float = 0.05  # Minimum resources needed for allocation
     coping_difficulty_scale: float = 0.5  # Scale for event difficulty effects
@@ -580,7 +571,7 @@ def compute_resilience_optimized_resource_cost(
     current_resilience: float,
     challenge: float,
     hindrance: float,
-    config: Optional[ResourceOptimizationConfig] = None
+    config: Optional[ResourceOptimizationConfig] = None,
 ) -> float:
     """
     Compute resource cost for coping that adapts based on resilience level.
@@ -602,7 +593,7 @@ def compute_resilience_optimized_resource_cost(
         config = ResourceOptimizationConfig()
 
     # Base cost influenced by event difficulty (hindrance is more costly)
-    event_difficulty = (challenge * 0.7 + hindrance * 1.3)  # Hindrance is 30% more difficult
+    event_difficulty = challenge * 0.7 + hindrance * 1.3  # Hindrance is 30% more difficult
     difficulty_multiplier = 1.0 + (event_difficulty * config.coping_difficulty_scale)
 
     # Resilience provides efficiency gains
@@ -623,9 +614,7 @@ def compute_resilience_optimized_resource_cost(
 
 
 def compute_resource_efficiency_gain(
-    current_resilience: float,
-    baseline_resilience: float,
-    config: Optional[ResourceOptimizationConfig] = None
+    current_resilience: float, baseline_resilience: float, config: Optional[ResourceOptimizationConfig] = None
 ) -> float:
     """
     Compute efficiency gain from resilience for resource utilization.
@@ -676,12 +665,8 @@ def get_neighbor_affects(agent, model) -> List[float]:
         return []
 
     try:
-        neighbors = list(
-            model.grid.get_neighbors(
-                agent.pos, include_center=False
-            )
-        )
-        return [neighbor.affect for neighbor in neighbors if hasattr(neighbor, 'affect')]
+        neighbors = list(model.grid.get_neighbors(agent.pos, include_center=False))
+        return [neighbor.affect for neighbor in neighbors if hasattr(neighbor, "affect")]
     except Exception:
         # Return empty list if there are any issues with neighbor lookup
         return []
@@ -695,7 +680,7 @@ def integrate_social_resilience_optimization(
     baseline_resilience: float,
     protective_factors: Dict[str, float],
     rng: Optional[np.random.Generator] = None,
-    config: Optional[ResourceOptimizationConfig] = None
+    config: Optional[ResourceOptimizationConfig] = None,
 ) -> float:
     """
     Integrate social resource exchange with resilience optimization mechanisms.
@@ -728,7 +713,6 @@ def integrate_social_resilience_optimization(
         social_resilience_boost = recent_social_benefit * 0.1
 
         # Store original resilience for this calculation
-        original_resilience = current_resilience
 
         # Temporarily boost resilience for optimization calculations
         boosted_resilience = min(1.0, current_resilience + social_resilience_boost)
@@ -773,7 +757,7 @@ def allocate_resilience_optimized_resources(
     baseline_resilience: float,
     protective_factors: Optional[ProtectiveFactors] = None,
     rng: Optional[np.random.Generator] = None,
-    config: Optional[ResourceOptimizationConfig] = None
+    config: Optional[ResourceOptimizationConfig] = None,
 ) -> Dict[str, float]:
     """
     Allocate resources with resilience-based optimization.
@@ -805,12 +789,7 @@ def allocate_resilience_optimized_resources(
 
     # Check if agent has minimum resources for allocation
     if available_resources < config.minimum_resource_threshold:
-        return {
-            'social_support': 0.0,
-            'family_support': 0.0,
-            'formal_intervention': 0.0,
-            'psychological_capital': 0.0
-        }
+        return {"social_support": 0.0, "family_support": 0.0, "formal_intervention": 0.0, "psychological_capital": 0.0}
 
     # Compute resilience-based efficiency gain
     efficiency_gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, config)
@@ -819,16 +798,16 @@ def allocate_resilience_optimized_resources(
     effective_resources = available_resources * efficiency_gain
 
     # Create allocation weights based on efficacy and resilience
-    factors = ['social_support', 'family_support', 'formal_intervention', 'psychological_capital']
+    factors = ["social_support", "family_support", "formal_intervention", "psychological_capital"]
     efficacies = [
         protective_factors.social_support,
         protective_factors.family_support,
         protective_factors.formal_intervention,
-        protective_factors.psychological_capital
+        protective_factors.psychological_capital,
     ]
 
     # Resilience improves allocation decisions by reducing temperature (more focused allocation)
-    base_temperature = config.get('utility', 'softmax_temperature') if hasattr(config, 'get') else 1.0
+    base_temperature = config.get("utility", "softmax_temperature") if hasattr(config, "get") else 1.0
     resilience_focus = current_resilience * 0.5  # Higher resilience = more focused allocation
     temperature = max(0.1, base_temperature - resilience_focus)
 
@@ -841,10 +820,7 @@ def allocate_resilience_optimized_resources(
     softmax_weights = np.exp(logits) / np.sum(np.exp(logits))
 
     # Allocate resources proportionally
-    allocations = {
-        factor: effective_resources * weight
-        for factor, weight in zip(factors, softmax_weights)
-    }
+    allocations = {factor: effective_resources * weight for factor, weight in zip(factors, softmax_weights)}
 
     return allocations
 
@@ -854,7 +830,7 @@ def compute_resource_depletion_with_resilience(
     cost: float,
     current_resilience: float,
     coping_successful: bool,
-    config: Optional[ResourceOptimizationConfig] = None
+    config: Optional[ResourceOptimizationConfig] = None,
 ) -> float:
     """
     Compute resource depletion considering resilience-based optimization.
@@ -895,7 +871,7 @@ def determine_coping_outcome_and_psychological_impact(
     challenge: float,
     hindrance: float,
     neighbor_affects: List[float],
-    config: Optional[StressProcessingConfig] = None
+    config: Optional[StressProcessingConfig] = None,
 ) -> tuple[float, float, float, bool]:
     """
     Process stress event using new mechanism with challenge/hindrance effects.
@@ -922,9 +898,7 @@ def determine_coping_outcome_and_psychological_impact(
     coped_successfully = np.random.random() < coping_prob
 
     # Compute resilience effect based on challenge/hindrance and coping outcome
-    resilience_effect = compute_challenge_hindrance_resilience_effect(
-        challenge, hindrance, coped_successfully, config
-    )
+    resilience_effect = compute_challenge_hindrance_resilience_effect(challenge, hindrance, coped_successfully, config)
 
     # Update resilience
     new_resilience = current_resilience + resilience_effect
@@ -955,9 +929,7 @@ def determine_coping_outcome_and_psychological_impact(
 
 
 def compute_peer_influence(
-    self_affect: float,
-    neighbor_affects: List[float],
-    config: Optional[AffectDynamicsConfig] = None
+    self_affect: float, neighbor_affects: List[float], config: Optional[AffectDynamicsConfig] = None
 ) -> float:
     """
     Compute aggregated influence from multiple neighbors on an agent's affect.
@@ -994,10 +966,7 @@ def compute_peer_influence(
 
 
 def compute_event_appraisal_effect(
-    challenge: float,
-    hindrance: float,
-    current_affect: float,
-    config: Optional[AffectDynamicsConfig] = None
+    challenge: float, hindrance: float, current_affect: float, config: Optional[AffectDynamicsConfig] = None
 ) -> float:
     """
     Compute affect change based on challenge/hindrance appraisal of events.
@@ -1028,9 +997,7 @@ def compute_event_appraisal_effect(
 
 
 def compute_homeostasis_effect(
-    current_affect: float,
-    baseline_affect: float = 0.0,
-    config: Optional[AffectDynamicsConfig] = None
+    current_affect: float, baseline_affect: float = 0.0, config: Optional[AffectDynamicsConfig] = None
 ) -> float:
     """
     Compute tendency of affect to return to baseline (homeostasis).
@@ -1061,10 +1028,7 @@ def compute_homeostasis_effect(
 
 
 def compute_homeostatic_adjustment(
-    initial_value: float,
-    final_value: float,
-    homeostatic_rate: Optional[float] = None,
-    value_type: str = 'affect'
+    initial_value: float, final_value: float, homeostatic_rate: Optional[float] = None, value_type: str = "affect"
 ) -> float:
     """
     Apply homeostatic adjustment to pull values back toward initial state.
@@ -1087,10 +1051,10 @@ def compute_homeostatic_adjustment(
         ValueError: If value_type is not 'affect' or 'resilience'
     """
     if homeostatic_rate is None:
-        homeostatic_rate = get_config().get('affect_dynamics', 'homeostatic_rate')
+        homeostatic_rate = get_config().get("affect_dynamics", "homeostatic_rate")
 
     # Validate value_type
-    if value_type not in ['affect', 'resilience']:
+    if value_type not in ["affect", "resilience"]:
         raise ValueError(f"value_type must be 'affect' or 'resilience', got '{value_type}'")
 
     # Calculate distance from initial value
@@ -1108,7 +1072,7 @@ def compute_homeostatic_adjustment(
         adjusted_value = final_value
 
     # Apply appropriate normalization based on value type
-    if value_type == 'affect':
+    if value_type == "affect":
         # Affect values normalized to [-1, 1]
         adjusted_value = clamp(adjusted_value, -1.0, 1.0)
     else:  # resilience
@@ -1119,8 +1083,7 @@ def compute_homeostatic_adjustment(
 
 
 def compute_cumulative_overload(
-    consecutive_hindrances: int,
-    config: Optional[ResilienceDynamicsConfig] = None
+    consecutive_hindrances: int, config: Optional[ResilienceDynamicsConfig] = None
 ) -> float:
     """
     Compute resilience impact from cumulative hindrance events.
@@ -1152,7 +1115,7 @@ def update_affect_dynamics(
     neighbor_affects: List[float],
     challenge: float = 0.0,
     hindrance: float = 0.0,
-    affect_config: Optional[AffectDynamicsConfig] = None
+    affect_config: Optional[AffectDynamicsConfig] = None,
 ) -> float:
     """
     Update agent's affect based on peer influence, event appraisal, and homeostasis.
@@ -1191,7 +1154,7 @@ def update_resilience_dynamics(
     coped_successfully: bool = False,
     received_social_support: bool = False,
     consecutive_hindrances: int = 0,
-    resilience_config: Optional[ResilienceDynamicsConfig] = None
+    resilience_config: Optional[ResilienceDynamicsConfig] = None,
 ) -> float:
     """
     Update agent's resilience based on coping, social support, and overload effects.
@@ -1230,11 +1193,7 @@ def update_resilience_dynamics(
     return clamp(new_resilience, 0.0, 1.0)
 
 
-def scale_homeostatic_rate(
-    base_rate: float,
-    resources: float,
-    stress: float
-) -> float:
+def scale_homeostatic_rate(base_rate: float, resources: float, stress: float) -> float:
     """
     Scale homeostatic rate based on resource availability and stress level.
     Higher resources lead to weaker homeostasis, which allows over time
@@ -1243,8 +1202,8 @@ def scale_homeostatic_rate(
     lowe stress lead to weaker homeostasis.
     """
 
-    resource_factor = 1.0 - (resources * 0.7) # Range: [0.3, 0.7]
-    stress_factor   = 1.0 + (stress * 0.5)    # Range: [1.0, 1.5]
-    scaled_rate     = base_rate * resource_factor * stress_factor
+    resource_factor = 1.0 - (resources * 0.7)  # Range: [0.3, 0.7]
+    stress_factor = 1.0 + (stress * 0.5)  # Range: [1.0, 1.5]
+    scaled_rate = base_rate * resource_factor * stress_factor
 
-    return min(base_rate * 2, scaled_rate) # Cap at 2x
+    return min(base_rate * 2, scaled_rate)  # Cap at 2x

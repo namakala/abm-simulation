@@ -13,24 +13,22 @@ the robustness and flexibility of the initialization system.
 
 import sys
 import numpy as np
-from typing import List, Dict, Tuple
-import pandas as pd
+from typing import List, Dict
 from pathlib import Path
 
 # Optional imports for visualization (if available)
 try:
     import matplotlib.pyplot as plt
     import seaborn as sns
+
     HAS_PLOTTING = True
 except ImportError:
     HAS_PLOTTING = False
     print("Warning: matplotlib/seaborn not available. Running without visualizations.")
 
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.agent import Person
-from src.python.config import get_config
-from src.python.math_utils import create_rng
 
 
 class MockModel:
@@ -96,34 +94,34 @@ def analyze_agent_distributions(agents: List[Person]) -> Dict:
 
     # Basic statistics
     analysis = {
-        'resilience': {
-            'mean': np.mean(resilience_values),
-            'std': np.std(resilience_values),
-            'min': np.min(resilience_values),
-            'max': np.max(resilience_values),
-            'values': resilience_values
+        "resilience": {
+            "mean": np.mean(resilience_values),
+            "std": np.std(resilience_values),
+            "min": np.min(resilience_values),
+            "max": np.max(resilience_values),
+            "values": resilience_values,
         },
-        'affect': {
-            'mean': np.mean(affect_values),
-            'std': np.std(affect_values),
-            'min': np.min(affect_values),
-            'max': np.max(affect_values),
-            'values': affect_values
+        "affect": {
+            "mean": np.mean(affect_values),
+            "std": np.std(affect_values),
+            "min": np.min(affect_values),
+            "max": np.max(affect_values),
+            "values": affect_values,
         },
-        'resources': {
-            'mean': np.mean(resources_values),
-            'std': np.std(resources_values),
-            'min': np.min(resources_values),
-            'max': np.max(resources_values),
-            'values': resources_values
+        "resources": {
+            "mean": np.mean(resources_values),
+            "std": np.std(resources_values),
+            "min": np.min(resources_values),
+            "max": np.max(resources_values),
+            "values": resources_values,
         },
-        'pss10': {
-            'mean': np.mean(pss10_scores),
-            'std': np.std(pss10_scores),
-            'min': np.min(pss10_scores),
-            'max': np.max(pss10_scores),
-            'values': pss10_scores
-        }
+        "pss10": {
+            "mean": np.mean(pss10_scores),
+            "std": np.std(pss10_scores),
+            "min": np.min(pss10_scores),
+            "max": np.max(pss10_scores),
+            "values": pss10_scores,
+        },
     }
 
     return analysis
@@ -142,22 +140,24 @@ def demonstrate_clamping() -> Dict:
 
     # Test with extreme configuration values that should be clamped
     extreme_config = {
-        'initial_resilience_mean': 2.0,    # Above valid range [0,1]
-        'initial_resilience_sd': 0.5,
-        'initial_affect_mean': -3.0,       # Below valid range [-1,1]
-        'initial_affect_sd': 0.5,
-        'initial_resources_mean': -1.0,    # Below valid range [0,1]
-        'initial_resources_sd': 0.5,
-        'stress_probability': 0.5,
-        'coping_success_rate': 0.5,
-        'subevents_per_day': 3
+        "initial_resilience_mean": 2.0,  # Above valid range [0,1]
+        "initial_resilience_sd": 0.5,
+        "initial_affect_mean": -3.0,  # Below valid range [-1,1]
+        "initial_affect_sd": 0.5,
+        "initial_resources_mean": -1.0,  # Below valid range [0,1]
+        "initial_resources_sd": 0.5,
+        "stress_probability": 0.5,
+        "coping_success_rate": 0.5,
+        "subevents_per_day": 3,
     }
 
     agents = create_agents_with_config(extreme_config, num_agents=20, seed=42)
     analysis = analyze_agent_distributions(agents)
 
     print("Configuration with extreme means (should be clamped):")
-    print(f"  Resilience mean: {extreme_config['initial_resilience_mean']} → Actual: {analysis['resilience']['mean']:.3f}")
+    print(
+        f"  Resilience mean: {extreme_config['initial_resilience_mean']} → Actual: {analysis['resilience']['mean']:.3f}"
+    )
     print(f"  Affect mean: {extreme_config['initial_affect_mean']} → Actual: {analysis['affect']['mean']:.3f}")
     print(f"  Resources mean: {extreme_config['initial_resources_mean']} → Actual: {analysis['resources']['mean']:.3f}")
 
@@ -192,15 +192,15 @@ def demonstrate_variation() -> Dict:
 
     # Test with moderate variation parameters
     variation_config = {
-        'initial_resilience_mean': 0.6,
-        'initial_resilience_sd': 0.2,    # Moderate variation
-        'initial_affect_mean': 0.1,
-        'initial_affect_sd': 0.3,        # Higher variation
-        'initial_resources_mean': 0.7,
-        'initial_resources_sd': 0.15,    # Lower variation
-        'stress_probability': 0.5,
-        'coping_success_rate': 0.5,
-        'subevents_per_day': 3
+        "initial_resilience_mean": 0.6,
+        "initial_resilience_sd": 0.2,  # Moderate variation
+        "initial_affect_mean": 0.1,
+        "initial_affect_sd": 0.3,  # Higher variation
+        "initial_resources_mean": 0.7,
+        "initial_resources_sd": 0.15,  # Lower variation
+        "stress_probability": 0.5,
+        "coping_success_rate": 0.5,
+        "subevents_per_day": 3,
     }
 
     agents = create_agents_with_config(variation_config, num_agents=100, seed=42)
@@ -212,15 +212,15 @@ def demonstrate_variation() -> Dict:
     print(f"  Resources: mean={analysis['resources']['mean']:.3f}, sd={analysis['resources']['std']:.3f}")
 
     # Check for realistic variation (not all agents identical)
-    resilience_values = analysis['resilience']['values']
-    affect_values = analysis['affect']['values']
-    resources_values = analysis['resources']['values']
+    resilience_values = analysis["resilience"]["values"]
+    affect_values = analysis["affect"]["values"]
+    resources_values = analysis["resources"]["values"]
 
     unique_resilience = len(set(np.round(resilience_values, 3)))
     unique_affect = len(set(np.round(affect_values, 3)))
     unique_resources = len(set(np.round(resources_values, 3)))
 
-    print(f"\nVariation analysis (unique values rounded to 3 decimal places):")
+    print("\nVariation analysis (unique values rounded to 3 decimal places):")
     print(f"  Unique resilience values: {unique_resilience}/{len(agents)}")
     print(f"  Unique affect values: {unique_affect}/{len(agents)}")
     print(f"  Unique resources values: {unique_resources}/{len(agents)}")
@@ -244,61 +244,61 @@ def demonstrate_different_configurations() -> Dict:
 
     configurations = [
         {
-            'name': 'Low Resilience, High Variation',
-            'config': {
-                'initial_resilience_mean': 0.3,
-                'initial_resilience_sd': 0.25,
-                'initial_affect_mean': 0.0,
-                'initial_affect_sd': 0.2,
-                'initial_resources_mean': 0.5,
-                'initial_resources_sd': 0.2,
-                'stress_probability': 0.5,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 3
-            }
+            "name": "Low Resilience, High Variation",
+            "config": {
+                "initial_resilience_mean": 0.3,
+                "initial_resilience_sd": 0.25,
+                "initial_affect_mean": 0.0,
+                "initial_affect_sd": 0.2,
+                "initial_resources_mean": 0.5,
+                "initial_resources_sd": 0.2,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
         },
         {
-            'name': 'High Resilience, Low Variation',
-            'config': {
-                'initial_resilience_mean': 0.8,
-                'initial_resilience_sd': 0.05,
-                'initial_affect_mean': 0.2,
-                'initial_affect_sd': 0.1,
-                'initial_resources_mean': 0.8,
-                'initial_resources_sd': 0.1,
-                'stress_probability': 0.5,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 3
-            }
+            "name": "High Resilience, Low Variation",
+            "config": {
+                "initial_resilience_mean": 0.8,
+                "initial_resilience_sd": 0.05,
+                "initial_affect_mean": 0.2,
+                "initial_affect_sd": 0.1,
+                "initial_resources_mean": 0.8,
+                "initial_resources_sd": 0.1,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
         },
         {
-            'name': 'Negative Affect Bias',
-            'config': {
-                'initial_resilience_mean': 0.5,
-                'initial_resilience_sd': 0.15,
-                'initial_affect_mean': -0.3,
-                'initial_affect_sd': 0.2,
-                'initial_resources_mean': 0.6,
-                'initial_resources_sd': 0.15,
-                'stress_probability': 0.5,
-                'coping_success_rate': 0.5,
-                'subevents_per_day': 3
-            }
-        }
+            "name": "Negative Affect Bias",
+            "config": {
+                "initial_resilience_mean": 0.5,
+                "initial_resilience_sd": 0.15,
+                "initial_affect_mean": -0.3,
+                "initial_affect_sd": 0.2,
+                "initial_resources_mean": 0.6,
+                "initial_resources_sd": 0.15,
+                "stress_probability": 0.5,
+                "coping_success_rate": 0.5,
+                "subevents_per_day": 3,
+            },
+        },
     ]
 
     results = {}
 
     for config_info in configurations:
         print(f"\nTesting configuration: {config_info['name']}")
-        agents = create_agents_with_config(config_info['config'], num_agents=50, seed=42)
+        agents = create_agents_with_config(config_info["config"], num_agents=50, seed=42)
         analysis = analyze_agent_distributions(agents)
 
         print(f"  Resilience: {analysis['resilience']['mean']:.3f} ± {analysis['resilience']['std']:.3f}")
         print(f"  Affect: {analysis['affect']['mean']:.3f} ± {analysis['affect']['std']:.3f}")
         print(f"  Resources: {analysis['resources']['mean']:.3f} ± {analysis['resources']['std']:.3f}")
 
-        results[config_info['name']] = analysis
+        results[config_info["name"]] = analysis
 
     return results
 
@@ -322,8 +322,8 @@ def create_visualizations(all_results: Dict) -> None:
         print("-" * 40)
 
         for config_name, results in all_results.items():
-            if config_name not in ['extreme', 'variation']:
-                resilience_vals = results['resilience']['values']
+            if config_name not in ["extreme", "variation"]:
+                resilience_vals = results["resilience"]["values"]
                 print(f"\n{config_name}:")
                 print(f"  Mean: {results['resilience']['mean']:.3f}, SD: {results['resilience']['std']:.3f}")
 
@@ -342,9 +342,9 @@ def create_visualizations(all_results: Dict) -> None:
         print("-" * 50)
 
         for config_name, results in all_results.items():
-            if config_name not in ['extreme', 'variation']:
-                resilience_vals = results['resilience']['values']
-                affect_vals = results['affect']['values']
+            if config_name not in ["extreme", "variation"]:
+                resilience_vals = results["resilience"]["values"]
+                affect_vals = results["affect"]["values"]
 
                 print(f"\n{config_name}:")
                 print("  Resilience → Affect patterns:")
@@ -359,55 +359,54 @@ def create_visualizations(all_results: Dict) -> None:
 
     # Original matplotlib visualization code (if available)
     # Set up the plotting style
-    plt.style.use('seaborn-v0_8')
+    plt.style.use("seaborn-v0_8")
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-    fig.suptitle('Agent Initialization Demonstration Results', fontsize=16, fontweight='bold')
+    fig.suptitle("Agent Initialization Demonstration Results", fontsize=16, fontweight="bold")
 
     # Colors for different configurations
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
 
     # 1. Distribution comparison plot
     ax1 = axes[0, 0]
     for i, (config_name, results) in enumerate(all_results.items()):
-        if config_name != 'extreme' and config_name != 'variation':  # Skip non-config results
-            resilience_vals = results['resilience']['values']
-            ax1.hist(resilience_vals, alpha=0.7, label=config_name, bins=15,
-                    color=colors[i % len(colors)], density=True)
+        if config_name != "extreme" and config_name != "variation":  # Skip non-config results
+            resilience_vals = results["resilience"]["values"]
+            ax1.hist(
+                resilience_vals, alpha=0.7, label=config_name, bins=15, color=colors[i % len(colors)], density=True
+            )
 
-    ax1.set_xlabel('Resilience')
-    ax1.set_ylabel('Density')
-    ax1.set_title('Resilience Distributions Across Configurations')
+    ax1.set_xlabel("Resilience")
+    ax1.set_ylabel("Density")
+    ax1.set_title("Resilience Distributions Across Configurations")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
 
     # 2. Affect vs Resilience scatter plot
     ax2 = axes[0, 1]
     for i, (config_name, results) in enumerate(all_results.items()):
-        if config_name != 'extreme' and config_name != 'variation':
-            resilience_vals = results['resilience']['values']
-            affect_vals = results['affect']['values']
-            ax2.scatter(resilience_vals, affect_vals, alpha=0.6,
-                       label=config_name, color=colors[i % len(colors)], s=30)
+        if config_name != "extreme" and config_name != "variation":
+            resilience_vals = results["resilience"]["values"]
+            affect_vals = results["affect"]["values"]
+            ax2.scatter(resilience_vals, affect_vals, alpha=0.6, label=config_name, color=colors[i % len(colors)], s=30)
 
-    ax2.set_xlabel('Resilience')
-    ax2.set_ylabel('Affect')
-    ax2.set_title('Affect vs Resilience Relationship')
+    ax2.set_xlabel("Resilience")
+    ax2.set_ylabel("Affect")
+    ax2.set_title("Affect vs Resilience Relationship")
     ax2.legend()
     ax2.grid(True, alpha=0.3)
-    ax2.axhline(y=0, color='black', linestyle='--', alpha=0.5)
-    ax2.axvline(x=0.5, color='black', linestyle='--', alpha=0.5)
+    ax2.axhline(y=0, color="black", linestyle="--", alpha=0.5)
+    ax2.axvline(x=0.5, color="black", linestyle="--", alpha=0.5)
 
     # 3. PSS-10 score distribution
     ax3 = axes[1, 0]
     for i, (config_name, results) in enumerate(all_results.items()):
-        if config_name != 'extreme' and config_name != 'variation':
-            pss10_vals = results['pss10']['values']
-            ax3.hist(pss10_vals, alpha=0.7, label=config_name, bins=20,
-                    color=colors[i % len(colors)], density=True)
+        if config_name != "extreme" and config_name != "variation":
+            pss10_vals = results["pss10"]["values"]
+            ax3.hist(pss10_vals, alpha=0.7, label=config_name, bins=20, color=colors[i % len(colors)], density=True)
 
-    ax3.set_xlabel('PSS-10 Score')
-    ax3.set_ylabel('Density')
-    ax3.set_title('PSS-10 Score Distributions')
+    ax3.set_xlabel("PSS-10 Score")
+    ax3.set_ylabel("Density")
+    ax3.set_title("PSS-10 Score Distributions")
     ax3.legend()
     ax3.grid(True, alpha=0.3)
 
@@ -417,28 +416,28 @@ def create_visualizations(all_results: Dict) -> None:
     config_names = []
 
     for config_name, results in all_results.items():
-        if config_name not in ['extreme', 'variation']:
-            for var_name in ['resilience', 'affect', 'resources']:
-                summary_data.append(results[var_name]['values'])
+        if config_name not in ["extreme", "variation"]:
+            for var_name in ["resilience", "affect", "resources"]:
+                summary_data.append(results[var_name]["values"])
                 config_names.append(f"{config_name}\n{var_name}")
 
     if summary_data:
         bp = ax4.boxplot(summary_data, patch_artist=True, labels=config_names)
-        ax4.set_ylabel('Value')
-        ax4.set_title('Statistical Summary Across All Configurations')
-        ax4.tick_params(axis='x', rotation=45)
+        ax4.set_ylabel("Value")
+        ax4.set_title("Statistical Summary Across All Configurations")
+        ax4.tick_params(axis="x", rotation=45)
         ax4.grid(True, alpha=0.3)
 
         # Color the boxes
-        for i, box in enumerate(bp['boxes']):
+        for i, box in enumerate(bp["boxes"]):
             box.set_facecolor(colors[i % len(colors)])
 
     plt.tight_layout()
 
     # Save the plot
-    output_dir = Path('data/processed')
+    output_dir = Path("data/processed")
     output_dir.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_dir / 'agent_initialization_demo.png', dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / "agent_initialization_demo.png", dpi=300, bbox_inches="tight")
     print(f"Visualization saved to: {output_dir / 'agent_initialization_demo.png'}")
 
     # Show the plot
@@ -460,11 +459,7 @@ def run_comprehensive_demo() -> None:
     config_results = demonstrate_different_configurations()
 
     # Combine all results for visualization
-    all_results = {
-        'extreme': clamping_results,
-        'variation': variation_results,
-        **config_results
-    }
+    all_results = {"extreme": clamping_results, "variation": variation_results, **config_results}
 
     # Create visualizations
     create_visualizations(all_results)
@@ -509,4 +504,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error running demonstration: {e}")
         import traceback
+
         traceback.print_exc()

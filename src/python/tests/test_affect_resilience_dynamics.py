@@ -13,8 +13,6 @@ Tests cover edge cases, typical scenarios, configuration variations,
 mathematical correctness, and proper normalization.
 """
 
-import pytest
-import numpy as np
 from src.python.affect_utils import (
     compute_peer_influence,
     compute_event_appraisal_effect,
@@ -24,7 +22,7 @@ from src.python.affect_utils import (
     update_resilience_dynamics,
     AffectDynamicsConfig,
     ResilienceDynamicsConfig,
-    clamp
+    clamp,
 )
 
 
@@ -200,7 +198,7 @@ class TestEventAppraisalEffect:
         # Challenge effect should be stronger due to low current affect
         # Hindrance effect should be weaker due to low current affect
         challenge_effect = 0.1 * 0.3 * (1.0 - (-0.6))  # (1 - current) = 1.6
-        hindrance_effect = -0.1 * 0.7 * (-0.6 + 1.0)   # (current + 1) = 0.4
+        hindrance_effect = -0.1 * 0.7 * (-0.6 + 1.0)  # (current + 1) = 0.4
         expected = challenge_effect + hindrance_effect
 
         assert abs(effect - expected) < 1e-10
@@ -307,7 +305,7 @@ class TestHomeostasisEffect:
         # Higher rate should produce stronger effect
         assert abs(effect_high) > abs(effect_low)
         assert abs(effect_low - (-0.05 * 0.5)) < 1e-10  # Negative (pushing down)
-        assert abs(effect_high - (-0.2 * 0.5)) < 1e-10   # Negative (pushing down)
+        assert abs(effect_high - (-0.2 * 0.5)) < 1e-10  # Negative (pushing down)
 
 
 class TestCumulativeOverload:
@@ -331,7 +329,7 @@ class TestCumulativeOverload:
         effect = compute_cumulative_overload(consecutive_hindrances, config)
 
         # Effect at threshold: min(3/3, 2.0) = 1.0, then -0.2 * 1.0 = -0.2
-        expected = -0.2 * min(3/3, 2.0)
+        expected = -0.2 * min(3 / 3, 2.0)
         assert abs(effect - expected) < 1e-10
 
     def test_overload_effect_above_threshold(self):
@@ -342,7 +340,7 @@ class TestCumulativeOverload:
         effect = compute_cumulative_overload(consecutive_hindrances, config)
 
         # Effect calculation: min(5/4, 2.0) = 1.25, then -0.2 * 1.25 = -0.25
-        overload_intensity = min(5/4, 2.0)
+        overload_intensity = min(5 / 4, 2.0)
         expected = -0.2 * overload_intensity
         assert abs(effect - expected) < 1e-10
 
@@ -354,7 +352,7 @@ class TestCumulativeOverload:
         effect = compute_cumulative_overload(consecutive_hindrances, config)
 
         # Should cap at maximum intensity of 2.0
-        overload_intensity = min(10/2, 2.0)  # = 2.0
+        overload_intensity = min(10 / 2, 2.0)  # = 2.0
         expected = -0.2 * overload_intensity
         assert abs(effect - expected) < 1e-10
 
@@ -388,8 +386,7 @@ class TestAffectDynamicsIntegration:
         hindrance = 0.1
 
         new_affect = update_affect_dynamics(
-            current_affect, baseline_affect, neighbor_affects,
-            challenge, hindrance, config
+            current_affect, baseline_affect, neighbor_affects, challenge, hindrance, config
         )
 
         # Should be in valid range
@@ -409,7 +406,7 @@ class TestAffectDynamicsIntegration:
             neighbor_affects=[1.0, -1.0, 0.8],
             challenge=1.0,
             hindrance=1.0,
-            affect_config=affect_config
+            affect_config=affect_config,
         )
 
         # Should still be clamped to valid range
@@ -425,8 +422,7 @@ class TestAffectDynamicsIntegration:
         hindrance = 0.0
 
         new_affect = update_affect_dynamics(
-            current_affect, baseline_affect, neighbor_affects,
-            challenge, hindrance, config
+            current_affect, baseline_affect, neighbor_affects, challenge, hindrance, config
         )
 
         # Should be in valid range
@@ -443,7 +439,7 @@ class TestAffectDynamicsIntegration:
             neighbor_affects=[],  # No peer influence
             challenge=0.0,
             hindrance=0.0,
-            affect_config=affect_config
+            affect_config=affect_config,
         )
 
         # Should be pulled back toward baseline (less than 1.0)
@@ -456,7 +452,7 @@ class TestAffectDynamicsIntegration:
             neighbor_affects=[],
             challenge=0.0,
             hindrance=0.0,
-            affect_config=affect_config
+            affect_config=affect_config,
         )
 
         # Should be pulled back toward baseline (greater than -1.0)
@@ -471,27 +467,17 @@ class TestAffectDynamicsIntegration:
         hindrance = 0.1
 
         # High influence configuration
-        config_high = AffectDynamicsConfig(
-            peer_influence_rate=0.3,
-            event_appraisal_rate=0.3,
-            homeostatic_rate=0.1
-        )
+        config_high = AffectDynamicsConfig(peer_influence_rate=0.3, event_appraisal_rate=0.3, homeostatic_rate=0.1)
 
         # Low influence configuration
-        config_low = AffectDynamicsConfig(
-            peer_influence_rate=0.05,
-            event_appraisal_rate=0.05,
-            homeostatic_rate=0.01
-        )
+        config_low = AffectDynamicsConfig(peer_influence_rate=0.05, event_appraisal_rate=0.05, homeostatic_rate=0.01)
 
         affect_high = update_affect_dynamics(
-            current_affect, baseline_affect, neighbor_affects,
-            challenge, hindrance, config_high
+            current_affect, baseline_affect, neighbor_affects, challenge, hindrance, config_high
         )
 
         affect_low = update_affect_dynamics(
-            current_affect, baseline_affect, neighbor_affects,
-            challenge, hindrance, config_low
+            current_affect, baseline_affect, neighbor_affects, challenge, hindrance, config_low
         )
 
         # Higher configuration values should produce larger magnitude changes
@@ -510,8 +496,7 @@ class TestResilienceDynamicsIntegration:
         consecutive_hindrances = 0
 
         new_resilience = update_resilience_dynamics(
-            current_resilience, coped_successfully, received_social_support,
-            consecutive_hindrances, config
+            current_resilience, coped_successfully, received_social_support, consecutive_hindrances, config
         )
 
         # Should be in valid range
@@ -529,8 +514,7 @@ class TestResilienceDynamicsIntegration:
         consecutive_hindrances = 0
 
         new_resilience = update_resilience_dynamics(
-            current_resilience, coped_successfully, received_social_support,
-            consecutive_hindrances, config
+            current_resilience, coped_successfully, received_social_support, consecutive_hindrances, config
         )
 
         # Should increase by coping success rate
@@ -546,8 +530,7 @@ class TestResilienceDynamicsIntegration:
         consecutive_hindrances = 0
 
         new_resilience = update_resilience_dynamics(
-            current_resilience, coped_successfully, received_social_support,
-            consecutive_hindrances, config
+            current_resilience, coped_successfully, received_social_support, consecutive_hindrances, config
         )
 
         # Should increase by social support rate
@@ -563,22 +546,18 @@ class TestResilienceDynamicsIntegration:
         consecutive_hindrances = 5  # Above threshold
 
         new_resilience = update_resilience_dynamics(
-            current_resilience, coped_successfully, received_social_support,
-            consecutive_hindrances, config
+            current_resilience, coped_successfully, received_social_support, consecutive_hindrances, config
         )
 
         # Should decrease due to overload
-        expected_overload = -0.2 * min(5/3, 2.0)  # -0.2 * 1.666... ≈ -0.333
+        expected_overload = -0.2 * min(5 / 3, 2.0)  # -0.2 * 1.666... ≈ -0.333
         expected_resilience = current_resilience + expected_overload
         assert abs(new_resilience - expected_resilience) < 1e-10
 
     def test_resilience_dynamics_combined_effects(self):
         """Test resilience dynamics with multiple effects."""
         config = ResilienceDynamicsConfig(
-            coping_success_rate=0.1,
-            social_support_rate=0.08,
-            overload_threshold=2,
-            influencing_hindrance=3
+            coping_success_rate=0.1, social_support_rate=0.08, overload_threshold=2, influencing_hindrance=3
         )
         current_resilience = 0.5
         coped_successfully = True
@@ -586,12 +565,11 @@ class TestResilienceDynamicsIntegration:
         consecutive_hindrances = 4  # Above threshold
 
         new_resilience = update_resilience_dynamics(
-            current_resilience, coped_successfully, received_social_support,
-            consecutive_hindrances, config
+            current_resilience, coped_successfully, received_social_support, consecutive_hindrances, config
         )
 
         # Should combine positive and negative effects
-        overload_effect = -0.2 * min(4/3, 2.0)  # -0.2 * 1.333... ≈ -0.267
+        overload_effect = -0.2 * min(4 / 3, 2.0)  # -0.2 * 1.333... ≈ -0.267
         total_expected = current_resilience + 0.1 + 0.08 + overload_effect
 
         assert abs(new_resilience - total_expected) < 1e-10
@@ -606,7 +584,7 @@ class TestResilienceDynamicsIntegration:
             coped_successfully=True,
             received_social_support=True,
             consecutive_hindrances=0,
-            resilience_config=resilience_config
+            resilience_config=resilience_config,
         )
 
         # Should still be in valid range
@@ -618,7 +596,7 @@ class TestResilienceDynamicsIntegration:
             coped_successfully=False,
             received_social_support=False,
             consecutive_hindrances=10,  # High overload
-            resilience_config=resilience_config
+            resilience_config=resilience_config,
         )
 
         # Should still be in valid range
@@ -633,8 +611,7 @@ class TestResilienceDynamicsIntegration:
         consecutive_hindrances = 0  # Below threshold
 
         new_resilience = update_resilience_dynamics(
-            current_resilience, coped_successfully, received_social_support,
-            consecutive_hindrances, config
+            current_resilience, coped_successfully, received_social_support, consecutive_hindrances, config
         )
 
         # Should remain unchanged
@@ -650,7 +627,7 @@ class TestResilienceDynamicsIntegration:
             coped_successfully=True,
             received_social_support=True,
             consecutive_hindrances=0,
-            resilience_config=resilience_config
+            resilience_config=resilience_config,
         )
 
         # Should be clamped at 1.0
@@ -663,7 +640,7 @@ class TestResilienceDynamicsIntegration:
             coped_successfully=False,
             received_social_support=False,
             consecutive_hindrances=5,  # High overload
-            resilience_config=resilience_config_overload
+            resilience_config=resilience_config_overload,
         )
 
         # Should be clamped at 0.0
@@ -678,7 +655,7 @@ class TestMathematicalCorrectness:
         config = AffectDynamicsConfig(peer_influence_rate=0.1, influencing_neighbors=5)
 
         # Test that influence is proportional to difference
-        affect_diff = 0.3 - (-0.1)  # 0.4
+        0.3 - (-0.1)  # 0.4
         influence = compute_peer_influence(0.0, [0.3], config)
         expected = 0.1 * (0.3 - 0.0)
         assert abs(influence - expected) < 1e-10
@@ -762,10 +739,7 @@ class TestConfigurationIntegration:
     def test_custom_configuration_values(self):
         """Test that custom configuration values are used correctly."""
         config = AffectDynamicsConfig(
-            peer_influence_rate=0.25,
-            event_appraisal_rate=0.18,
-            homeostatic_rate=0.08,
-            influencing_neighbors=3
+            peer_influence_rate=0.25, event_appraisal_rate=0.18, homeostatic_rate=0.08, influencing_neighbors=3
         )
 
         # Test that custom values are preserved
@@ -845,14 +819,11 @@ class TestIntegrationScenarios:
 
         # Update affect
         new_affect = update_affect_dynamics(
-            current_affect, baseline_affect, neighbor_affects,
-            challenge, hindrance, config_affect
+            current_affect, baseline_affect, neighbor_affects, challenge, hindrance, config_affect
         )
 
         # Update resilience (successful coping + social support)
-        new_resilience = update_resilience_dynamics(
-            current_resilience, True, True, 0, config_resilience
-        )
+        new_resilience = update_resilience_dynamics(current_resilience, True, True, 0, config_resilience)
 
         # Both should improve
         assert new_affect > current_affect
@@ -881,14 +852,11 @@ class TestIntegrationScenarios:
 
         # Update affect
         new_affect = update_affect_dynamics(
-            current_affect, baseline_affect, neighbor_affects,
-            challenge, hindrance, affect_config
+            current_affect, baseline_affect, neighbor_affects, challenge, hindrance, affect_config
         )
 
         # Update resilience (failed coping + no social support + high overload)
-        new_resilience = update_resilience_dynamics(
-            current_resilience, False, False, 5, resilience_config
-        )
+        new_resilience = update_resilience_dynamics(current_resilience, False, False, 5, resilience_config)
 
         # Resilience should worsen due to overload
         assert new_resilience < current_resilience
@@ -918,14 +886,11 @@ class TestIntegrationScenarios:
 
         # Update affect (homeostasis should pull toward baseline)
         new_affect = update_affect_dynamics(
-            current_affect, baseline_affect, neighbor_affects,
-            challenge, hindrance, config_affect
+            current_affect, baseline_affect, neighbor_affects, challenge, hindrance, config_affect
         )
 
         # Update resilience (successful coping + social support)
-        new_resilience = update_resilience_dynamics(
-            current_resilience, True, True, 0, config_resilience
-        )
+        new_resilience = update_resilience_dynamics(current_resilience, True, True, 0, config_resilience)
 
         # Affect should improve toward baseline
         assert new_affect > current_affect

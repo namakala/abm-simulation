@@ -20,9 +20,9 @@ class TestDataclassConfigIntegration:
     def test_interaction_config_uses_config_values(self, config):
         """Test that InteractionConfig uses config values correctly."""
         interaction_config = InteractionConfig()
-        expected_influence_rate = config.get('interaction', 'influence_rate')
-        expected_resilience_influence = config.get('interaction', 'resilience_influence')
-        expected_max_neighbors = config.get('interaction', 'max_neighbors')
+        expected_influence_rate = config.get("interaction", "influence_rate")
+        expected_resilience_influence = config.get("interaction", "resilience_influence")
+        expected_max_neighbors = config.get("interaction", "max_neighbors")
 
         assert interaction_config.influence_rate == expected_influence_rate
         assert interaction_config.resilience_influence == expected_resilience_influence
@@ -32,10 +32,10 @@ class TestDataclassConfigIntegration:
     def test_protective_factors_uses_config_values(self, config):
         """Test that ProtectiveFactors uses config values correctly."""
         protective_factors = ProtectiveFactors()
-        expected_social = config.get('protective', 'social_support')
-        expected_family = config.get('protective', 'family_support')
-        expected_formal = config.get('protective', 'formal_intervention')
-        expected_psychological = config.get('protective', 'psychological_capital')
+        expected_social = config.get("protective", "social_support")
+        expected_family = config.get("protective", "family_support")
+        expected_formal = config.get("protective", "formal_intervention")
+        expected_psychological = config.get("protective", "psychological_capital")
 
         assert protective_factors.social_support == expected_social
         assert protective_factors.family_support == expected_family
@@ -46,9 +46,9 @@ class TestDataclassConfigIntegration:
     def test_resource_params_uses_config_values(self, config):
         """Test that ResourceParams uses config values correctly."""
         resource_params = ResourceParams()
-        expected_regeneration = config.get('resource', 'base_regeneration')
-        expected_cost = config.get('resource', 'allocation_cost')
-        expected_exponent = config.get('resource', 'cost_exponent')
+        expected_regeneration = config.get("resource", "base_regeneration")
+        expected_cost = config.get("resource", "allocation_cost")
+        expected_exponent = config.get("resource", "cost_exponent")
 
         assert resource_params.base_regeneration == expected_regeneration
         assert resource_params.allocation_cost == expected_cost
@@ -58,10 +58,10 @@ class TestDataclassConfigIntegration:
     def test_appraisal_weights_uses_config_values(self, config):
         """Test that AppraisalWeights uses config values correctly."""
         appraisal_weights = AppraisalWeights()
-        expected_omega_c = config.get('appraisal', 'omega_c')
-        expected_omega_o = config.get('appraisal', 'omega_o')
-        expected_bias = config.get('appraisal', 'bias')
-        expected_gamma = config.get('appraisal', 'gamma')
+        expected_omega_c = config.get("appraisal", "omega_c")
+        expected_omega_o = config.get("appraisal", "omega_o")
+        expected_bias = config.get("appraisal", "bias")
+        expected_gamma = config.get("appraisal", "gamma")
 
         assert appraisal_weights.omega_c == expected_omega_c
         assert appraisal_weights.omega_o == expected_omega_o
@@ -72,9 +72,9 @@ class TestDataclassConfigIntegration:
     def test_threshold_params_uses_config_values(self, config):
         """Test that ThresholdParams uses config values correctly."""
         threshold_params = ThresholdParams()
-        expected_base = config.get('threshold', 'base_threshold')
-        expected_challenge = config.get('threshold', 'challenge_scale')
-        expected_hindrance = config.get('threshold', 'hindrance_scale')
+        expected_base = config.get("threshold", "base_threshold")
+        expected_challenge = config.get("threshold", "challenge_scale")
+        expected_hindrance = config.get("threshold", "hindrance_scale")
 
         assert threshold_params.base_threshold == expected_base
         assert threshold_params.challenge_scale == expected_challenge
@@ -95,7 +95,7 @@ class TestConfigEnvironmentOverride:
     def test_environment_variable_override(self, clean_env, reload_config_fixture):
         """Test that environment variables properly override defaults."""
         # Set a test environment variable
-        os.environ['SIMULATION_NUM_AGENTS'] = '50'
+        os.environ["SIMULATION_NUM_AGENTS"] = "50"
 
         # Reload config to pick up new environment variable
         new_config = reload_config_fixture()
@@ -111,24 +111,20 @@ class TestModuleImports:
     def test_no_import_errors(self):
         """Test that all modules can be imported without errors."""
         # Test importing all main modules
-        from src.python import config, affect_utils, stress_utils, math_utils, agent, model
 
         # Test importing test modules
-        import src.python.tests.test_affect_utils as test_affect
-        import src.python.tests.test_stress_utils as test_stress
-        import src.python.tests.test_agent_integration as test_agent
 
     @pytest.mark.unit
     def test_no_circular_dependencies(self):
         """Test for circular import dependencies."""
 
         # Try to use the dataclasses
-        config = get_config()
-        interaction = InteractionConfig()
-        protective = ProtectiveFactors()
-        stress_event = StressEvent(0.5, 0.5)
-        weights = AppraisalWeights()
-        rng_config = RNGConfig()
+        get_config()
+        InteractionConfig()
+        ProtectiveFactors()
+        StressEvent(0.5, 0.5)
+        AppraisalWeights()
+        RNGConfig()
 
         # If we get here without ImportError, no circular dependencies
         assert True

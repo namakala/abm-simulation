@@ -22,7 +22,7 @@ from src.python.stress_utils import (
     generate_pss10_item_response,
     generate_pss10_responses,
     map_agent_stress_to_pss10,
-    compute_pss10_score
+    compute_pss10_score,
 )
 
 from src.python.config import Config, ConfigurationError
@@ -33,11 +33,7 @@ class TestPSS10Item:
 
     def test_pss10_item_creation(self):
         """Test PSS10Item dataclass creation with valid parameters."""
-        item = PSS10Item(
-            reverse_scored=True,
-            weight_controllability=0.7,
-            weight_overload=0.3
-        )
+        item = PSS10Item(reverse_scored=True, weight_controllability=0.7, weight_overload=0.3)
 
         assert item.reverse_scored is True
         assert item.weight_controllability == 0.7
@@ -103,9 +99,7 @@ class TestPSS10DimensionCorrelation:
         overload = 0.4
         correlation = 0.3
 
-        corr_c, corr_o = generate_pss10_dimension_scores(
-            controllability, overload, correlation, rng
-        )
+        corr_c, corr_o = generate_pss10_dimension_scores(controllability, overload, correlation, rng)
 
         # Should return values in [0,1] range
         assert 0 <= corr_c <= 1
@@ -123,9 +117,7 @@ class TestPSS10DimensionCorrelation:
         overload = 0.2
         correlation = -0.4
 
-        corr_c, corr_o = generate_pss10_dimension_scores(
-            controllability, overload, correlation, rng
-        )
+        corr_c, corr_o = generate_pss10_dimension_scores(controllability, overload, correlation, rng)
 
         assert 0 <= corr_c <= 1
         assert 0 <= corr_o <= 1
@@ -171,7 +163,7 @@ class TestPSS10ItemGeneration:
             controllability_score=0.6,
             overload_score=0.4,
             reverse_scored=False,
-            rng=rng
+            rng=rng,
         )
 
         # Should return valid PSS-10 response (0-4)
@@ -185,18 +177,26 @@ class TestPSS10ItemGeneration:
         # Generate two responses with different controllability and overload scores to ensure different base responses
         # Use different parameter combinations to make reverse scoring effect more apparent and avoid coincidental equality
         response_normal = generate_pss10_item_response(
-            item_mean=2.0, item_sd=0.5,  # Different mean for more variation
-            controllability_loading=0.5, overload_loading=0.5,
-            controllability_score=0.2, overload_score=0.3,  # Lower controllability, lower overload
-            reverse_scored=False, rng=rng
+            item_mean=2.0,
+            item_sd=0.5,  # Different mean for more variation
+            controllability_loading=0.5,
+            overload_loading=0.5,
+            controllability_score=0.2,
+            overload_score=0.3,  # Lower controllability, lower overload
+            reverse_scored=False,
+            rng=rng,
         )
 
         rng = np.random.default_rng(42)  # Reset seed
         response_reverse = generate_pss10_item_response(
-            item_mean=3.0, item_sd=0.5,  # Different mean
-            controllability_loading=0.5, overload_loading=0.5,
-            controllability_score=0.8, overload_score=0.7,  # Higher controllability, higher overload
-            reverse_scored=True, rng=rng
+            item_mean=3.0,
+            item_sd=0.5,  # Different mean
+            controllability_loading=0.5,
+            overload_loading=0.5,
+            controllability_score=0.8,
+            overload_score=0.7,  # Higher controllability, higher overload
+            reverse_scored=True,
+            rng=rng,
         )
 
         # Reverse scored should give different result due to different input parameters and reverse scoring
@@ -227,7 +227,7 @@ class TestPSS10ItemGeneration:
             controllability_score=0.0,
             overload_score=0.0,
             reverse_scored=False,
-            rng=rng
+            rng=rng,
         )
 
         assert 0 <= response <= 4
@@ -238,17 +238,25 @@ class TestPSS10ItemGeneration:
         rng2 = np.random.default_rng(123)
 
         response1 = generate_pss10_item_response(
-            item_mean=2.0, item_sd=1.0,
-            controllability_loading=0.5, overload_loading=0.5,
-            controllability_score=0.5, overload_score=0.5,
-            reverse_scored=False, rng=rng1
+            item_mean=2.0,
+            item_sd=1.0,
+            controllability_loading=0.5,
+            overload_loading=0.5,
+            controllability_score=0.5,
+            overload_score=0.5,
+            reverse_scored=False,
+            rng=rng1,
         )
 
         response2 = generate_pss10_item_response(
-            item_mean=2.0, item_sd=1.0,
-            controllability_loading=0.5, overload_loading=0.5,
-            controllability_score=0.5, overload_score=0.5,
-            reverse_scored=False, rng=rng2
+            item_mean=2.0,
+            item_sd=1.0,
+            controllability_loading=0.5,
+            overload_loading=0.5,
+            controllability_score=0.5,
+            overload_score=0.5,
+            reverse_scored=False,
+            rng=rng2,
         )
 
         assert response1 == response2
@@ -307,11 +315,11 @@ class TestPSS10ResponseGeneration:
         rng = np.random.default_rng(42)
 
         custom_config = {
-            'item_means': [2.0] * 10,
-            'item_sds': [1.0] * 10,
-            'load_controllability': [0.5] * 10,
-            'load_overload': [0.5] * 10,
-            'bifactor_correlation': 0.0
+            "item_means": [2.0] * 10,
+            "item_sds": [1.0] * 10,
+            "load_controllability": [0.5] * 10,
+            "load_overload": [0.5] * 10,
+            "bifactor_correlation": 0.0,
         }
 
         responses = generate_pss10_responses(0.5, 0.5, rng, custom_config)
@@ -341,8 +349,16 @@ class TestPSS10Integration:
         """Test that PSS-10 score computation still works with new responses."""
         # Create test responses
         responses = {
-            1: 2, 2: 1, 3: 3, 4: 1, 5: 2,  # Reverse scored items: 4, 5
-            6: 3, 7: 1, 8: 2, 9: 2, 10: 3  # Reverse scored items: 7, 8
+            1: 2,
+            2: 1,
+            3: 3,
+            4: 1,
+            5: 2,  # Reverse scored items: 4, 5
+            6: 3,
+            7: 1,
+            8: 2,
+            9: 2,
+            10: 3,  # Reverse scored items: 7, 8
         }
 
         score = compute_pss10_score(responses)
@@ -380,9 +396,9 @@ class TestPSS10Configuration:
         config = Config()
 
         # Test new bifactor model parameters
-        controllability_loadings = config.get('pss10', 'load_controllability')
-        overload_loadings = config.get('pss10', 'load_overload')
-        correlation = config.get('pss10', 'bifactor_correlation')
+        controllability_loadings = config.get("pss10", "load_controllability")
+        overload_loadings = config.get("pss10", "load_overload")
+        correlation = config.get("pss10", "bifactor_correlation")
 
         assert len(controllability_loadings) == 10
         assert len(overload_loadings) == 10
@@ -403,7 +419,7 @@ class TestPSS10Configuration:
         config.validate()
 
         # Test that validation catches invalid values
-        with patch.object(config, 'pss10_load_controllability', [1.5] * 10):  # Invalid loading > 1
+        with patch.object(config, "pss10_load_controllability", [1.5] * 10):  # Invalid loading > 1
             with pytest.raises(ConfigurationError, match="controllability loading"):
                 config.validate()
 
@@ -416,9 +432,9 @@ class TestPSS10Configuration:
         expected_controllability = [0, 0, 0, 1, 1, 0, 1, 1, 0, 0]
         expected_overload = [1, 1, 1, 0, 0, 1, 0, 0, 1, 1]
 
-        assert config.get('pss10', 'load_controllability') == expected_controllability
-        assert config.get('pss10', 'load_overload') == expected_overload
-        assert config.get('pss10', 'bifactor_correlation') == -0.3
+        assert config.get("pss10", "load_controllability") == expected_controllability
+        assert config.get("pss10", "load_overload") == expected_overload
+        assert config.get("pss10", "bifactor_correlation") == -0.3
 
 
 def run_all_tests():
@@ -433,7 +449,7 @@ def run_all_tests():
         TestPSS10ItemGeneration(),
         TestPSS10ResponseGeneration(),
         TestPSS10Integration(),
-        TestPSS10Configuration()
+        TestPSS10Configuration(),
     ]
 
     total_tests = 0
@@ -444,7 +460,7 @@ def run_all_tests():
         print(f"\n{class_name}:")
 
         # Get all test methods
-        test_methods = [method for method in dir(test_class) if method.startswith('test_')]
+        test_methods = [method for method in dir(test_class) if method.startswith("test_")]
 
         for test_method in test_methods:
             total_tests += 1

@@ -196,41 +196,43 @@ If your PR adds new parameters:
 ### Setting Up for Development
 
 ```bash
-# Create development environment
-conda env create -f environment.yml
-conda activate ABM
+# Install dependencies (uses pixi.toml + pixi.lock)
+pixi install
 
-# Install development dependencies
-pip install pre-commit black isort mypy
+# Activate the environment in a subshell
+pixi shell
 
-# Set up pre-commit hooks
-pre-commit install
+# Or run a single command in the environment
+pixi run python --version
 
-# Run pre-commit on all files
-pre-commit run --all-files
+# Set up pre-commit hooks (optional)
+git config core.hooksPath .githooks
+
+The hook runs `pixi run prettify && pixi run format && pixi run lint` always, and only runs tests (`pixi run test-cov && pixi run test-config`) when `*.py` files are staged.
 ```
 
 ### Running Tests During Development
 
+This project uses [pixi tasks](https://pixi.sh) defined in `pixi.toml`. All common commands are available as tasks:
+
 ```bash
 # Run all tests
-python -m pytest
+pixi run test
 
 # Run specific test categories
-python -m pytest src/python/tests/test_*.py -k "integration"  # Integration tests only
-python -m pytest src/python/tests/test_*.py -k "config"      # Configuration tests only
+pixi run test-integration   # Integration tests only
+pixi run test-config        # Configuration tests only
 
 # Run with coverage (required for PRs)
-python -m pytest --cov=src/python --cov-report=html --cov-fail-under=85
-
-# Check specific file coverage (for new features)
-python -m pytest --cov=src.python.new_module --cov-report=html --cov-fail-under=90
+pixi run test-cov
 
 # Run performance benchmarks
-python -m pytest src/python/tests/ -k "benchmark" --benchmark-only
+pixi run benchmark
 
-# Run only new tests you've added
-python -m pytest src/python/tests/test_your_new_feature.py -v
+# Pass additional arguments to a task (use -- to separate)
+pixi run test -- -v
+pixi run test -- -k "your_feature"
+pixi run test -- --cov=src.python.new_module --cov-report=html --cov-fail-under=90
 ```
 
 ## Review Process

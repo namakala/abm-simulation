@@ -19,15 +19,12 @@ Usage:
 """
 
 import sys
-import numpy as np
 import pandas as pd
-from pathlib import Path
 
 # Add project root to path for imports
-sys.path.append('.')
+sys.path.append(".")
 
 from src.python.model import StressModel
-from src.python.config import get_config
 
 
 def run_simulation_and_get_data(days: int = 100, agents: int = 30, seed: int = 42):
@@ -93,16 +90,16 @@ def print_correlation_matrix(corr_matrix: pd.DataFrame):
     Args:
         corr_matrix: Correlation matrix DataFrame
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("CORRELATION MATRIX")
-    print("="*60)
+    print("=" * 60)
 
     # Print the matrix with nice formatting
-    print(corr_matrix.to_string(float_format='%.4f'))
+    print(corr_matrix.to_string(float_format="%.4f"))
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("INTERPRETATION")
-    print("="*60)
+    print("=" * 60)
 
     # Provide interpretation of key correlations
     variables = corr_matrix.columns.tolist()
@@ -129,13 +126,13 @@ def main():
 
     # Variables to analyze
     variables_of_interest = [
-        'avg_pss10',
-        'avg_resilience',
-        'avg_affect',
-        'avg_stress',
-        'avg_resources',
-        'social_support_rate',
-        'coping_success_rate'
+        "avg_pss10",
+        "avg_resilience",
+        "avg_affect",
+        "avg_stress",
+        "avg_resources",
+        "social_support_rate",
+        "coping_success_rate",
     ]
 
     try:
@@ -157,9 +154,9 @@ def main():
         print_correlation_matrix(corr_matrix)
 
         # Additional statistics
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("SUMMARY STATISTICS")
-        print("="*60)
+        print("=" * 60)
 
         for var in variables_of_interest:
             if var in model_data.columns:
@@ -177,6 +174,7 @@ def main():
     except Exception as e:
         print(f"Error running correlation analysis demo: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
