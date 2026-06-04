@@ -56,3 +56,4 @@ Subdirectories may contain their own AGENTS.md with scope-specific instructions.
 - Full directory map: READ `@docs/agents/PROJECT_STRUCTURE.md`
 - System design and decisions: READ `@docs/agents/ARCHITECTURE.md`
 - Document templates: READ `@docs/templates/`
+- Python module instructions: READ `@src/python/AGENTS.md`
