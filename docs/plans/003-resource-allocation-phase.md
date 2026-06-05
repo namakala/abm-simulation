@@ -1,19 +1,20 @@
 ---
 title: Resource Allocation Phase
-description: Extract resource allocation into atomic phase isolated from interaction
-date: 2026-06-04
+description: Extract resource regeneration, softmax allocation, efficacy update into daily phase
+date: 2026-06-05
 ---
 
 # Overview
 
-Extract resource regeneration -> softmax allocation -> efficacy update pipeline into a standalone phase function. Strictly isolated from interaction concerns: only tests PF allocation dynamics.
+Extract resource regeneration, softmax-based PF allocation, and efficacy updates from agent.py:296-318 and resource_utils.py into a standalone daily phase. Strictly isolated from interaction concerns: no social resource exchange (moved to Plan 004). Runs once after the event loop.
 
 # Goals
 
 - Theory-based tests assert all resource allocation predictions
 - `process_resource_allocation()` is a pure function with (state, config, rng) -> PhaseOutput
-- No interaction code touches this phase
-- Refactored resource_utils.py keeps helpers
+- No interaction variables referenced (no social exchange here)
+- Social resource exchange removed — moved to Plan 004
+- Resource regeneration multipliers are hardcoded constants (noted for Plan 006)
 
 # Implementation Steps
 
@@ -24,22 +25,23 @@ Extract resource regeneration -> softmax allocation -> efficacy update pipeline 
   - Regeneration: R near 0 -> high R'; R = 1 -> R' = 0; positive A boosts R'
   - R always in [0,1]; sum(r_f) = available R (conservation)
   - No interaction variables referenced
-  - COR loss primacy: net effect of stress event on R is negative
+  - Resource regeneration multipliers: affect 0.50x, resilience 0.30x (constants, Plan 006 externalizes)
 - [ ] 2. Create `phases/resource_allocation.py`:
-  - `process_resource_allocation()`: regeneration -> softmax allocation to each PF -> efficacy updates -> resource depletion if coping
+  - `process_resource_allocation()`: resource regeneration -> softmax allocation weights -> PF efficacy updates -> resource depletion
   - Returns PhaseOutput with state_delta (resources, protective_factors) and observation (allocation_weights per PF, efficacies before/after, regeneration_amount)
-- [ ] 3. Move from `resource_utils.py` and `affect_utils.py` into phase function
-- [ ] 4. Run: `pytest src/python/tests/test_resource_allocation_theory.py -v`
+- [ ] 3. Extract from agent.py:296-318 and resource_utils.py (excluding social exchange functions)
+- [ ] 4. Hardcoded constants in resource_utils.py noted for Plan 006 (not changed now)
+- [ ] 5. Run: `pytest src/python/tests/test_resource_allocation_theory.py -v`
 
 # Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
-| Softmax temperature affects realism | Med | High | Default T must produce non-trivial multi-factor allocation |
-| Resource cost double-counted | Low | High | Phase only handles allocation; cost already applied in WP 1 |
+| Social resource exchange accidentally kept | Low | High | Verify no process_social_resource_exchange import in this phase |
+| Resource regeneration constants differ from current behavior | Low | Med | Cross-reference agent.py:299-307 for exact multiplier values |
 
 # UAT
 
 1. All theory tests pass
 2. Phase function returns per-factor allocation breakdown
-3. No interaction functions referenced in this phase
+3. No interaction functions referenced in this phase (grep for social, interact, partner)

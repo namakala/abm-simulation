@@ -1,45 +1,51 @@
 ---
 title: Resilience Activation Phase
-description: Extract resilience activation into atomic phase with theory-based tests
-date: 2026-06-04
+description: Extract coping, resilience delta, resource cost, PF allocation into event-driven phase
+date: 2026-06-05
 ---
 
 # Overview
 
-Extract coping outcome -> resilience update pipeline from agent.py/affect_utils.py into a standalone phase function. TDD: write theory-based tests first.
+Extract coping outcome, resilience/affect/stress changes, resource cost, PSS-10 generation, and PF allocation from agent.py:572-709 into an event-driven phase. Called only when is_stressed=True. Receives state already updated by Plan 001. This is the largest phase — it handles the full coping pipeline.
 
 # Goals
 
 - Theory-based tests assert all resilience activation predictions
 - `process_resilience_activation()` is a pure function with (state, config, rng) -> PhaseOutput
-- Refactored affect_utils.py keeps only helpers
-- All tests pass
+- Called per-event, only when is_stressed
+- PSS-10 generation from stress dimensions is included here
+- Resource cost, reward, and penalty are included here (hardcoded constants noted for Plan 006)
 
 # Implementation Steps
 
 - [ ] 1. Write `test_resilience_activation_theory.py`:
-  - Higher challenge -> higher coping probability; higher hindrance -> lower
-  - Positive neighbor affect -> higher coping probability; negative -> lower
-  - Successful coping -> DeltaR >= 0; failed coping -> DeltaR <= 0
-  - Asymmetry: ch_gain(0.3*ch) > ch_loss(0.1*ch); hi_loss(0.4*hi) > hi_gain(0.1*hi)
-  - Overload: DeltaR_o = -0.4 * min(h_c / eta, 1.0) when h_c >= eta
-  - Homeostasis: R > R0 -> pull down; R < R0 -> pull up; R = R0 -> no change
-  - Protective factor boost: larger when R_t far below R_0
+  - Higher challenge -> higher coping prob; higher hindrance -> lower
+  - Positive neighbor affect -> higher coping prob; negative -> lower
+  - Successful coping -> DeltaR >= 0; failed -> DeltaR <= 0
+  - Asymmetry: ch_gain > ch_loss; hi_loss > hi_gain
+  - Overload: DeltaR_o = -0.4 * min(h_c / eta, 1.0)
+  - Homeostasis: R > R0 -> pull down; R < R0 -> pull up
+  - Resource cost scales with resilience and event difficulty
+  - Resource reward = base_cost * 0.75 after successful coping (constant, Plan 006 externalizes)
+  - Resource penalty = base_cost * 0.10 after failed coping (constant, Plan 006 externalizes)
+  - PF allocation fraction = resources * 0.30 after successful coping (constant, Plan 006 externalizes)
+  - Stress dimensions updated from event outcome; PSS-10 generated from updated dims
 - [ ] 2. Create `phases/resilience_activation.py`:
-  - `process_resilience_activation()`: coping probability -> outcome -> resilience delta (ch/hi effect, overload, protective boost, social support, homeostasis)
-  - Returns PhaseOutput with state_delta (resilience) and observation (coping_prob, coped_successfully, each DeltaR component)
-- [ ] 3. Move from `affect_utils.py` into phase function
-- [ ] 4. Run: `pytest src/python/tests/test_resilience_activation_theory.py -v`
+  - `process_resilience_activation()`: neighbor affects -> coping prob -> coping outcome -> affect/resilience/stress deltas -> stress dim update -> PSS-10 gen -> resource cost -> PF allocation -> hindrance tracking
+  - Returns PhaseOutput with state_delta (affect, resilience, current_stress, stress_controllability, stress_overload, resources, protective_factors, consecutive_hindrances, stress_breach_count, pss10, pss10_responses, stressed)
+- [ ] 3. Extract from agent.py:572-709 and affect_utils.py coping/resilience functions
+- [ ] 4. Hardcoded constants in affect_utils.py noted for Plan 006 (not changed now)
+- [ ] 5. Run: `pytest src/python/tests/test_resilience_activation_theory.py -v`
 
 # Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
-| Overload formula changed from original | Low | High | Verify new formula -0.4*min(h_c/eta,1.0) matches intent |
-| Homeostasis interacts with other phases | Med | Med | Test in isolation first; integration test in WP 6 catches conflicts |
+| State delta has 12 keys — easy to miss one | High | High | Line-by-line cross-reference of agent.py:572-709 for all self.* assignments |
+| Overlap with Plan 005 stress buffering (both modify resilience) | Med | High | Plan 002 handles coping-induced resilience change; Plan 005 handles PF boost. Keys documented. |
 
 # UAT
 
 1. All theory tests pass
-2. Phase function returns per-component DeltaR breakdown in observation
-3. Old resilience dynamics still work
+2. Phase function returns correct per-component DeltaR breakdown in observation
+3. For same seed and same stress event -> same coping outcome and resource change as current code
