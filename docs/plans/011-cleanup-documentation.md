@@ -24,14 +24,14 @@ Final cleanup after all phases implemented, parameterized, integrated, tested, a
   - Include: agent_initialization_demo.py, stress_processing_mechanism.py, track_daily_stress.py, etc.
 - [ ] 2. Review and archive superseded tests:
   - Keep: conftest.py, test_phase_signatures.py, core utility tests (test_math_utils.py, test_config_*.py)
-  - Archive: test_correlation_validation.py (replaced by Plan 008 tests)
-  - Flag: tests that overlap with Plan 008 integrated tests
+  - Archive: test_correlation_validation.py (replaced by Plan 009 tests)
+  - Flag: tests that overlap with Plan 009 integrated tests
 - [ ] 3. Update architecture docs:
   - `docs/agents/ARCHITECTURE.md`: add two-context pipeline diagram, PhaseFrequency, sequential delegation via _apply_delta
   - `docs/agents/ARCHITECTURE_MODEL.md`: add phase pipeline decomposition, state variable table with each phase that modifies it, assumption parameter reference
   - `docs/features/stress-perception.md`: correct PSS-10 vs Resilience r to -0.57 (Thomas & Zolkoski 2020)
   - `docs/features/resilience-dynamics.md`: update overload formula, add assumption param reference
-  - `docs/features/resource-management.md`: clarify PF vs interaction boundary, social exchange in Plan 004
+  - `docs/features/resource-management.md`: clarify PF vs interaction boundary, social exchange in Plan 005
   - `docs/features/agent-interactions.md`: document win-win/lose-lose state machine, support detection
 - [ ] 4. Remove Person.stressful_event() from docs and code references
 - [ ] 5. Run full test suite: `pytest src/python/tests/ -v`

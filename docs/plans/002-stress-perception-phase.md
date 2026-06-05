@@ -6,7 +6,7 @@ date: 2026-06-05
 
 # Overview
 
-Extract the event generation, appraisal, threshold, and is_stressed classification from agent.py:517-560 into a standalone event-driven phase function. This is the first phase called per stress event. Non-stressed events return early without coping. PSS-10 generation is NOT in this phase — it happens in Plan 002.
+Extract the event generation, appraisal, threshold, and is_stressed classification from agent.py:517-560 into a standalone event-driven phase function. This is the first phase called per stress event. Non-stressed events return early without coping. PSS-10 generation is NOT in this phase — it happens in Plan 003.
 
 # Goals
 
@@ -30,7 +30,7 @@ Extract the event generation, appraisal, threshold, and is_stressed classificati
   - Returns PhaseOutput with state_delta (challenge, hindrance, is_stressed, event attrs, stress dimensions) and observation (event attrs, appraisal, threshold)
 - [ ] 3. Extract code from agent.py:517-560 (stressful_event top through non-stressed return)
 - [ ] 4. Keep helpers in stress_utils.py: generate_stress_event, apply_weights, evaluate_stress_threshold, update_stress_dimensions_from_event
-- [ ] 5. Hardcoded constants in stress_utils.py noted for Plan 006 parameterization (not changed now)
+- [ ] 5. Hardcoded constants in stress_utils.py noted for Plan 007 parameterization (not changed now)
 - [ ] 6. Run: `pytest src/python/tests/test_stress_perception_theory.py -v`
 
 # Risks
@@ -38,7 +38,7 @@ Extract the event generation, appraisal, threshold, and is_stressed classificati
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
 | Non-stressed path no-op misunderstood | Med | High | Test verifies update_stress_dimensions(is_stressful=False) returns inputs unchanged |
-| PSS-10 generation not in this phase | Low | Low | Document clearly; Plan 002 generates PSS-10 after coping |
+| PSS-10 generation not in this phase | Low | Low | Document clearly; Plan 003 generates PSS-10 after coping |
 
 # UAT
 

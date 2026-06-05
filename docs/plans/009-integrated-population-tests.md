@@ -6,7 +6,7 @@ date: 2026-06-05
 
 # Overview
 
-Test the fully assembled simulation (post-Plan 007) against empirically-sourced correlation targets. Includes a calibration step to bring PSS-10 population mean from ~24.8 to the literature norm of 13-15. Adds src/python/calibration/ for batch tuning. References 11 correlations with source citations and 95% CIs.
+Test the fully assembled simulation (post-Plan 008) against empirically-sourced correlation targets. Includes a calibration step to bring PSS-10 population mean from ~24.8 to the literature norm of 13-15. Adds src/python/calibration/ for batch tuning. References 11 correlations with source citations and 95% CIs.
 
 # Goals
 

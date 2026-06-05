@@ -44,7 +44,7 @@ Convert the Python demo scripts to Quarto (.qmd) documents. Each demo runs its p
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
 | quarto not available in environment | Med | Low | Add to pixi dependencies |
-| Demo uses unpublished phase API | Low | Med | Demos written AFTER Plan 007 orchestrator is stable |
+| Demo uses unpublished phase API | Low | Med | Demos written AFTER Plan 008 orchestrator is stable |
 
 # UAT
 

@@ -36,7 +36,7 @@ Extract social interaction, mutual affect/resilience convergence, and resource e
     - (F,F,_) -> both PF social_support +small_boost, resources unchanged
   - Returns (self_delta, partner_delta) with affect, resilience, resources, protective_factors keys
 - [ ] 3. Extract from agent.py:382-504 and process_social_resource_exchange from resource_utils.py
-- [ ] 4. Hardcoded constants (support_threshold=0.05, boost=0.10, etc.) noted for Plan 006
+- [ ] 4. Hardcoded constants (support_threshold=0.05, boost=0.10, etc.) noted for Plan 007
 - [ ] 5. Run: `pytest src/python/tests/test_interaction_theory.py -v`
 
 # Risks

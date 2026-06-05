@@ -6,14 +6,14 @@ date: 2026-06-05
 
 # Overview
 
-Rewrite Person.step() as a two-loop orchestrator that calls event-driven phases inside the subevent loop and daily consolidation phases after it. This is the integration point: all 5 phases must be implemented (Plans 001-005) and parameterized (Plan 006) before this starts. The signature freeze checkpoint prevents API drift.
+Rewrite Person.step() as a two-loop orchestrator that calls event-driven phases inside the subevent loop and daily consolidation phases after it. This is the integration point: all 5 phases must be implemented (Plans 002-006) and parameterized (Plan 007) before this starts. The signature freeze checkpoint prevents API drift.
 
 # Goals
 
 - Signature freeze: tests/phase_signatures.py asserts all phase interfaces are locked
 - Person.step() delegates to event-driven phase functions (loop) + daily phases (consolidation)
-- Person.stressful_event() removed (decomposed into Plans 001-002)
-- Person.interact() simplified to call Plan 004 phase function
+- Person.stressful_event() removed (decomposed into Plans 002-003)
+- Person.interact() simplified to call Plan 005 phase function
 - _apply_delta() is the single merge point for sequential delegation
 - All existing tests pass (behavioral regression)
 
@@ -24,7 +24,7 @@ Rewrite Person.step() as a two-loop orchestrator that calls event-driven phases 
   - Correct PHASE_FREQUENCY per phase
   - Correct parameter count and return type
   - All state_delta keys documented in AgentState
-  - Plan 004: return type is Tuple[PhaseOutput, PhaseOutput]
+  - Plan 005: return type is Tuple[PhaseOutput, PhaseOutput]
 - [ ] 2. Add orchestrator helpers to Person:
   - `_build_agent_state()` -> AgentState (reads self.*)
   - `_apply_delta(state, delta)` -> new state (dict merge, sequential)
