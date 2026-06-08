@@ -218,7 +218,7 @@ class TestEndToEndWorkflows:
         with patch("numpy.random.random", return_value=0.4):
             new_affect, new_resilience, new_stress, coped_successfully = (
                 determine_coping_outcome_and_psychological_impact(
-                    current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
+                    current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config=config
                 )
             )
 
@@ -404,7 +404,7 @@ class TestErrorHandling:
 
         # Should handle extreme values gracefully
         new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
-            current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config
+            current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config=config
         )
 
         # All values should still be in valid ranges
