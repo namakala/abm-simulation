@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 
 from src.python.config import get_config
 from src.python.math_utils import clamp
+from src.python.resource_utils import ResourceOptimizationConfig
+from src.python.stress_utils import compute_event_difficulty
 
 # Load configuration
 config = get_config()
@@ -556,16 +558,6 @@ def compute_stress_decay(current_stress: float, config: Optional[StressProcessin
     return clamp(decayed_stress, 0.0, 1.0)
 
 
-@dataclass
-class ResourceOptimizationConfig:
-    """Configuration parameters for resilience-based resource optimization."""
-
-    base_resource_cost: float = field(default_factory=lambda: get_config().get("agent", "resource_cost"))
-    resilience_efficiency_factor: float = 0.3  # 30% efficiency gain from resilience
-    minimum_resource_threshold: float = 0.05  # Minimum resources needed for allocation
-    coping_difficulty_scale: float = 0.5  # Scale for event difficulty effects
-
-
 def compute_resilience_optimized_resource_cost(
     base_cost: float,
     current_resilience: float,
@@ -593,7 +585,7 @@ def compute_resilience_optimized_resource_cost(
         config = ResourceOptimizationConfig()
 
     # Base cost influenced by event difficulty (hindrance is more costly)
-    event_difficulty = challenge * 0.7 + hindrance * 1.3  # Hindrance is 30% more difficult
+    event_difficulty = compute_event_difficulty(challenge, hindrance)
     difficulty_multiplier = 1.0 + (event_difficulty * config.coping_difficulty_scale)
 
     # Resilience provides efficiency gains
@@ -807,7 +799,8 @@ def allocate_resilience_optimized_resources(
     ]
 
     # Resilience improves allocation decisions by reducing temperature (more focused allocation)
-    base_temperature = config.get("utility", "softmax_temperature") if hasattr(config, "get") else 1.0
+    cfg = get_config()
+    base_temperature = cfg.get("utility", "softmax_temperature")
     resilience_focus = current_resilience * 0.5  # Higher resilience = more focused allocation
     temperature = max(0.1, base_temperature - resilience_focus)
 
@@ -871,6 +864,7 @@ def determine_coping_outcome_and_psychological_impact(
     challenge: float,
     hindrance: float,
     neighbor_affects: List[float],
+    rng: Optional[np.random.Generator] = None,
     config: Optional[StressProcessingConfig] = None,
 ) -> tuple[float, float, float, bool]:
     """
@@ -883,6 +877,7 @@ def determine_coping_outcome_and_psychological_impact(
         challenge: Challenge component from event appraisal (0-1)
         hindrance: Hindrance component from event appraisal (0-1)
         neighbor_affects: List of neighbor affect values
+        rng: Random number generator for reproducible testing
         config: Stress processing configuration
 
     Returns:
@@ -895,7 +890,9 @@ def determine_coping_outcome_and_psychological_impact(
     coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
 
     # Determine if coping was successful
-    coped_successfully = np.random.random() < coping_prob
+    if rng is None:
+        rng = np.random.default_rng()
+    coped_successfully = rng.random() < coping_prob
 
     # Compute resilience effect based on challenge/hindrance and coping outcome
     resilience_effect = compute_challenge_hindrance_resilience_effect(challenge, hindrance, coped_successfully, config)

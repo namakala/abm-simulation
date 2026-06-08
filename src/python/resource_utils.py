@@ -14,6 +14,7 @@ from typing import Dict, Optional, Tuple
 from dataclasses import dataclass, field
 
 from src.python.config import get_config
+from src.python.stress_utils import compute_event_difficulty
 
 # Load configuration
 config = get_config()
@@ -45,7 +46,7 @@ class ResourceOptimizationConfig:
     """Configuration parameters for resilience-based resource optimization."""
 
     base_resource_cost: float = field(default_factory=lambda: get_config().get("agent", "resource_cost"))
-    resilience_efficiency_factor: float = 0.15  # 15% efficiency gain from resilience
+    resilience_efficiency_factor: float = 0.3  # 30% efficiency gain from resilience
     minimum_resource_threshold: float = 0.05  # Minimum resources needed for allocation
     coping_difficulty_scale: float = 0.5  # Scale for event difficulty effects
     stressed_resource_floor: float = 0.1  # Minimum resources maintained for stressed agents
@@ -169,7 +170,7 @@ def compute_resilience_optimized_resource_cost(
         config = ResourceOptimizationConfig()
 
     # Base cost influenced by event difficulty (hindrance is more costly)
-    event_difficulty = challenge * 0.7 + hindrance * 1.3  # Hindrance is 30% more difficult
+    event_difficulty = compute_event_difficulty(challenge, hindrance)
     difficulty_multiplier = 1.0 + (event_difficulty * config.coping_difficulty_scale)
 
     # Resilience provides efficiency gains
@@ -288,7 +289,8 @@ def allocate_resilience_optimized_resources(
     ]
 
     # Resilience improves allocation decisions by reducing temperature (more focused allocation)
-    base_temperature = config.get("utility", "softmax_temperature") if hasattr(config, "get") else 1.0
+    cfg = get_config()
+    base_temperature = cfg.get("utility", "softmax_temperature")
     resilience_focus = current_resilience * 0.5  # Higher resilience = more focused allocation
     temperature = max(0.1, base_temperature - resilience_focus)
 
@@ -336,10 +338,10 @@ def compute_resource_depletion_with_resilience(
 
     # Failed coping attempts cost more (inefficient resource use)
     if not coping_successful:
-        optimized_cost *= 1.1  # 10% penalty for failed coping
+        optimized_cost *= 1.3  # 30% penalty for failed coping
 
     # Ensure minimum cost even with very high resilience
-    optimized_cost = max(cost * 0.1, optimized_cost)
+    optimized_cost = max(cost * 0.3, optimized_cost)
 
     # Deplete resources
     remaining_resources = max(0.0, current_resources - optimized_cost)

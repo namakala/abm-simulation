@@ -173,6 +173,12 @@ class Person(mesa.Agent):
         # Initialize agent-specific volatility from Beta(1,1) distribution
         self.volatility = self._rng.beta(1, 1)
 
+        # Track stress breach count for network adaptation
+        self.stress_breach_count = 0
+
+        # Track whether network adaptation has been applied
+        self._adapted_network = False
+
     def _initialize_pss10_scores(self):
         """
         Initialize PSS-10 scores and map to stress levels during agent creation.
@@ -565,6 +571,8 @@ class Person(mesa.Agent):
                     coped_successfully=True,  # No coping needed for non-stressful events
                     is_stressful=False,
                     volatility=self.volatility,
+                    recent_stress_intensity=self.recent_stress_intensity,
+                    stress_momentum=self.stress_momentum,
                 )
             )
             return challenge, hindrance
@@ -581,6 +589,7 @@ class Person(mesa.Agent):
             challenge=challenge,
             hindrance=hindrance,
             neighbor_affects=neighbor_affects,
+            rng=self._rng,
             config=stress_config,
         )
 
@@ -599,6 +608,8 @@ class Person(mesa.Agent):
                 coped_successfully=coped_successfully,
                 is_stressful=True,
                 volatility=self.volatility,
+                recent_stress_intensity=self.recent_stress_intensity,
+                stress_momentum=self.stress_momentum,
             )
         )
 
@@ -634,6 +645,7 @@ class Person(mesa.Agent):
             stress_overload=self.stress_overload,
             pss10_score=self.pss10,
             current_stress=self.current_stress,
+            pss10_responses=self.pss10_responses,
         )
 
         # Update the tracked event with complete processing results
@@ -678,7 +690,7 @@ class Person(mesa.Agent):
             self.consecutive_hindrances = 0.0
 
         # STEP 10: Track stress breach count for network adaptation
-        self.stress_breach_count = getattr(self, "stress_breach_count", 0) + 1
+        self.stress_breach_count += 1
 
         # STEP 11: Allocate resources to protective factors with complete stress integration
         if is_stressed and coped_successfully:
