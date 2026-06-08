@@ -13,6 +13,49 @@ from src.python.stress_utils import generate_stress_event
 from src.python.agent import Person
 from src.python.affect_utils import ProtectiveFactors, InteractionConfig, ResourceParams
 from src.python.stress_utils import ThresholdParams, AppraisalWeights
+from src.python.phases.interfaces import AgentState
+
+
+# ── Phase-specific fixtures ──────────────────────────────────────
+
+
+@pytest.fixture
+def phase_minimal_state():
+    """Minimal AgentState for phase function tests."""
+    return AgentState(
+        resilience=0.5,
+        affect=0.0,
+        resources=0.6,
+        baseline_resilience=0.5,
+        baseline_affect=0.0,
+        current_stress=0.3,
+        protective_factors={
+            "social_support": 0.5,
+            "family_support": 0.5,
+            "formal_intervention": 0.5,
+            "psychological_capital": 0.5,
+        },
+        pss10=15,
+        stressed=False,
+        daily_interactions=0,
+        daily_support_exchanges=0,
+        stress_controllability=0.5,
+        stress_overload=0.5,
+        consecutive_hindrances=0.0,
+        volatility=0.3,
+        stress_config={},
+        interaction_config={},
+    )
+
+
+@pytest.fixture
+def phase_config():
+    """Generic phase configuration dict."""
+    return {
+        "threshold": 0.5,
+        "influence_rate": 0.1,
+        "decay_rate": 0.05,
+    }
 
 
 @pytest.fixture
