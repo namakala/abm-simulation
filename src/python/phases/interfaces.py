@@ -3,7 +3,7 @@
 Every phase function accepts (state, config, rng) and returns PhaseOutput.
 """
 
-from typing import Any, Dict, Generator, List, Literal, Optional, Protocol, TypedDict, Union
+from typing import Any, Dict, List, Literal, Protocol, TypedDict
 
 from numpy.random import Generator
 

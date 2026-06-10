@@ -261,8 +261,6 @@ class TestNamespaceIsolation:
         """Phase __init__.py does not leak unrelated names."""
         import src.python.phases
         internal = dir(src.python.phases)
-        # Should not contain internal implementation details from submodules
-        unexpected = [n for n in internal if n.startswith("_") and n != "__all__"]
         # Allow dunder names
         undesired = [n for n in internal if n not in src.python.phases.__all__ and not n.startswith("__")]
         if undesired:
