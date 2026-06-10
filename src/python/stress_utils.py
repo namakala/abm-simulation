@@ -870,6 +870,8 @@ def update_stress_dimensions_from_event(
     coped_successfully: bool,
     is_stressful: bool = True,
     volatility: float = 0.5,
+    recent_stress_intensity: float = 0.0,
+    stress_momentum: float = 0.0,
     config: Optional[Dict[str, float]] = None,
 ) -> Tuple[float, float, float, float]:
     """
@@ -883,6 +885,8 @@ def update_stress_dimensions_from_event(
         coped_successfully: Whether the coping attempt was successful
         is_stressful: Whether the event is stressful (True) or non-stressful (False)
         volatility: Agent-specific volatility parameter ∈ [0,1] drawn from Beta(1,1)
+        recent_stress_intensity: Current recent stress intensity (passed from agent state)
+        stress_momentum: Current stress momentum (passed from agent state)
         config: Configuration for stress dimension updates
 
     Returns:
@@ -942,7 +946,9 @@ def update_stress_dimensions_from_event(
     updated_overload = clamp(updated_overload, 0.0, 1.0)
 
     # Update recent stress intensity and momentum for dynamic PSS-10 response
-    recent_stress_intensity, stress_momentum = _update_recent_stress_intensity(challenge, hindrance, coped_successfully)
+    recent_stress_intensity, stress_momentum = _update_recent_stress_intensity(
+        challenge, hindrance, coped_successfully, recent_stress_intensity, stress_momentum
+    )
 
     recent_stress_intensity *= volatility
 
@@ -954,8 +960,29 @@ def update_stress_dimensions_from_event(
     return updated_controllability, updated_overload, recent_stress_intensity, stress_momentum
 
 
+def compute_event_difficulty(challenge: float, hindrance: float) -> float:
+    """
+    Compute the overall difficulty of a stress event from challenge and hindrance components.
+
+    Hindrance contributes more to difficulty than challenge, reflecting the
+    asymmetric impact of hindrance events on psychological strain.
+
+    Args:
+        challenge: Challenge component from event appraisal (0-1)
+        hindrance: Hindrance component from event appraisal (0-1)
+
+    Returns:
+        Event difficulty score
+    """
+    return challenge * 0.7 + hindrance * 1.3
+
+
 def _update_recent_stress_intensity(
-    challenge: float, hindrance: float, coped_successfully: bool
+    challenge: float,
+    hindrance: float,
+    coped_successfully: bool,
+    recent_stress_intensity: float = 0.0,
+    stress_momentum: float = 0.0,
 ) -> Tuple[float, float]:
     """
     Update recent stress intensity and momentum for dynamic PSS-10 calculation.
@@ -964,12 +991,14 @@ def _update_recent_stress_intensity(
         challenge: Challenge component from event appraisal (0-1)
         hindrance: Hindrance component from event appraisal (0-1)
         coped_successfully: Whether the coping attempt was successful
+        recent_stress_intensity: Current recent stress intensity (passed from agent state)
+        stress_momentum: Current stress momentum (passed from agent state)
 
     Returns:
         Tuple of (recent_stress_intensity, stress_momentum)
     """
     # Calculate event stress intensity (hindrance is more intense than challenge)
-    event_intensity = (challenge * 0.7) + (hindrance * 1.3)
+    event_intensity = compute_event_difficulty(challenge, hindrance)
 
     # Adjust intensity based on coping outcome
     if not coped_successfully:
@@ -977,17 +1006,16 @@ def _update_recent_stress_intensity(
 
     # Update recent stress intensity with decay of previous intensity
     decay_rate = 0.8  # How quickly previous intensity fades
-    recent_stress_intensity = 0.0  # This would need to be passed in from agent state
     recent_stress_intensity = (recent_stress_intensity * decay_rate) + (event_intensity * 0.2)
 
     # Update stress momentum (rate of change)
     # Positive momentum means stress is increasing
     if event_intensity > recent_stress_intensity * decay_rate:
         # Stress is increasing
-        stress_momentum = min(1.0, 0.0 + 0.1)  # This would need to be passed in from agent state
+        stress_momentum = min(1.0, stress_momentum + 0.1)
     else:
         # Stress is decreasing or stable
-        stress_momentum = max(-1.0, 0.0 - 0.05)  # This would need to be passed in from agent state
+        stress_momentum = max(-1.0, stress_momentum - 0.05)
 
     return recent_stress_intensity, stress_momentum
 
@@ -1101,6 +1129,7 @@ def validate_theoretical_correlations(
     stress_overload: float,
     pss10_score: int,
     current_stress: float,
+    pss10_responses: Optional[Dict[int, int]] = None,
 ) -> bool:
     """
     Validate that theoretical correlations between stress processing components are maintained.
@@ -1113,6 +1142,7 @@ def validate_theoretical_correlations(
         stress_overload: Current stress overload
         pss10_score: Current PSS-10 score
         current_stress: Current stress level
+        pss10_responses: Optional PSS-10 item responses for feedback validation
 
     Returns:
         True if all validations pass, False otherwise
@@ -1161,7 +1191,7 @@ def validate_theoretical_correlations(
 
     # Validate 8: Feedback loop consistency
     # The feedback from PSS-10 to stress dimensions should be reasonable
-    if pss10_responses := {}:  # This would need to be passed in
+    if pss10_responses is not None:
         pss10_controllability = extract_controllability_from_pss10(pss10_responses)
         pss10_overload = extract_overload_from_pss10(pss10_responses)
 

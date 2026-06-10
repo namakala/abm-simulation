@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+export DOTENV_FILE=.env.example
+
+echo "==> Running pre-push checks (CI/CD mirror)..."
+
+pixi run prettify
+pixi run format
+pixi run lint
+pixi run test-cov
+pixi run test-config
+
+echo "==> All pre-push checks passed!"

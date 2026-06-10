@@ -11,15 +11,10 @@ This script specifically tests:
 6. Daily reset mechanism works correctly
 """
 
-import os
-import sys
 import traceback
 import numpy as np
 
-# Add src/python to path for imports
-sys.path.append(os.path.join(os.path.dirname(__file__), "src", "python"))
-
-from model import StressModel
+from src.python.model import StressModel
 
 
 def test_basic_social_interaction_collection():

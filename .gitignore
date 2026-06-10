@@ -95,3 +95,4 @@ target/
 *.env*
 **/.archive/**
 !**/.archive/.gitkeep
+matplotlib-*/

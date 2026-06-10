@@ -3,7 +3,7 @@
 Test script to verify the new stress processing mechanisms work correctly.
 """
 
-from affect_utils import (
+from src.python.affect_utils import (
     compute_coping_probability,
     compute_challenge_hindrance_resilience_effect,
     compute_daily_affect_reset,
