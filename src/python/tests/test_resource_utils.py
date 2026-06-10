@@ -10,7 +10,6 @@ This module tests all functions in resource_utils.py including:
 """
 
 from src.python.model import StressModel
-import pytest
 
 from src.python.resource_utils import (
     ProtectiveFactors,
@@ -254,7 +253,6 @@ class TestComputeResourceEfficiencyGain:
         config = ResourceOptimizationConfig()
         gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, config)
         assert gain == 1.0 + (0.2 * 0.3)  # surplus * factor
-
 
     def test_no_gain_below_baseline(self):
         """Test no gain when current < baseline."""
@@ -1030,7 +1028,6 @@ class TestResourceCorrelations:
             else:
                 seed_details.append(f"seed={seed}: FAIL [{'; '.join(var_msgs)}]")
 
-        assert passed_seeds >= min_passes, (
-            f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n"
-            + "\n".join(seed_details)
-        )
+        assert (
+            passed_seeds >= min_passes
+        ), f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)

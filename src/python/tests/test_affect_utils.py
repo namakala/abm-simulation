@@ -353,7 +353,13 @@ class TestNewStressProcessingMechanisms:
         with patch("numpy.random.random", return_value=0.5):
             new_affect, new_resilience, new_stress, coped_successfully = (
                 determine_coping_outcome_and_psychological_impact(
-                    current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, config=config
+                    current_affect,
+                    current_resilience,
+                    current_stress,
+                    challenge,
+                    hindrance,
+                    neighbor_affects,
+                    config=config,
                 )
             )
 

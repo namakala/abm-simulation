@@ -205,10 +205,12 @@ pixi shell
 # Or run a single command in the environment
 pixi run python --version
 
-# Set up pre-commit hooks (optional)
-git config core.hooksPath .githooks
+# Activate hooks (required — prevents CI/CD failures)
+pixi run install-hooks
 
-The hook runs `pixi run prettify && pixi run format && pixi run lint` always, and only runs tests (`pixi run test-cov && pixi run test-config`) when `*.py` files are staged.
+**pre-commit** (fast check): Runs `pixi run prettify && pixi run format && pixi run lint` always, and runs tests (`pixi run test-cov && pixi run test-config`) when `*.py` files are staged.
+
+**pre-push** (CI/CD mirror): Runs the full pipeline `pixi run prettify && pixi run format && pixi run lint && pixi run test-cov && pixi run test-config` on every push. This matches the GitHub Actions workflow in `.github/workflows/coverage-test.yml`.
 ```
 
 ### Running Tests During Development

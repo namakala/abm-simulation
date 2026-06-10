@@ -15,7 +15,6 @@ from src.python.affect_utils import ProtectiveFactors, InteractionConfig, Resour
 from src.python.stress_utils import ThresholdParams, AppraisalWeights
 from src.python.phases.interfaces import AgentState
 
-
 # ── Phase-specific fixtures ──────────────────────────────────────
 
 

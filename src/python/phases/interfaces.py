@@ -97,5 +97,4 @@ class PhaseFunction(Protocol):
         state: AgentState,
         config: Dict[str, Any],
         rng: Generator,
-    ) -> PhaseOutput:
-        ...
+    ) -> PhaseOutput: ...

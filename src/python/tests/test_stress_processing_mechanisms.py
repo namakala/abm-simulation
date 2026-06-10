@@ -361,10 +361,15 @@ class TestCompleteStressProcessingPipeline:
         hindrance = 0.2  # Low hindrance should increase coping probability
         neighbor_affects = [0.5, 0.7]  # Positive social influence
 
-        new_affect, new_resilience, new_stress, coped_successfully = (
-            determine_coping_outcome_and_psychological_impact(
-                current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, rng=rng, config=config
-            )
+        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
+            current_affect,
+            current_resilience,
+            current_stress,
+            challenge,
+            hindrance,
+            neighbor_affects,
+            rng=rng,
+            config=config,
         )
 
         # With high challenge and positive social influence, coping should succeed
@@ -389,10 +394,15 @@ class TestCompleteStressProcessingPipeline:
         hindrance = 0.8  # High hindrance should decrease coping probability
         neighbor_affects = [-0.5, -0.7]  # Negative social influence
 
-        new_affect, new_resilience, new_stress, coped_successfully = (
-            determine_coping_outcome_and_psychological_impact(
-                current_affect, current_resilience, current_stress, challenge, hindrance, neighbor_affects, rng=rng, config=config
-            )
+        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
+            current_affect,
+            current_resilience,
+            current_stress,
+            challenge,
+            hindrance,
+            neighbor_affects,
+            rng=rng,
+            config=config,
         )
 
         # With low challenge and negative social influence, coping should fail

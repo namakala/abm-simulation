@@ -49,6 +49,7 @@ class TestPhaseImports:
     def test_all_imported(self):
         """All expected names are importable from src.python.phases."""
         from src.python.phases import __all__ as phases_all
+
         expected = [
             "AgentState",
             "PhaseOutput",
@@ -77,12 +78,20 @@ class TestPhaseImports:
         """AgentState TypedDict contains all documented fields."""
         hints = get_type_hints(AgentState)
         required = {
-            "resilience", "affect", "resources",
-            "baseline_resilience", "baseline_affect",
-            "protective_factors", "current_stress",
-            "pss10", "stressed", "volatility",
-            "daily_interactions", "daily_support_exchanges",
-            "stress_controllability", "stress_overload",
+            "resilience",
+            "affect",
+            "resources",
+            "baseline_resilience",
+            "baseline_affect",
+            "protective_factors",
+            "current_stress",
+            "pss10",
+            "stressed",
+            "volatility",
+            "daily_interactions",
+            "daily_support_exchanges",
+            "stress_controllability",
+            "stress_overload",
             "consecutive_hindrances",
         }
         missing = required - set(hints.keys())
@@ -139,6 +148,7 @@ class TestPhaseFunctionProtocol:
     def test_accepts_three_args(self, name, fn, _, __):
         """run_phase accepts (state, config, rng)."""
         import inspect
+
         sig = inspect.signature(fn)
         params = list(sig.parameters.keys())
         assert len(params) >= 3, f"{name}: expected ≥3 params, got {params}"
@@ -175,7 +185,9 @@ class TestStubBehaviour:
             fn({}, {}, sample_rng)
 
     @pytest.mark.parametrize("name,fn,_,__", PHASE_MODULES)
-    def test_all_stubs_raise_before_any_side_effect(self, name, fn, _, __, phase_minimal_state, phase_config, sample_rng):
+    def test_all_stubs_raise_before_any_side_effect(
+        self, name, fn, _, __, phase_minimal_state, phase_config, sample_rng
+    ):
         """No side effects occur before the NotImplementedError."""
         state_before = dict(phase_minimal_state)
         with pytest.raises(NotImplementedError):
@@ -260,6 +272,7 @@ class TestNamespaceIsolation:
     def test_no_pollution(self):
         """Phase __init__.py does not leak unrelated names."""
         import src.python.phases
+
         internal = dir(src.python.phases)
         # Allow dunder names
         undesired = [n for n in internal if n not in src.python.phases.__all__ and not n.startswith("__")]

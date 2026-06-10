@@ -65,10 +65,9 @@ class TestTheoreticalCorrelationsAgentLevel:
             else:
                 seed_details.append(f"seed={seed}: FAIL (r={correlation:.4f}, p={p_value:.4f})")
 
-        assert passed_seeds >= min_passes, (
-            f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n"
-            + "\n".join(seed_details)
-        )
+        assert (
+            passed_seeds >= min_passes
+        ), f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
 
     def test_pss10_resilience_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resilience."""
@@ -217,10 +216,9 @@ class TestTheoreticalCorrelationsAgentLevel:
             else:
                 seed_details.append(f"seed={seed}: FAIL (r={correlation:.4f}, p={p_value:.4f})")
 
-        assert passed_seeds >= min_passes, (
-            f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n"
-            + "\n".join(seed_details)
-        )
+        assert (
+            passed_seeds >= min_passes
+        ), f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
 
 
 class TestTheoreticalCorrelationsPopulationLevel:
@@ -253,10 +251,9 @@ class TestTheoreticalCorrelationsPopulationLevel:
             else:
                 seed_details.append(f"seed={seed}: FAIL (r={correlation:.4f}, p={p_value:.4f})")
 
-        assert passed_seeds >= min_passes, (
-            f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n"
-            + "\n".join(seed_details)
-        )
+        assert (
+            passed_seeds >= min_passes
+        ), f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
 
     def test_avg_pss10_avg_resilience_negative_correlation(self):
         """Test that average PSS-10 negatively correlates with average resilience over time."""

@@ -23,6 +23,7 @@ sort-imports = "isort src/python/"
 security-bandit = "bandit -r src/python/"
 extract-env = "bash src/shell/extract_env.sh"
 update-env-example = "bash src/shell/update_env_example.sh"
+install-hooks = "git config core.hooksPath .githooks"
 
 [dependencies]
 mesa = "3.3.0.*"
