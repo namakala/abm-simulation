@@ -39,7 +39,7 @@ PHASE_MODULES = [
 ]
 
 # Modules that are still stubs (raise NotImplementedError)
-STUB_MODULES = [m for m in PHASE_MODULES if m[0] != "stress_perception"]
+STUB_MODULES = [m for m in PHASE_MODULES if m[0] not in ("stress_perception", "resilience_activation")]
 
 # ──────────────────────────────────────────────
 # Import & structural tests
