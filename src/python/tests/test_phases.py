@@ -38,6 +38,9 @@ PHASE_MODULES = [
     ("interaction", run_interaction, INTERACTION_FREQUENCY, "event_driven"),
 ]
 
+# Modules that are still stubs (raise NotImplementedError)
+STUB_MODULES = [m for m in PHASE_MODULES if m[0] != "stress_perception"]
+
 # ──────────────────────────────────────────────
 # Import & structural tests
 # ──────────────────────────────────────────────
@@ -170,21 +173,21 @@ class TestPhaseFunctionProtocol:
 
 
 class TestStubBehaviour:
-    """Stub phase functions raise NotImplementedError."""
+    """Stub phase functions raise NotImplementedError (stress_perception excluded)."""
 
-    @pytest.mark.parametrize("name,fn,_,__", PHASE_MODULES)
+    @pytest.mark.parametrize("name,fn,_,__", STUB_MODULES)
     def test_raises_not_implemented(self, name, fn, _, __, phase_minimal_state, phase_config, sample_rng):
         """Calling a stub run_phase raises NotImplementedError."""
         with pytest.raises(NotImplementedError, match="not yet implemented"):
             fn(phase_minimal_state, phase_config, sample_rng)
 
-    @pytest.mark.parametrize("name,fn,_,__", PHASE_MODULES)
+    @pytest.mark.parametrize("name,fn,_,__", STUB_MODULES)
     def test_raises_with_empty_state(self, name, fn, _, __, sample_rng):
         """Calling with empty state also raises NotImplementedError."""
         with pytest.raises(NotImplementedError):
             fn({}, {}, sample_rng)
 
-    @pytest.mark.parametrize("name,fn,_,__", PHASE_MODULES)
+    @pytest.mark.parametrize("name,fn,_,__", STUB_MODULES)
     def test_all_stubs_raise_before_any_side_effect(
         self, name, fn, _, __, phase_minimal_state, phase_config, sample_rng
     ):
@@ -204,7 +207,7 @@ class TestStubBehaviour:
 class TestRNGDeterminism:
     """Same seed produces same NotImplementedError (no flaky behaviour)."""
 
-    @pytest.mark.parametrize("name,fn,_,__", PHASE_MODULES)
+    @pytest.mark.parametrize("name,fn,_,__", STUB_MODULES)
     def test_deterministic_not_implemented(self, name, fn, _, __, phase_minimal_state, phase_config):
         """Seeded RNG produces consistent results (both raise)."""
         rng1 = np.random.default_rng(42)
@@ -223,7 +226,7 @@ class TestRNGDeterminism:
 class TestEdgeCases:
     """Resilience to extreme or minimal inputs (all raise NotImplementedError)."""
 
-    @pytest.mark.parametrize("name,fn,_,__", PHASE_MODULES)
+    @pytest.mark.parametrize("name,fn,_,__", STUB_MODULES)
     def test_extreme_state_values(self, name, fn, _, __, sample_rng):
         """Extreme boundary state values don't cause unexpected errors (just NotImplementedError)."""
         extreme_state = AgentState(
@@ -253,7 +256,7 @@ class TestEdgeCases:
         with pytest.raises(NotImplementedError):
             fn(extreme_state, {}, sample_rng)
 
-    @pytest.mark.parametrize("name,fn,_,__", PHASE_MODULES)
+    @pytest.mark.parametrize("name,fn,_,__", STUB_MODULES)
     def test_none_rng(self, name, fn, _, __, phase_minimal_state, phase_config):
         """None RNG raises TypeError before NotImplementedError (if fn uses rng)."""
         # Accept either TypeError (RNG usage) or NotImplementedError (stub)
