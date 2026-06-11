@@ -134,7 +134,9 @@ class TestAgentIntegration:
         config = StressProcessingConfig(base_coping_probability=0.5, social_influence_factor=0.2)
 
         # Calculate coping probability with positive social influence
-        coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+        coping_prob = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.0, config=config
+        )
 
         # Should be higher than base probability due to positive social influence
         expected_base = 0.5 + (config.challenge_bonus * challenge) - (config.hindrance_penalty * hindrance)
@@ -428,7 +430,7 @@ class TestErrorHandling:
 
         # Should handle gracefully or raise appropriate error
         try:
-            coping_prob = compute_coping_probability(challenge, hindrance, [], config)
+            coping_prob = compute_coping_probability(challenge, hindrance, [], current_resilience=0.0, config=config)
             # If it doesn't raise an error, result should be handled appropriately
             assert isinstance(coping_prob, float)
         except (ValueError, TypeError):

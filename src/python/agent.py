@@ -103,8 +103,14 @@ class Person(mesa.Agent):
             }
 
         # Random number generator for reproducible testing
+        # Use model seed combined with unique_id for per-agent determinism
         # Note: Mesa Agent base class has 'rng' property, so we use '_rng'
-        self._rng = create_rng(getattr(model, "seed", None))
+        model_seed = getattr(model, "seed", None)
+        if model_seed is not None and self.unique_id is not None:
+            agent_seed = model_seed + self.unique_id
+        else:
+            agent_seed = model_seed
+        self._rng = create_rng(agent_seed)
 
         # Initialize state variables using new transformation pipeline
         # Use sigmoid_transform for [0,1] bounds (resilience, baseline_resilience, resources)
@@ -619,6 +625,8 @@ class Person(mesa.Agent):
             stress_overload=self.stress_overload,
             recent_stress_intensity=self.recent_stress_intensity,
             stress_momentum=self.stress_momentum,
+            affect=self.affect,
+            resources=self.resources,
             rng=self._rng,
         )
         self.pss10_responses = pss10_data["pss10_responses"]

@@ -33,7 +33,9 @@ class TestCopingProbability:
         hindrance = 0.2
         neighbor_affects = [0.5, 0.3, 0.7]  # Positive average
 
-        coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+        coping_prob = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.0, config=config
+        )
 
         # Should be in valid range
         assert 0.0 <= coping_prob <= 1.0
@@ -55,7 +57,9 @@ class TestCopingProbability:
         hindrance = 0.8
         neighbor_affects = [-0.5, -0.3, -0.7]  # Negative average
 
-        coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+        coping_prob = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.0, config=config
+        )
 
         # Should be in valid range
         assert 0.0 <= coping_prob <= 1.0
@@ -77,7 +81,9 @@ class TestCopingProbability:
         hindrance = 0.5
         neighbor_affects = []
 
-        coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+        coping_prob = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.0, config=config
+        )
 
         # Should be in valid range
         assert 0.0 <= coping_prob <= 1.0
@@ -97,7 +103,9 @@ class TestCopingProbability:
         hindrance = 0.0
         neighbor_affects = [1.0, 1.0, 1.0]
 
-        coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+        coping_prob = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.0, config=config
+        )
 
         # Should be very high but may not reach exactly 1.0 due to implementation details
         assert coping_prob >= 0.7  # Should be reasonably high
@@ -107,7 +115,9 @@ class TestCopingProbability:
         hindrance = 1.0
         neighbor_affects = [-1.0, -1.0, -1.0]
 
-        coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+        coping_prob = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.0, config=config
+        )
 
         # Should be very low but may not reach exactly 0.0 due to implementation details
         assert coping_prob < 0.2  # Should be close to minimum

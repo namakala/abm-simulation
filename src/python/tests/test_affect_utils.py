@@ -297,7 +297,9 @@ class TestNewStressProcessingMechanisms:
         hindrance = 0.3
         neighbor_affects = [0.4, 0.6]
 
-        coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+        coping_prob = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.0, config=config
+        )
 
         # Should be in valid range
         assert 0.0 <= coping_prob <= 1.0

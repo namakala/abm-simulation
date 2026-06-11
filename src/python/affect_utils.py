@@ -425,18 +425,24 @@ class StressProcessingConfig:
 
 
 def compute_coping_probability(
-    challenge: float, hindrance: float, neighbor_affects: List[float], config: Optional[StressProcessingConfig] = None
+    challenge: float,
+    hindrance: float,
+    neighbor_affects: List[float],
+    current_resilience: float = 0.5,
+    config: Optional[StressProcessingConfig] = None,
 ) -> float:
     """
-    Compute coping success probability based on challenge/hindrance and social influence.
+    Compute coping success probability based on challenge/hindrance, social influence, and resilience.
 
     Challenge increases coping probability, hindrance decreases it.
     Positive neighbor affects increase probability, negative decrease it.
+    Higher resilience increases coping probability.
 
     Args:
         challenge: Challenge component from event appraisal (0-1)
         hindrance: Hindrance component from event appraisal (0-1)
         neighbor_affects: List of neighbor affect values
+        current_resilience: Agent's current resilience level (0-1)
         config: Stress processing configuration
 
     Returns:
@@ -458,8 +464,11 @@ def compute_coping_probability(
         avg_neighbor_affect = np.mean(neighbor_affects)
         social_effect = config.social_influence_factor * avg_neighbor_affect
 
+    # Resilience boosts coping ability
+    resilience_effect = 0.4 * current_resilience
+
     # Combine all effects
-    total_effect = challenge_effect + hindrance_effect + social_effect
+    total_effect = challenge_effect + hindrance_effect + social_effect + resilience_effect
 
     # Apply effects to base probability
     coping_prob = base_prob + total_effect
@@ -886,8 +895,8 @@ def determine_coping_outcome_and_psychological_impact(
     if config is None:
         config = StressProcessingConfig()
 
-    # Compute coping probability based on challenge/hindrance and social influence
-    coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, config)
+    # Compute coping probability based on challenge/hindrance, social influence, and resilience
+    coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, current_resilience, config)
 
     # Determine if coping was successful
     if rng is None:

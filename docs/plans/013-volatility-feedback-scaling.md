@@ -31,6 +31,7 @@ Cover 3 medium-severity gaps. The volatility parameter exists (agent.py:174) but
 - [ ] 2a. Move `update_stress_dimensions_from_pss10_feedback()` call from `agent.py:stressful_event()` into `process_pss10_consolidation()` (orchestrator-internal phase from Plan 008)
 - [ ] 2b. Move `validate_theoretical_correlations()` call from `stressful_event()` to `test_correlation_validation.py` -- it is a runtime assertion, not production control flow
 - [ ] 2c. Write test: PSS-10 feedback loop correctly updates stress dimensions from generated responses
+- [ ] 2d. Remove `@pytest.mark.flaky` from `test_resilience_affect_positive_correlation` (post-relocation correlation should be stable)
 
 ## Step 3: Extract Homeostatic Rate Scaling
 
