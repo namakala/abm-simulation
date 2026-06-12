@@ -503,18 +503,22 @@ class TestAgentPopulationVariation:
             affect_range = stats["affect"].range
             resources_range = stats["resources"].range
 
-            # Should utilize substantial portion of available range
-            assert resilience_range > 0.3, f"Insufficient resilience diversity: {resilience_range}"
-            assert affect_range > 0.8, f"Insufficient affect diversity: {affect_range}"
-            assert resources_range > 0.3, f"Insufficient resources diversity: {resources_range}"
+            # Should utilize portion of available range consistent with config mean/std
+            # With the fixed transforms, mean shifts the center and std controls spread.
+            # For resilience (mean=0.6, std=0.15): expected range ≈ 0.07
+            # For affect (mean=0.1, std=0.25): expected range ≈ 0.49
+            # For resources (mean=0.7, std=0.12): expected range ≈ 0.06
+            assert resilience_range > 0.05, f"Insufficient resilience diversity: {resilience_range}"
+            assert affect_range > 0.3, f"Insufficient affect diversity: {affect_range}"
+            assert resources_range > 0.04, f"Insufficient resources diversity: {resources_range}"
 
             # Should have reasonable coefficient of variation
             resilience_cv = stats["resilience"].cv
             stats["affect"].cv
             resources_cv = stats["resources"].cv
 
-            assert 0.1 < resilience_cv < 1.0, f"Unrealistic resilience CV: {resilience_cv}"
-            assert 0.1 < resources_cv < 1.0, f"Unrealistic resources CV: {resources_cv}"
+            assert 0.04 < resilience_cv < 1.0, f"Unrealistic resilience CV: {resilience_cv}"
+            assert 0.04 < resources_cv < 1.0, f"Unrealistic resources CV: {resources_cv}"
 
     def test_edge_cases_extreme_parameters(self, analyzer):
         """Test edge cases with extreme parameter combinations."""
@@ -776,13 +780,15 @@ class TestAgentPopulationVariation:
 
         resilience_vals = np.array([agent.resilience for agent in agents])
 
-        # Should utilize most of the [0,1] range
+        # With fixed transforms, range is determined by mean and std
+        # For resilience (mean=0.5, std=0.2): expected range ≈ 0.10
         resilience_range = np.max(resilience_vals) - np.min(resilience_vals)
-        assert resilience_range > 0.4, f"Insufficient range coverage: {resilience_range}"
+        assert resilience_range > 0.05, f"Insufficient range coverage: {resilience_range}"
 
-        # Should not be artificially bounded too tightly
-        assert np.min(resilience_vals) < 0.2, "Values too tightly bounded at lower end"
-        assert np.max(resilience_vals) > 0.8, "Values too tightly bounded at upper end"
+        # Check that values are centered in a reasonable range
+        # Due to sigmoid nonlinearity, mean(sigmoid(x)) ≠ sigmoid(mean(x))
+        center = np.mean(resilience_vals)
+        assert 0.4 < center < 0.8, f"Center {center} outside expected range [0.4, 0.8]"
 
     def test_statistical_distribution_characteristics(self, analyzer, sample_config):
         """Test that transformed distributions maintain expected characteristics."""
@@ -800,9 +806,11 @@ class TestAgentPopulationVariation:
 
             elif attr_name == "affect":  # Tanh transformed
                 # Tanh transformation should be roughly symmetric around 0
+                # With mean=0.1, the center shifts slightly positive
                 assert abs(stat.mean) < 0.3, f"Affect mean not centered: {stat.mean}"
-                # Should utilize full [-1,1] range
-                assert stat.range > 1.0, f"Affect range insufficient: {stat.range}"
+                # Range depends on configured parameters (mean=0.1, std=0.25)
+                # Expected: tanh((0.1 ± 0.75)/3) ≈ [-0.21, 0.27], range ≈ 0.48
+                assert stat.range > 0.3, f"Affect range insufficient: {stat.range}"
 
     def test_deterministic_behavior_verification(self, analyzer, sample_config):
         """Test deterministic behavior with fixed seeds."""

@@ -670,7 +670,7 @@ class TestEdgeCases:
         """Test support exchange detection with negative changes."""
         model = MockModel(seed=42)
 
-        agent1 = Person(
+        Person(
             model,
             {
                 "initial_affect_mean": 0.0,
@@ -684,7 +684,7 @@ class TestEdgeCases:
                 "subevents_per_day": 3,
             },
         )
-        agent2 = Person(
+        agent = Person(
             model,
             {
                 "initial_affect_mean": 0.0,
@@ -699,28 +699,19 @@ class TestEdgeCases:
             },
         )
 
-        model.grid.get_neighbors.return_value = [agent2]
+        model.grid.get_neighbors.return_value = [agent]
 
         # Test support exchange detection logic directly
-        # Calculate changes that would result from the mocked interaction
-        original_affect = agent1.affect
-        original_resilience = agent1.resilience
+        # Simulate BOTH agents declining: all deltas are negative or zero
+        # Negative deltas should never trigger support_exchange (uses >, not >=)
+        affect_change = -0.1  # agent1 affect declines
+        resilience_change = -0.05  # agent1 resilience declines
+        partner_affect_change = -0.5  # agent2 affect declines
+        partner_resilience_change = -0.05  # agent2 resilience declines
 
-        # Simulate the changes that process_interaction would produce
-        new_affect = -0.1  # agent1's new affect
-        new_resilience = 0.45  # agent1's new resilience
-        partner_new_affect = -0.1  # agent2's new affect
-        partner_new_resilience = 0.45  # agent2's new resilience
-
-        # Calculate changes
-        affect_change = new_affect - original_affect  # -0.1 - 0.0 = -0.1
-        resilience_change = new_resilience - original_resilience  # 0.45 - 0.5 = -0.05
-        partner_affect_change = partner_new_affect - agent2.affect  # -0.1 - 0.4 = -0.5
-        partner_resilience_change = partner_new_resilience - agent2.resilience  # 0.45 - 0.5 = -0.05
-
-        # Calculate resource changes (no resource exchange in this case)
-        resource_transfer = abs(agent1.resources - agent1.resources)  # 0.0
-        received_resources = agent1.resources - agent1.resources  # 0.0
+        # No resource exchange
+        resource_transfer = 0.0
+        received_resources = 0.0
 
         # Test the support exchange detection logic directly
         support_threshold = 0.05
@@ -740,21 +731,7 @@ class TestEdgeCases:
         """Test support exchange detection with zero changes."""
         model = MockModel(seed=42)
 
-        agent1 = Person(
-            model,
-            {
-                "initial_affect_mean": 0.0,
-                "initial_affect_sd": 0.1,
-                "initial_resilience_mean": 0.5,
-                "initial_resilience_sd": 0.1,
-                "initial_resources_mean": 0.6,
-                "initial_resources_sd": 0.1,
-                "stress_probability": 0.5,
-                "coping_success_rate": 0.5,
-                "subevents_per_day": 3,
-            },
-        )
-        agent2 = Person(
+        agent = Person(
             model,
             {
                 "initial_affect_mean": 0.0,
@@ -769,28 +746,18 @@ class TestEdgeCases:
             },
         )
 
-        model.grid.get_neighbors.return_value = [agent2]
+        model.grid.get_neighbors.return_value = [agent]
 
         # Test support exchange detection logic directly
-        # Calculate changes that would result from the mocked interaction
-        original_affect = agent1.affect
-        original_resilience = agent1.resilience
+        # Simulate zero change: all new values equal current values
+        affect_change = 0.0  # agent1 affect unchanged
+        resilience_change = 0.0  # agent1 resilience unchanged
+        partner_affect_change = 0.0  # agent2 affect unchanged
+        partner_resilience_change = 0.0  # agent2 resilience unchanged
 
-        # Simulate the changes that process_interaction would produce
-        new_affect = 0.0  # agent1's new affect (same as original)
-        new_resilience = 0.5  # agent1's new resilience (same as original)
-        partner_new_affect = 0.0  # agent2's new affect
-        partner_new_resilience = 0.5  # agent2's new resilience (same as original)
-
-        # Calculate changes
-        affect_change = new_affect - original_affect  # 0.0 - 0.0 = 0.0
-        resilience_change = new_resilience - original_resilience  # 0.5 - 0.5 = 0.0
-        partner_affect_change = partner_new_affect - agent2.affect  # 0.0 - 0.4 = -0.4
-        partner_resilience_change = partner_new_resilience - agent2.resilience  # 0.5 - 0.5 = 0.0
-
-        # Calculate resource changes (no resource exchange in this case)
-        resource_transfer = abs(agent1.resources - agent1.resources)  # 0.0
-        received_resources = agent1.resources - agent1.resources  # 0.0
+        # No resource exchange
+        resource_transfer = 0.0
+        received_resources = 0.0
 
         # Test the support exchange detection logic directly
         support_threshold = 0.05

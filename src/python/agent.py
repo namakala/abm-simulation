@@ -376,9 +376,10 @@ class Person(mesa.Agent):
         if self.daily_pss10_scores:
             avg_score = np.mean(self.daily_pss10_scores)
             rounded_score = round(avg_score)
-            self.pss10 = rounded_score
 
             # Step 7: Use the daily PSS-10 score to initialize stress level for next day
+            # Note: pss10 and pss10_responses are kept consistent with the last event's data.
+            # The consolidated score is used only for stress feedback.
             self._update_stress_from_daily_pss10(rounded_score)
 
         # Clear daily scores for next day

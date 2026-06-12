@@ -15,6 +15,7 @@ from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.stress_utils import (
     compute_pss10_score,
+    compute_stress_from_pss10,
     generate_stress_event,
     apply_weights,
     StressEvent,
@@ -370,10 +371,12 @@ class TestPSS10StressMechanismIntegration:
         if agent.pss10 == 40:
             assert agent.current_stress == 1.0
 
-        # Test with middle PSS-10 score
-        if 10 <= agent.pss10 <= 30:
-            expected_stress = agent.pss10 / 40.0
-            assert abs(agent.current_stress - expected_stress) < 1e-10
+        # Stress is computed from dimensions, not from pss10/40.0
+        expected_stress = compute_stress_from_pss10(
+            stress_controllability=agent.stress_controllability,
+            stress_overload=agent.stress_overload,
+        )
+        assert abs(agent.current_stress - expected_stress) < 1e-10
 
         # Ensure stress is always in valid range
         assert 0.0 <= agent.current_stress <= 1.0

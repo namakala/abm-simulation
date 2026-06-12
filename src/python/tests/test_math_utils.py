@@ -460,6 +460,29 @@ class TestTransformationFunctions:
         result = tanh_transform(mean=2.0, std=0.5, rng=rng)
         assert -1.0 <= result <= 1.0
 
+    def test_tanh_transform_mean_shifts_output(self):
+        """Test that the mean parameter shifts the output distribution.
+
+        With same seed and std, different means must produce different outputs.
+        A positive mean should tend toward positive values; negative mean toward negative.
+        """
+        rng_pos = create_rng(42)
+        rng_neg = create_rng(42)
+
+        result_pos = tanh_transform(mean=0.8, std=0.1, rng=rng_pos)
+        result_neg = tanh_transform(mean=-0.4, std=0.1, rng=rng_neg)
+
+        # Different means with same seed should NOT produce identical values
+        assert (
+            result_pos != result_neg
+        ), f"mean=0.8 and mean=-0.4 should yield different outputs, got {result_pos} == {result_neg}"
+
+        # With mean=0.8, output should be positive (shifted toward +1)
+        assert result_pos > 0.0, f"tanh_transform(mean=0.8) should be positive, got {result_pos}"
+
+        # With mean=-0.4, output should be negative (shifted toward -1)
+        assert result_neg < 0.0, f"tanh_transform(mean=-0.4) should be negative, got {result_neg}"
+
     def test_tanh_transform_deterministic(self):
         """Test tanh transformation determinism with fixed RNG."""
         rng1 = create_rng(42)
@@ -486,7 +509,17 @@ class TestTransformationFunctions:
         rng = create_rng(42)
 
         result = tanh_transform(mean=1.0, std=0.0, rng=rng)
-        assert result == 0.0  # Should return 0.0 for zero std case
+        # Deterministic output based on mean, no random variance
+        expected = np.tanh(1.0 / 3.0)
+        assert abs(result - expected) < 1e-10
+
+        # Mean=0 should give 0
+        result_zero = tanh_transform(mean=0.0, std=0.0, rng=rng)
+        assert abs(result_zero) < 1e-10
+
+        # Mean=-1 should give -tanh(1/3)
+        result_neg = tanh_transform(mean=-1.0, std=0.0, rng=rng)
+        assert abs(result_neg + expected) < 1e-10
 
     def test_tanh_transform_extreme_parameters(self):
         """Test tanh transformation with extreme parameter values."""
@@ -570,8 +603,18 @@ class TestTransformationFunctions:
         rng = create_rng(42)
 
         result = sigmoid_transform(mean=1.0, std=0.0, rng=rng)
-        expected = sigmoid(0.0)  # Should return sigmoid of 0
+        # Deterministic output based on mean, no random variance
+        expected = sigmoid(1.0 / 3.0)
         assert abs(result - expected) < 1e-10
+
+        # Mean=0 should give sigmoid(0) = 0.5
+        result_zero = sigmoid_transform(mean=0.0, std=0.0, rng=rng)
+        assert abs(result_zero - 0.5) < 1e-10
+
+        # Mean=-1 should give sigmoid(-1/3)
+        result_neg = sigmoid_transform(mean=-1.0, std=0.0, rng=rng)
+        expected_neg = sigmoid(-1.0 / 3.0)
+        assert abs(result_neg - expected_neg) < 1e-10
 
     def test_sigmoid_transform_extreme_parameters(self):
         """Test sigmoid transformation with extreme parameter values."""
@@ -729,8 +772,11 @@ class TestTransformationFunctions:
         result_tanh = tanh_transform(mean=1.0, std=0.0, rng=rng)
         result_sigmoid = sigmoid_transform(mean=1.0, std=0.0, rng=rng)
 
-        assert result_tanh == 0.0  # Should return 0.0 for zero std case
-        assert result_sigmoid == sigmoid(0.0)  # Should return sigmoid of 0
+        # Deterministic output based on mean, no random variance
+        expected_tanh = np.tanh(1.0 / 3.0)
+        expected_sigmoid = sigmoid(1.0 / 3.0)
+        assert abs(result_tanh - expected_tanh) < 1e-10
+        assert abs(result_sigmoid - expected_sigmoid) < 1e-10
 
     def test_inverse_transformations_with_zero_std(self):
         """Test inverse transformations handle zero standard deviation."""
@@ -747,7 +793,7 @@ class TestTransformationFunctions:
         create_rng(42)
 
         # Test multiple parameter combinations
-        param_combinations = [(0.0, 1.0), (5.0, 2.0), (-3.0, 0.5), (100.0, 10.0)]
+        param_combinations = [(0.0, 1.0), (1.0, 0.5), (-1.0, 0.3), (-3.0, 0.5)]
 
         for mean_val, std_val in param_combinations:
             # Generate samples
@@ -975,19 +1021,13 @@ class TestTransformationFunctions:
         assert -1.0 <= result_tanh <= 1.0
         assert 0.0 <= result_sigmoid <= 1.0
 
-        # Test with negative standard deviation (numpy raises ValueError)
-        # This should raise an error since numpy doesn't handle negative std
-        try:
-            tanh_transform(mean=0.0, std=-1.0, rng=create_rng(42))
-            assert False, "Should have raised ValueError for negative std"
-        except ValueError:
-            pass  # Expected behavior
-
-        try:
-            sigmoid_transform(mean=0.0, std=-1.0, rng=create_rng(42))
-            assert False, "Should have raised ValueError for negative std"
-        except ValueError:
-            pass  # Expected behavior
+        # Test with negative standard deviation (now handled gracefully)
+        # The new implementation uses rng.normal(0,1) then applies mean+std*z,
+        # so negative std is equivalent to |std| (inverts z but same distribution)
+        result_tanh_neg = tanh_transform(mean=0.0, std=-1.0, rng=create_rng(42))
+        result_sigmoid_neg = sigmoid_transform(mean=0.0, std=-1.0, rng=create_rng(42))
+        assert -1.0 <= result_tanh_neg <= 1.0
+        assert 0.0 <= result_sigmoid_neg <= 1.0
 
     def test_inverse_transformation_edge_cases(self):
         """Test edge cases for inverse transformation functions."""
