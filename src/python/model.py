@@ -83,6 +83,7 @@ class StressModel(mesa.Model):
 
         self.max_days = max_days
         self.num_agents = N
+        self.seed = seed
 
         # Initialize DataCollector for population and agent metrics
         self._initialize_datacollector()

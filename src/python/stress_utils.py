@@ -704,17 +704,24 @@ def generate_pss10_from_stress_dimensions(
     stress_overload: float,
     recent_stress_intensity: float = 0.0,
     stress_momentum: float = 0.0,
+    affect: float = 0.0,
+    resources: float = 0.5,
     rng: Optional[np.random.Generator] = None,
     config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Generate PSS-10 responses from current stress dimensions with enhanced dynamic response.
 
+    Positive affect and higher resources reduce perceived stress (lower PSS-10),
+    negative affect and lower resources increase it.
+
     Args:
         stress_controllability: Current stress controllability ∈ [0,1]
         stress_overload: Current stress overload ∈ [0,1]
         recent_stress_intensity: Recent stress intensity for immediate response
         stress_momentum: Stress momentum for predictive response
+        affect: Current affect value (-1 to 1), used to modulate stress perception
+        resources: Current resource level (0-1), buffers perceived stress
         rng: Random number generator for reproducible testing
         config: Configuration parameters
 
@@ -738,10 +745,16 @@ def generate_pss10_from_stress_dimensions(
     base_controllability = stress_controllability
     base_overload = stress_overload
 
+    # Protective factors modulate stress perception
+    # Positive affect and higher resources reduce perceived stress
+    affect_influence = affect * 0.25  # Scale affect into [−0.25, 0.25]
+    # Higher resources buffer against perceived stress (0 resources = no buffering)
+    resource_buffer = resources * 0.80  # Scale resources into [0, 0.80]
+
     # Apply recent stress intensity for immediate response
     intensity_boost = recent_stress_intensity * config["sensitivity"]
-    dynamic_controllability = clamp(base_controllability - intensity_boost, 0, 1)
-    dynamic_overload = clamp(base_overload + intensity_boost, 0, 1)
+    dynamic_controllability = clamp(base_controllability - intensity_boost + affect_influence + resource_buffer, 0, 1)
+    dynamic_overload = clamp(base_overload + intensity_boost - affect_influence - resource_buffer, 0, 1)
 
     # Apply stress momentum for predictive response
     momentum_adjustment = stress_momentum * config["momentum_weight"]

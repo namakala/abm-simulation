@@ -6,3 +6,4 @@ per-file-ignores = {"src/python/tests/*" = ["F811", "F821"], "src/python/demos/*
 
 [tool.black]
 line-length = 120
+

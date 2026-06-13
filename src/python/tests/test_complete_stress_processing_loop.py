@@ -13,6 +13,7 @@ from unittest.mock import Mock
 
 from src.python.agent import Person
 from src.python.stress_utils import (
+    compute_pss10_score,
     generate_stress_event,
     StressEvent,
     AppraisalWeights,
@@ -595,10 +596,12 @@ class TestCompleteStressProcessingLoop:
                 # Execute step (which includes Step 7: PSS-10 consolidation and stress update)
                 agent.step()
 
-            # Verify Step 7: PSS-10 consolidation
-            expected_avg = np.mean(daily_scores)
-            expected_rounded = round(expected_avg)
-            assert agent.pss10 == expected_rounded, f"Step 7 failed: PSS-10 not consolidated correctly on day {day}"
+            # Verify Step 7: PSS-10 score remains consistent with pss10_responses
+            # (consolidated score is used only for stress feedback, not to overwrite pss10)
+            expected_score = compute_pss10_score(agent.pss10_responses)
+            assert (
+                agent.pss10 == expected_score
+            ), f"Step 7 failed: pss10={agent.pss10} inconsistent with responses ({expected_score}) on day {day}"
 
             # Verify Step 7: Stress level updated based on consolidated PSS-10
             expected_stress = compute_stress_from_pss10(agent.stress_controllability, agent.stress_overload)

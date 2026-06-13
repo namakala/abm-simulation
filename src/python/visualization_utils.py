@@ -58,7 +58,36 @@ def create_visualization_report(
 
     Returns:
         Path to the generated PDF report file, or placeholder if matplotlib not available
+
+    Raises:
+        ValueError: If data is empty or contains no valid rows after removing missing values.
     """
+    # ── Validate input before matplotlib check ──────────────────────
+    if isinstance(data, list):
+        # Convert list of Person agents to DataFrame
+        try:
+            data = pd.DataFrame(
+                {
+                    "resilience": [getattr(agent, "resilience", 0.0) for agent in data],
+                    "affect": [getattr(agent, "affect", 0.0) for agent in data],
+                    "stress": [getattr(agent, "current_stress", 0.0) for agent in data],
+                    "pss10": [getattr(agent, "pss10", 0.0) for agent in data],
+                }
+            )
+        except (AttributeError, TypeError) as e:
+            raise ValueError(f"Cannot convert agent list to DataFrame: {e}")
+
+    if not isinstance(data, pd.DataFrame):
+        raise ValueError("Data must be a DataFrame or a list of Person agents")
+
+    # Handle missing data — check before returning placeholder
+    data = data.dropna(subset=["resilience", "affect", "stress", "pss10"])
+    if data.empty:
+        raise ValueError("No valid data after removing missing values")
+
+    if filename is None:
+        filename = f"psychological_data_report_{len(data)}_observations.pdf"
+
     if not HAS_MATPLOTLIB:
         # Return placeholder path if matplotlib not available
         output_path = Path(output_dir)
@@ -85,31 +114,8 @@ def create_visualization_report(
     plt.rcParams["font.size"] = style_config.get("font_size", 12)
     plt.rcParams["axes.titlesize"] = style_config.get("title_font_size", 16)
 
-    # Convert list of agents to DataFrame if needed
-    if isinstance(data, list):
-        # Assume list of Person agents with required attributes
-        try:
-            data = pd.DataFrame(
-                {
-                    "resilience": [getattr(agent, "resilience", 0.0) for agent in data],
-                    "affect": [getattr(agent, "affect", 0.0) for agent in data],
-                    "stress": [getattr(agent, "current_stress", 0.0) for agent in data],
-                    "pss10": [getattr(agent, "pss10", 0.0) for agent in data],
-                }
-            )
-        except (AttributeError, TypeError) as e:
-            raise ValueError(f"Cannot convert agent list to DataFrame: {e}")
-
-    if filename is None:
-        filename = f"psychological_data_report_{len(data)}_observations.pdf"
-
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-
-    # Handle missing data
-    data = data.dropna(subset=["resilience", "affect", "stress", "pss10"])
-    if data.empty:
-        raise ValueError("No valid data after removing missing values")
 
     # Create figure with GridSpec for flexible layout
     fig = plt.figure(figsize=style_config.get("figure_size", (20, 10)))
@@ -270,7 +276,21 @@ def create_time_series_visualization(
 
     Returns:
         Path to the generated PDF file, or placeholder if matplotlib not available
+
+    Raises:
+        ValueError: If required columns are missing or data is empty after removing NaN.
     """
+    # ── Validate input before matplotlib check ──────────────────────
+    required_cols = ["avg_pss10", "avg_stress", "avg_resilience", "avg_affect"]
+    missing_cols = [col for col in required_cols if col not in model_data.columns]
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {missing_cols}")
+
+    # Filter data to required columns and drop NaN
+    plot_data = model_data[required_cols].dropna()
+    if plot_data.empty:
+        raise ValueError("No valid data after removing missing values")
+
     if not HAS_MATPLOTLIB:
         # Return placeholder path if matplotlib not available
         output_path = Path(output_dir)
@@ -298,17 +318,6 @@ def create_time_series_visualization(
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-
-    # Validate required columns
-    required_cols = ["avg_pss10", "avg_stress", "avg_resilience", "avg_affect"]
-    missing_cols = [col for col in required_cols if col not in model_data.columns]
-    if missing_cols:
-        raise ValueError(f"Missing required columns: {missing_cols}")
-
-    # Filter data to required columns and drop NaN
-    plot_data = model_data[required_cols].dropna()
-    if plot_data.empty:
-        raise ValueError("No valid data after removing missing values")
 
     # Create figure with GridSpec for 2x2 layout
     fig = plt.figure(figsize=style_config.get("figure_size", (16, 10)))

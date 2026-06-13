@@ -22,7 +22,7 @@ def test_new_mechanisms():
     hindrance = 0.2  # Low hindrance
     neighbor_affects = [0.5, 0.3, 0.7]  # Positive neighbors
 
-    coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects)
+    coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, current_resilience=0.0)
     print(f"   Challenge: {challenge}, Hindrance: {hindrance}")
     print(f"   Neighbor affects: {neighbor_affects}")
     print(f"   Coping probability: {coping_prob:.3f}")
@@ -30,7 +30,7 @@ def test_new_mechanisms():
 
     # Test with negative neighbors
     negative_neighbors = [-0.5, -0.3, -0.7]
-    coping_prob_neg = compute_coping_probability(challenge, hindrance, negative_neighbors)
+    coping_prob_neg = compute_coping_probability(challenge, hindrance, negative_neighbors, current_resilience=0.0)
     print(f"   Negative neighbors coping probability: {coping_prob_neg:.3f}")
     assert coping_prob_neg < coping_prob, "Negative neighbors should decrease coping probability"
 

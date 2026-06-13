@@ -337,14 +337,14 @@ def tanh_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.random.
     Transform normal distribution sample to [-1,1] bounds using tanh.
 
     The transformation pipeline:
-    1. Sample from normal distribution N(mean, std)
-    2. Transform to Z-scale ~ N(0,1) by subtracting mean and dividing by std
+    1. Sample from standard normal distribution N(0,1)
+    2. Scale by std and shift by mean: raw = mean + std * z
     3. Normalize by dividing by 3 to confine to approximately [-1,1]
     4. Apply tanh() for [-1,1] bounds
 
     Args:
-        mean: Normal distribution mean parameter
-        std: Normal distribution standard deviation parameter
+        mean: Normal distribution mean parameter for output centering
+        std: Normal distribution standard deviation parameter for spread
         rng: Random number generator
 
     Returns:
@@ -355,14 +355,14 @@ def tanh_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.random.
 
     # Handle zero standard deviation case
     if std == 0:
-        return 0.0  # Return 0 for zero std case
+        return np.tanh(mean / 3.0)  # Deterministic based on mean
 
-    # Sample from normal distribution
-    sample = rng.normal(mean, std)
+    # Sample from standard normal distribution
+    z = rng.normal(0, 1)
 
-    # Transform to Z-scale and normalize
-    z_score = (sample - mean) / std
-    normalized = z_score / 3.0  # Divide by 3 to confine to ~[-1,1]
+    # Scale and shift to incorporate mean and std
+    raw = mean + std * z
+    normalized = raw / 3.0  # Divide by 3 to confine to ~[-1,1]
 
     # Apply tanh transformation for [-1,1] bounds
     result = np.tanh(normalized)
@@ -375,14 +375,14 @@ def sigmoid_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.rand
     Transform normal distribution sample to [0,1] bounds using sigmoid.
 
     The transformation pipeline:
-    1. Sample from normal distribution N(mean, std)
-    2. Transform to Z-scale ~ N(0,1) by subtracting mean and dividing by std
+    1. Sample from standard normal distribution N(0,1)
+    2. Scale by std and shift by mean: raw = mean + std * z
     3. Normalize by dividing by 3 to confine to approximately [-1,1]
     4. Apply sigmoid() for [0,1] bounds
 
     Args:
-        mean: Normal distribution mean parameter
-        std: Normal distribution standard deviation parameter
+        mean: Normal distribution mean parameter for output centering
+        std: Normal distribution standard deviation parameter for spread
         rng: Random number generator
 
     Returns:
@@ -393,14 +393,14 @@ def sigmoid_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.rand
 
     # Handle zero standard deviation case
     if std == 0:
-        return sigmoid(0.0)  # Return sigmoid of 0 for zero std case
+        return sigmoid(mean / 3.0)  # Deterministic based on mean
 
-    # Sample from normal distribution
-    sample = rng.normal(mean, std)
+    # Sample from standard normal distribution
+    z = rng.normal(0, 1)
 
-    # Transform to Z-scale and normalize
-    z_score = (sample - mean) / std
-    normalized = z_score / 3.0  # Divide by 3 to confine to ~[-1,1]
+    # Scale and shift to incorporate mean and std
+    raw = mean + std * z
+    normalized = raw / 3.0  # Divide by 3 to confine to ~[-1,1]
 
     # Apply sigmoid transformation for [0,1] bounds
     result = sigmoid(normalized)
