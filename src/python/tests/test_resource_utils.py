@@ -1028,6 +1028,6 @@ class TestResourceCorrelations:
             else:
                 seed_details.append(f"seed={seed}: FAIL [{'; '.join(var_msgs)}]")
 
-        assert (
-            passed_seeds >= min_passes
-        ), f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
+        assert passed_seeds >= min_passes, (
+            f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
+        )

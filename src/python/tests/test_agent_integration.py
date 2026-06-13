@@ -301,9 +301,9 @@ class TestAgentResourceManagement:
             agent.stressful_event()
 
         # Simple assertion that should work
-        assert (
-            agent.resources < initial_resources
-        ), f"Resources should be reduced. Initial: {initial_resources}, Final: {agent.resources}"
+        assert agent.resources < initial_resources, (
+            f"Resources should be reduced. Initial: {initial_resources}, Final: {agent.resources}"
+        )
         assert agent.resources >= 0.0, "Resources should not be negative"
 
     @pytest.mark.config

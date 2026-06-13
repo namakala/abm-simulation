@@ -6,7 +6,6 @@ export DOTENV_FILE=.env.example
 echo "==> Running pre-commit checks..."
 
 # Always run lint/format
-pixi run prettify
 pixi run format
 pixi run lint
 
@@ -18,7 +17,7 @@ else
     echo "==> No Python files changed, skipping tests."
 fi
 
-# Re-stage files auto-formatted by ruff/black
+# Re-stage files auto-formatted by ruff
 git add src/python/
 
 echo "==> All pre-commit checks passed!"

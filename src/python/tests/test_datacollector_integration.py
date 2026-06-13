@@ -81,9 +81,9 @@ class TestDataCollectorAgentLevel:
         assert agent_data["affect"].between(-1.0, 1.0).all(), "All affect values should be in [-1, 1]"
         assert agent_data["resources"].between(0.0, 1.0).all(), "All resources values should be in [0, 1]"
         assert agent_data["current_stress"].between(0.0, 1.0).all(), "All current_stress values should be in [0, 1]"
-        assert (
-            agent_data["stress_controllability"].between(0.0, 1.0).all()
-        ), "All stress_controllability values should be in [0, 1]"
+        assert agent_data["stress_controllability"].between(0.0, 1.0).all(), (
+            "All stress_controllability values should be in [0, 1]"
+        )
         assert agent_data["stress_overload"].between(0.0, 1.0).all(), "All stress_overload values should be in [0, 1]"
 
     def test_agent_data_across_steps(self):
@@ -225,23 +225,23 @@ class TestDataCollectorModelLevel:
 
         # Handle potential NaN values
         if not pd.isna(manual_avg_resilience) and not pd.isna(collected_avg_resilience):
-            assert (
-                abs(manual_avg_resilience - collected_avg_resilience) < 1e-10
-            ), "Average resilience should match manual calculation"
+            assert abs(manual_avg_resilience - collected_avg_resilience) < 1e-10, (
+                "Average resilience should match manual calculation"
+            )
 
         manual_avg_affect = step_agent_data["affect"].mean()
         collected_avg_affect = latest_data["avg_affect"]
         if not pd.isna(manual_avg_affect) and not pd.isna(collected_avg_affect):
-            assert (
-                abs(manual_avg_affect - collected_avg_affect) < 1e-10
-            ), "Average affect should match manual calculation"
+            assert abs(manual_avg_affect - collected_avg_affect) < 1e-10, (
+                "Average affect should match manual calculation"
+            )
 
         manual_avg_resources = step_agent_data["resources"].mean()
         collected_avg_resources = latest_data["avg_resources"]
         if not pd.isna(manual_avg_resources) and not pd.isna(collected_avg_resources):
-            assert (
-                abs(manual_avg_resources - collected_avg_resources) < 1e-10
-            ), "Average resources should match manual calculation"
+            assert abs(manual_avg_resources - collected_avg_resources) < 1e-10, (
+                "Average resources should match manual calculation"
+            )
 
     def test_model_data_across_steps(self):
         """Test that model data is collected correctly across multiple steps."""
@@ -297,13 +297,13 @@ class TestDataCollectorModelLevel:
         assert model_data["avg_affect"].between(-1.0, 1.0).all(), "All avg_affect values should be in [-1, 1]"
         assert model_data["avg_resources"].between(0.0, 1.0).all(), "All avg_resources values should be in [0, 1]"
         assert model_data["avg_stress"].between(0.0, 1.0).all(), "All avg_stress values should be in [0, 1]"
-        assert (
-            model_data["coping_success_rate"].between(0.0, 1.0).all()
-        ), "All coping_success_rate values should be in [0, 1]"
+        assert model_data["coping_success_rate"].between(0.0, 1.0).all(), (
+            "All coping_success_rate values should be in [0, 1]"
+        )
         assert model_data["network_density"].between(0.0, 1.0).all(), "All network_density values should be in [0, 1]"
-        assert (
-            model_data["stress_prevalence"].between(0.0, 1.0).all()
-        ), "All stress_prevalence values should be in [0, 1]"
+        assert model_data["stress_prevalence"].between(0.0, 1.0).all(), (
+            "All stress_prevalence values should be in [0, 1]"
+        )
 
 
 class TestDataCollectorConsistency:
@@ -330,14 +330,14 @@ class TestDataCollectorConsistency:
 
         # Check step numbering (agent data uses 1-based, model data uses 0-based)
         expected_agent_steps = list(range(1, 11))  # 1-10
-        assert (
-            sorted(agent_data.index.get_level_values("Step").unique()) == expected_agent_steps
-        ), f"Agent data steps should be {expected_agent_steps}"
+        assert sorted(agent_data.index.get_level_values("Step").unique()) == expected_agent_steps, (
+            f"Agent data steps should be {expected_agent_steps}"
+        )
 
         expected_model_indices = list(range(10))  # 0-9
-        assert (
-            list(model_data.index) == expected_model_indices
-        ), f"Model data indices should be {expected_model_indices}"
+        assert list(model_data.index) == expected_model_indices, (
+            f"Model data indices should be {expected_model_indices}"
+        )
 
     def test_no_data_loss_over_time(self):
         """Test that no data is lost or corrupted over multiple steps."""
@@ -388,9 +388,9 @@ class TestDataCollectorConsistency:
         for step in [1, 2, 3]:  # Mesa's 1-based steps
             step_agent_data = agent_data[agent_data.index.get_level_values("Step") == step]
             assert len(step_agent_data) == 5, f"Step {step} should have 5 agent records"
-            assert (
-                step_agent_data.index.get_level_values("Step") == step
-            ).all(), f"All agent records for step {step} should have correct step number"
+            assert (step_agent_data.index.get_level_values("Step") == step).all(), (
+                f"All agent records for step {step} should have correct step number"
+            )
 
         # Model data uses 0-based indexing
         for step in [0, 1, 2]:  # Python's 0-based indices

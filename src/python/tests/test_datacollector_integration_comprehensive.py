@@ -114,12 +114,12 @@ class TestDataCollectorEndToEndIntegration:
             expected_model_records = config["max_days"]
             expected_agent_records = config["N"] * config["max_days"]
 
-            assert (
-                len(model_data) == expected_model_records
-            ), f"Config {config}: Expected {expected_model_records} model records"
-            assert (
-                len(agent_data) == expected_agent_records
-            ), f"Config {config}: Expected {expected_agent_records} agent records"
+            assert len(model_data) == expected_model_records, (
+                f"Config {config}: Expected {expected_model_records} model records"
+            )
+            assert len(agent_data) == expected_agent_records, (
+                f"Config {config}: Expected {expected_agent_records} agent records"
+            )
 
             # Verify data quality
             assert not model_data.isnull().any().any(), f"Config {config}: Model data should not contain null values"
@@ -151,12 +151,12 @@ class TestDataCollectorEndToEndIntegration:
         assert len(checkpoints) == 4, "Should have 4 checkpoints"
 
         for checkpoint in checkpoints:
-            assert (
-                checkpoint["model_records"] == checkpoint["day"] + 1
-            ), f"Model records should match days at checkpoint {checkpoint['day']}"
-            assert checkpoint["agent_records"] == 20 * (
-                checkpoint["day"] + 1
-            ), f"Agent records should match at checkpoint {checkpoint['day']}"
+            assert checkpoint["model_records"] == checkpoint["day"] + 1, (
+                f"Model records should match days at checkpoint {checkpoint['day']}"
+            )
+            assert checkpoint["agent_records"] == 20 * (checkpoint["day"] + 1), (
+                f"Agent records should match at checkpoint {checkpoint['day']}"
+            )
             assert checkpoint["data_quality"], f"Data quality should be maintained at checkpoint {checkpoint['day']}"
 
         # Final verification
@@ -304,12 +304,12 @@ class TestDataCollectorMultiAgentScenarios:
             expected_model_records = 3
             expected_agent_records = N * 3
 
-            assert (
-                len(model_data) == expected_model_records
-            ), f"N={N}: Should have {expected_model_records} model records"
-            assert (
-                len(agent_data) == expected_agent_records
-            ), f"N={N}: Should have {expected_agent_records} agent records"
+            assert len(model_data) == expected_model_records, (
+                f"N={N}: Should have {expected_model_records} model records"
+            )
+            assert len(agent_data) == expected_agent_records, (
+                f"N={N}: Should have {expected_agent_records} agent records"
+            )
 
             # Verify data quality scales
             assert not model_data.isnull().any().any(), f"N={N}: Model data should not contain null values"
@@ -343,9 +343,9 @@ class TestDataCollectorMultiAgentScenarios:
 
             # Verify network density is reasonable for the configuration
             network_density_values = model_data["network_density"].values
-            assert all(
-                0 <= d <= 1 for d in network_density_values
-            ), f"Network config {net_config}: Network density should be in [0,1]"
+            assert all(0 <= d <= 1 for d in network_density_values), (
+                f"Network config {net_config}: Network density should be in [0,1]"
+            )
 
     def test_agents_with_different_initial_conditions(self):
         """Test data collection with agents having different initial states."""
@@ -422,12 +422,12 @@ class TestDataCollectorTimeSeriesAnalysis:
             expected_model_records = i + 1
             expected_agent_records = 8 * (i + 1)
 
-            assert (
-                data["model_records"] == expected_model_records
-            ), f"Step {i}: Expected {expected_model_records} model records"
-            assert (
-                data["agent_records"] == expected_agent_records
-            ), f"Step {i}: Expected {expected_agent_records} agent records"
+            assert data["model_records"] == expected_model_records, (
+                f"Step {i}: Expected {expected_model_records} model records"
+            )
+            assert data["agent_records"] == expected_agent_records, (
+                f"Step {i}: Expected {expected_agent_records} agent records"
+            )
 
         # Verify final data integrity
         final_model_data = model.datacollector.get_model_vars_dataframe()
@@ -612,9 +612,9 @@ class TestDataCollectorPerformanceValidation:
         collection_time = time.time() - start_time
 
         # Verify reasonable performance (adjust threshold as needed)
-        assert (
-            collection_time < 30.0
-        ), f"Large simulation should complete in reasonable time, took {collection_time:.2f}s"
+        assert collection_time < 30.0, (
+            f"Large simulation should complete in reasonable time, took {collection_time:.2f}s"
+        )
 
         # Verify data integrity for large simulation
         model_data = model.datacollector.get_model_vars_dataframe()
@@ -709,28 +709,28 @@ class TestDataCollectorIntegrationValidation:
         final_model_data = model_data.iloc[-1]  # Last day
 
         # Test consistency between model data and population summary
-        assert (
-            abs(final_model_data["avg_resilience"] - population_summary["avg_resilience"]) < 1e-10
-        ), "Resilience should match between sources"
-        assert (
-            abs(final_model_data["avg_affect"] - population_summary["avg_affect"]) < 1e-10
-        ), "Affect should match between sources"
-        assert (
-            abs(final_model_data["avg_resources"] - population_summary["avg_resources"]) < 1e-10
-        ), "Resources should match between sources"
+        assert abs(final_model_data["avg_resilience"] - population_summary["avg_resilience"]) < 1e-10, (
+            "Resilience should match between sources"
+        )
+        assert abs(final_model_data["avg_affect"] - population_summary["avg_affect"]) < 1e-10, (
+            "Affect should match between sources"
+        )
+        assert abs(final_model_data["avg_resources"] - population_summary["avg_resources"]) < 1e-10, (
+            "Resources should match between sources"
+        )
 
         # Test consistency with agent data aggregations
         final_day_agent_data = agent_data[agent_data.index.get_level_values("Step") == 4]  # Mesa uses 1-based indexing
 
         manual_avg_resilience = final_day_agent_data["resilience"].mean()
-        assert (
-            abs(manual_avg_resilience - final_model_data["avg_resilience"]) < 1e-10
-        ), "Agent aggregation should match model data"
+        assert abs(manual_avg_resilience - final_model_data["avg_resilience"]) < 1e-10, (
+            "Agent aggregation should match model data"
+        )
 
         manual_avg_affect = final_day_agent_data["affect"].mean()
-        assert (
-            abs(manual_avg_affect - final_model_data["avg_affect"]) < 1e-10
-        ), "Affect aggregation should match model data"
+        assert abs(manual_avg_affect - final_model_data["avg_affect"]) < 1e-10, (
+            "Affect aggregation should match model data"
+        )
 
     def test_data_collection_pipeline_completeness(self):
         """Test completeness of the entire data collection pipeline."""

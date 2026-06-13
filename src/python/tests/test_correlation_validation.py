@@ -66,9 +66,9 @@ class TestTheoreticalCorrelationsAgentLevel:
             else:
                 seed_details.append(f"seed={seed}: FAIL (r={correlation:.4f}, p={p_value:.4f})")
 
-        assert (
-            passed_seeds >= min_passes
-        ), f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
+        assert passed_seeds >= min_passes, (
+            f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
+        )
 
     def test_pss10_resilience_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resilience."""
@@ -222,9 +222,9 @@ class TestTheoreticalCorrelationsAgentLevel:
             else:
                 seed_details.append(f"seed={seed}: FAIL (r={correlation:.4f}, p={p_value:.4f})")
 
-        assert (
-            passed_seeds >= min_passes
-        ), f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
+        assert passed_seeds >= min_passes, (
+            f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
+        )
 
 
 class TestTheoreticalCorrelationsPopulationLevel:
@@ -257,9 +257,9 @@ class TestTheoreticalCorrelationsPopulationLevel:
             else:
                 seed_details.append(f"seed={seed}: FAIL (r={correlation:.4f}, p={p_value:.4f})")
 
-        assert (
-            passed_seeds >= min_passes
-        ), f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
+        assert passed_seeds >= min_passes, (
+            f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
+        )
 
     def test_avg_pss10_avg_resilience_negative_correlation(self):
         """Test that average PSS-10 negatively correlates with average resilience over time."""
@@ -387,9 +387,9 @@ class TestStatisticalSignificance:
 
         for (var1, var2), (min_corr, max_corr) in expected_ranges.items():
             correlation = final_epoch[var1].corr(final_epoch[var2])
-            assert (
-                min_corr <= correlation <= max_corr
-            ), f"Correlation {var1}↔{var2}={correlation:.3f} outside expected range [{min_corr}, {max_corr}]"
+            assert min_corr <= correlation <= max_corr, (
+                f"Correlation {var1}↔{var2}={correlation:.3f} outside expected range [{min_corr}, {max_corr}]"
+            )
 
 
 class TestConfigurationBasedCorrelationValidation:
@@ -452,9 +452,9 @@ class TestIntegrationWithSimulationFramework:
 
         # Allow any reasonable correlation (based on observed correlations from demos)
         for corr in correlations:
-            assert (
-                -0.7 < corr < 0.7
-            ), f"Correlation too extreme for N={population_sizes[correlations.index(corr)]}: {corr}"
+            assert -0.7 < corr < 0.7, (
+                f"Correlation too extreme for N={population_sizes[correlations.index(corr)]}: {corr}"
+            )
 
     @pytest.mark.flaky(reason="Late correlation threshold (0.07) is too tight for current model dynamics")
     def test_correlation_validation_over_simulation_time(self):
