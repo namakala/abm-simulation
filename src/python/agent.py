@@ -55,6 +55,7 @@ from src.python.resource_utils import (
 
 from src.python.math_utils import sample_poisson, create_rng, tanh_transform, sigmoid_transform
 from src.python.config import get_config
+from src.python.assumption_config import get_assumptions
 
 # Load configuration
 config = get_config()
@@ -477,7 +478,8 @@ class Person(mesa.Agent):
             partner_resources=original_partner_resources,
             self_resilience=self.resilience,
             partner_resilience=partner.resilience,
-            social_support_boost=1.0 + (self.protective_factors["social_support"] * 0.1),
+            social_support_boost=1.0
+            + (self.protective_factors["social_support"] * get_assumptions().resource.social_resilience_boost_factor),
         )
 
         # Calculate resource changes for return values
@@ -702,14 +704,15 @@ class Person(mesa.Agent):
         self.stress_breach_count += 1
 
         # STEP 11: Allocate resources to protective factors with complete stress integration
+        a = get_assumptions()
         if is_stressed and coped_successfully:
-            # Give 75% resource reward after successful coping
-            resource_reward = base_resource_cost * 0.75
+            # Give resource reward after successful coping (Plan 007)
+            resource_reward = base_resource_cost * a.coping.resource_reward  # 0.75
             self.resources = clamp(self.resources + resource_reward, 0.0, 1.0)
 
             # Use utility function for protective factor allocation
             allocations = allocate_protective_factors(
-                available_resources=self.resources * 0.3,
+                available_resources=self.resources * a.coping.pf_allocation_fraction,  # 0.3
                 current_resilience=self.resilience,
                 baseline_resilience=self.baseline_resilience,
                 protective_factors=self.protective_factors,
@@ -725,8 +728,8 @@ class Person(mesa.Agent):
             total_allocated = sum(allocations.values())
             self.resources -= total_allocated
         else:
-            # Add small resource penalty for failed coping attempts
-            resource_penalty = base_resource_cost * 0.1  # 10% penalty
+            # Add small resource penalty for failed coping attempts (Plan 007)
+            resource_penalty = base_resource_cost * a.coping.resource_penalty  # 0.1
             self.resources = clamp(self.resources - resource_penalty, 0.0, 1.0)
 
         return challenge, hindrance

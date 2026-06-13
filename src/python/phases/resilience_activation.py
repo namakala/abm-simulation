@@ -31,13 +31,16 @@ from src.python.stress_utils import (
     validate_theoretical_correlations,
 )
 from src.python.math_utils import clamp
+from src.python.assumption_config import get_assumptions
 
 PHASE_FREQUENCY: PhaseFrequency = "event_driven"
 
-# Hardcoded constants (Plan 007 will externalise these)
-_RESOURCE_REWARD_MULTIPLIER = 0.75
-_RESOURCE_PENALTY_MULTIPLIER = 0.10
-_PF_ALLOCATION_FRACTION = 0.30
+# Assumption-parameterized constants (Plan 007)
+# Loaded from ASSUMPTION_* env vars; falls back to spec defaults.
+_assumptions = get_assumptions()
+_RESOURCE_REWARD_MULTIPLIER = _assumptions.coping.resource_reward
+_RESOURCE_PENALTY_MULTIPLIER = _assumptions.coping.resource_penalty
+_PF_ALLOCATION_FRACTION = _assumptions.coping.pf_allocation_fraction
 
 
 def run_phase(

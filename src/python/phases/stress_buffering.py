@@ -22,14 +22,16 @@ from typing import Any, Dict
 from numpy.random import Generator
 
 from src.python.phases.interfaces import AgentState, PhaseOutput, PhaseFrequency
+from src.python.assumption_config import get_assumptions
 
 PHASE_FREQUENCY: PhaseFrequency = "daily"
 
-# Hardcoded constants (Plan 007 externalises these)
-_DEFAULT_BOOST_RATE = 0.1
-_DEFAULT_A_COEFFICIENT = -0.3  # stress -> resources
-_DEFAULT_B_COEFFICIENT = 0.5  # resources -> buffering
-_DEFAULT_C_PRIME_COEFFICIENT = -0.2  # stress -> buffering | resources
+# Assumption-parameterized constants (Plan 007)
+_assumptions = get_assumptions()
+_DEFAULT_BOOST_RATE = _assumptions.resource.buffering_boost_rate
+_DEFAULT_A_COEFFICIENT = _assumptions.resource.buffering_a_coefficient  # stress -> resources
+_DEFAULT_B_COEFFICIENT = _assumptions.resource.buffering_b_coefficient  # resources -> buffering
+_DEFAULT_C_PRIME_COEFFICIENT = _assumptions.resource.buffering_c_prime_coefficient  # stress -> buffering | resources
 _DEFAULT_SOCIAL_STRESS_PATH = -0.2
 _DEFAULT_SOCIAL_BUFFERING_PATH = 0.4
 

@@ -27,6 +27,7 @@ from typing import Tuple, Optional, Dict, Any
 from dataclasses import dataclass, field
 
 from src.python.config import get_config
+from src.python.assumption_config import get_assumptions
 from src.python.math_utils import clamp
 
 # Load configuration
@@ -745,8 +746,7 @@ def generate_pss10_from_stress_dimensions(
     base_controllability = stress_controllability
     base_overload = stress_overload
 
-    # Protective factors modulate stress perception
-    # Positive affect and higher resources reduce perceived stress
+    # Protective factors modulate stress perception (Plan 007)
     affect_influence = affect * 0.25  # Scale affect into [−0.25, 0.25]
     # Higher resources buffer against perceived stress (0 resources = no buffering)
     resource_buffer = resources * 0.80  # Scale resources into [0, 0.80]
@@ -907,6 +907,7 @@ def update_stress_dimensions_from_event(
     """
     # Get configuration for stress dimension updates
     cfg = get_config()
+    assumptions = get_assumptions()
 
     if config is None:
         config = {
@@ -914,13 +915,26 @@ def update_stress_dimensions_from_event(
             "overload_update_rate": cfg.get("stress_dynamics", "overload_update_rate"),
         }
 
+    # Load assumption-parameterized weights (Plan 007)
+    ccw = assumptions.stress.controllability_challenge_weight  # 0.10
+    chw = assumptions.stress.controllability_hindrance_weight  # 0.05
+    ocw = assumptions.stress.overload_challenge_weight  # 0.05
+    ohw = assumptions.stress.overload_hindrance_weight  # 0.10
+    baseline_c = assumptions.stress.baseline_controllability  # 0.5
+    baseline_o = assumptions.stress.baseline_overload  # 0.5
+    chr_ = assumptions.stress.controllability_homeostasis_rate  # 0.05
+    ohr = assumptions.stress.overload_homeostasis_rate  # 0.05
+
     # For non-stressful events, apply minimal updates
     if not is_stressful:
         config["controllability_update_rate"] = 0.0
         config["overload_update_rate"] = 0.0
+        # Also zero out homeostasis for non-stressful events
+        chr_ = 0.0
+        ohr = 0.0
 
     # Challenge vs hindrance effects on controllability
-    controllability_change_magnitude = (challenge * 0.10) + (hindrance * 0.05)
+    controllability_change_magnitude = (challenge * ccw) + (hindrance * chw)
     if coped_successfully:
         # Successful coping: challenge and hindrance builds controllability
         controllability_change = controllability_change_magnitude
@@ -929,17 +943,15 @@ def update_stress_dimensions_from_event(
         controllability_change = -controllability_change_magnitude
 
     # Apply controllability update with decay toward baseline
-    baseline_controllability = 0.5  # Neutral baseline
-
     # Move toward baseline when no strong events, but allow event-driven changes
-    homeostasis_pull = (baseline_controllability - current_controllability) * 0.05
+    homeostasis_pull = (baseline_c - current_controllability) * chr_
     event_effect = controllability_change * volatility
 
     updated_controllability = current_controllability + homeostasis_pull + event_effect
     updated_controllability = clamp(updated_controllability, 0.0, 1.0)
 
     # Overload effects: hindrance increases overload, challenge reduces it slightly
-    overload_change_magnitude = (challenge * 0.05) + (hindrance * 0.10)
+    overload_change_magnitude = (challenge * ocw) + (hindrance * ohw)
     if coped_successfully:
         # Successful coping: hindrance still increases overload but less, challenge reduces it
         overload_change = -overload_change_magnitude
@@ -948,12 +960,9 @@ def update_stress_dimensions_from_event(
         overload_change = overload_change_magnitude
 
     # Apply overload update with decay toward baseline
-    baseline_overload = 0.5  # Neutral baseline
-
     # Move toward baseline when no strong events, but allow event-driven changes
-    homeostasis_pull = (baseline_overload - current_overload) * 0.05
+    homeostasis_pull = (baseline_o - current_overload) * ohr
     event_effect = overload_change * volatility
-    # event_effect = overload_change * config['overload_update_rate']
 
     updated_overload = current_overload + homeostasis_pull + event_effect
     updated_overload = clamp(updated_overload, 0.0, 1.0)
@@ -980,6 +989,9 @@ def compute_event_difficulty(challenge: float, hindrance: float) -> float:
     Hindrance contributes more to difficulty than challenge, reflecting the
     asymmetric impact of hindrance events on psychological strain.
 
+    Weights come from ASSUMPTION_EVENT_INTENSITY_CHALLENGE_WEIGHT and
+    ASSUMPTION_EVENT_INTENSITY_HINDRANCE_WEIGHT (defaults: 0.7, 1.3).
+
     Args:
         challenge: Challenge component from event appraisal (0-1)
         hindrance: Hindrance component from event appraisal (0-1)
@@ -987,7 +999,8 @@ def compute_event_difficulty(challenge: float, hindrance: float) -> float:
     Returns:
         Event difficulty score
     """
-    return challenge * 0.7 + hindrance * 1.3
+    a = get_assumptions()
+    return challenge * a.stress.event_intensity_challenge_weight + hindrance * a.stress.event_intensity_hindrance_weight
 
 
 def _update_recent_stress_intensity(
@@ -1013,22 +1026,25 @@ def _update_recent_stress_intensity(
     # Calculate event stress intensity (hindrance is more intense than challenge)
     event_intensity = compute_event_difficulty(challenge, hindrance)
 
+    a = get_assumptions()
+
     # Adjust intensity based on coping outcome
     if not coped_successfully:
-        event_intensity *= 1.5  # Failed coping makes events more intense
+        event_intensity *= a.stress.failed_coping_intensity_multiplier  # 1.5
 
     # Update recent stress intensity with decay of previous intensity
-    decay_rate = 0.8  # How quickly previous intensity fades
-    recent_stress_intensity = (recent_stress_intensity * decay_rate) + (event_intensity * 0.2)
+    decay_rate = a.stress.stress_intensity_decay_rate  # 0.8
+    new_intensity_weight = a.stress.new_intensity_weight  # 0.2
+    recent_stress_intensity = (recent_stress_intensity * decay_rate) + (event_intensity * new_intensity_weight)
 
     # Update stress momentum (rate of change)
     # Positive momentum means stress is increasing
     if event_intensity > recent_stress_intensity * decay_rate:
         # Stress is increasing
-        stress_momentum = min(1.0, stress_momentum + 0.1)
+        stress_momentum = min(1.0, stress_momentum + a.stress.momentum_increase_rate)  # 0.1
     else:
         # Stress is decreasing or stable
-        stress_momentum = max(-1.0, stress_momentum - 0.05)
+        stress_momentum = max(-1.0, stress_momentum - a.stress.momentum_decrease_rate)  # 0.05
 
     return recent_stress_intensity, stress_momentum
 
@@ -1044,13 +1060,14 @@ def decay_recent_stress_intensity(recent_stress_intensity: float, stress_momentu
     Returns:
         Tuple of (decayed_stress_intensity, decayed_momentum)
     """
+    a = get_assumptions()
     # Gradual decay when no recent stress events
-    decay_rate = 0.95  # 5% decay per update
+    decay_rate = 0.95  # 5% decay per update (kept as local, not an assumption)
     decayed_intensity = recent_stress_intensity * decay_rate
 
     # Also decay momentum toward zero
-    if abs(stress_momentum) > 0.01:
-        decayed_momentum = stress_momentum * 0.9  # 10% decay toward zero
+    if abs(stress_momentum) > a.stress.momentum_zero_threshold:  # 0.01
+        decayed_momentum = stress_momentum * a.stress.momentum_decay_factor  # 0.9
     else:
         decayed_momentum = 0.0
 
@@ -1069,16 +1086,15 @@ def estimate_pss10_from_stress_dimensions(stress_controllability: float, stress_
         Tuple of (min_expected, max_expected) PSS-10 scores
     """
     # Simple estimation based on stress dimensions
-    # In practice, this would use the same logic as PSS-10 generation
-    base_score = 10  # Neutral baseline
-
-    controllability_effect = (1.0 - stress_controllability) * 8  # Up to 8 points
-    overload_effect = stress_overload * 12  # Up to 12 points
+    a = get_assumptions()
+    base_score = a.stress.pss10_estimation_base  # 10
+    controllability_effect = (1.0 - stress_controllability) * a.stress.pss10_controllability_max_effect  # 8
+    overload_effect = stress_overload * a.stress.pss10_overload_max_effect  # 12
 
     estimated_score = base_score + controllability_effect + overload_effect
 
     # Add some variance for estimation uncertainty
-    variance = 3
+    variance = a.stress.pss10_estimation_variance  # 3
     return (max(0, int(estimated_score - variance)), min(40, int(estimated_score + variance)))
 
 

@@ -23,16 +23,18 @@ from numpy.random import Generator
 
 from src.python.phases.interfaces import AgentState, PhaseOutput, PhaseFrequency
 from src.python.math_utils import clamp
+from src.python.assumption_config import get_assumptions
 
 PHASE_FREQUENCY: PhaseFrequency = "event_driven"
 
 # ──────────────────────────────────────────────
-# Default configuration constants
+# Default configuration constants (Plan 007)
 # ──────────────────────────────────────────────
 
+_assumptions = get_assumptions()
 _DEFAULT_INFLUENCE_RATE = 0.05
 _DEFAULT_RESILIENCE_INFLUENCE = 0.05
-_DEFAULT_SUPPORT_THRESHOLD = 0.05
+_DEFAULT_SUPPORT_THRESHOLD = _assumptions.social.support_exchange_threshold
 _DEFAULT_BOOST = 0.10
 _DEFAULT_COST = 0.05
 _DEFAULT_SMALL_BOOST = 0.02

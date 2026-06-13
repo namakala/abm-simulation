@@ -14,6 +14,7 @@ from typing import List, Optional, Dict
 from dataclasses import dataclass, field
 
 from src.python.config import get_config
+from src.python.assumption_config import get_assumptions
 from src.python.math_utils import clamp
 from src.python.resource_utils import ResourceOptimizationConfig
 from src.python.stress_utils import compute_event_difficulty
@@ -233,11 +234,10 @@ def compute_stress_impact_on_affect(
         Affect change
     """
     if config is None:
-        # Get fresh config instance to avoid global config issues
-        cfg = get_config()
+        a = get_assumptions()
         config = {
-            "coping_improvement": cfg.get("agent", "coping_success_rate") * 0.2,  # Scale based on success rate
-            "coping_deterioration": cfg.get("agent", "coping_success_rate") * 0.4,  # Scale based on success rate
+            "coping_improvement": a.coping.affect_improvement_scale,  # 0.2
+            "coping_deterioration": a.coping.affect_deterioration_scale,  # 0.4
             "no_stress_effect": 0.0,  # No change if not stressed
         }
 
@@ -288,11 +288,10 @@ def compute_stress_impact_on_resilience(
         Resilience change
     """
     if config is None:
-        # Get fresh config instance to avoid global config issues
-        cfg = get_config()
+        a = get_assumptions()
         config = {
-            "coping_improvement": cfg.get("agent", "coping_success_rate") * 0.1,  # Scale based on success rate
-            "coping_deterioration": cfg.get("agent", "coping_success_rate") * 0.2,  # Scale based on success rate
+            "coping_improvement": a.coping.resilience_improvement_scale,  # 0.1
+            "coping_deterioration": a.coping.resilience_deterioration_scale,  # 0.2
             "no_stress_effect": 0.0,  # No change if not stressed
         }
 
@@ -503,14 +502,16 @@ def compute_challenge_hindrance_resilience_effect(
     if config is None:
         config = StressProcessingConfig()
 
+    a = get_assumptions()
+
     if coped_successfully:
         # Success case: hindrance slightly helps, challenge greatly helps
-        hindrance_effect = 0.1 * hindrance  # Small positive effect
-        challenge_effect = 0.3 * challenge  # Large positive effect
+        hindrance_effect = a.coping.hindrance_success_resilience * hindrance  # 0.1
+        challenge_effect = a.coping.challenge_success_resilience * challenge  # 0.3
     else:
         # Failure case: hindrance greatly hurts, challenge slightly hurts
-        hindrance_effect = -0.4 * hindrance  # Large negative effect
-        challenge_effect = -0.1 * challenge  # Small negative effect
+        hindrance_effect = a.coping.hindrance_failure_resilience * hindrance  # -0.4
+        challenge_effect = a.coping.challenge_failure_resilience * challenge  # -0.1
 
     total_effect = hindrance_effect + challenge_effect
     return total_effect
@@ -910,23 +911,25 @@ def determine_coping_outcome_and_psychological_impact(
     new_resilience = current_resilience + resilience_effect
     new_resilience = clamp(new_resilience, 0.0, 1.0)
 
-    # Update stress based on coping outcome
+    a = get_assumptions()
+
+    # Update stress based on coping outcome (Plan 007)
     if coped_successfully:
         # Successful coping reduces stress
-        stress_reduction = 0.2 * (1.0 + challenge)  # Challenge helps reduce stress more
+        stress_reduction = a.coping.success_stress_reduction * (1.0 + challenge)  # 0.2
         new_stress = current_stress - stress_reduction
     else:
         # Failed coping increases stress
-        stress_increase = 0.3 * (1.0 + hindrance)  # Hindrance increases stress more
+        stress_increase = a.coping.failure_stress_increase * (1.0 + hindrance)  # 0.3
         new_stress = current_stress + stress_increase
 
     new_stress = clamp(new_stress, 0.0, 1.0)
 
-    # Update affect based on stress outcome
+    # Update affect based on stress outcome (Plan 007)
     if coped_successfully:
-        affect_change = 0.1 * challenge  # Challenge provides positive affect boost
+        affect_change = a.coping.success_affect_change * challenge  # 0.1
     else:
-        affect_change = -0.2 * hindrance  # Hindrance provides negative affect impact
+        affect_change = a.coping.failure_affect_change * hindrance  # -0.2
 
     new_affect = current_affect + affect_change
     new_affect = clamp(new_affect, -1.0, 1.0)
@@ -1111,8 +1114,9 @@ def compute_cumulative_overload(
     # Overload effect increases with more consecutive hindrances
     overload_intensity = min(consecutive_hindrances / config.influencing_hindrance, 2.0)
 
-    # Overload reduces resilience significantly
-    return -0.2 * overload_intensity
+    # Overload reduces resilience (assumption-parameterised, Plan 007)
+    a = get_assumptions()
+    return -a.coping.resilience_deterioration_scale * overload_intensity  # -0.2
 
 
 def update_affect_dynamics(

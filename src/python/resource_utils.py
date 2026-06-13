@@ -14,6 +14,7 @@ from typing import Dict, Optional, Tuple
 from dataclasses import dataclass, field
 
 from src.python.config import get_config
+from src.python.assumption_config import get_assumptions
 from src.python.stress_utils import compute_event_difficulty
 
 # Load configuration
@@ -43,15 +44,22 @@ class ResourceParams:
 
 @dataclass
 class ResourceOptimizationConfig:
-    """Configuration parameters for resilience-based resource optimization."""
+    """Configuration parameters for resilience-based resource optimization.
+
+    Loads default values from ASSUMPTION_* env vars (Plan 007) when not
+    explicitly provided. Falls back to original hardcoded constants for
+    backward compatibility.
+    """
 
     base_resource_cost: float = field(default_factory=lambda: get_config().get("agent", "resource_cost"))
-    resilience_efficiency_factor: float = 0.3  # 30% efficiency gain from resilience
-    minimum_resource_threshold: float = 0.05  # Minimum resources needed for allocation
-    coping_difficulty_scale: float = 0.5  # Scale for event difficulty effects
+    resilience_efficiency_factor: float = field(
+        default_factory=lambda: get_assumptions().resource.resilience_efficiency_factor
+    )
+    minimum_resource_threshold: float = field(default_factory=lambda: get_assumptions().resource.min_resource_threshold)
+    coping_difficulty_scale: float = field(default_factory=lambda: get_assumptions().resource.coping_difficulty_scale)
     stressed_resource_floor: float = 0.1  # Minimum resources maintained for stressed agents
     preservation_threshold: float = 0.1  # Resources to preserve for basic needs before allocation
-    efficiency_return_factor: float = 0.05  # Efficiency return on protective factor investments
+    efficiency_return_factor: float = field(default_factory=lambda: get_assumptions().resource.efficiency_return_factor)
 
 
 def compute_resource_regeneration(current_resources: float, config: Optional[ResourceParams] = None) -> float:
@@ -177,15 +185,17 @@ def compute_resilience_optimized_resource_cost(
     # Higher resilience = lower effective cost (more efficient resource use)
     resilience_efficiency = 1.0 - (current_resilience * config.resilience_efficiency_factor)
 
-    # Challenge events benefit more from resilience (resilience helps with motivation)
-    # Hindrance events benefit less from resilience (hindrance is more about obstacles)
-    challenge_resilience_bonus = challenge * current_resilience * 0.2
-    hindrance_resilience_bonus = hindrance * current_resilience * 0.1
+    # Assumption-parameterized bonus factors (Plan 007)
+    a = get_assumptions()
+    challenge_resilience_bonus = challenge * current_resilience * a.resource.challenge_resilience_bonus_factor  # 0.2
+    hindrance_resilience_bonus = hindrance * current_resilience * a.resource.hindrance_resilience_bonus_factor  # 0.1
 
     resilience_bonus = challenge_resilience_bonus + hindrance_resilience_bonus
 
-    # Calculate final cost
-    optimized_cost = base_cost * difficulty_multiplier * max(0.3, resilience_efficiency - resilience_bonus)
+    # Calculate final cost with min cost floor
+    optimized_cost = (
+        base_cost * difficulty_multiplier * max(a.resource.min_cost_floor, resilience_efficiency - resilience_bonus)
+    )
 
     return optimized_cost
 
@@ -218,8 +228,8 @@ def compute_resource_efficiency_gain(
         return 1.0
 
     # Efficiency gain scales with resilience surplus
-    # Maximum 50% efficiency improvement at very high resilience surplus
-    max_efficiency_gain = 0.5
+    a = get_assumptions()
+    max_efficiency_gain = a.resource.max_efficiency_gain  # 0.5
     efficiency_gain = min(resilience_surplus * config.resilience_efficiency_factor, max_efficiency_gain)
 
     # Return efficiency multiplier (1.0 + gain)
@@ -289,13 +299,15 @@ def allocate_resilience_optimized_resources(
     ]
 
     # Resilience improves allocation decisions by reducing temperature (more focused allocation)
+    ac = get_assumptions()
     cfg = get_config()
     base_temperature = cfg.get("utility", "softmax_temperature")
-    resilience_focus = current_resilience * 0.5  # Higher resilience = more focused allocation
+    # Assumption-parameterized focus factor (Plan 007 harmonises to 0.5)
+    resilience_focus = current_resilience * ac.resource.resilience_focus_factor
     temperature = max(0.1, base_temperature - resilience_focus)
 
-    # Add resilience bonus to allocation weights
-    resilience_bonuses = [current_resilience * 0.5] * len(factors)  # 50% resilience bonus to all factors
+    # Add resilience bonus to allocation weights (harmonised to 0.2 per Plan 007)
+    resilience_bonuses = [current_resilience * ac.resource.resilience_allocation_bonus] * len(factors)
     adjusted_efficacies = [efficacy + bonus for efficacy, bonus in zip(efficacies, resilience_bonuses)]
 
     # Softmax decision making with resilience-adjusted temperature
@@ -333,15 +345,17 @@ def compute_resource_depletion_with_resilience(
     if config is None:
         config = ResourceOptimizationConfig()
 
+    a = get_assumptions()
+
     # Apply resilience-based cost optimization
     optimized_cost = cost * (1.0 - current_resilience * config.resilience_efficiency_factor)
 
     # Failed coping attempts cost more (inefficient resource use)
     if not coping_successful:
-        optimized_cost *= 1.3  # 30% penalty for failed coping
+        optimized_cost *= a.resource.failed_coping_cost_penalty  # 1.3 (30% penalty)
 
     # Ensure minimum cost even with very high resilience
-    optimized_cost = max(cost * 0.3, optimized_cost)
+    optimized_cost = max(cost * a.resource.min_cost_floor, optimized_cost)
 
     # Deplete resources
     remaining_resources = max(0.0, current_resources - optimized_cost)
@@ -379,13 +393,14 @@ def process_social_resource_exchange(
     # Get configuration for resource exchange
     cfg = get_config()
 
+    a = get_assumptions()
     if config is None:
         config = {
             "base_exchange_rate": cfg.get("resource", "social_exchange_rate"),
             "exchange_threshold": cfg.get("resource", "exchange_threshold"),
             "max_exchange_ratio": cfg.get("resource", "max_exchange_ratio"),
-            "minimum_resource_threshold_for_sharing": 0.2,  # Minimum resources needed before sharing
-            "exchange_amount_reduction_factor": 0.5,  # Reduce exchange amounts to minimize correlation impact
+            "minimum_resource_threshold_for_sharing": a.resource.min_resource_threshold_for_sharing,  # 0.2
+            "exchange_amount_reduction_factor": a.resource.exchange_amount_reduction_factor,  # 0.5
         }
 
     # Calculate resource difference (positive if partner has more resources)
@@ -409,11 +424,10 @@ def process_social_resource_exchange(
     if giver < config["minimum_resource_threshold_for_sharing"]:
         return 0.0, 0.0, self_resources, partner_resources
 
-    # Resilience-optimized exchange calculation
+    # Resilience-optimized exchange calculation (Plan 007 assumption-parameterised)
     # Higher giver resilience = more generous sharing
     # Higher receiver resilience = more efficient resource utilization
-    giver_resilience * 0.2
-    receiver_efficiency_bonus = receiver_resilience * 0.15
+    receiver_efficiency_bonus = receiver_resilience * a.resource.receiver_efficiency_bonus_factor  # 0.15
 
     # Calculate exchange amount with resilience optimization
     max_transferable = giver * config["max_exchange_ratio"]
@@ -500,8 +514,9 @@ def update_protective_factors_with_allocation(
         if allocation > 0 and factor in updated_factors:
             current_efficacy = updated_factors[factor]
 
-            # Resilience provides additional improvement rate bonus
-            resilience_bonus = current_resilience * 0.2  # 20% bonus from resilience
+            # Assumption-parameterised resilience improvement bonus (Plan 007)
+            ac = get_assumptions()
+            resilience_bonus = current_resilience * ac.resource.resilience_allocation_bonus  # 0.2
 
             # Investment return is higher when current efficacy is lower and resilience is higher
             improvement_rate = config["improvement_rate"]
@@ -511,7 +526,9 @@ def update_protective_factors_with_allocation(
             efficiency_gain = 1.0 + resilience_bonus
 
             # Add efficiency returns: investments yield additional benefits over time
-            efficiency_return = allocation * config.get("efficiency_return_factor", 0.05)
+            efficiency_return = allocation * config.get(
+                "efficiency_return_factor", ac.resource.efficiency_return_factor
+            )
 
             efficacy_increase = (
                 allocation * improvement_rate * investment_effectiveness * efficiency_gain
@@ -629,15 +646,19 @@ def update_protective_factors_efficacy(
 
     updated_factors = protective_factors.copy()
 
-    # Apply stress-based optimization if stress state provided
+    a = get_assumptions()
+
+    # Determine effective improvement rate considering stress state
+    effective_rate = config["improvement_rate"]
 
     if stress_state:
         # High overload reduces allocation efficiency
-        overload_penalty = stress_state.get("stress_overload", 0.0) * 0.1
-        1.0 - overload_penalty
+        overload_penalty = stress_state.get("stress_overload", 0.0) * a.resource.overload_allocation_penalty_rate  # 0.1
+        effective_rate *= 1.0 - overload_penalty
 
-        # Low controllability increases allocation urgency
-        (1.0 - stress_state.get("stress_controllability", 0.5)) * 0.05
+        # Low controllability increases allocation urgency (small boost)
+        urgency_boost = (1.0 - stress_state.get("stress_controllability", 0.5)) * 0.05
+        effective_rate *= 1.0 + urgency_boost
 
     # Update each protective factor based on allocation
     for factor, allocation in allocations.items():
@@ -645,9 +666,13 @@ def update_protective_factors_efficacy(
             current_efficacy = updated_factors[factor]
 
             # Stress state influences improvement effectiveness
-            stress_effectiveness = 1.0 + (stress_state.get("current_stress", 0.0) * 0.1) if stress_state else 1.0
+            stress_effectiveness = 1.0
+            if stress_state:
+                stress_effectiveness = 1.0 + (
+                    stress_state.get("current_stress", 0.0) * a.resource.stress_improvement_effectiveness
+                )  # 0.1
 
-            improvement_rate = config["improvement_rate"]
+            improvement_rate = effective_rate
             investment_effectiveness = 1.0 - current_efficacy
 
             efficacy_increase = allocation * improvement_rate * investment_effectiveness * stress_effectiveness
@@ -669,9 +694,9 @@ def calculate_recent_social_benefit(daily_support_exchanges: int) -> float:
     if daily_support_exchanges <= 0:
         return 0.0
 
+    a = get_assumptions()
     # Weight by number of support exchanges (more exchanges = more benefit)
-    # Cap at reasonable level to avoid excessive boosting
-    recent_benefit = min(1.0, daily_support_exchanges * 0.2)
+    recent_benefit = min(1.0, daily_support_exchanges * a.resource.support_exchange_benefit_weight)  # 0.2
 
     return recent_benefit
 
@@ -706,14 +731,17 @@ def allocate_protective_factors_with_social_boost(
     if rng is None:
         rng = np.random.default_rng()
 
+    a = get_assumptions()
     # Preserve resources for basic needs before allocation
     preservable_resources = max(0.0, available_resources - config.preservation_threshold)
     if preservable_resources <= 0:
         return {"social_support": 0.0, "family_support": 0.0, "formal_intervention": 0.0, "psychological_capital": 0.0}
 
-    # Social support increases available resources for allocation
-    social_resource_boost = social_benefit * 0.1  # 10% boost per social benefit unit
-    available_for_allocation = preservable_resources * 0.1 + social_resource_boost
+    # Social support increases available resources for allocation (Plan 007)
+    social_resource_boost = social_benefit * a.resource.social_resource_boost_factor  # 0.1
+    available_for_allocation = (
+        preservable_resources * a.resource.preservable_allocation_fraction + social_resource_boost
+    )
 
     if available_for_allocation > 0 and preservable_resources > 0:
         # Use resilience-optimized allocation function with social enhancement
@@ -728,7 +756,7 @@ def allocate_protective_factors_with_social_boost(
 
         # Apply social support boost to social_support allocation specifically
         if "social_support" in allocations and allocations["social_support"] > 0:
-            allocations["social_support"] *= 1.0 + social_benefit * 0.3
+            allocations["social_support"] *= 1.0 + social_benefit * a.resource.social_support_allocation_boost  # 0.3
 
         # Normalize allocations
         total_allocated = sum(allocations.values())

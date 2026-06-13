@@ -20,17 +20,19 @@ import numpy as np
 from numpy.random import Generator
 
 from src.python.phases.interfaces import AgentState, PhaseOutput, PhaseFrequency
+from src.python.assumption_config import get_assumptions
 
 PHASE_FREQUENCY: PhaseFrequency = "daily"
 
 # Factor names in canonical order — must match AgentState.protective_factors keys
 _FACTORS = ["social_support", "family_support", "formal_intervention", "psychological_capital"]
 
-# Hardcoded regeneration multipliers (Plan 007 externalises these)
-_AFFECT_MULT_COEFFICIENT = 0.50
-_RESILIENCE_MULT_COEFFICIENT = 0.30
-_EFFICIENCY_RETURN_FACTOR = 0.05
-_RESILIENCE_BONUS_FACTOR = 0.20
+# Assumption-parameterized constants (Plan 007)
+_assumptions = get_assumptions()
+_AFFECT_MULT_COEFFICIENT = _assumptions.resource.affect_regeneration_multiplier
+_RESILIENCE_MULT_COEFFICIENT = _assumptions.resource.resilience_regeneration_multiplier
+_EFFICIENCY_RETURN_FACTOR = _assumptions.resource.efficiency_return_factor
+_RESILIENCE_BONUS_FACTOR = _assumptions.resource.challenge_resilience_bonus_factor
 
 
 def _compute_regeneration(

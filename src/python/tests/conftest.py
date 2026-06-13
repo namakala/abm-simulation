@@ -8,6 +8,7 @@ import pytest
 import numpy as np
 import networkx as nx
 from src.python.config import get_config, reload_config, config
+from src.python.assumption_config import reload_assumptions
 from src.python.math_utils import create_rng
 from src.python.stress_utils import generate_stress_event
 from src.python.agent import Person
@@ -250,6 +251,7 @@ def complete_env_isolation():
 
     # Reset global config cache objects
     config.config = None
+    reload_assumptions()
 
     # Run the test
     yield
@@ -258,3 +260,4 @@ def complete_env_isolation():
     os.environ.clear()
     os.environ.update(current_env)
     config.config = None
+    reload_assumptions()
