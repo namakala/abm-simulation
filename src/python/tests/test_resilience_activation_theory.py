@@ -95,9 +95,9 @@ class TestCopingProbabilityTheory:
         high_challenge = compute_coping_probability(
             challenge=0.8, hindrance=0.5, neighbor_affects=[0.0], current_resilience=0.5, config=config
         )
-        assert (
-            high_challenge >= low_challenge
-        ), f"Higher challenge should increase coping prob, got {high_challenge} < {low_challenge}"
+        assert high_challenge >= low_challenge, (
+            f"Higher challenge should increase coping prob, got {high_challenge} < {low_challenge}"
+        )
 
     def test_higher_hindrance_decreases_coping_prob(self):
         """Higher hindrance -> lower coping probability (all else equal)."""
@@ -108,9 +108,9 @@ class TestCopingProbabilityTheory:
         high_hindrance = compute_coping_probability(
             challenge=0.5, hindrance=0.8, neighbor_affects=[0.0], current_resilience=0.5, config=config
         )
-        assert (
-            high_hindrance <= low_hindrance
-        ), f"Higher hindrance should decrease coping prob, got {high_hindrance} > {low_hindrance}"
+        assert high_hindrance <= low_hindrance, (
+            f"Higher hindrance should decrease coping prob, got {high_hindrance} > {low_hindrance}"
+        )
 
     def test_positive_neighbor_affect_increases_coping_prob(self):
         """Positive neighbor affect -> higher coping probability than negative."""
@@ -121,9 +121,9 @@ class TestCopingProbabilityTheory:
         pos_neighbors = compute_coping_probability(
             challenge=0.5, hindrance=0.5, neighbor_affects=[0.5, 0.6], current_resilience=0.5, config=config
         )
-        assert (
-            pos_neighbors > neg_neighbors
-        ), f"Positive neighbor affect should increase coping prob, got {pos_neighbors} <= {neg_neighbors}"
+        assert pos_neighbors > neg_neighbors, (
+            f"Positive neighbor affect should increase coping prob, got {pos_neighbors} <= {neg_neighbors}"
+        )
 
     def test_higher_resilience_increases_coping_prob(self):
         """Higher resilience -> higher coping probability."""
@@ -383,9 +383,9 @@ class TestAsymmetry:
             challenge=0.0, hindrance=hi_value, coped_successfully=False
         )
         expected_overload = -0.4 * hi_value
-        assert (
-            abs(total_effect - expected_overload) < 1e-10
-        ), f"Overload effect should be -0.4*hi={expected_overload:.4f}, got {total_effect:.4f}"
+        assert abs(total_effect - expected_overload) < 1e-10, (
+            f"Overload effect should be -0.4*hi={expected_overload:.4f}, got {total_effect:.4f}"
+        )
 
     def test_overload_capped_at_one(self):
         """Overload effect uses min(h_c / eta, 1.0) - test with extreme hindrance."""
@@ -473,9 +473,9 @@ class TestPhaseFunctionIntegration:
         config["event_controllability"] = 0.3
         config["event_overload"] = 0.7
         result = run_phase(state, config, np.random.default_rng(42))
-        assert (
-            result["state_delta"]["consecutive_hindrances"] > 2.0
-        ), "consecutive_hindrances should increment when hindrance > challenge"
+        assert result["state_delta"]["consecutive_hindrances"] > 2.0, (
+            "consecutive_hindrances should increment when hindrance > challenge"
+        )
 
     def test_consecutive_hindrances_resets_when_challenge_higher(self):
         """consecutive_hindrances resets to 0 when challenge > hindrance."""
@@ -484,9 +484,9 @@ class TestPhaseFunctionIntegration:
         state["hindrance"] = 0.2
         state["consecutive_hindrances"] = 5.0
         result = run_phase(state, SUCCESS_CONFIG, np.random.default_rng(42))
-        assert (
-            result["state_delta"]["consecutive_hindrances"] == 0.0
-        ), "consecutive_hindrances should reset when challenge > hindrance"
+        assert result["state_delta"]["consecutive_hindrances"] == 0.0, (
+            "consecutive_hindrances should reset when challenge > hindrance"
+        )
 
 
 # ──────────────────────────────────────────────
@@ -518,9 +518,9 @@ class TestResourceCostTheory:
         high_difficulty_cost = compute_resilience_optimized_resource_cost(
             base_cost=0.1, current_resilience=0.5, challenge=0.2, hindrance=0.8
         )
-        assert (
-            high_difficulty_cost >= low_difficulty_cost
-        ), f"More difficult events should cost more, got {high_difficulty_cost:.4f} < {low_difficulty_cost:.4f}"
+        assert high_difficulty_cost >= low_difficulty_cost, (
+            f"More difficult events should cost more, got {high_difficulty_cost:.4f} < {low_difficulty_cost:.4f}"
+        )
 
     def test_resource_cost_decreases_with_resilience(self):
         """Higher resilience reduces resource cost (efficiency gain)."""
@@ -532,9 +532,9 @@ class TestResourceCostTheory:
         high_res_cost = compute_resilience_optimized_resource_cost(
             base_cost=0.1, current_resilience=0.8, challenge=0.5, hindrance=0.5
         )
-        assert (
-            high_res_cost <= low_res_cost
-        ), f"Higher resilience should reduce cost, got {high_res_cost:.4f} > {low_res_cost:.4f}"
+        assert high_res_cost <= low_res_cost, (
+            f"Higher resilience should reduce cost, got {high_res_cost:.4f} > {low_res_cost:.4f}"
+        )
 
     def test_resource_reward_after_successful_coping(self):
         """Resource reward = base_cost * 0.75 after successful coping."""

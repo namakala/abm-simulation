@@ -568,9 +568,9 @@ class TestCompleteStressProcessingLoop:
         # Test Step 3: Initial stress level should be based on PSS-10 score
         initial_stress = agent.current_stress
         expected_initial_stress = compute_stress_from_pss10(agent.stress_controllability, agent.stress_overload)
-        assert (
-            abs(initial_stress - expected_initial_stress) < 1e-2
-        ), "Step 3 failed: Initial stress should be based on PSS-10"
+        assert abs(initial_stress - expected_initial_stress) < 1e-2, (
+            "Step 3 failed: Initial stress should be based on PSS-10"
+        )
 
         # Simulate multiple days with PSS-10 collection and feedback
         for day in range(3):
@@ -583,9 +583,9 @@ class TestCompleteStressProcessingLoop:
                 daily_scores.append(agent.pss10)  # PSS-10 score is updated in stressful_event
 
             # Verify that daily_pss10_scores is populated by the events
-            assert (
-                len(agent.daily_pss10_scores) == num_events_per_day
-            ), f"Daily PSS-10 scores not populated correctly on day {day}"
+            assert len(agent.daily_pss10_scores) == num_events_per_day, (
+                f"Daily PSS-10 scores not populated correctly on day {day}"
+            )
             assert agent.daily_pss10_scores == daily_scores, f"Daily PSS-10 scores mismatch on day {day}"
 
             # Store state before step
@@ -599,9 +599,9 @@ class TestCompleteStressProcessingLoop:
             # Verify Step 7: PSS-10 score remains consistent with pss10_responses
             # (consolidated score is used only for stress feedback, not to overwrite pss10)
             expected_score = compute_pss10_score(agent.pss10_responses)
-            assert (
-                agent.pss10 == expected_score
-            ), f"Step 7 failed: pss10={agent.pss10} inconsistent with responses ({expected_score}) on day {day}"
+            assert agent.pss10 == expected_score, (
+                f"Step 7 failed: pss10={agent.pss10} inconsistent with responses ({expected_score}) on day {day}"
+            )
 
             # Verify Step 7: Stress level updated based on consolidated PSS-10
             expected_stress = compute_stress_from_pss10(agent.stress_controllability, agent.stress_overload)
@@ -628,9 +628,9 @@ class TestCompleteStressProcessingLoop:
 
         # The stress should be correlated with PSS-10 (though smoothed)
         stress_pss10_correlation = 1.0 - abs(final_stress - expected_final_stress)
-        assert (
-            stress_pss10_correlation > 0.3
-        ), "Feedback mechanism should maintain correlation between stress and PSS-10"
+        assert stress_pss10_correlation > 0.3, (
+            "Feedback mechanism should maintain correlation between stress and PSS-10"
+        )
 
     def test_pss10_stress_bounds_maintenance(self):
         """Test that PSS-10 workflow maintains all values within valid bounds."""
@@ -700,9 +700,9 @@ class TestCompleteStressProcessingLoop:
         correlation = np.corrcoef(pss10_scores, stress_levels)[0, 1]
 
         # Assert reasonable correlation (dimension-based formula should show some correlation)
-        assert (
-            correlation > -0.5
-        ), f"Correlation between PSS-10 and stress should be reasonable with dimension-based formula, got {correlation:.3f}"
+        assert correlation > -0.5, (
+            f"Correlation between PSS-10 and stress should be reasonable with dimension-based formula, got {correlation:.3f}"
+        )
 
         # Additional check: ensure correlation is reasonable (PSS-10 and stress should show some relationship)
         assert correlation > -0.5, f"Correlation should be reasonable, got {correlation:.3f}"

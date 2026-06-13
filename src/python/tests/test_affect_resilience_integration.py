@@ -143,9 +143,9 @@ class TestSocialInfluenceScenario:
         # Neighbors should not have deteriorated significantly (social buffering)
         # Note: Some deterioration may occur due to complex social dynamics
         for i, agent in enumerate(agents):
-            assert (
-                agent.affect >= initial_neighbor_affects[i] - 0.7
-            ), f"Agent {i} affect should not deteriorate significantly"
+            assert agent.affect >= initial_neighbor_affects[i] - 0.7, (
+                f"Agent {i} affect should not deteriorate significantly"
+            )
 
         # All values should remain in valid ranges
         assert -1.0 <= central_agent.affect <= 1.0
@@ -216,9 +216,9 @@ class TestSocialInfluenceScenario:
 
         # Neighbors should not have improved significantly (negative contagion)
         for i, agent in enumerate(agents):
-            assert (
-                agent.affect <= initial_neighbor_affects[i] + 0.4
-            ), f"Agent {i} affect should not improve significantly"
+            assert agent.affect <= initial_neighbor_affects[i] + 0.4, (
+                f"Agent {i} affect should not improve significantly"
+            )
 
     def test_influencing_neighbors_parameter_effect(self):
         """

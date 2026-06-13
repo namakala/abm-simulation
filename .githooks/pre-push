@@ -5,7 +5,6 @@ export DOTENV_FILE=.env.example
 
 echo "==> Running pre-push checks (CI/CD mirror)..."
 
-pixi run prettify
 pixi run format
 pixi run lint
 pixi run test-cov

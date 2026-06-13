@@ -453,9 +453,9 @@ class TestAgentPopulationVariation:
             resilience_stat = stats["resilience"]
             assert 0.1 < resilience_stat.mean < 0.9, f"Unrealistic resilience mean: {resilience_stat.mean}"
             assert 0.01 < resilience_stat.std < 0.4, f"Unrealistic resilience SD: {resilience_stat.std}"
-            assert (
-                resilience_stat.skewness >= -2 and resilience_stat.skewness <= 2
-            ), f"Extreme skewness: {resilience_stat.skewness}"
+            assert resilience_stat.skewness >= -2 and resilience_stat.skewness <= 2, (
+                f"Extreme skewness: {resilience_stat.skewness}"
+            )
 
             # Test affect statistics (tanh transformed)
             affect_stat = stats["affect"]

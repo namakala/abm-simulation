@@ -473,9 +473,9 @@ class TestTransformationFunctions:
         result_neg = tanh_transform(mean=-0.4, std=0.1, rng=rng_neg)
 
         # Different means with same seed should NOT produce identical values
-        assert (
-            result_pos != result_neg
-        ), f"mean=0.8 and mean=-0.4 should yield different outputs, got {result_pos} == {result_neg}"
+        assert result_pos != result_neg, (
+            f"mean=0.8 and mean=-0.4 should yield different outputs, got {result_pos} == {result_neg}"
+        )
 
         # With mean=0.8, output should be positive (shifted toward +1)
         assert result_pos > 0.0, f"tanh_transform(mean=0.8) should be positive, got {result_pos}"

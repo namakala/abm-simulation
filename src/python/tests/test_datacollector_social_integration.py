@@ -41,9 +41,9 @@ def test_basic_social_interaction_collection():
     assert (model_data["support_exchanges"] >= 0).all(), "All support_exchanges should be non-negative"
 
     # Check that support exchanges don't exceed total interactions
-    assert (
-        model_data["support_exchanges"] <= model_data["social_interactions"]
-    ).all(), "Support exchanges should not exceed total social interactions"
+    assert (model_data["support_exchanges"] <= model_data["social_interactions"]).all(), (
+        "Support exchanges should not exceed total social interactions"
+    )
 
     print(f"✓ Collected {len(model_data)} days of social interaction data")
     print(f"✓ Total social interactions: {model_data['social_interactions'].sum()}")
@@ -267,9 +267,9 @@ def test_data_consistency():
     for i, result in enumerate(results):
         assert result["total_interactions"] >= 0, f"Run {i + 1} should have non-negative interactions"
         assert result["total_support"] >= 0, f"Run {i + 1} should have non-negative support exchanges"
-        assert (
-            result["total_support"] <= result["total_interactions"]
-        ), f"Run {i + 1} support should not exceed interactions"
+        assert result["total_support"] <= result["total_interactions"], (
+            f"Run {i + 1} support should not exceed interactions"
+        )
 
     print("✓ Run 1: interactions={}, support={}".format(results[0]["total_interactions"], results[0]["total_support"]))
     print("✓ Run 2: interactions={}, support={}".format(results[1]["total_interactions"], results[1]["total_support"]))

@@ -277,9 +277,9 @@ class TestNonStressedPath:
         )
 
         # Changes should be minimal (homeostasis pull + small event effect)
-        assert (
-            abs(updated_c - current_controllability) < 0.05
-        ), f"Controllability changed too much: {current_controllability} -> {updated_c}"
+        assert abs(updated_c - current_controllability) < 0.05, (
+            f"Controllability changed too much: {current_controllability} -> {updated_c}"
+        )
         assert abs(updated_o - current_overload) < 0.05, f"Overload changed too much: {current_overload} -> {updated_o}"
         # Non-stressful events reset intensity and momentum to zero
         assert rsi == 0.0
@@ -334,9 +334,9 @@ class TestEventSampling:
         event1 = generate_stress_event(rng1)
         event2 = generate_stress_event(rng2)
         # Very unlikely to produce identical events from different seeds
-        assert (event1.controllability != event2.controllability) or (
-            event1.overload != event2.overload
-        ), "Different seeds should produce different events"
+        assert (event1.controllability != event2.controllability) or (event1.overload != event2.overload), (
+            "Different seeds should produce different events"
+        )
 
 
 # ──────────────────────────────────────────────
