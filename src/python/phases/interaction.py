@@ -153,7 +153,7 @@ def process_interaction(
     # (only self-stressed cases get resource changes; partner-stressed
     # alone is handled when that agent is 'self' in their own call)
 
-    # ── 6. Build deltas ────────────────────────────────────────────
+    # ── 6. Build deltas (change values — applied additively by caller) ──
     self_delta: Dict[str, Any] = {
         "affect": self_affect_change,
         "resilience": self_resilience_change,

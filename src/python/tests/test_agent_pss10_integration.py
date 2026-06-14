@@ -107,29 +107,14 @@ class TestAgentPSS10StepIntegration:
         # Create agent
         agent = Person(model)
 
-        # Store initial PSS-10 state
-        agent.pss10_responses.copy()
+        # Execute one step (uses phase pipeline, no mocking needed)
+        agent.step()
 
-        # Patch stressful_event to simulate PSS-10 update
-        with patch.object(agent, "stressful_event") as mock_stressful_event:
-
-            def side_effect():
-                # Simulate stress event updating PSS-10 and appending to daily scores
-                agent.pss10 = 15  # New PSS-10 score
-                agent.daily_pss10_scores.append(15)
-                return 0.5, 0.5
-
-            mock_stressful_event.side_effect = side_effect
-
-            # Execute one step
-            agent.step()
-
-        # PSS-10 should be updated due to consolidation
-        assert agent.pss10 == 15
-
-        # Stress levels should still be in valid range
+        # PSS-10 values should be in valid ranges after step
+        assert 0 <= agent.pss10 <= 40
         assert 0 <= agent.stress_controllability <= 1
         assert 0 <= agent.stress_overload <= 1
+        assert isinstance(agent.stressed, bool)
 
     def test_pss10_score_consistency(self):
         """Test that PSS-10 score remains consistent with responses after step."""

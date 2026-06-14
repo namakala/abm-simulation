@@ -57,6 +57,15 @@ from src.python.math_utils import sample_poisson, create_rng, tanh_transform, si
 from src.python.config import get_config
 from src.python.assumption_config import get_assumptions
 
+# Phase functions (Plan 008 orchestrator)
+from src.python.phases import (
+    run_stress_perception,
+    run_resilience_activation,
+    run_resource_allocation,
+    run_stress_buffering,
+)
+from src.python.phases.interaction import process_interaction as phase_process_interaction
+
 # Load configuration
 config = get_config()
 
@@ -505,183 +514,161 @@ class Person(mesa.Agent):
 
     def step(self):
         """
-        Execute one day of simulation with integrated stress and affect dynamics.
+        Execute one day of simulation using the two-loop orchestrator pattern.
 
-        Coordinates stress events, social interactions, and baseline dynamics
-        to create realistic mental health trajectories.
+        Two loops:
+        1. Subevent loop: shuffled "stress" / "interact" actions using event-driven phases
+        2. Daily consolidation loop: affect dynamics, resource allocation, stress buffering,
+           PSS-10 consolidation, daily reset
+
+        State flows through phases via ``_build_agent_state`` → ``_apply_delta`` → ``_write_back_state``.
         """
-        # Get configuration for dynamics
-        affect_config = getattr(self, "affect_config", None) or AffectDynamicsConfig()
-        resilience_config = ResilienceDynamicsConfig()
+        # ── 1. Build agent state ────────────────────────────────────
+        state = self._build_agent_state()
 
-        # Store initial affect and resilience values at the beginning of each day
-
-        # Get neighbor affects for social influence throughout the day
+        # ── 2. Get shared config values ─────────────────────────────
         neighbor_affects = get_neighbor_affects(self, self.model)
+        cfg = get_config()
+        base_resource_cost = cfg.get("agent", "resource_cost")
+        pss10_threshold = cfg.get("pss10", "threshold")
+        subevents_per_day = cfg.get("agent", "subevents_per_day")
 
-        # Initialize daily tracking variables
-        daily_challenge = 0.0
-        daily_hindrance = 0.0
-        stress_events_count = 0
-
-        # Determine number of subevents using utility function
-        n_subevents = sample_poisson(lam=config.get("agent", "subevents_per_day"), rng=self._rng, min_value=1)
-
-        # Generate random sequence of actions
+        # ── 3. Subevent loop (event-driven phases) ──────────────────
+        n_subevents = sample_poisson(lam=subevents_per_day, rng=self._rng, min_value=1)
         actions = [self._rng.choice(["interact", "stress"]) for _ in range(n_subevents)]
-
-        # Shuffle for random order
         self._rng.shuffle(actions)
 
-        # Execute actions and accumulate daily challenge/hindrance
-        # Each action represents a subevent within the day, simulating realistic timing
+        daily_challenge_total = 0.0
+        daily_hindrance_total = 0.0
+        stress_event_count = 0
+
         for action in actions:
-            if action == "interact":
-                # Track social interaction and check for meaningful support exchange
-                # The interact() method returns detailed information about the interaction outcome
-                interaction_result = self.interact()
-                self.daily_interactions += 1
+            if action == "stress":
+                # ── Stress perception phase ─────────────────────────
+                perception_config = {
+                    "omega_c": cfg.get("appraisal", "omega_c"),
+                    "omega_o": cfg.get("appraisal", "omega_o"),
+                    "bias": cfg.get("appraisal", "bias"),
+                    "gamma": cfg.get("appraisal", "gamma"),
+                    "delta": 0.2,  # stress_perception default
+                    "base_threshold": cfg.get("threshold", "base_threshold"),
+                    "challenge_scale": cfg.get("threshold", "challenge_scale"),
+                    "hindrance_scale": cfg.get("threshold", "hindrance_scale"),
+                }
+                perception_result = run_stress_perception(state, perception_config, self._rng)
+                state = self._apply_delta(state, perception_result["state_delta"])
 
-                # Check if this was a meaningful support exchange
-                # A support exchange occurs when interaction results in positive affect change
-                # and/or resilience improvement for either agent (threshold = 0.05)
-                # This tracks when social connections provide genuine emotional or psychological support
-                if interaction_result and interaction_result.get("support_exchange", False):
-                    self.daily_support_exchanges += 1
+                # Accumulate challenge/hindrance for daily dynamics
+                challenge = perception_result["state_delta"].get("challenge", 0.0)
+                hindrance = perception_result["state_delta"].get("hindrance", 0.0)
+                daily_challenge_total += challenge
+                daily_hindrance_total += hindrance
+                stress_event_count += 1
 
-            elif action == "stress":
-                challenge, hindrance = self.stressful_event()
-                daily_challenge += challenge
-                daily_hindrance += hindrance
-                stress_events_count += 1
+                # ── Resilience activation phase (only if stressed) ──
+                if state.get("is_stressed", False):
+                    activation_config = {
+                        "neighbor_affects": neighbor_affects,
+                        "base_resource_cost": base_resource_cost,
+                    }
+                    activation_result = run_resilience_activation(state, activation_config, self._rng)
+                    state = self._apply_delta(state, activation_result["state_delta"])
 
-        # Normalize daily challenge/hindrance by number of events
-        if stress_events_count > 0:
-            daily_challenge /= stress_events_count
-            daily_hindrance /= stress_events_count
+            elif action == "interact":
+                # ── Interaction phase ───────────────────────────────
+                interaction_config = {
+                    "influence_rate": cfg.get("interaction", "influence_rate"),
+                    "resilience_influence": cfg.get("interaction", "resilience_influence"),
+                }
 
-        # Apply integrated affect dynamics (homeostasis + peer influence + event appraisal)
-        self.affect = update_affect_dynamics(
-            current_affect=self.affect,
-            baseline_affect=self.baseline_affect,
-            neighbor_affects=neighbor_affects,
-            challenge=daily_challenge,
-            hindrance=daily_hindrance,
-            affect_config=affect_config,
-        )
+                # Find a random neighbor for interaction
+                if self.pos is not None:
+                    try:
+                        neighbors = list(self.model.grid.get_neighbors(self.pos, include_center=False))
+                    except Exception:
+                        neighbors = []
+                else:
+                    neighbors = []
 
-        # Apply integrated resilience dynamics using new stress processing mechanisms
-        # The new mechanism handles coping success determination within each stress event
-        # and incorporates social interaction effects on coping probability
+                if neighbors:
+                    partner = self._rng.choice(neighbors)
+                    partner_state = partner._build_agent_state()
 
-        # Check if agent received social support during interactions (for resilience boost)
-        received_social_support = self.daily_interactions > 0 and self._rng.random() < 0.3
+                    self_output, partner_output = phase_process_interaction(
+                        state, partner_state, interaction_config, self._rng
+                    )
+                    # Interaction phase returns CHANGE (delta) values
+                    for key, value in self_output["state_delta"].items():
+                        if key in state:
+                            if isinstance(state[key], dict) and isinstance(value, dict):
+                                # Merge dict fields (e.g. protective_factors)
+                                state[key].update(value)
+                            elif isinstance(state[key], (int, float)) and isinstance(value, (int, float)):
+                                # Add numeric changes
+                                state[key] = state[key] + value
+                            else:
+                                state[key] = value
+                        else:
+                            state[key] = value
 
-        # Use new resilience dynamics that work with the updated stress processing
-        # The coping success is now determined within each stress event using social influence
-        self.resilience = update_resilience_dynamics(
-            current_resilience=self.resilience,
-            coped_successfully=False,  # Will be handled per event in new mechanism
-            received_social_support=received_social_support,
-            consecutive_hindrances=getattr(self, "consecutive_hindrances", 0),
-            resilience_config=resilience_config,
-        )
+                    # Apply partner delta and write back
+                    for key, value in partner_output["state_delta"].items():
+                        if key in partner_state:
+                            if isinstance(partner_state[key], dict) and isinstance(value, dict):
+                                partner_state[key].update(value)
+                            elif isinstance(partner_state[key], (int, float)) and isinstance(value, (int, float)):
+                                partner_state[key] = partner_state[key] + value
+                            else:
+                                partner_state[key] = value
+                        else:
+                            partner_state[key] = value
+                    partner._write_back_state(partner_state)
 
-        # Add boost from protective factors
-        protective_boost = get_resilience_boost_from_protective_factors(
-            protective_factors=self.protective_factors,
-            baseline_resilience=self.baseline_resilience,
-            current_resilience=self.resilience,
-        )
-        self.resilience = min(1.0, self.resilience + protective_boost)
+                    # Track interaction
+                    state["daily_interactions"] = state.get("daily_interactions", 0) + 1
+                    if self_output["observation"].get("support_occurred", False):
+                        state["daily_support_exchanges"] = state.get("daily_support_exchanges", 0) + 1
 
-        # Apply enhanced resource regeneration with affect and resilience influence
-        regen_params = ResourceParams(base_regeneration=config.get("resource", "base_regeneration"))
+        # Normalize daily challenge/hindrance
+        if stress_event_count > 0:
+            daily_challenge_total /= stress_event_count
+            daily_hindrance_total /= stress_event_count
 
-        # Affect influences resource regeneration (positive affect helps recovery)
-        affect_multiplier = 1.0 + 0.5 * max(
-            0.0, self.affect
-        )  # Increased effectiveness: positive affect boosts regeneration more
+        # ── 4. Daily consolidation loop ─────────────────────────────
+        # 4a. Affect dynamics (internal phase)
+        affect_config = {
+            "neighbor_affects": neighbor_affects,
+            "daily_challenge": daily_challenge_total,
+            "daily_hindrance": daily_hindrance_total,
+            "stress_decay_rate": cfg.get("dynamics", "stress_decay_rate"),
+        }
+        affect_result = process_affect_dynamics(state, affect_config, self._rng)
+        state = self._apply_delta(state, affect_result["state_delta"])
 
-        # Resilience provides additional regeneration bonus (higher resilience = better resource management)
-        resilience_multiplier = 1.0 + 0.3 * self.resilience  # Resilience bonus for resource regeneration
+        # 4b. Resource allocation (phase module)
+        resource_config = {
+            "base_regeneration": cfg.get("resource", "base_regeneration"),
+        }
+        resource_result = run_resource_allocation(state, resource_config, self._rng)
+        state = self._apply_delta(state, resource_result["state_delta"])
 
-        base_regeneration = compute_resource_regeneration(self.resources, regen_params)
-        self.resources += base_regeneration * affect_multiplier * resilience_multiplier
+        # 4c. Stress buffering (phase module)
+        buffering_config = {}
+        buffering_result = run_stress_buffering(state, buffering_config, self._rng)
+        state = self._apply_delta(state, buffering_result["state_delta"])
 
-        # Integrate social support with resilience optimization
-        self.resilience = integrate_social_resilience_optimization(
-            current_resilience=self.resilience,
-            daily_interactions=self.daily_interactions,
-            daily_support_exchanges=self.daily_support_exchanges,
-            resources=self.resources,
-            baseline_resilience=self.baseline_resilience,
-            protective_factors=self.protective_factors,
-            rng=self._rng,
-        )
+        # 4d. PSS-10 consolidation (internal phase)
+        pss10_config = {"pss10_threshold": pss10_threshold}
+        pss10_result = process_pss10_consolidation(state, pss10_config, self._rng)
+        state = self._apply_delta(state, pss10_result["state_delta"])
 
-        # Decay consecutive hindrances over time if no new hindrance events
-        if hasattr(self, "consecutive_hindrances") and self.consecutive_hindrances > 0:
-            # Slowly decay consecutive hindrances when no new hindrance events occur
-            decay_rate = config.get("dynamics", "stress_decay_rate")
-            self.consecutive_hindrances = max(0, self.consecutive_hindrances - decay_rate)
+        # 4e. Daily reset (internal phase)
+        reset_config = {"current_day": getattr(self.model, "day", 0)}
+        reset_result = process_daily_reset(state, reset_config, self._rng)
+        state = self._apply_delta(state, reset_result["state_delta"])
 
-        # Apply homeostatic adjustment to both affect and resilience
-        # This pulls values back toward their FIXED baseline (natural equilibrium point)
-
-        # Get homeostatic rates from configuration
-        cfg = get_config()
-        affect_homeostatic_rate = cfg.get("affect_dynamics", "homeostatic_rate")
-        resilience_homeostatic_rate = cfg.get("resilience_dynamics", "homeostatic_rate")
-        pss10_threshold = cfg.get("pss10", "threshold")
-
-        # Scale the homeostatic rate based on resources and stress
-        scaled_affect_homeostatic_rate = scale_homeostatic_rate(
-            affect_homeostatic_rate, self.resources, self.current_stress
-        )
-
-        scaled_resilience_homeostatic_rate = scale_homeostatic_rate(
-            resilience_homeostatic_rate, self.resources, self.current_stress
-        )
-
-        # Apply homeostatic adjustment to affect using FIXED baseline
-        self.affect = compute_homeostatic_adjustment(
-            initial_value=self.baseline_affect,  # Use fixed baseline, not daily initial value
-            final_value=self.affect,
-            homeostatic_rate=scaled_affect_homeostatic_rate,
-            value_type="affect",
-        )
-
-        # Apply homeostatic adjustment to resilience using FIXED baseline
-        self.resilience = compute_homeostatic_adjustment(
-            initial_value=self.baseline_resilience,  # Use fixed baseline, not daily initial value
-            final_value=self.resilience,
-            homeostatic_rate=scaled_resilience_homeostatic_rate,
-            value_type="resilience",
-        )
-
-        # NOTE: baseline_affect and baseline_resilience remain FIXED (not updated daily)
-        # This ensures homeostasis pulls toward the agent's natural equilibrium point
-
-        # Consolidate daily PSS-10 scores
-        if self.daily_pss10_scores:
-            avg_score = np.mean(self.daily_pss10_scores)
-            rounded_score = round(avg_score)
-
-            # Step 7: Use the daily PSS-10 score to initialize stress level for next day
-            # Note: pss10 and pss10_responses are kept consistent with the last event's data.
-            # The consolidated score is used only for stress feedback.
-            self._update_stress_from_daily_pss10(rounded_score)
-
-        # Clear daily scores for next day
-        self.daily_pss10_scores = []
-
-        # Clamp values that are not handled by transformation pipeline
-        # Note: resilience, affect, and resources are now handled by transformation pipeline
-        self.current_stress = clamp(self.current_stress, 0.0, 1.0)
-        self.stress_controllability = clamp(self.stress_controllability, 0.0, 1.0)
-        self.stress_overload = clamp(self.stress_overload, 0.0, 1.0)
-        self.stressed = self.pss10 >= pss10_threshold
+        # ── 5. Write back state ─────────────────────────────────────
+        self._write_back_state(state)
 
     def interact(self):
         """
@@ -1205,6 +1192,7 @@ class Person(mesa.Agent):
         Only writes fields that correspond to actual Person attributes.
         Transient keys (challenge, hindrance, is_stressed,
         event_controllability, event_overload) are silently skipped.
+        Bounded keys (resilience, affect, resources) are clamped.
 
         Args:
             state: AgentState dict containing values to write back.
@@ -1234,6 +1222,14 @@ class Person(mesa.Agent):
             "daily_support_exchanges",
             "protective_factors",
         }
+
+        # Clamp bounded keys
+        if "resilience" in state:
+            state["resilience"] = max(0.0, min(1.0, state["resilience"]))
+        if "affect" in state:
+            state["affect"] = max(-1.0, min(1.0, state["affect"]))
+        if "resources" in state:
+            state["resources"] = max(0.0, min(1.0, state["resources"]))
 
         for key in writable_keys:
             if key in state:
