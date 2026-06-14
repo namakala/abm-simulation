@@ -61,6 +61,296 @@ from src.python.assumption_config import get_assumptions
 config = get_config()
 
 
+# ── Orchestrator-internal phase functions (Plan 008) ──────────────
+
+
+def process_affect_dynamics(
+    state: dict,
+    config: dict,
+    rng: np.random.Generator,
+) -> dict:
+    """Apply daily affect dynamics: homeostasis, peer influence, resource regen.
+
+    Consolidates affect/resilience/resource updates that happen once per day
+    after the subevent loop.  Extracted from ``Person.step()``.
+
+    Applies in order:
+    1. Affect dynamics (homeostasis + peer influence + event appraisal)
+    2. Resilience dynamics + protective factor boost
+    3. Resource regeneration (affected by affect and resilience)
+    4. Social resilience optimisation
+    5. Consecutive hindrance decay
+    6. Homeostatic adjustment for affect and resilience
+
+    Args:
+        state: Current AgentState dict (not modified).
+        config: Config dict with optional keys:
+            ``neighbor_affects``, ``daily_challenge``, ``daily_hindrance``,
+            ``stress_decay_rate``, ``affect_config``, ``resilience_config``.
+        rng: Seeded random number generator.
+
+    Returns:
+        PhaseOutput-like dict with ``state_delta`` and ``observation``.
+    """
+    # ── Read inputs from state ────────────────────────────────────
+    affect = state["affect"]
+    baseline_affect = state["baseline_affect"]
+    resilience = state["resilience"]
+    baseline_resilience = state["baseline_resilience"]
+    resources = state["resources"]
+    current_stress = state["current_stress"]
+    daily_interactions = state.get("daily_interactions", 0)
+    daily_support_exchanges = state.get("daily_support_exchanges", 0)
+    protective_factors = dict(state.get("protective_factors", {}))
+    consecutive_hindrances = state.get("consecutive_hindrances", 0.0)
+
+    # ── Read config ───────────────────────────────────────────────
+    neighbor_affects = config.get("neighbor_affects", [])
+    daily_challenge = config.get("daily_challenge", 0.0)
+    daily_hindrance = config.get("daily_hindrance", 0.0)
+    stress_decay_rate = config.get("stress_decay_rate", 0.05)
+    affect_cfg = config.get("affect_config", None) or AffectDynamicsConfig()
+    resilience_cfg = config.get("resilience_config", None) or ResilienceDynamicsConfig()
+
+    # ── 1. Affect dynamics ────────────────────────────────────────
+    new_affect = update_affect_dynamics(
+        current_affect=affect,
+        baseline_affect=baseline_affect,
+        neighbor_affects=neighbor_affects,
+        challenge=daily_challenge,
+        hindrance=daily_hindrance,
+        affect_config=affect_cfg,
+    )
+
+    # ── 2. Resilience dynamics + PF boost ─────────────────────────
+    received_social_support = daily_interactions > 0 and rng.random() < 0.3 if hasattr(rng, "random") else False
+
+    new_resilience = update_resilience_dynamics(
+        current_resilience=resilience,
+        coped_successfully=False,  # handled per event in new mechanism
+        received_social_support=received_social_support,
+        consecutive_hindrances=consecutive_hindrances,
+        resilience_config=resilience_cfg,
+    )
+
+    protective_boost = get_resilience_boost_from_protective_factors(
+        protective_factors=protective_factors,
+        baseline_resilience=baseline_resilience,
+        current_resilience=new_resilience,
+    )
+    new_resilience = min(1.0, new_resilience + protective_boost)
+
+    # ── 3. Resource regeneration ──────────────────────────────────
+    cfg = get_config()
+    regen_params = ResourceParams(base_regeneration=cfg.get("resource", "base_regeneration"))
+    affect_mult = 1.0 + 0.5 * max(0.0, new_affect)
+    resil_mult = 1.0 + 0.3 * new_resilience
+    base_regeneration = compute_resource_regeneration(resources, regen_params)
+    new_resources = resources + base_regeneration * affect_mult * resil_mult
+    new_resources = min(1.0, max(0.0, new_resources))
+
+    # ── 4. Social resilience optimisation ─────────────────────────
+    new_resilience = integrate_social_resilience_optimization(
+        current_resilience=new_resilience,
+        daily_interactions=daily_interactions,
+        daily_support_exchanges=daily_support_exchanges,
+        resources=new_resources,
+        baseline_resilience=baseline_resilience,
+        protective_factors=protective_factors,
+        rng=rng,
+    )
+
+    # ── 5. Consecutive hindrance decay ────────────────────────────
+    new_consecutive_hindrances = consecutive_hindrances
+    if consecutive_hindrances > 0:
+        new_consecutive_hindrances = max(0.0, consecutive_hindrances - stress_decay_rate)
+
+    # ── 6. Homeostatic adjustment ─────────────────────────────────
+    affect_homeostatic_rate = cfg.get("affect_dynamics", "homeostatic_rate")
+    resilience_homeostatic_rate = cfg.get("resilience_dynamics", "homeostatic_rate")
+
+    scaled_affect_rate = scale_homeostatic_rate(affect_homeostatic_rate, new_resources, current_stress)
+    scaled_resilience_rate = scale_homeostatic_rate(resilience_homeostatic_rate, new_resources, current_stress)
+
+    new_affect = compute_homeostatic_adjustment(
+        initial_value=baseline_affect,
+        final_value=new_affect,
+        homeostatic_rate=scaled_affect_rate,
+        value_type="affect",
+    )
+
+    new_resilience = compute_homeostatic_adjustment(
+        initial_value=baseline_resilience,
+        final_value=new_resilience,
+        homeostatic_rate=scaled_resilience_rate,
+        value_type="resilience",
+    )
+
+    # ── Build PhaseOutput ─────────────────────────────────────────
+    state_delta = {
+        "affect": new_affect,
+        "resilience": new_resilience,
+        "resources": new_resources,
+        "consecutive_hindrances": new_consecutive_hindrances,
+    }
+
+    observation = {
+        "neighbor_affects_summary": {
+            "count": len(neighbor_affects),
+            "mean": float(np.mean(neighbor_affects)) if neighbor_affects else 0.0,
+        },
+        "protective_boost": protective_boost,
+        "regeneration": base_regeneration * affect_mult * resil_mult,
+    }
+
+    return {"state_delta": state_delta, "observation": observation}
+
+
+def process_pss10_consolidation(
+    state: dict,
+    config: dict,
+    rng: np.random.Generator,
+) -> dict:
+    """Consolidate daily PSS-10 scores and update stress level.
+
+    Extracted from ``Person.step()`` lines 363-380.
+
+    Averages the day's PSS-10 scores, updates current_stress via
+    exponential smoothing, clamps all values, and updates ``stressed``
+    status based on the PSS-10 threshold.
+
+    Args:
+        state: Current AgentState dict (not modified).
+        config: Config dict (``pss10_threshold`` can be overridden).
+        rng: Seeded random number generator (unused, for protocol compat).
+
+    Returns:
+        PhaseOutput-like dict with ``state_delta`` and ``observation``.
+    """
+    # ── Read state ────────────────────────────────────────────────
+    daily_pss10_scores = state.get("daily_pss10_scores", [])
+    current_stress = state.get("current_stress", 0.0)
+    stress_controllability = state.get("stress_controllability", 0.5)
+    stress_overload = state.get("stress_overload", 0.5)
+    pss10 = state.get("pss10", 0)
+
+    # ── Read config ───────────────────────────────────────────────
+    cfg = get_config()
+    pss10_threshold = config.get("pss10_threshold", cfg.get("pss10", "threshold"))
+
+    # ── Consolidate ───────────────────────────────────────────────
+    if daily_pss10_scores:
+        # Compute new stress from PSS-10 dimensions
+        new_stress_level = compute_stress_from_pss10(
+            stress_controllability=stress_controllability,
+            stress_overload=stress_overload,
+        )
+        smoothing_factor = 0.7
+        current_stress = smoothing_factor * new_stress_level + (1.0 - smoothing_factor) * current_stress
+
+    # ── Clamp values ──────────────────────────────────────────────
+    current_stress = clamp(current_stress, 0.0, 1.0)
+    stress_controllability = clamp(stress_controllability, 0.0, 1.0)
+    stress_overload = clamp(stress_overload, 0.0, 1.0)
+
+    # ── Update stressed status ───────────────────────────────────-
+    stressed = pss10 >= pss10_threshold
+
+    # ── Build PhaseOutput ─────────────────────────────────────────
+    state_delta = {
+        "current_stress": current_stress,
+        "stress_controllability": stress_controllability,
+        "stress_overload": stress_overload,
+        "stressed": stressed,
+        "daily_pss10_scores": [],  # cleared for next day
+    }
+
+    observation = {
+        "avg_pss10": float(np.mean(daily_pss10_scores)) if daily_pss10_scores else 0.0,
+        "num_events": len(daily_pss10_scores),
+    }
+
+    return {"state_delta": state_delta, "observation": observation}
+
+
+def process_daily_reset(
+    state: dict,
+    config: dict,
+    rng: np.random.Generator,
+) -> dict:
+    """Perform daily reset: counters, affect reset, stress decay, event clear.
+
+    Extracted from ``Person._daily_reset()``.  Runs once per day after
+    the consolidation phases.
+
+    Args:
+        state: Current AgentState dict (not modified).
+        config: Config dict with optional key ``current_day`` (int).
+        rng: Seeded random number generator.
+
+    Returns:
+        PhaseOutput-like dict with ``state_delta`` and ``observation``.
+    """
+    # ── Read state ────────────────────────────────────────────────
+    affect = state.get("affect", 0.0)
+    baseline_affect = state.get("baseline_affect", 0.0)
+    current_stress = state.get("current_stress", 0.0)
+    daily_stress_events = list(state.get("daily_stress_events", []))
+    consecutive_hindrances = state.get("consecutive_hindrances", 0.0)
+
+    # ── Read config ───────────────────────────────────────────────
+    current_day = config.get("current_day", 0)
+
+    # ── 1. Affect reset toward baseline ───────────────────────────
+    stress_config = StressProcessingConfig()
+    new_affect = compute_daily_affect_reset(
+        current_affect=affect,
+        baseline_affect=baseline_affect,
+        config=stress_config,
+    )
+
+    # ── 2. Stress decay ───────────────────────────────────────────
+    new_stress = compute_stress_decay(
+        current_stress=current_stress,
+        config=stress_config,
+    )
+
+    # ── 3. Stress summary observation ─────────────────────────────
+    stress_summary = {}
+    if daily_stress_events:
+        stress_levels = [e.get("stress_level", 0.0) for e in daily_stress_events]
+        coping_success = [e.get("coped_successfully", False) for e in daily_stress_events]
+        stress_summary = {
+            "avg_stress": float(np.mean(stress_levels)),
+            "max_stress": float(max(stress_levels)),
+            "num_events": len(daily_stress_events),
+            "coping_success_rate": float(np.mean(coping_success)) if coping_success else 0.0,
+        }
+
+    # ── 4. Hindrance daily decay ──────────────────────────────────
+    daily_decay_rate = 0.05
+    new_consecutive_hindrances = max(0.0, consecutive_hindrances - daily_decay_rate)
+
+    # ── Build PhaseOutput ─────────────────────────────────────────
+    state_delta = {
+        "daily_interactions": 0,
+        "daily_support_exchanges": 0,
+        "affect": new_affect,
+        "current_stress": new_stress,
+        "daily_stress_events": [],  # cleared for new day
+        "stress_history": [],  # storage moved to model level
+        "last_reset_day": current_day,
+        "daily_pss10_scores": [],  # cleared for new day
+        "consecutive_hindrances": new_consecutive_hindrances,
+    }
+
+    observation = {
+        "stress_summary": stress_summary,
+    }
+
+    return {"state_delta": state_delta, "observation": observation}
+
+
 class Person(mesa.Agent):
     """
     A person who experiences social interactions and stressful events.
