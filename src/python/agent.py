@@ -830,3 +830,121 @@ class Person(mesa.Agent):
 
         # Reset daily PSS-10 scores for new day
         self.daily_pss10_scores = []
+
+    # ── Orchestrator helpers (Plan 008) ─────────────────────────────
+
+    def _build_agent_state(self) -> dict:
+        """Build an AgentState dict from current ``self.*`` attributes.
+
+        Mutable containers (dicts, lists) are shallow-copied to prevent
+        accidental aliasing between the state dict and agent attributes.
+
+        Returns:
+            dict with all AgentState fields populated.
+        """
+        import copy
+
+        state: dict = {
+            # Core state
+            "baseline_resilience": self.baseline_resilience,
+            "resilience": self.resilience,
+            "resources": self.resources,
+            "baseline_affect": self.baseline_affect,
+            "affect": self.affect,
+            # Protective factors
+            "protective_factors": copy.copy(self.protective_factors),
+            # Stress tracking
+            "current_stress": self.current_stress,
+            "recent_stress_intensity": self.recent_stress_intensity,
+            "stress_momentum": self.stress_momentum,
+            "last_stress_update": self.last_stress_update,
+            "daily_stress_events": list(self.daily_stress_events),
+            "stress_history": list(self.stress_history),
+            "last_reset_day": self.last_reset_day,
+            "consecutive_hindrances": self.consecutive_hindrances,
+            "stress_breach_count": self.stress_breach_count,
+            # PSS-10 state
+            "pss10_responses": copy.copy(self.pss10_responses),
+            "stress_controllability": self.stress_controllability,
+            "stress_overload": self.stress_overload,
+            "pss10": self.pss10,
+            "stressed": self.stressed,
+            "daily_pss10_scores": list(self.daily_pss10_scores),
+            # Daily counters
+            "daily_interactions": self.daily_interactions,
+            "daily_support_exchanges": self.daily_support_exchanges,
+            # Configuration (read-only)
+            "stress_config": dict(self.stress_config),
+            "interaction_config": copy.copy(self.interaction_config.__dict__)
+            if hasattr(self.interaction_config, "__dict__")
+            else dict(self.interaction_config),
+            # Fixed traits
+            "volatility": self.volatility,
+        }
+        return state
+
+    def _apply_delta(self, state: dict, delta: dict) -> dict:
+        """Merge ``delta`` into a copy of ``state``.
+
+        For dict-valued keys (e.g. ``protective_factors``), performs a
+        shallow merge rather than replacement.
+
+        Args:
+            state: Current AgentState dict (not mutated).
+            delta: State-delta dict from a phase function.
+
+        Returns:
+            New AgentState dict with delta applied.
+        """
+        import copy
+
+        new_state = copy.copy(state)
+        for key, value in delta.items():
+            if key in new_state and isinstance(new_state[key], dict) and isinstance(value, dict):
+                # Merge dict fields (e.g. protective_factors)
+                merged = copy.copy(new_state[key])
+                merged.update(value)
+                new_state[key] = merged
+            else:
+                new_state[key] = value
+        return new_state
+
+    def _write_back_state(self, state: dict) -> None:
+        """Write AgentState values back to ``self.*`` attributes.
+
+        Only writes fields that correspond to actual Person attributes.
+        Transient keys (challenge, hindrance, is_stressed,
+        event_controllability, event_overload) are silently skipped.
+
+        Args:
+            state: AgentState dict containing values to write back.
+        """
+        # Mapping from state keys to self.* attribute names (identity for most)
+        # Excludes transient keys that should not be written to self
+        writable_keys = {
+            "resilience",
+            "affect",
+            "resources",
+            "current_stress",
+            "recent_stress_intensity",
+            "stress_momentum",
+            "last_stress_update",
+            "daily_stress_events",
+            "stress_history",
+            "last_reset_day",
+            "consecutive_hindrances",
+            "stress_breach_count",
+            "pss10_responses",
+            "stress_controllability",
+            "stress_overload",
+            "pss10",
+            "stressed",
+            "daily_pss10_scores",
+            "daily_interactions",
+            "daily_support_exchanges",
+            "protective_factors",
+        }
+
+        for key in writable_keys:
+            if key in state:
+                setattr(self, key, state[key])
