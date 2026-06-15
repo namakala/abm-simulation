@@ -63,7 +63,7 @@ class AffectDynamicsConfig:
     event_appraisal_rate: float = field(
         default_factory=lambda: get_config().get("affect_dynamics", "event_appraisal_rate")
     )
-    homeostatic_rate: float = field(default_factory=lambda: get_config().get("affect_dynamics", "homeostatic_rate"))
+    homeostatic_rate: float = field(default_factory=lambda: get_assumptions().stress.affect_homeostatic_rate)
     influencing_neighbors: int = field(default_factory=lambda: get_config().get("influence", "influencing_neighbors"))
 
 
@@ -81,6 +81,7 @@ class ResilienceDynamicsConfig:
         default_factory=lambda: get_config().get("resilience_dynamics", "overload_threshold")
     )
     influencing_hindrance: int = field(default_factory=lambda: get_config().get("influence", "influencing_hindrance"))
+    homeostatic_rate: float = field(default_factory=lambda: get_assumptions().stress.resilience_homeostatic_rate)
 
 
 def compute_social_influence(
@@ -417,10 +418,8 @@ class StressProcessingConfig:
     social_influence_factor: float = field(default_factory=lambda: get_config().get("coping", "social_influence"))
     challenge_bonus: float = field(default_factory=lambda: get_config().get("coping", "challenge_bonus"))
     hindrance_penalty: float = field(default_factory=lambda: get_config().get("coping", "hindrance_penalty"))
-    daily_decay_rate: float = field(default_factory=lambda: get_config().get("affect_dynamics", "homeostatic_rate"))
-    stress_decay_rate: float = field(
-        default_factory=lambda: get_config().get("resilience_dynamics", "homeostatic_rate")
-    )
+    daily_decay_rate: float = field(default_factory=lambda: get_assumptions().stress.affect_homeostatic_rate)
+    stress_decay_rate: float = field(default_factory=lambda: get_assumptions().stress.resilience_homeostatic_rate)
 
 
 def compute_coping_probability(
@@ -1060,7 +1059,13 @@ def compute_homeostatic_adjustment(
         ValueError: If value_type is not 'affect' or 'resilience'
     """
     if homeostatic_rate is None:
-        homeostatic_rate = get_config().get("affect_dynamics", "homeostatic_rate")
+        from src.python.assumption_config import get_assumptions
+
+        assumptions = get_assumptions()
+        if value_type == "affect":
+            homeostatic_rate = assumptions.stress.affect_homeostatic_rate
+        else:
+            homeostatic_rate = assumptions.stress.resilience_homeostatic_rate
 
     # Validate value_type
     if value_type not in ["affect", "resilience"]:

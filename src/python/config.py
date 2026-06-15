@@ -284,8 +284,9 @@ class Config:
         # ==============================================
         self.affect_peer_influence_rate = self._get_env_value("AFFECT_PEER_INFLUENCE_RATE", float, 0.1)
         self.affect_event_appraisal_rate = self._get_env_value("AFFECT_EVENT_APPRAISAL_RATE", float, 0.15)
-        self.affect_homeostatic_rate = self._get_env_value("AFFECT_HOMEOSTATIC_RATE", float, 0.5)
-        self.resilience_homeostatic_rate = self._get_env_value("RESILIENCE_HOMEOSTATIC_RATE", float, 0.5)
+        # Homeostatic rates migrated to ASSUMPTION_AFFECT_HOMEOSTATIC_RATE / ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE
+        self.affect_homeostatic_rate = None
+        self.resilience_homeostatic_rate = None
 
         self.resilience_coping_success_rate = self._get_env_value("RESILIENCE_COPING_SUCCESS_RATE", float, 0.1)
         self.resilience_social_support_rate = self._get_env_value("RESILIENCE_SOCIAL_SUPPORT_RATE", float, 0.08)
@@ -640,13 +641,13 @@ class Config:
             "affect_dynamics": {
                 "peer_influence_rate": self.affect_peer_influence_rate,
                 "event_appraisal_rate": self.affect_event_appraisal_rate,
-                "homeostatic_rate": self.affect_homeostatic_rate,
+                "homeostatic_rate": get_assumptions().stress.affect_homeostatic_rate,
             },
             "resilience_dynamics": {
                 "coping_success_rate": self.resilience_coping_success_rate,
                 "social_support_rate": self.resilience_social_support_rate,
                 "overload_threshold": self.resilience_overload_threshold,
-                "homeostatic_rate": self.resilience_homeostatic_rate,
+                "homeostatic_rate": get_assumptions().stress.resilience_homeostatic_rate,
                 "boost_rate": self.resilience_boost_rate,
             },
             "influence": {

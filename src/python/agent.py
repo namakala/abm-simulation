@@ -43,6 +43,7 @@ from src.python.resource_utils import (
 
 from src.python.math_utils import sample_poisson, create_rng, tanh_transform, sigmoid_transform
 from src.python.config import get_config
+from src.python.assumption_config import get_assumptions
 
 # Phase functions (Plan 008 orchestrator)
 from src.python.phases import (
@@ -162,8 +163,8 @@ def process_affect_dynamics(
         new_consecutive_hindrances = max(0.0, consecutive_hindrances - stress_decay_rate)
 
     # ── 6. Homeostatic adjustment ─────────────────────────────────
-    affect_homeostatic_rate = cfg.get("affect_dynamics", "homeostatic_rate")
-    resilience_homeostatic_rate = cfg.get("resilience_dynamics", "homeostatic_rate")
+    affect_homeostatic_rate = get_assumptions().stress.affect_homeostatic_rate
+    resilience_homeostatic_rate = get_assumptions().stress.resilience_homeostatic_rate
 
     scaled_affect_rate = scale_homeostatic_rate(affect_homeostatic_rate, new_resources, current_stress)
     scaled_resilience_rate = scale_homeostatic_rate(resilience_homeostatic_rate, new_resources, current_stress)

@@ -9,6 +9,7 @@ to return to equilibrium states.
 import pytest
 from src.python.affect_utils import compute_homeostatic_adjustment
 from src.python.config import get_config
+from src.python.assumption_config import get_assumptions
 
 
 class TestHomeostaticAdjustmentBasic:
@@ -236,16 +237,15 @@ class TestHomeostaticAdjustmentConfiguration:
         config_result = compute_homeostatic_adjustment(initial_value, final_value, value_type="affect")
         assert result != config_result
 
-    @pytest.mark.skip(reason="The homeostatic rates are now the same")
     def test_independent_affect_and_resilience_homeostatic_rates(self):
         """Test that affect and resilience homeostatic rates work independently."""
-        config = get_config()
+        assumptions = get_assumptions()
 
-        # Get the independent rates from configuration
-        affect_rate = config.get("affect_dynamics", "homeostatic_rate")
-        resilience_rate = config.get("resilience_dynamics", "homeostatic_rate")
+        # Get the independent rates from assumption configuration
+        affect_rate = assumptions.stress.affect_homeostatic_rate
+        resilience_rate = assumptions.stress.resilience_homeostatic_rate
 
-        # They should be different values (0.1 for affect, 0.05 for resilience)
+        # They should be different values (0.5 for affect, 0.3 for resilience)
         assert affect_rate != resilience_rate
 
         initial_affect = 0.0
