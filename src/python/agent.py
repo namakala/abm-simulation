@@ -23,7 +23,6 @@ from src.python.stress_utils import (
 )
 
 from src.python.affect_utils import (
-    process_interaction,
     clamp,
     InteractionConfig,
     update_affect_dynamics,
@@ -46,11 +45,9 @@ from src.python.resource_utils import (
     ResourceOptimizationConfig,
     compute_resilience_optimized_resource_cost,
     compute_resource_depletion_with_resilience,
-    process_social_resource_exchange,
     update_protective_factors_with_allocation,
     get_resilience_boost_from_protective_factors,
     allocate_protective_factors,
-    calculate_recent_social_benefit,
 )
 
 from src.python.math_utils import sample_poisson, create_rng, tanh_transform, sigmoid_transform
@@ -672,14 +669,20 @@ class Person(mesa.Agent):
 
     def interact(self):
         """
-        Interact with a random neighbor using utility functions with social resource exchange.
+        Interact with a random neighbor using the phase-based process_interaction.
 
-        Delegates all domain logic to utility functions for modularity and testability.
-        Implements social resource exchange mechanism to fix correlation issues by allowing
-        agents to share resources during meaningful support interactions.
+        Delegates to ``phase_process_interaction`` (Plan 008) and translates the
+        ``PhaseOutput`` into the legacy return-dict format with change values.
 
         Returns:
-            Dictionary with interaction results including support exchange detection and resource transfers
+            Dictionary with interaction results:
+            - support_exchange: bool
+            - affect_change: float (self affect change)
+            - resilience_change: float (self resilience change)
+            - resource_transfer: float
+            - received_resources: float
+            - partner_affect_change: float
+            - partner_resilience_change: float
         """
         # Check if agent has a valid position
         if self.pos is None:
@@ -691,11 +694,10 @@ class Person(mesa.Agent):
                 "received_resources": 0.0,
             }
 
-        # Get neighbors using Mesa's grid
+        # Get neighbors
         try:
             neighbors = list(self.model.grid.get_neighbors(self.pos, include_center=False))
         except Exception:
-            # Return empty result if there are issues with neighbor lookup
             return {
                 "support_exchange": False,
                 "affect_change": 0.0,
@@ -713,77 +715,63 @@ class Person(mesa.Agent):
                 "received_resources": 0.0,
             }
 
-        # Store original values for change calculation
+        # Record original state for change calculation
         original_self_affect = self.affect
         original_self_resilience = self.resilience
         original_self_resources = self.resources
 
-        # Select random interaction partner
+        # Select random partner
         partner = self._rng.choice(neighbors)
-
-        # Store original partner values for change calculation
         original_partner_affect = partner.affect
         original_partner_resilience = partner.resilience
-        original_partner_resources = partner.resources
 
-        # Use utility function for interaction processing
-        new_self_affect, new_partner_affect, new_self_resilience, new_partner_resilience = process_interaction(
-            self_affect=self.affect,
-            partner_affect=partner.affect,
-            self_resilience=self.resilience,
-            partner_resilience=partner.resilience,
-            config=self.interaction_config,
+        # Build states and call phase function
+        self_state = self._build_agent_state()
+        partner_state = partner._build_agent_state()
+
+        self_output, partner_output = phase_process_interaction(
+            self_state,
+            partner_state,
+            self.interaction_config.__dict__
+            if hasattr(self.interaction_config, "__dict__")
+            else dict(self.interaction_config),
+            self._rng,
         )
 
-        # Update state with results from utility function
-        self.affect = clamp(new_self_affect, -1.0, 1.0)
-        partner.affect = clamp(new_partner_affect, -1.0, 1.0)
-        self.resilience = clamp(new_self_resilience, 0.0, 1.0)
-        partner.resilience = clamp(new_partner_resilience, 0.0, 1.0)
+        # Apply self delta (phase returns CHANGE values)
+        self.affect = clamp(self.affect + self_output["state_delta"].get("affect", 0.0), -1.0, 1.0)
+        self.resilience = clamp(self.resilience + self_output["state_delta"].get("resilience", 0.0), 0.0, 1.0)
+        resource_delta = self_output["state_delta"].get("resources", 0.0)
+        self.resources = clamp(self.resources + resource_delta, 0.0, 1.0)
 
-        # Calculate changes for support exchange detection
-        # Track how much each agent's state improved (or declined) during interaction
+        # Apply partner delta
+        partner.affect = clamp(partner.affect + partner_output["state_delta"].get("affect", 0.0), -1.0, 1.0)
+        partner.resilience = clamp(partner.resilience + partner_output["state_delta"].get("resilience", 0.0), 0.0, 1.0)
+        partner.resources = clamp(partner.resources + partner_output["state_delta"].get("resources", 0.0), 0.0, 1.0)
+
+        # Calculate changes
         self_affect_change = self.affect - original_self_affect
         self_resilience_change = self.resilience - original_self_resilience
         partner_affect_change = partner.affect - original_partner_affect
         partner_resilience_change = partner.resilience - original_partner_resilience
+        received_resources = self.resources - original_self_resources
+        resource_transfer = abs(received_resources)
 
-        # Implement social resource exchange mechanism with resilience optimization
-        calculate_recent_social_benefit(self.daily_support_exchanges)
-        _, _, new_self_resources, new_partner_resources = process_social_resource_exchange(
-            self_resources=original_self_resources,
-            partner_resources=original_partner_resources,
-            self_resilience=self.resilience,
-            partner_resilience=partner.resilience,
-            social_support_boost=1.0
-            + (self.protective_factors["social_support"] * get_assumptions().resource.social_resilience_boost_factor),
-        )
-
-        # Calculate resource changes for return values
-        resource_transfer = abs(new_self_resources - original_self_resources)
-        received_resources = new_self_resources - original_self_resources
-
-        # Update agent resources
-        self.resources = new_self_resources
-        partner.resources = new_partner_resources
-
-        # Update resources after exchange
-        self.resources = clamp(self.resources, 0.0, 1.0)
-        partner.resources = clamp(partner.resources, 0.0, 1.0)
-
-        # Detect support exchange: when at least one agent benefits significantly
-        # Support exchange occurs when there's meaningful positive change in affect, resilience, or resources
-        # This captures when social interaction provides genuine emotional, psychological, or material benefit
-        # Threshold of 0.05 ensures we only count meaningful improvements, not minor fluctuations
-        support_threshold = 0.05  # Minimum change to count as support
+        # Detect support exchange (threshold = 0.05)
+        support_threshold = 0.05
+        support_occurred = self_output["observation"].get("support_occurred", False)
         support_exchange = (
-            self_affect_change > support_threshold
+            support_occurred
+            or self_affect_change > support_threshold
             or self_resilience_change > support_threshold
-            or resource_transfer > support_threshold  # Resource giving as support
+            or resource_transfer > support_threshold
             or partner_affect_change > support_threshold
             or partner_resilience_change > support_threshold
-            or received_resources > support_threshold  # Resource receiving as support
+            or received_resources > support_threshold
         )
+
+        # Increment daily interaction counter
+        self.daily_interactions += 1
 
         return {
             "support_exchange": support_exchange,
