@@ -263,10 +263,8 @@ class StressModel(mesa.Model):
         # Update social support tracking from agent interaction data
         self._update_social_support_tracking()
 
-        # Apply daily reset to all agents AFTER data collection
-        for agent in self.agents:
-            if hasattr(agent, "_daily_reset"):
-                agent._daily_reset(self.day)
+        # Daily reset is now handled inside Person.step() via process_daily_reset
+        # (Plan 008 refactoring — no separate _daily_reset loop needed)
 
         # Increment simulation day counter
         self.day += 1
