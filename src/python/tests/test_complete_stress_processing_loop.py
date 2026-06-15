@@ -236,7 +236,7 @@ class TestCompleteStressProcessingLoop:
             patch("src.python.agent.generate_stress_event", return_value=stressful_event),
             patch("src.python.agent.process_stress_event", return_value=(True, 0.1, 0.9)),
             patch(
-                "src.python.agent.determine_coping_outcome_and_psychological_impact",
+                "src.python.phases.resilience_activation.determine_coping_outcome_and_psychological_impact",
                 return_value=(agent.affect, agent.resilience, 0.5, True),
             ),
         ):

@@ -15,10 +15,7 @@ from src.python.stress_utils import (
     AppraisalWeights,
     ThresholdParams,
     initialize_pss10_from_items,
-    generate_pss10_from_stress_dimensions,
-    update_stress_dimensions_from_pss10_feedback,
     update_stress_dimensions_from_event,
-    validate_theoretical_correlations,
     compute_stress_from_pss10,
 )
 
@@ -33,7 +30,6 @@ from src.python.affect_utils import (
     ResourceParams,
     compute_homeostatic_adjustment,
     scale_homeostatic_rate,
-    determine_coping_outcome_and_psychological_impact,
     StressProcessingConfig,
     compute_daily_affect_reset,
     compute_stress_decay,
@@ -42,17 +38,11 @@ from src.python.affect_utils import (
 )
 
 from src.python.resource_utils import (
-    ResourceOptimizationConfig,
-    compute_resilience_optimized_resource_cost,
-    compute_resource_depletion_with_resilience,
-    update_protective_factors_with_allocation,
     get_resilience_boost_from_protective_factors,
-    allocate_protective_factors,
 )
 
 from src.python.math_utils import sample_poisson, create_rng, tanh_transform, sigmoid_transform
 from src.python.config import get_config
-from src.python.assumption_config import get_assumptions
 
 # Phase functions (Plan 008 orchestrator)
 from src.python.phases import (
@@ -785,217 +775,95 @@ class Person(mesa.Agent):
 
     def stressful_event(self):
         """
-        Process a stressful event using the complete stress processing pipeline:
-        Stress Event → current_stress → stress_dimensions → PSS-10 → stress_dimensions (feedback)
+        Process a stressful event (Plan 008 delegation wrapper).
 
-        Returns challenge and hindrance values for integration with daily dynamics.
-        Implements complete theoretical loop ensuring all correlations are achieved.
+        Deprecated: prefer using Person.step() which handles the full phase
+        pipeline.  This method is kept for backward compatibility with tests.
+        Calls generate_stress_event (pachable) then delegates to the phase
+        pipeline for resilience activation.
 
         Returns:
             Tuple of (challenge, hindrance) values for the event
         """
-        # Generate stress event using utility function
+        # Generate event (uses module-level import that tests can patch)
         event = generate_stress_event(rng=self._rng)
 
-        # Get configuration parameters for threshold adjustment
+        # Get configuration
         cfg = get_config()
-        base_threshold = cfg.get("threshold", "base_threshold")
-        challenge_scale = cfg.get("threshold", "challenge_scale")
-        hindrance_scale = cfg.get("threshold", "hindrance_scale")
-
-        # Compute challenge and hindrance using appraisal weights
         weights = AppraisalWeights(
             omega_c=cfg.get("appraisal", "omega_c"),
             omega_o=cfg.get("appraisal", "omega_o"),
             bias=cfg.get("appraisal", "bias"),
             gamma=cfg.get("appraisal", "gamma"),
         )
-
-        # Process stress event to get challenge/hindrance values
-        is_stressed, challenge, hindrance = process_stress_event(
-            event=event,
-            threshold_params=ThresholdParams(
-                base_threshold=base_threshold, challenge_scale=challenge_scale, hindrance_scale=hindrance_scale
-            ),
-            weights=weights,
-            rng=self._rng,
+        threshold_params = ThresholdParams(
+            base_threshold=cfg.get("threshold", "base_threshold"),
+            challenge_scale=cfg.get("threshold", "challenge_scale"),
+            hindrance_scale=cfg.get("threshold", "hindrance_scale"),
         )
 
-        # STEP 1: Track ALL stress events for complete processing loop
+        # Appraise event and check threshold
+        is_stressed, challenge, hindrance = process_stress_event(event, threshold_params, weights, rng=self._rng)
+
+        # Build state and apply stress perception delta
+        state = self._build_agent_state()
+        state["challenge"] = challenge
+        state["hindrance"] = hindrance
+        state["is_stressed"] = is_stressed
+        state["event_controllability"] = event.controllability
+        state["event_overload"] = event.overload
+
+        if not is_stressed:
+            # Update stress dimensions for non-stressful event
+            (
+                state["stress_controllability"],
+                state["stress_overload"],
+                state["recent_stress_intensity"],
+                state["stress_momentum"],
+            ) = update_stress_dimensions_from_event(
+                current_controllability=state["stress_controllability"],
+                current_overload=state["stress_overload"],
+                challenge=challenge,
+                hindrance=hindrance,
+                coped_successfully=True,
+                is_stressful=False,
+                volatility=state["volatility"],
+                recent_stress_intensity=state["recent_stress_intensity"],
+                stress_momentum=state["stress_momentum"],
+            )
+            self._write_back_state(state)
+            return challenge, hindrance
+
+        # Stressed: run resilience activation via phase function
+        neighbor_affects = get_neighbor_affects(self, self.model)
+        activation_config = {
+            "neighbor_affects": neighbor_affects,
+            "base_resource_cost": cfg.get("agent", "resource_cost"),
+        }
+        activation_result = run_resilience_activation(state, activation_config, self._rng)
+        state = self._apply_delta(state, activation_result["state_delta"])
+
+        # Ensure daily_pss10_scores reflects the latest event
+        pss10 = state.get("pss10", 0)
+        if pss10 > 0:
+            # Flush to daily_pss10_scores via state
+            scores = list(state.get("daily_pss10_scores", []))
+            scores.append(pss10)
+            state["daily_pss10_scores"] = scores
+
+        # Write back and track stress event
+        self._write_back_state(state)
         self.daily_stress_events.append(
             {
                 "challenge": challenge,
                 "hindrance": hindrance,
                 "is_stressed": is_stressed,
-                "stress_level": 0.0,
-                "coped_successfully": False,
+                "stress_level": state.get("current_stress", 0.0),
+                "coped_successfully": activation_result["observation"].get("coped_successfully", False),
                 "event_controllability": event.controllability,
                 "event_overload": event.overload,
             }
         )
-
-        if not is_stressed:
-            # Even non-stressful events provide learning opportunities for stress dimensions
-            self.stress_controllability, self.stress_overload, self.recent_stress_intensity, self.stress_momentum = (
-                update_stress_dimensions_from_event(
-                    current_controllability=self.stress_controllability,
-                    current_overload=self.stress_overload,
-                    challenge=challenge,
-                    hindrance=hindrance,
-                    coped_successfully=True,  # No coping needed for non-stressful events
-                    is_stressful=False,
-                    volatility=self.volatility,
-                    recent_stress_intensity=self.recent_stress_intensity,
-                    stress_momentum=self.stress_momentum,
-                )
-            )
-            return challenge, hindrance
-
-        # STEP 2: Get neighbor affects for social influence on coping
-        neighbor_affects = get_neighbor_affects(self, self.model)
-
-        # STEP 3: Use enhanced stress processing mechanism with complete feedback loop
-        stress_config = StressProcessingConfig()
-        new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
-            current_affect=self.affect,
-            current_resilience=self.resilience,
-            current_stress=self.current_stress,
-            challenge=challenge,
-            hindrance=hindrance,
-            neighbor_affects=neighbor_affects,
-            rng=self._rng,
-            config=stress_config,
-        )
-
-        # STEP 4: Update core agent state
-        self.affect = new_affect
-        self.resilience = new_resilience
-        self.current_stress = new_stress
-
-        # STEP 5: Update stress dimensions based on event outcome (feedback loop)
-        self.stress_controllability, self.stress_overload, self.recent_stress_intensity, self.stress_momentum = (
-            update_stress_dimensions_from_event(
-                current_controllability=self.stress_controllability,
-                current_overload=self.stress_overload,
-                challenge=challenge,
-                hindrance=hindrance,
-                coped_successfully=coped_successfully,
-                is_stressful=True,
-                volatility=self.volatility,
-                recent_stress_intensity=self.recent_stress_intensity,
-                stress_momentum=self.stress_momentum,
-            )
-        )
-
-        # STEP 6: Generate PSS-10 from updated stress dimensions
-        pss10_data = generate_pss10_from_stress_dimensions(
-            stress_controllability=self.stress_controllability,
-            stress_overload=self.stress_overload,
-            recent_stress_intensity=self.recent_stress_intensity,
-            stress_momentum=self.stress_momentum,
-            affect=self.affect,
-            resources=self.resources,
-            rng=self._rng,
-        )
-        self.pss10_responses = pss10_data["pss10_responses"]
-        self.pss10 = pss10_data["pss10_score"]
-        self.stressed = pss10_data["stressed"]
-
-        # Collect PSS-10 score for daily consolidation
-        self.daily_pss10_scores.append(self.pss10)
-
-        # STEP 7: Update stress dimensions from PSS-10 feedback (complete loop)
-        self.stress_controllability, self.stress_overload = update_stress_dimensions_from_pss10_feedback(
-            current_controllability=self.stress_controllability,
-            current_overload=self.stress_overload,
-            pss10_responses=self.pss10_responses,
-            current_resources=self.resources,
-        )
-
-        # STEP 8: Validate theoretical correlations are maintained
-        validate_theoretical_correlations(
-            challenge=challenge,
-            hindrance=hindrance,
-            coped_successfully=coped_successfully,
-            stress_controllability=self.stress_controllability,
-            stress_overload=self.stress_overload,
-            pss10_score=self.pss10,
-            current_stress=self.current_stress,
-            pss10_responses=self.pss10_responses,
-        )
-
-        # Update the tracked event with complete processing results
-        if self.daily_stress_events:
-            self.daily_stress_events[-1].update(
-                {
-                    "stress_level": new_stress,
-                    "coped_successfully": coped_successfully,
-                    "final_stress_controllability": self.stress_controllability,
-                    "final_stress_overload": self.stress_overload,
-                    "pss10_score": self.pss10,
-                }
-            )
-
-        # STEP 8: Use resources for coping attempt with complete stress state
-        base_resource_cost = cfg.get("agent", "resource_cost")
-        resource_config = ResourceOptimizationConfig()
-
-        # Compute resilience-optimized resource cost using complete stress state
-        optimized_cost = compute_resilience_optimized_resource_cost(
-            base_cost=base_resource_cost,
-            current_resilience=self.resilience,
-            challenge=challenge,
-            hindrance=hindrance,
-            config=resource_config,
-        )
-
-        # Apply resource depletion during coping attempt
-        self.resources = compute_resource_depletion_with_resilience(
-            current_resources=self.resources,
-            cost=optimized_cost,
-            current_resilience=self.resilience,
-            coping_successful=coped_successfully,
-            is_stressed=self.stressed,
-            config=resource_config,
-        )
-
-        # STEP 9: Track consecutive hindrances for overload effects
-        if hindrance > challenge:
-            self.consecutive_hindrances = getattr(self, "consecutive_hindrances", 0.0) + 1.0
-        else:
-            self.consecutive_hindrances = 0.0
-
-        # STEP 10: Track stress breach count for network adaptation
-        self.stress_breach_count += 1
-
-        # STEP 11: Allocate resources to protective factors with complete stress integration
-        a = get_assumptions()
-        if is_stressed and coped_successfully:
-            # Give resource reward after successful coping (Plan 007)
-            resource_reward = base_resource_cost * a.coping.resource_reward  # 0.75
-            self.resources = clamp(self.resources + resource_reward, 0.0, 1.0)
-
-            # Use utility function for protective factor allocation
-            allocations = allocate_protective_factors(
-                available_resources=self.resources * a.coping.pf_allocation_fraction,  # 0.3
-                current_resilience=self.resilience,
-                baseline_resilience=self.baseline_resilience,
-                protective_factors=self.protective_factors,
-                rng=self._rng,
-            )
-
-            # Update protective factors with allocations
-            self.protective_factors = update_protective_factors_with_allocation(
-                protective_factors=self.protective_factors, allocations=allocations, current_resilience=self.resilience
-            )
-
-            # Deduct allocated resources
-            total_allocated = sum(allocations.values())
-            self.resources -= total_allocated
-        else:
-            # Add small resource penalty for failed coping attempts (Plan 007)
-            resource_penalty = base_resource_cost * a.coping.resource_penalty  # 0.1
-            self.resources = clamp(self.resources - resource_penalty, 0.0, 1.0)
 
         return challenge, hindrance
 
