@@ -108,9 +108,9 @@ class TestAssumptionConfigExistence:
         assert c.overload_allocation_penalty_rate == 0.1
         assert c.stress_improvement_effectiveness == 0.1
         assert c.social_resource_boost_factor == 0.1
-        assert c.preservable_allocation_fraction == 0.1
+        assert c.preservable_allocation_fraction == 0.5
         assert c.social_support_allocation_boost == 0.3
-        assert c.affect_regeneration_multiplier == 0.5
+        assert c.affect_regeneration_multiplier == 0.2
         assert c.resilience_regeneration_multiplier == 0.3
 
     @pytest.mark.unit

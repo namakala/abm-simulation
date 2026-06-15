@@ -66,10 +66,11 @@ class TestUpdateStressDimensionsAssumptions:
             coped_successfully=True,
             is_stressful=True,
             volatility=1.0,
+            resilience=0.0,  # disable buffer for assumption testing
         )
         # controllability_change_magnitude = 1.0*0.10 + 0.0*0.05 = 0.10
         # homeostasis = (0.5 - 0.5) * 0.05 = 0
-        # event = 0.10 * 1.0 = 0.10
+        # event = 0.10 * 1.0 * resilience_buffer(1.0) = 0.10
         # expected: 0.5 + 0 + 0.10 = 0.60
         assert ctrl == pytest.approx(0.60, abs=0.01)
 
@@ -90,8 +91,9 @@ class TestUpdateStressDimensionsAssumptions:
                 coped_successfully=True,
                 is_stressful=True,
                 volatility=1.0,
+                resilience=0.0,  # disable buffer for assumption testing
             )
-            # With weight=0.20: ctrl = 0.5 + (1.0*0.20) * 1.0 = 0.70
+            # With weight=0.20: ctrl = 0.5 + (1.0*0.20) * 1.0 * 1.0 = 0.70
             assert ctrl == pytest.approx(0.70, abs=0.01)
         finally:
             os.environ.pop("ASSUMPTION_CONTROLLABILITY_CHALLENGE_WEIGHT", None)

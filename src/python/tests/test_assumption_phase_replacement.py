@@ -98,7 +98,17 @@ class TestResourceAllocationAssumptions:
 
     @pytest.mark.unit
     def test_module_level_constants_match_assumptions(self):
-        """Module-level constants equal assumption config defaults."""
+        """Module-level constants equal assumption config defaults.
+
+        Uses importlib.reload to force re-evaluation of module-level constants.
+        """
+        import importlib
+
+        # Force-reload so module-level consts pick up current assumptions
+        from src.python import phases as _phases
+
+        importlib.reload(_phases.resource_allocation)
+
         from src.python.phases.resource_allocation import (
             _AFFECT_MULT_COEFFICIENT,
             _RESILIENCE_MULT_COEFFICIENT,

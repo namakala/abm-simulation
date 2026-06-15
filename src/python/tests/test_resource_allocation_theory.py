@@ -144,12 +144,22 @@ class TestResourceRegeneration:
         assert out_high_res["observation"]["regeneration_amount"] > out_low_res["observation"]["regeneration_amount"]
 
     def test_regeneration_formula_match(self):
-        """R' = base_regeneration * (1 - R) * (1 + 0.5 * max(0, A)) * (1 + 0.3 * resilience)."""
+        """R' = base_regeneration * (1 - R) * (1 + affect_mult_coeff * max(0, A)) * (1 + 0.3 * resilience).
+
+        affect_mult_coeff loaded from assumption_config (default 0.2 after calibration).
+        """
+        from src.python.phases.resource_allocation import _AFFECT_MULT_COEFFICIENT, _RESILIENCE_MULT_COEFFICIENT
+
         R, A, resil = 0.25, 0.4, 0.6
         state = _make_state(resources=R, affect=A, resilience=resil)
         config = _make_config(base_regeneration=0.1)
         out = _run(state, config)
-        expected = 0.1 * (1.0 - R) * (1.0 + 0.5 * max(0.0, A)) * (1.0 + 0.3 * resil)
+        expected = (
+            0.1
+            * (1.0 - R)
+            * (1.0 + _AFFECT_MULT_COEFFICIENT * max(0.0, A))
+            * (1.0 + _RESILIENCE_MULT_COEFFICIENT * resil)
+        )
         assert out["observation"]["regeneration_amount"] == pytest.approx(expected, rel=1e-10)
 
 
@@ -338,7 +348,11 @@ class TestEdgeCases:
         assert "observation" in out
 
     def test_protective_factors_all_zero_handling(self):
-        """All e_f = 0 → softmax divides evenly, allocation still valid."""
+        """All e_f = 0 → softmax divides evenly, allocation still valid.
+
+        With preservation (10%), spendable = 0.9 * 0.5 = 0.45.
+        Equal weights = 0.25 → each allocation = 0.45 * 0.25 = 0.1125.
+        """
         pfs = {f: 0.0 for f in FACTORS}
         state = _make_state(resources=0.5, protective_factors=pfs)
         config = _make_config(softmax_temperature=1.0, base_regeneration=0.0)
@@ -347,5 +361,7 @@ class TestEdgeCases:
         for w in weights.values():
             assert w == pytest.approx(0.25, abs=1e-10)
         allocated = out["observation"]["allocated_resources"]
+        # With 10% preservation: spendable = 0.5 * 0.9 = 0.45
+        expected_per_factor = 0.25 * 0.5 * 0.9  # 0.1125
         for f in FACTORS:
-            assert allocated[f] == pytest.approx(0.25 * 0.5, abs=1e-10)
+            assert allocated[f] == pytest.approx(expected_per_factor, abs=1e-10)

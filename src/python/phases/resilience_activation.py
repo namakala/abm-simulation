@@ -138,6 +138,7 @@ def run_phase(
             volatility=volatility,
             recent_stress_intensity=recent_stress_intensity,
             stress_momentum=stress_momentum,
+            resilience=current_resilience,
         )
     )
 

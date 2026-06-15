@@ -519,11 +519,15 @@ def generate_pss10_item_response(
 
     # Transform from normal distribution around the empirically observed mean
     # Adjust mean based on current stress level, normalized to [0, 4]
-    adjusted_mean = normalized_stress * 4
+    # Scaled by STRESS_SCALE to produce realistic population means (~13-15 total)
+    # while preserving stress-driven variation for correlations
+    # Scale normalized stress [0,1] to item response [0,4]
+    STRESS_SCALE = 3.5
+    adjusted_mean = normalized_stress * STRESS_SCALE
     raw_response = clamp(adjusted_mean, 0, 4)  # Limit to range [0, 4]
 
-    # Add small amount of measurement error using local RNG
-    measurement_error = local_rng.normal(0, 0.1)
+    # Add measurement error using local RNG
+    measurement_error = local_rng.normal(0, 0.5)
     final_response = raw_response + measurement_error
 
     # Apply reverse scoring if needed
@@ -749,7 +753,8 @@ def generate_pss10_from_stress_dimensions(
     # Protective factors modulate stress perception (Plan 007)
     affect_influence = affect * 0.25  # Scale affect into [−0.25, 0.25]
     # Higher resources buffer against perceived stress (0 resources = no buffering)
-    resource_buffer = resources * 0.80  # Scale resources into [0, 0.80]
+    # Reduced from 0.80 to 0.15 to avoid dominating stress dimension variation
+    resource_buffer = resources * 0.15  # Scale resources into [0, 0.15]
 
     # Apply recent stress intensity for immediate response
     intensity_boost = recent_stress_intensity * config["sensitivity"]
@@ -885,10 +890,13 @@ def update_stress_dimensions_from_event(
     volatility: float = 0.5,
     recent_stress_intensity: float = 0.0,
     stress_momentum: float = 0.0,
+    resilience: float = 0.5,
     config: Optional[Dict[str, float]] = None,
 ) -> Tuple[float, float, float, float]:
     """
     Update agent's controllability and overload dimensions based on stress event outcomes.
+
+    Higher resilience buffers the negative impact of stress on controllability/overload.
 
     Args:
         current_controllability: Current stress controllability ∈ [0,1]
@@ -900,11 +908,15 @@ def update_stress_dimensions_from_event(
         volatility: Agent-specific volatility parameter ∈ [0,1] drawn from Beta(1,1)
         recent_stress_intensity: Current recent stress intensity (passed from agent state)
         stress_momentum: Current stress momentum (passed from agent state)
+        resilience: Current resilience level (0-1), buffers stress dimension changes
         config: Configuration for stress dimension updates
 
     Returns:
         Tuple of (updated_controllability, updated_overload, recent_stress_intensity, stress_momentum)
     """
+    # Resilience buffer: higher resilience reduces impact of stress events
+    # on controllability/overload by up to 95% at resilience=1.0
+    resilience_buffer = 1.0 - resilience * 0.95
     # Get configuration for stress dimension updates
     cfg = get_config()
     assumptions = get_assumptions()
@@ -945,7 +957,7 @@ def update_stress_dimensions_from_event(
     # Apply controllability update with decay toward baseline
     # Move toward baseline when no strong events, but allow event-driven changes
     homeostasis_pull = (baseline_c - current_controllability) * chr_
-    event_effect = controllability_change * volatility
+    event_effect = controllability_change * volatility * resilience_buffer
 
     updated_controllability = current_controllability + homeostasis_pull + event_effect
     updated_controllability = clamp(updated_controllability, 0.0, 1.0)
@@ -962,7 +974,7 @@ def update_stress_dimensions_from_event(
     # Apply overload update with decay toward baseline
     # Move toward baseline when no strong events, but allow event-driven changes
     homeostasis_pull = (baseline_o - current_overload) * ohr
-    event_effect = overload_change * volatility
+    event_effect = overload_change * volatility * resilience_buffer
 
     updated_overload = current_overload + homeostasis_pull + event_effect
     updated_overload = clamp(updated_overload, 0.0, 1.0)

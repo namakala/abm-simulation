@@ -249,11 +249,18 @@ def process_pss10_consolidation(
     stress_controllability = clamp(stress_controllability, 0.0, 1.0)
     stress_overload = clamp(stress_overload, 0.0, 1.0)
 
+    # ── Consolidate PSS-10 score ─────────────────────────────────
+    if daily_pss10_scores:
+        consolidated_pss10 = int(round(float(np.mean(daily_pss10_scores))))
+    else:
+        consolidated_pss10 = pss10  # keep existing
+
     # ── Update stressed status ───────────────────────────────────-
-    stressed = pss10 >= pss10_threshold
+    stressed = consolidated_pss10 >= pss10_threshold
 
     # ── Build PhaseOutput ─────────────────────────────────────────
     state_delta = {
+        "pss10": consolidated_pss10,
         "current_stress": current_stress,
         "stress_controllability": stress_controllability,
         "stress_overload": stress_overload,
@@ -635,9 +642,17 @@ class Person(mesa.Agent):
         # 4b. Resource allocation (phase module)
         resource_config = {
             "base_regeneration": cfg.get("resource", "base_regeneration"),
+            "preservable_allocation_fraction": cfg.get("assumptions", "preservable_allocation_fraction"),
+            "softmax_temperature": cfg.get("utility", "softmax_temperature"),
+            "protective_improvement_rate": cfg.get("resource", "protective_improvement_rate"),
         }
         resource_result = run_resource_allocation(state, resource_config, self._rng)
         state = self._apply_delta(state, resource_result["state_delta"])
+
+        # Add small noise to resources for cross-sectional variation
+        current_resources = state.get("resources", 0.5)
+        noise = self._rng.normal(0, 0.02) * current_resources
+        state["resources"] = max(0.0, min(1.0, current_resources + noise))
 
         # 4c. Stress buffering (phase module)
         buffering_config = {}

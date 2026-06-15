@@ -178,6 +178,8 @@ def run_phase(
     base_regeneration = config.get("base_regeneration", 0.1)
     temperature = config.get("softmax_temperature", 1.0)
     improvement_rate = config.get("protective_improvement_rate", 0.1)
+    # Fraction of regenerated resources to preserve (not allocate)
+    preservable_fraction = config.get("preservable_allocation_fraction", 0.1)
 
     # ── 1. Resource regeneration ────────────────────────────────────
     regeneration = _compute_regeneration(resources, affect, resilience, base_regeneration)
@@ -185,15 +187,19 @@ def run_phase(
     # Total resources available after regeneration
     available_for_allocation = resources + regeneration
 
+    # Preserve a fraction of resources (prevent depletion)
+    preserved = available_for_allocation * preservable_fraction
+    spendable = available_for_allocation - preserved
+
     # ── 2. Softmax allocation ───────────────────────────────────────
-    allocations = _allocate_resources(available_for_allocation, efficacies_before, temperature)
+    allocations = _allocate_resources(spendable, efficacies_before, temperature)
     total_allocated = sum(allocations.values())
 
     # ── 3. PF efficacy updates (diminishing returns) ────────────────
     efficacies_after = _update_efficacies(efficacies_before, allocations, resilience, improvement_rate)
 
-    # ── 4. Resource depletion ───────────────────────────────────────
-    new_resources = min(1.0, max(0.0, available_for_allocation - total_allocated))
+    # ── 4. Remaining resources (preserved + unspent) ────────────────
+    new_resources = min(1.0, max(0.0, preserved + (spendable - total_allocated)))
 
     # ── Build PhaseOutput ───────────────────────────────────────────
     state_delta: Dict[str, Any] = {
@@ -203,10 +209,8 @@ def run_phase(
 
     observation: Dict[str, Any] = {
         "regeneration_amount": regeneration,
-        "allocation_weights": {
-            f: float(allocations[f] / available_for_allocation) if available_for_allocation > 0 else 0.25
-            for f in _FACTORS
-        },
+        "allocation_weights": {f: float(allocations[f] / spendable) if spendable > 0 else 0.25 for f in _FACTORS},
+        "spendable_fraction": float(spendable / available_for_allocation) if available_for_allocation > 0 else 0.0,
         "allocated_resources": {f: float(allocations[f]) for f in _FACTORS},
         "efficacies_before": dict(efficacies_before),
         "efficacies_after": dict(efficacies_after),

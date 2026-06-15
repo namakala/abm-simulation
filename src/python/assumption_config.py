@@ -199,7 +199,7 @@ class AssumptionResourceConfig:
         default_factory=lambda: _env_float("ASSUMPTION_SOCIAL_RESOURCE_BOOST_FACTOR", 0.1)
     )
     preservable_allocation_fraction: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_PRESERVABLE_ALLOCATION_FRACTION", 0.1)
+        default_factory=lambda: _env_float("ASSUMPTION_PRESERVABLE_ALLOCATION_FRACTION", 0.5)
     )
     social_support_allocation_boost: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_SOCIAL_SUPPORT_ALLOCATION_BOOST", 0.3)
@@ -212,7 +212,7 @@ class AssumptionResourceConfig:
         default_factory=lambda: _env_float("ASSUMPTION_EXCHANGE_AMOUNT_REDUCTION", 0.5)
     )
     affect_regeneration_multiplier: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", 0.5)
+        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", 0.2)
     )
     resilience_regeneration_multiplier: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_REGENERATION_MULTIPLIER", 0.3)
@@ -236,7 +236,7 @@ class AssumptionResourceConfig:
     )
     buffering_boost_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_BOOST_RATE", 0.1))
     buffering_a_coefficient: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_A_COEFFICIENT", -0.3)
+        default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_A_COEFFICIENT", -0.03)
     )
     buffering_b_coefficient: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_B_COEFFICIENT", 0.5)
