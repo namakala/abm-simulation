@@ -463,7 +463,7 @@ def compute_coping_probability(
         social_effect = config.social_influence_factor * avg_neighbor_affect
 
     # Resilience boosts coping ability
-    resilience_effect = 0.4 * current_resilience
+    resilience_effect = get_assumptions().coping.resilience_coping_factor * current_resilience
 
     # Combine all effects
     total_effect = challenge_effect + hindrance_effect + social_effect + resilience_effect

@@ -15,17 +15,18 @@ class TestResilienceActivationAssumptions:
     @pytest.mark.unit
     def test_module_level_constants_match_assumptions(self):
         """Module-level constants equal assumption config defaults."""
-        from src.python.phases.resilience_activation import (
-            _RESOURCE_REWARD_MULTIPLIER,
-            _RESOURCE_PENALTY_MULTIPLIER,
-            _PF_ALLOCATION_FRACTION,
-        )
-        from src.python.assumption_config import get_assumptions
+        import importlib
+        import src.python.phases.resilience_activation as ra
+        from src.python.assumption_config import reload_assumptions, get_assumptions
+
+        # Force fresh state — other tests may have polluted the cache
+        reload_assumptions()
+        importlib.reload(ra)
 
         a = get_assumptions()
-        assert _RESOURCE_REWARD_MULTIPLIER == a.coping.resource_reward
-        assert _RESOURCE_PENALTY_MULTIPLIER == a.coping.resource_penalty
-        assert _PF_ALLOCATION_FRACTION == a.coping.pf_allocation_fraction
+        assert ra._RESOURCE_REWARD_MULTIPLIER == a.coping.resource_reward
+        assert ra._RESOURCE_PENALTY_MULTIPLIER == a.coping.resource_penalty
+        assert ra._PF_ALLOCATION_FRACTION == a.coping.pf_allocation_fraction
 
     @pytest.mark.unit
     def test_module_reload_picks_up_env(self, clean_env):

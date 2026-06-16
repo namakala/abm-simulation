@@ -267,45 +267,6 @@ class TestAgentStressEvents:
 class TestAgentResourceManagement:
     """Test agent resource management and protective factors."""
 
-    @pytest.mark.skip(reason="Test is flaky and needs fixing")
-    def test_agent_resource_usage_during_coping(self):
-        """Test that resources are used when coping successfully."""
-        model = MockModel(seed=42)
-
-        # Use explicit config to avoid any config loading issues
-        config = {
-            "initial_resources_mean": 1.0,  # Start with full resources
-            "initial_resilience_mean": 1.0,  # Maximum resilience for guaranteed coping success
-            "initial_affect_mean": 0.0,
-            "initial_resources_sd": 0.1,
-            "initial_resilience_sd": 0.1,
-            "initial_affect_sd": 0.1,
-            "stress_probability": 0.5,
-            "coping_success_rate": 0.5,
-            "subevents_per_day": 3,
-        }
-
-        agent = Person(model, config)
-        initial_resources = agent.resources
-
-        # Simplify the mocking - use fewer layers
-        with (
-            patch("src.python.agent.process_stress_event", return_value=(True, 0.8, 0.2)),
-            patch(
-                "src.python.affect_utils.determine_coping_outcome_and_psychological_impact",
-                return_value=(0.1, 0.9, 0.15, True),
-            ),
-            patch("src.python.agent.generate_stress_event", return_value=StressEvent(0.1, 0.7)),
-            patch.object(agent, "_allocate_protective_factors"),
-        ):  # Prevent additional consumption
-            agent.stressful_event()
-
-        # Simple assertion that should work
-        assert agent.resources < initial_resources, (
-            f"Resources should be reduced. Initial: {initial_resources}, Final: {agent.resources}"
-        )
-        assert agent.resources >= 0.0, "Resources should not be negative"
-
     @pytest.mark.config
     def test_agent_resource_consumption_direct(self):
         """Test resource consumption by calling the logic directly."""

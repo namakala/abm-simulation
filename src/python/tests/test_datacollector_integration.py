@@ -400,12 +400,6 @@ class TestDataCollectorConsistency:
 class TestDataCollectorEdgeCases:
     """Test edge cases for DataCollector system."""
 
-    def test_empty_agent_set(self):
-        """Test data collection with empty agent set."""
-        # Skip this test for now as NetworkX doesn't support N=0
-        # In a real scenario, this would need special handling
-        pytest.skip("NetworkX doesn't support empty graphs")
-
     def test_single_step_run(self):
         """Test data collection with single-step runs."""
         # Use k < N for network creation

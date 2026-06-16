@@ -9,8 +9,6 @@ This module tests all functions in resource_utils.py including:
 - Edge cases and conditional branches
 """
 
-import pytest
-
 from src.python.model import StressModel
 
 from src.python.resource_utils import (
@@ -85,7 +83,7 @@ class TestResourceOptimizationConfig:
         """Test default values."""
         config = ResourceOptimizationConfig()
         assert config.base_resource_cost == get_config().get("agent", "resource_cost")
-        assert config.resilience_efficiency_factor == 0.3
+        assert config.resilience_efficiency_factor == 0.15
         assert config.minimum_resource_threshold == 0.05
         assert config.coping_difficulty_scale == 0.5
 
@@ -254,7 +252,7 @@ class TestComputeResourceEfficiencyGain:
         baseline_resilience = 0.5
         config = ResourceOptimizationConfig()
         gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, config)
-        assert gain == 1.0 + (0.2 * 0.3)  # surplus * factor
+        assert gain == 1.0 + (0.2 * 0.15)  # surplus * factor (reduced to 0.15)
 
     def test_no_gain_below_baseline(self):
         """Test no gain when current < baseline."""
@@ -270,14 +268,14 @@ class TestComputeResourceEfficiencyGain:
         baseline_resilience = 0.0
         config = ResourceOptimizationConfig()
         gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, config)
-        assert gain == 1.0 + 0.3  # actual max gain based on factor
+        assert gain == 1.0 + 0.15  # actual max gain based on factor (reduced to 0.15)
 
     def test_none_config(self):
         """Test with None config."""
         current_resilience = 0.7
         baseline_resilience = 0.5
         gain = compute_resource_efficiency_gain(current_resilience, baseline_resilience, None)
-        assert gain == 1.0 + (0.2 * 0.3)
+        assert gain == 1.0 + (0.2 * 0.15)
 
 
 class TestAllocateResilienceOptimizedResources:
@@ -297,7 +295,7 @@ class TestAllocateResilienceOptimizedResources:
         total_allocated = sum(allocations.values())
         # With preservation threshold, only preservable resources are allocated
         preservable = max(0.0, available_resources - config.preservation_threshold)
-        expected = preservable * (1.0 + 0.2 * 0.3) if preservable > 0 else 0.0
+        expected = preservable * (1.0 + 0.2 * 0.15) if preservable > 0 else 0.0
         assert abs(total_allocated - expected) < 1e-6
 
     def test_insufficient_resources(self, sample_protective_factors, sample_rng):
@@ -369,7 +367,7 @@ class TestComputeResourceDepletionWithResilience:
         resilience = 0.5
         config = ResourceOptimizationConfig()
         remaining = compute_resource_depletion_with_resilience(current_resources, cost, resilience, True, False, config)
-        expected_cost = cost * (1.0 - resilience * 0.3)
+        expected_cost = cost * (1.0 - resilience * 0.15)
         expected_remaining = max(0.0, current_resources - expected_cost)
         assert remaining == expected_remaining
 
@@ -395,7 +393,7 @@ class TestComputeResourceDepletionWithResilience:
         config = ResourceOptimizationConfig()
         remaining = compute_resource_depletion_with_resilience(current_resources, cost, resilience, True, False, config)
         # Actual calculation gives approximately 0.7927
-        expected_remaining = 0.7927
+        expected_remaining = 0.79135
         assert abs(remaining - expected_remaining) < 1e-3
 
     def test_stressed_resource_floor(self):
@@ -970,9 +968,6 @@ class TestAllocateProtectiveFactorsWithSocialBoost:
 class TestResourceCorrelations:
     """Test correlations between avg_resources and key mental health variables."""
 
-    @pytest.mark.flaky(
-        reason="Resource-allocation phase consumes all resources, producing NaN correlations; needs recalibration"
-    )
     def test_resource_correlations_theoretical_expectations(self):
         """Test that correlations between resources and key variables match theoretical expectations."""
         seeds = [42, 123, 456]

@@ -55,9 +55,9 @@ class AssumptionCopingConfig:
     challenge/hindrance resilience effects.
     """
 
-    resource_reward: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_REWARD", 0.75))
-    resource_penalty: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_PENALTY", 0.10))
-    pf_allocation_fraction: float = field(default_factory=lambda: _env_float("ASSUMPTION_PF_ALLOCATION_FRACTION", 0.30))
+    resource_reward: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_REWARD", 0.10))
+    resource_penalty: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_PENALTY", 0.20))
+    pf_allocation_fraction: float = field(default_factory=lambda: _env_float("ASSUMPTION_PF_ALLOCATION_FRACTION", 0.15))
     affect_improvement_scale: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_AFFECT_IMPROVEMENT_SCALE", 0.2)
     )
@@ -66,6 +66,9 @@ class AssumptionCopingConfig:
     )
     resilience_improvement_scale: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_IMPROVEMENT_SCALE", 0.1)
+    )
+    resilience_coping_factor: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_COPING_FACTOR", 0.10)
     )
     resilience_deterioration_scale: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_DETERIORATION_SCALE", 0.2)
@@ -173,7 +176,7 @@ class AssumptionResourceConfig:
     """
 
     resilience_efficiency_factor: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_EFFICIENCY_FACTOR", 0.3)
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_EFFICIENCY_FACTOR", 0.15)
     )
     min_resource_threshold: float = field(default_factory=lambda: _env_float("ASSUMPTION_MIN_RESOURCE_THRESHOLD", 0.05))
     coping_difficulty_scale: float = field(
@@ -183,7 +186,7 @@ class AssumptionResourceConfig:
     failed_coping_cost_penalty: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_FAILED_COPING_COST_PENALTY", 1.3)
     )
-    max_efficiency_gain: float = field(default_factory=lambda: _env_float("ASSUMPTION_MAX_EFFICIENCY_GAIN", 0.5))
+    max_efficiency_gain: float = field(default_factory=lambda: _env_float("ASSUMPTION_MAX_EFFICIENCY_GAIN", 0.3))
     social_resilience_boost_factor: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_SOCIAL_RESILIENCE_BOOST_FACTOR", 0.1)
     )
@@ -191,7 +194,7 @@ class AssumptionResourceConfig:
         default_factory=lambda: _env_float("ASSUMPTION_SUPPORT_EXCHANGE_BENEFIT_WEIGHT", 0.2)
     )
     challenge_resilience_bonus_factor: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_CHALLENGE_RESILIENCE_BONUS_FACTOR", 0.2)
+        default_factory=lambda: _env_float("ASSUMPTION_CHALLENGE_RESILIENCE_BONUS_FACTOR", 0.1)
     )
     hindrance_resilience_bonus_factor: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_HINDRANCE_RESILIENCE_BONUS_FACTOR", 0.1)
@@ -219,10 +222,10 @@ class AssumptionResourceConfig:
         default_factory=lambda: _env_float("ASSUMPTION_EXCHANGE_AMOUNT_REDUCTION", 0.5)
     )
     affect_regeneration_multiplier: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", 0.2)
+        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", 0.1)
     )
     resilience_regeneration_multiplier: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_REGENERATION_MULTIPLIER", 0.3)
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_REGENERATION_MULTIPLIER", 0.05)
     )
     # Phase-level constants (beyond the original spec 62)
     efficiency_return_factor: float = field(
@@ -230,10 +233,10 @@ class AssumptionResourceConfig:
     )
     # Resource allocation optimisation factors
     resilience_focus_factor: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_FOCUS_FACTOR", 0.5)
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_FOCUS_FACTOR", 0.15)
     )
     resilience_allocation_bonus: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_ALLOCATION_BONUS", 0.2)
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_ALLOCATION_BONUS", 0.05)
     )
     giver_resilience_sharing_factor: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_GIVER_RESILIENCE_SHARING_FACTOR", 0.2)

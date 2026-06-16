@@ -45,13 +45,14 @@ class TestAssumptionConfigExistence:
         from src.python.assumption_config import AssumptionCopingConfig
 
         c = AssumptionCopingConfig()
-        assert c.resource_reward == 0.75
-        assert c.resource_penalty == 0.10
-        assert c.pf_allocation_fraction == 0.30
+        assert c.resource_reward == 0.10
+        assert c.resource_penalty == 0.20
+        assert c.pf_allocation_fraction == 0.15
         assert c.affect_improvement_scale == 0.2
         assert c.affect_deterioration_scale == 0.4
         assert c.resilience_improvement_scale == 0.1
         assert c.resilience_deterioration_scale == 0.2
+        assert c.resilience_coping_factor == 0.10
         assert c.challenge_success_resilience == 0.3
         assert c.challenge_failure_resilience == -0.1
         assert c.hindrance_success_resilience == 0.1
@@ -95,23 +96,23 @@ class TestAssumptionConfigExistence:
         from src.python.assumption_config import AssumptionResourceConfig
 
         c = AssumptionResourceConfig()
-        assert c.resilience_efficiency_factor == 0.3
+        assert c.resilience_efficiency_factor == 0.15
         assert c.min_resource_threshold == 0.05
         assert c.coping_difficulty_scale == 0.5
         assert c.min_cost_floor == 0.3
         assert c.failed_coping_cost_penalty == 1.3
-        assert c.max_efficiency_gain == 0.5
+        assert c.max_efficiency_gain == 0.3
         assert c.social_resilience_boost_factor == 0.1
         assert c.support_exchange_benefit_weight == 0.2
-        assert c.challenge_resilience_bonus_factor == 0.2
+        assert c.challenge_resilience_bonus_factor == 0.1
         assert c.hindrance_resilience_bonus_factor == 0.1
         assert c.overload_allocation_penalty_rate == 0.1
         assert c.stress_improvement_effectiveness == 0.1
         assert c.social_resource_boost_factor == 0.1
         assert c.preservable_allocation_fraction == 0.5
         assert c.social_support_allocation_boost == 0.3
-        assert c.affect_regeneration_multiplier == 0.2
-        assert c.resilience_regeneration_multiplier == 0.3
+        assert c.affect_regeneration_multiplier == 0.1
+        assert c.resilience_regeneration_multiplier == 0.05
 
     @pytest.mark.unit
     def test_assumption_social_config_defaults(self):
@@ -153,9 +154,9 @@ class TestAssumptionConfigExistence:
         from src.python.assumption_config import AssumptionConfig
 
         c = AssumptionConfig()
-        assert c.coping.resource_reward == 0.75
+        assert c.coping.resource_reward == 0.10
         assert c.stress.controllability_challenge_weight == 0.10
-        assert c.resource.resilience_efficiency_factor == 0.3
+        assert c.resource.resilience_efficiency_factor == 0.15
         assert c.social.support_exchange_threshold == 0.05
         assert c.buffering.resilience_low_threshold == 0.3
 

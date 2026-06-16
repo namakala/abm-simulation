@@ -178,5 +178,4 @@ class TestStepDeterminism:
         # With different seeds, should differ (99.9% likely)
         # Not strictly guaranteed but strong indicator
         results_differ = a1.resilience != a2.resilience or a1.affect != a2.affect
-        if not results_differ:
-            pytest.skip("Same results with different seeds (possible but unlikely)")
+        assert results_differ, "Results should differ with different seeds"
