@@ -475,70 +475,51 @@ def generate_pss10_item_response(
     overload_loading: float,
     controllability_score: float,
     overload_score: float,
-    reverse_scored: bool,
+    pss10_scale: float = 3.5,
+    pss10_noise_sd: float = 1.15,
     rng: Optional[np.random.Generator] = None,
-    deterministic: bool = False,
 ) -> int:
     """
-    Generate a single PSS-10 item response using empirically grounded factor loadings.
+    Generate a single PSS-10 item response using the bifactor model (phase 2).
+
+    Uses item_mean as the intercept (baseline response at average stress).
+    Stress dimensions create deviations through factor loadings.
+    Measurement noise is proportional to item_sd.
+    No reversal at generation time — handled by compute_pss10_score.
 
     Args:
-        item_mean: Mean response for this item from normative data
+        item_mean: Baseline response for this item (intercept)
         item_sd: Standard deviation for this item from normative data
         controllability_loading: Factor loading on controllability dimension ∈ [0,1]
         overload_loading: Factor loading on overload dimension ∈ [0,1]
-        controllability_score: Agent's current controllability dimension score ∈ [0,1]
-        overload_score: Agent's current overload dimension score ∈ [0,1]
-        reverse_scored: Whether this item should be reverse scored
+        controllability_score: Agent's current controllability ∈ [0,1]
+        overload_score: Agent's current overload ∈ [0,1]
+        pss10_scale: Scaling factor for stress dimension offset (replaces STRESS_SCALE)
+        pss10_noise_sd: Multiplier on item_sd for measurement noise
         rng: Random number generator for reproducible testing
 
     Returns:
         PSS-10 item response ∈ [0,4]
     """
-    if deterministic:
-        # Create a deterministic seed from input parameters
-        input_str = f"{item_mean:.10f}_{item_sd:.10f}_{controllability_loading:.10f}_{overload_loading:.10f}_{controllability_score:.10f}_{overload_score:.10f}_{reverse_scored}"
-        seed = int(hashlib.md5(input_str.encode()).hexdigest(), 16) % (2**32)
-        local_rng = np.random.default_rng(seed)
-    else:
-        if rng is None:
-            rng = np.random.default_rng()
-        local_rng = rng
+    if rng is None:
+        rng = np.random.default_rng()
 
-    # Linear combination of dimension scores weighted by factor loadings
-    # Higher controllability → lower stress response (unless reverse scored)
-    # Higher overload → higher stress response
-    stress_component = (
-        controllability_loading * (1.0 - controllability_score)  # Low controllability = high stress
-        + overload_loading * overload_score  # High overload = high stress
+    # Center stress dimensions: 0.5 = average stress, deviation = stress signal
+    # Higher controllability → lower response (negative offset through loading)
+    # Higher overload → higher response (positive offset through loading)
+    centered_c = 1.0 - controllability_score - 0.5  # [-0.5, 0.5]
+    centered_o = overload_score - 0.5  # [-0.5, 0.5]
+
+    # Bifactor model: item_mean as intercept + stress offset through loadings
+    adjusted_mean = (
+        item_mean + controllability_loading * pss10_scale * centered_c + overload_loading * pss10_scale * centered_o
     )
 
-    # Normalize by total loading (avoid division by zero)
-    total_loading = max(controllability_loading + overload_loading, 1e-10)
-    normalized_stress = stress_component / total_loading
+    # Measurement noise proportional to empirical item SD
+    raw = rng.normal(adjusted_mean, item_sd * pss10_noise_sd)
 
-    # Transform from normal distribution around the empirically observed mean
-    # Adjust mean based on current stress level, normalized to [0, 4]
-    # Scaled by STRESS_SCALE to produce realistic population means (~13-15 total)
-    # while preserving stress-driven variation for correlations
-    # Scale normalized stress [0,1] to item response [0,4]
-    STRESS_SCALE = 3.5
-    adjusted_mean = normalized_stress * STRESS_SCALE
-    raw_response = clamp(adjusted_mean, 0, 4)  # Limit to range [0, 4]
-
-    # Add measurement error using local RNG
-    measurement_error = local_rng.normal(0, 0.5)
-    final_response = raw_response + measurement_error
-
-    # Apply reverse scoring if needed
-    if reverse_scored:
-        final_response = 4.0 - final_response
-
-    # Clamp to [0,4] range and round to nearest integer
-    clamped_response = max(0.0, min(4.0, final_response))
-    response_value = int(round(clamped_response))
-
-    return response_value
+    # Clamp to [0,4] and round to nearest integer
+    return int(round(max(0.0, min(4.0, raw))))
 
 
 def generate_pss10_responses(
@@ -574,9 +555,11 @@ def generate_pss10_responses(
             "load_controllability": cfg.get("pss10", "load_controllability"),
             "load_overload": cfg.get("pss10", "load_overload"),
             "bifactor_correlation": cfg.get("pss10", "bifactor_correlation"),
+            "pss10_scale": cfg.get("pss10", "pss10_scale"),
+            "pss10_noise_sd": cfg.get("pss10", "pss10_noise_sd"),
         }
 
-    # Generate correlated dimension scores using merged function with deterministic behavior
+    # Generate correlated dimension scores
     correlated_controllability, correlated_overload = generate_pss10_dimension_scores(
         controllability, overload, config["bifactor_correlation"], rng, deterministic
     )
@@ -585,7 +568,7 @@ def generate_pss10_responses(
     pss10_items = create_pss10_mapping()
     responses = {}
 
-    # Generate response for each item using deterministic version
+    # Generate response for each item using bifactor model
     for item_num in range(1, 11):
         item = pss10_items[item_num]
 
@@ -596,9 +579,9 @@ def generate_pss10_responses(
             overload_loading=item.weight_overload,
             controllability_score=correlated_controllability,
             overload_score=correlated_overload,
-            reverse_scored=item.reverse_scored,
+            pss10_scale=config.get("pss10_scale", 3.5),
+            pss10_noise_sd=config.get("pss10_noise_sd", 1.15),
             rng=rng,
-            deterministic=deterministic,
         )
 
         responses[item_num] = response
@@ -607,88 +590,58 @@ def generate_pss10_responses(
 
 
 def initialize_pss10_from_items(
-    controllability_score: float,
-    overload_score: float,
     rng: np.random.Generator,
     config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
-    Initialize PSS-10 responses and derived stress dimensions from item responses.
+    Initialize PSS-10 responses from item parameters directly (phase 1).
+
+    Generates each PSS-10 item response from empirical item mean and SD,
+    then derives stress dimensions (controllability, overload) from the items.
+    No stress dimension inputs needed — items are independent at initialization.
 
     Args:
-        controllability_score: Base controllability score ∈ [0,1]
-        overload_score: Base overload score ∈ [0,1]
         rng: Random number generator for reproducible testing
-        config: Configuration parameters
+        config: Configuration parameters (item_means, item_sds, threshold)
 
     Returns:
-        Dictionary containing pss10_responses, stress_controllability, stress_overload, pss10_score, and stressed status
+        Dictionary containing pss10_responses, stress_controllability,
+        stress_overload, pss10_score, and stressed status
     """
     # Get configuration values
     cfg = get_config()
 
     if config is None:
         config = {
-            "controllability_sd": cfg.get("pss10", "controllability_sd") / 4,
-            "overload_sd": cfg.get("pss10", "overload_sd") / 4,
             "item_means": cfg.get("pss10", "item_means"),
             "item_sds": cfg.get("pss10", "item_sds"),
-            "load_controllability": cfg.get("pss10", "load_controllability"),
-            "load_overload": cfg.get("pss10", "load_overload"),
             "threshold": cfg.get("pss10", "threshold"),
         }
 
-    # Clamp input scores to [0,1] range
-    controllability_score = max(0.0, min(1.0, controllability_score))
-    overload_score = max(0.0, min(1.0, overload_score))
-
-    # Generate each PSS-10 item response
+    # Generate each PSS-10 item response directly from item parameters
     pss10_responses = {}
     for item_num in range(1, 11):
-        # Determine if item is reverse scored
-        reverse_scored = item_num in [4, 5, 7, 8]
+        idx = item_num - 1
+        raw = rng.normal(config["item_means"][idx], config["item_sds"][idx])
+        pss10_responses[item_num] = int(round(max(0.0, min(4.0, raw))))
 
-        # Get item parameters from configuration
-        item_mean = config["item_means"][item_num - 1]
-        item_sd = config["item_sds"][item_num - 1]
-        controllability_loading = config["load_controllability"][item_num - 1]
-        overload_loading = config["load_overload"][item_num - 1]
-
-        # Generate item response
-        response = generate_pss10_item_response(
-            item_mean=item_mean,
-            item_sd=item_sd,
-            controllability_loading=controllability_loading,
-            overload_loading=overload_loading,
-            controllability_score=controllability_score,
-            overload_score=overload_score,
-            reverse_scored=reverse_scored,
-            rng=rng,
-        )
-
-        pss10_responses[item_num] = response
-
-    # Initialize stress_controllability by averaging items 4, 5, 7, 8, then dividing by 4
+    # Derive stress_controllability from items 4, 5, 7, 8
     controllability_items = [4, 5, 7, 8]
     controllability_scores = []
     for item_num in controllability_items:
-        if item_num in pss10_responses:
-            # Without reversing the item score, higher PSS-10 response = higher controllability
-            response = pss10_responses[item_num]
-            controllability_scores.append(response / 4.0)  # Normalize to [0,1]
+        response = pss10_responses[item_num]
+        controllability_scores.append(response / 4.0)
     stress_controllability = np.mean(controllability_scores) if controllability_scores else 0.5
 
-    # Initialize stress_overload by averaging items 1, 2, 3, 6, 9, 10, then dividing by 6
+    # Derive stress_overload from items 1, 2, 3, 6, 9, 10
     overload_items = [1, 2, 3, 6, 9, 10]
     overload_scores = []
     for item_num in overload_items:
-        if item_num in pss10_responses:
-            # Higher PSS-10 response = higher overload
-            response = pss10_responses[item_num]
-            overload_scores.append(response / 4.0)  # Normalize to [0,1]
+        response = pss10_responses[item_num]
+        overload_scores.append(response / 4.0)
     stress_overload = np.mean(overload_scores) if overload_scores else 0.5
 
-    # Initialize pss10_score by summing items 1-10
+    # Compute PSS-10 score (handles reversal via compute_pss10_score)
     pss10_score = compute_pss10_score(pss10_responses)
 
     # Set initial stressed status based on PSS-10 threshold
@@ -711,6 +664,7 @@ def generate_pss10_from_stress_dimensions(
     stress_momentum: float = 0.0,
     affect: float = 0.0,
     resources: float = 0.5,
+    pss10_bias: float = 0.0,
     rng: Optional[np.random.Generator] = None,
     config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
@@ -773,6 +727,15 @@ def generate_pss10_from_stress_dimensions(
 
     # Calculate PSS-10 score
     pss10_score = compute_pss10_score(pss10_responses)
+
+    # Apply agent-specific PSS-10 bias to item responses
+    # This propagates the bias through the stress feedback loop
+    if pss10_bias != 0.0:
+        per_item_bias = pss10_bias / 10.0
+        for item_num in pss10_responses:
+            biased = int(round(max(0.0, min(4.0, pss10_responses[item_num] + per_item_bias))))
+            pss10_responses[item_num] = biased
+        pss10_score = compute_pss10_score(pss10_responses)
 
     # Update stressed status based on PSS-10 threshold
     pss10_threshold = config["threshold"]

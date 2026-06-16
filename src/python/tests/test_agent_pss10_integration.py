@@ -48,10 +48,10 @@ class TestAgentPSS10Initialization:
         assert isinstance(agent.pss10_responses, dict)
         assert len(agent.pss10_responses) == 10
 
-        # Check that current_stress is initialized based on PSS-10 score (Step 3)
-        # Formula: pss10_score / 40.0
-        expected_stress = agent.pss10 / 40.0
-        assert abs(agent.current_stress - expected_stress) < 1e-1
+        # Check that current_stress is initialized from stress dimensions
+        # Formula: (stress_overload + (1.0 - stress_controllability)) / 2.0
+        expected_stress = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
+        assert abs(agent.current_stress - expected_stress) < 1e-6
 
         # Check that all PSS-10 responses are valid
         for item_num, response in agent.pss10_responses.items():
@@ -67,8 +67,8 @@ class TestAgentPSS10Initialization:
         # Create agent
         agent = Person(model)
 
-        # Verify PSS-10 score matches computed score from responses
-        expected_score = compute_pss10_score(agent.pss10_responses)
+        # Verify PSS-10 score matches computed score from responses plus bias
+        expected_score = int(round(max(0.0, min(40.0, compute_pss10_score(agent.pss10_responses) + agent.pss10_bias))))
         assert agent.pss10 == expected_score
 
     def test_pss10_reproducibility(self):

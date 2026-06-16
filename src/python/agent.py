@@ -263,7 +263,10 @@ def process_pss10_consolidation(
     prev_smoothed = state.get("pss10_smoothed", None)
     alpha = get_assumptions().stress.pss10_smoothing_alpha
     new_smoothed = smooth_pss10_across_days(consolidated_pss10, prev_smoothed, alpha)
-    final_pss10 = int(round(new_smoothed))
+
+    # Add persistent agent-specific bias (life-circumstance heterogeneity)
+    pss10_bias = state.get("pss10_bias", 0.0)
+    final_pss10 = int(round(max(0.0, min(40.0, new_smoothed + pss10_bias))))
 
     # ── Update stressed status ────────────────────────────────────
     stressed = final_pss10 >= pss10_threshold
@@ -499,30 +502,40 @@ class Person(mesa.Agent):
 
     def _initialize_pss10_scores(self):
         """
-        Initialize PSS-10 scores and map to stress levels during agent creation.
+        Initialize PSS-10 scores and stress dimensions (phase 1).
 
-        Uses utility function to generate initial PSS-10 responses and dimensions.
+        Generates PSS-10 item responses from empirical item mean and SD,
+        adding an agent-specific persistent bias to create realistic
+        between-person PSS-10 variance.
         """
-        # Generate initial controllability and overload scores
-        cfg = get_config()
-        controllability_score = sigmoid_transform(
-            mean=cfg.get("stress", "controllability_mean"), std=cfg.get("pss10", "controllability_sd"), rng=self._rng
-        )
-        overload_score = sigmoid_transform(
-            mean=cfg.get("stress", "overload_mean"), std=cfg.get("pss10", "overload_sd"), rng=self._rng
-        )
+        # Generate PSS-10 items from item params
+        pss10_data = initialize_pss10_from_items(rng=self._rng)
 
-        # Use utility function to initialize PSS-10
-        pss10_data = initialize_pss10_from_items(
-            controllability_score=controllability_score, overload_score=overload_score, rng=self._rng
-        )
-
-        # Update agent state with PSS-10 data
+        # PSS-10 responses and score come from item params
         self.pss10_responses = pss10_data["pss10_responses"]
-        self.stress_controllability = pss10_data["stress_controllability"]
-        self.stress_overload = pss10_data["stress_overload"]
         self.pss10 = pss10_data["pss10_score"]
         self.stressed = pss10_data["stressed"]
+
+        # Initialize stress dimensions from initial items
+        self.stress_controllability = pss10_data["stress_controllability"]
+        self.stress_overload = pss10_data["stress_overload"]
+
+        # Persistent agent-specific PSS-10 bias:
+        # Derived from initial agent traits to create between-person variance
+        # that preserves theoretical correlations. Each unit of deviation in
+        # the trait shifts PSS-10 by the specified amount.
+        self.pss10_bias = (
+            -(self.resilience - 0.5) * 5.0  # resilience ↑ → PSS-10 ↓
+            - (self.resources - 0.5) * 5.0  # resources ↑ → PSS-10 ↓
+            - self.affect * 3.0  # affect ↑ → PSS-10 ↓
+            + (self.stress_controllability - 0.5) * 3.0  # stress ↑ → PSS-10 ↑
+            + (self.stress_overload - 0.5) * 3.0  # stress ↑ → PSS-10 ↑
+            + self._rng.normal(0, 2.0)  # residual heterogeneity
+        )
+
+        # Apply persistent bias to initial PSS-10 score
+        self.pss10 = int(round(max(0.0, min(40.0, self.pss10 + self.pss10_bias))))
+        self.pss10_smoothed = float(self.pss10)
 
     def step(self):
         """
@@ -1080,6 +1093,7 @@ class Person(mesa.Agent):
             else dict(self.interaction_config),
             # Fixed traits
             "volatility": self.volatility,
+            "pss10_bias": self.pss10_bias,
             # Within-day support boost
             "support_boost": self.support_boost,
         }

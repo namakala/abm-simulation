@@ -241,8 +241,8 @@ class TestAgentInitializationCore:
 
         # Check stress tracking variables
         # current_stress is computed from PSS-10 score: pss10_score / 40.0
-        expected_stress = agent.pss10 / 40.0
-        assert abs(agent.current_stress - expected_stress) < 1e-1
+        expected_stress = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
+        assert abs(agent.current_stress - expected_stress) < 1e-6
         assert agent.daily_stress_events == []
         assert agent.stress_history == []
         assert agent.last_reset_day == 0

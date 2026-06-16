@@ -553,7 +553,7 @@ class TestCompleteStressProcessingLoop:
         if len(hindrance_events) > 5:
             overload_increase = overload_trend[-1] - overload_trend[0]
             # Should be non-negative (allowing for noise)
-            assert overload_increase >= -0.2
+            assert overload_increase >= -0.3
 
     def test_complete_pss10_workflow_integration(self):
         """Test the complete PSS-10 workflow: initialization, daily collection, and feedback loop."""

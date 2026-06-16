@@ -21,6 +21,7 @@ from src.python.stress_utils import (
     generate_pss10_dimension_scores,
     generate_pss10_item_response,
     generate_pss10_responses,
+    initialize_pss10_from_items,
     map_agent_stress_to_pss10,
     compute_pss10_score,
 )
@@ -148,6 +149,130 @@ class TestPSS10DimensionCorrelation:
         assert corr_o1 == corr_o2
 
 
+class TestPSS10BifactorGeneration:
+    """Test PSS-10 item response generation via bifactor model (phase 2)."""
+
+    def test_basic_generation(self):
+        """Test basic item response generation with bifactor model."""
+        rng = np.random.default_rng(42)
+        response = generate_pss10_item_response(
+            item_mean=2.0,
+            item_sd=1.0,
+            controllability_loading=0.5,
+            overload_loading=0.5,
+            controllability_score=0.5,
+            overload_score=0.5,
+            rng=rng,
+        )
+        assert 0 <= response <= 4
+        assert isinstance(response, int)
+
+    def test_stress_direction_controllability(self):
+        """Higher controllability (lower stress) → lower response."""
+        rng = np.random.default_rng(42)
+        rng2 = np.random.default_rng(42)
+
+        # Low controllability = high stress → higher response
+        low_control = generate_pss10_item_response(
+            item_mean=2.0,
+            item_sd=0.5,
+            controllability_loading=0.8,
+            overload_loading=0.2,
+            controllability_score=0.2,
+            overload_score=0.5,
+            pss10_scale=3.5,
+            pss10_noise_sd=0.1,
+            rng=rng,
+        )
+        # High controllability = low stress → lower response
+        high_control = generate_pss10_item_response(
+            item_mean=2.0,
+            item_sd=0.5,
+            controllability_loading=0.8,
+            overload_loading=0.2,
+            controllability_score=0.8,
+            overload_score=0.5,
+            pss10_scale=3.5,
+            pss10_noise_sd=0.1,
+            rng=rng2,
+        )
+        assert low_control >= high_control
+
+    def test_stress_direction_overload(self):
+        """Higher overload → higher response."""
+        rng = np.random.default_rng(42)
+        rng2 = np.random.default_rng(42)
+
+        low_overload = generate_pss10_item_response(
+            item_mean=2.0,
+            item_sd=0.5,
+            controllability_loading=0.2,
+            overload_loading=0.8,
+            controllability_score=0.5,
+            overload_score=0.2,
+            pss10_scale=3.5,
+            pss10_noise_sd=0.1,
+            rng=rng,
+        )
+        high_overload = generate_pss10_item_response(
+            item_mean=2.0,
+            item_sd=0.5,
+            controllability_loading=0.2,
+            overload_loading=0.8,
+            controllability_score=0.5,
+            overload_score=0.8,
+            pss10_scale=3.5,
+            pss10_noise_sd=0.1,
+            rng=rng2,
+        )
+        assert high_overload >= low_overload
+
+    def test_item_mean_as_baseline(self):
+        """At average stress, response centers near item_mean."""
+        rng = np.random.default_rng(42)
+        # Average stress: controllability = overload = 0.5
+        # With high noise, the mean should still approximate item_mean
+        responses = []
+        for _ in range(100):
+            r = generate_pss10_item_response(
+                item_mean=2.5,
+                item_sd=0.5,
+                controllability_loading=0.5,
+                overload_loading=0.5,
+                controllability_score=0.5,
+                overload_score=0.5,
+                pss10_scale=3.5,
+                pss10_noise_sd=0.1,
+                rng=rng,
+            )
+            responses.append(r)
+        assert abs(np.mean(responses) - 2.5) < 0.5
+
+    def test_reproducibility(self):
+        """Test reproducibility with same seed."""
+        rng1 = np.random.default_rng(123)
+        rng2 = np.random.default_rng(123)
+        r1 = generate_pss10_item_response(
+            item_mean=2.0,
+            item_sd=1.0,
+            controllability_loading=0.5,
+            overload_loading=0.5,
+            controllability_score=0.5,
+            overload_score=0.5,
+            rng=rng1,
+        )
+        r2 = generate_pss10_item_response(
+            item_mean=2.0,
+            item_sd=1.0,
+            controllability_loading=0.5,
+            overload_loading=0.5,
+            controllability_score=0.5,
+            overload_score=0.5,
+            rng=rng2,
+        )
+        assert r1 == r2
+
+
 class TestPSS10ItemGeneration:
     """Test PSS-10 item response generation functionality."""
 
@@ -162,57 +287,12 @@ class TestPSS10ItemGeneration:
             overload_loading=0.5,
             controllability_score=0.6,
             overload_score=0.4,
-            reverse_scored=False,
             rng=rng,
         )
 
         # Should return valid PSS-10 response (0-4)
         assert 0 <= response <= 4
         assert isinstance(response, int)
-
-    def test_item_response_reverse_scoring(self):
-        """Test that reverse scoring works correctly."""
-        rng = np.random.default_rng(42)
-
-        # Generate two responses with different controllability and overload scores to ensure different base responses
-        # Use different parameter combinations to make reverse scoring effect more apparent and avoid coincidental equality
-        response_normal = generate_pss10_item_response(
-            item_mean=2.0,
-            item_sd=0.5,  # Different mean for more variation
-            controllability_loading=0.5,
-            overload_loading=0.5,
-            controllability_score=0.2,
-            overload_score=0.3,  # Lower controllability, lower overload
-            reverse_scored=False,
-            rng=rng,
-        )
-
-        rng = np.random.default_rng(42)  # Reset seed
-        response_reverse = generate_pss10_item_response(
-            item_mean=3.0,
-            item_sd=0.5,  # Different mean
-            controllability_loading=0.5,
-            overload_loading=0.5,
-            controllability_score=0.8,
-            overload_score=0.7,  # Higher controllability, higher overload
-            reverse_scored=True,
-            rng=rng,
-        )
-
-        # Reverse scored should give different result due to different input parameters and reverse scoring
-        # If they happen to be equal by coincidence, the test should still pass as long as reverse scoring is applied
-        # But we expect them to be different due to different input parameters
-
-        # The reverse scored response should be roughly 4 minus the normal response
-        expected_reverse = 4 - response_normal
-        assert abs(response_reverse - expected_reverse) <= 1  # Allow some tolerance for randomness
-
-        # Additional check: if responses are equal, ensure reverse scoring was applied correctly
-        if response_normal == response_reverse:
-            # This should not happen with different input parameters, but if it does,
-            # verify that reverse scoring logic is working by checking the raw computation
-            # The reverse scored response should be 4 - normal_response
-            assert response_reverse == (4 - response_normal)
 
     def test_item_response_clamping(self):
         """Test that responses are properly clamped to [0,4] range."""
@@ -226,7 +306,6 @@ class TestPSS10ItemGeneration:
             overload_loading=0.0,
             controllability_score=0.0,
             overload_score=0.0,
-            reverse_scored=False,
             rng=rng,
         )
 
@@ -244,7 +323,6 @@ class TestPSS10ItemGeneration:
             overload_loading=0.5,
             controllability_score=0.5,
             overload_score=0.5,
-            reverse_scored=False,
             rng=rng1,
         )
 
@@ -255,7 +333,6 @@ class TestPSS10ItemGeneration:
             overload_loading=0.5,
             controllability_score=0.5,
             overload_score=0.5,
-            reverse_scored=False,
             rng=rng2,
         )
 
@@ -386,6 +463,86 @@ class TestPSS10Integration:
             compute_pss10_score(invalid_responses)
 
 
+class TestPSS10Initialization:
+    """Test PSS-10 initialization from item parameters (phase 1)."""
+
+    def test_initialize_from_item_params_basic(self):
+        """Test that initialize_pss10_from_items generates items from item_mean/sd."""
+        rng = np.random.default_rng(42)
+        config = {
+            "item_means": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+            "item_sds": [0.5] * 10,
+            "threshold": 27,
+        }
+
+        result = initialize_pss10_from_items(rng=rng, config=config)
+
+        # Should return all expected keys
+        assert "pss10_responses" in result
+        assert "stress_controllability" in result
+        assert "stress_overload" in result
+        assert "pss10_score" in result
+        assert "stressed" in result
+
+        # Should have exactly 10 item responses
+        responses = result["pss10_responses"]
+        assert len(responses) == 10
+        assert set(responses.keys()) == set(range(1, 11))
+
+        # All responses should be valid integers in [0,4]
+        for item_num, response in responses.items():
+            assert isinstance(response, int)
+            assert 0 <= response <= 4
+
+        # Stress dimensions should be in [0,1]
+        assert 0.0 <= result["stress_controllability"] <= 1.0
+        assert 0.0 <= result["stress_overload"] <= 1.0
+
+        # PSS-10 score should be in [0,40]
+        assert 0 <= result["pss10_score"] <= 40
+
+        # Stressed should be boolean
+        assert isinstance(result["stressed"], bool)
+
+    def test_initialize_reproducibility(self):
+        """Test that initialization is reproducible with same seed."""
+        config = {
+            "item_means": [2.0] * 10,
+            "item_sds": [0.5] * 10,
+            "threshold": 27,
+        }
+
+        rng1 = np.random.default_rng(123)
+        rng2 = np.random.default_rng(123)
+
+        result1 = initialize_pss10_from_items(rng=rng1, config=config)
+        result2 = initialize_pss10_from_items(rng=rng2, config=config)
+
+        assert result1["pss10_responses"] == result2["pss10_responses"]
+        assert result1["pss10_score"] == result2["pss10_score"]
+        assert result1["stressed"] == result2["stressed"]
+
+    def test_initialize_stress_derivation(self):
+        """Test that stress dimensions are correctly derived from items."""
+        rng = np.random.default_rng(42)
+        config = {
+            "item_means": [2.0] * 10,
+            "item_sds": [0.1] * 10,  # Low SD for deterministic-like results
+            "threshold": 27,
+        }
+
+        result = initialize_pss10_from_items(rng=rng, config=config)
+        responses = result["pss10_responses"]
+
+        # Stress controllability = mean of items 4,5,7,8 / 4
+        expected_controllability = np.mean([responses[i] / 4.0 for i in [4, 5, 7, 8]])
+        assert result["stress_controllability"] == pytest.approx(expected_controllability, abs=0.01)
+
+        # Stress overload = mean of items 1,2,3,6,9,10 / 4
+        expected_overload = np.mean([responses[i] / 4.0 for i in [1, 2, 3, 6, 9, 10]])
+        assert result["stress_overload"] == pytest.approx(expected_overload, abs=0.01)
+
+
 @pytest.mark.config
 class TestPSS10Configuration:
     """Test PSS-10 configuration parameters."""
@@ -446,9 +603,11 @@ def run_all_tests():
     test_classes = [
         TestPSS10Item(),
         TestPSS10DimensionCorrelation(),
+        TestPSS10BifactorGeneration(),
         TestPSS10ItemGeneration(),
         TestPSS10ResponseGeneration(),
         TestPSS10Integration(),
+        TestPSS10Initialization(),
         TestPSS10Configuration(),
     ]
 

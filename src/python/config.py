@@ -266,6 +266,10 @@ class Config:
         # PSS-10 threshold for stress classification
         self.pss10_threshold = self._get_env_value("PSS10_THRESHOLD", int, 27)
 
+        # PSS-10 bifactor model scaling parameters (phase 2)
+        self.pss10_scale = self._get_env_value("PSS10_SCALE", float, 3.5)
+        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 2.0)
+
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value("COPING_BASE_PROBABILITY", float, 0.5)
         self.coping_social_influence = self._get_env_value("COPING_SOCIAL_INFLUENCE", float, 0.1)
@@ -632,6 +636,8 @@ class Config:
                 "threshold": self.pss10_threshold,
                 "sensitivity": self._get_env_value("PSS10_SENSITIVITY", float, 0.5),
                 "momentum_weight": self._get_env_value("PSS10_MOMENTUM_WEIGHT", float, 0.3),
+                "pss10_scale": self.pss10_scale,
+                "pss10_noise_sd": self.pss10_noise_sd,
             },
             "interaction": {
                 "influence_rate": self.interaction_influence_rate,
