@@ -256,12 +256,22 @@ def process_pss10_consolidation(
     else:
         consolidated_pss10 = pss10  # keep existing
 
-    # ── Update stressed status ───────────────────────────────────-
-    stressed = consolidated_pss10 >= pss10_threshold
+    # ── Apply exponential smoothing across days (Plan 011) ────────
+    from src.python.stress_utils import smooth_pss10_across_days
+    from src.python.assumption_config import get_assumptions
+
+    prev_smoothed = state.get("pss10_smoothed", None)
+    alpha = get_assumptions().stress.pss10_smoothing_alpha
+    new_smoothed = smooth_pss10_across_days(consolidated_pss10, prev_smoothed, alpha)
+    final_pss10 = int(round(new_smoothed))
+
+    # ── Update stressed status ────────────────────────────────────
+    stressed = final_pss10 >= pss10_threshold
 
     # ── Build PhaseOutput ─────────────────────────────────────────
     state_delta = {
-        "pss10": consolidated_pss10,
+        "pss10": final_pss10,
+        "pss10_smoothed": new_smoothed,
         "current_stress": current_stress,
         "stress_controllability": stress_controllability,
         "stress_overload": stress_overload,
@@ -456,7 +466,8 @@ class Person(mesa.Agent):
         self.pss10_responses = {}  # Individual PSS-10 item responses
         self.stress_controllability = 0.5  # Controllability stress level ∈ [0,1]
         self.stress_overload = 0.5  # Overload stress level ∈ [0,1]
-        self.pss10 = 0  # Total PSS-10 score (0-40)
+        self.pss10 = 0  # Total PSS-10 score (0-40) — smoothed across days
+        self.pss10_smoothed = 0.0  # Float smoothed value, carried across days
         self.stressed = False  # Stress classification based on PSS-10 threshold
         self.daily_pss10_scores = []  # List to collect PSS-10 scores for the current day
 
@@ -1046,6 +1057,7 @@ class Person(mesa.Agent):
             "stress_controllability": self.stress_controllability,
             "stress_overload": self.stress_overload,
             "pss10": self.pss10,
+            "pss10_smoothed": self.pss10_smoothed,
             "stressed": self.stressed,
             "daily_pss10_scores": list(self.daily_pss10_scores),
             # Daily counters
@@ -1117,6 +1129,7 @@ class Person(mesa.Agent):
             "stress_controllability",
             "stress_overload",
             "pss10",
+            "pss10_smoothed",
             "stressed",
             "daily_pss10_scores",
             "daily_interactions",

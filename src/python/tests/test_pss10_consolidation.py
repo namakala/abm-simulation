@@ -134,3 +134,51 @@ class TestConsolidateDailyPss10:
         result = consolidate_daily_pss10([3, 9, 5])
         # mean = 5.67, round = 6
         assert result == 6
+
+
+class TestSmoothPss10AcrossDays:
+    """smooth_pss10_across_days applies exponential smoothing."""
+
+    @pytest.mark.unit
+    def test_smooth_first_day(self):
+        """First day: alpha=0.30, prev=None returns consolidated as-is."""
+        from src.python.stress_utils import smooth_pss10_across_days
+
+        result = smooth_pss10_across_days(20, None, alpha=0.30)
+        assert result == 20
+
+    @pytest.mark.unit
+    def test_smooth_second_day(self):
+        """Second day: smoothed = alpha * consolidated + (1-alpha) * prev."""
+        from src.python.stress_utils import smooth_pss10_across_days
+
+        # prev=20, consolidated=14, alpha=0.30
+        # smoothed = 0.30*14 + 0.70*20 = 4.2 + 14.0 = 18.2
+        result = smooth_pss10_across_days(14, 20, alpha=0.30)
+        assert result == pytest.approx(18.2, abs=0.01)
+
+    @pytest.mark.unit
+    def test_smooth_returns_float(self):
+        """Returns float for downstream rounding, not int."""
+        from src.python.stress_utils import smooth_pss10_across_days
+
+        result = smooth_pss10_across_days(14, 20, alpha=0.30)
+        assert isinstance(result, float)
+
+    @pytest.mark.unit
+    def test_smooth_custom_alpha(self):
+        """Custom alpha changes the blend."""
+        from src.python.stress_utils import smooth_pss10_across_days
+
+        # alpha=0.10: 90% weight on prev, 10% on new
+        result = smooth_pss10_across_days(14, 20, alpha=0.10)
+        # 0.10*14 + 0.90*20 = 1.4 + 18.0 = 19.4
+        assert result == pytest.approx(19.4, abs=0.01)
+
+    @pytest.mark.unit
+    def test_smooth_alpha_one(self):
+        """alpha=1.0: only current day matters."""
+        from src.python.stress_utils import smooth_pss10_across_days
+
+        result = smooth_pss10_across_days(14, 20, alpha=1.0)
+        assert result == 14.0

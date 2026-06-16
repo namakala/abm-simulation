@@ -1306,3 +1306,28 @@ def consolidate_daily_pss10(scores: list) -> int | None:
     if not scores:
         return None
     return int(round(float(np.mean(scores))))
+
+
+def smooth_pss10_across_days(
+    consolidated: int,
+    prev_smoothed: int | None,
+    alpha: float = 0.30,
+) -> float:
+    """Apply exponential smoothing across days.
+
+    Formula: ``smoothed = alpha * consolidated + (1 - alpha) * prev_smoothed``
+
+    If ``prev_smoothed`` is ``None`` (first day), returns ``consolidated``
+    unchanged as a float.
+
+    Args:
+        consolidated: The day's consolidated PSS-10 score (0-40).
+        prev_smoothed: Previous day's smoothed score, or ``None`` for day 1.
+        alpha: Smoothing factor (higher = more weight on current day).
+
+    Returns:
+        Smoothed PSS-10 score as a float.
+    """
+    if prev_smoothed is None:
+        return float(consolidated)
+    return alpha * float(consolidated) + (1.0 - alpha) * float(prev_smoothed)

@@ -161,6 +161,7 @@ class AssumptionStressConfig:
     resilience_buffer_coefficient: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_BUFFER_COEFFICIENT", 0.50)
     )
+    pss10_smoothing_alpha: float = field(default_factory=lambda: _env_float("ASSUMPTION_PSS10_SMOOTHING_ALPHA", 0.30))
     affect_homeostatic_rate: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_AFFECT_HOMEOSTATIC_RATE", 0.5)
     )
