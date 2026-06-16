@@ -94,6 +94,9 @@ class AssumptionCopingConfig:
     social_support_factor: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", 0.15)
     )
+    support_boost_factor: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.10)
+    )
     success_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_SUCCESS_AFFECT_CHANGE", 0.1))
     failure_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_FAILURE_AFFECT_CHANGE", -0.2))
 

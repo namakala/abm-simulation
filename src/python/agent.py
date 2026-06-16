@@ -491,6 +491,9 @@ class Person(mesa.Agent):
         # Track stress breach count for network adaptation
         self.stress_breach_count = 0
 
+        # Within-day support boost from recent support exchanges
+        self.support_boost = 0.0
+
         # Track whether network adaptation has been applied
         self._adapted_network = False
 
@@ -552,6 +555,10 @@ class Person(mesa.Agent):
         stress_event_count = 0
 
         for action in actions:
+            # Decay support_boost at each subevent (10% per subevent)
+            current_boost = state.get("support_boost", 0.0)
+            state["support_boost"] = current_boost * 0.9
+
             if action == "stress":
                 # ── Stress perception phase ─────────────────────────
                 perception_config = {
@@ -663,6 +670,9 @@ class Person(mesa.Agent):
                     state["daily_interactions"] = state.get("daily_interactions", 0) + 1
                     if self_output["observation"].get("support_occurred", False):
                         state["daily_support_exchanges"] = state.get("daily_support_exchanges", 0) + 1
+                        # Accumulate within-day support boost (Plan 011)
+                        current = state.get("support_boost", 0.0)
+                        state["support_boost"] = min(1.0, current + 0.10)
 
         # Normalize daily challenge/hindrance
         if stress_event_count > 0:
@@ -1070,6 +1080,8 @@ class Person(mesa.Agent):
             else dict(self.interaction_config),
             # Fixed traits
             "volatility": self.volatility,
+            # Within-day support boost
+            "support_boost": self.support_boost,
         }
         return state
 
@@ -1138,6 +1150,7 @@ class Person(mesa.Agent):
             "last_daily_support_exchanges",
             "last_daily_stress_events",
             "protective_factors",
+            "support_boost",
         }
 
         # Clamp bounded keys

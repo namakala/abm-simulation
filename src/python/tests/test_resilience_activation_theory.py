@@ -860,3 +860,52 @@ class TestObservationContent:
             assert "resource_cost" in obs
         else:
             assert "resource_penalty" in obs
+
+
+class TestSupportBoostCopingProbability:
+    """support_boost parameter in compute_coping_probability."""
+
+    def test_support_boost_increases_coping_prob(self):
+        """Higher support_boost -> higher coping probability."""
+        config = StressProcessingConfig()
+        low_boost = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.5,
+            support_boost=0.0,
+            config=config,
+        )
+        high_boost = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.5,
+            support_boost=0.5,
+            config=config,
+        )
+        assert high_boost > low_boost
+
+    def test_support_boost_default_zero(self):
+        """Default support_boost=0.0 adds no extra effect."""
+        config = StressProcessingConfig()
+        default_prob = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.5,
+            config=config,
+        )
+        zero_boost_prob = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.5,
+            support_boost=0.0,
+            config=config,
+        )
+        assert abs(default_prob - zero_boost_prob) < 1e-10

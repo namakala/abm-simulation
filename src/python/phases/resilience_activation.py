@@ -104,6 +104,7 @@ def run_phase(
     # ── STEP 1: Coping outcome ──────────────────────────────────────
     stress_config = StressProcessingConfig()
     social_support_efficacy = protective_factors.get("social_support", 0.5)
+    support_boost = state.get("support_boost", 0.0)
 
     new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
         current_affect=current_affect,
@@ -115,6 +116,7 @@ def run_phase(
         rng=rng,
         config=stress_config,
         social_support_efficacy=social_support_efficacy,
+        support_boost=support_boost,
     )
 
     # Compute values needed for observation
@@ -124,6 +126,7 @@ def run_phase(
         neighbor_affects=neighbor_affects,
         current_resilience=current_resilience,
         social_support_efficacy=social_support_efficacy,
+        support_boost=support_boost,
         config=stress_config,
     )
     resilience_effect = compute_challenge_hindrance_resilience_effect(
