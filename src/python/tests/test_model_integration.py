@@ -3,6 +3,7 @@
 Test script to verify the model properly integrates with new stress processing mechanisms.
 """
 
+import pytest
 import pandas as pd
 import networkx as nx
 from unittest.mock import patch, MagicMock
@@ -439,6 +440,37 @@ def test_get_agent_time_series_data_with_error():
             df = model.get_agent_time_series_data()
             # Should return the original data on error
             assert not df.empty
+
+
+class TestDailyCopingSupportCorr:
+    """Tests for the daily_coping_support_corr model reporter."""
+
+    @pytest.mark.unit
+    def test_reporter_in_model_data(self):
+        """daily_coping_support_corr is present in DataCollector output."""
+        model = StressModel(N=10, max_days=2, seed=42)
+        for _ in range(2):
+            model.step()
+        model_data = model.get_time_series_data()
+        assert "daily_coping_support_corr" in model_data.columns
+
+    @pytest.mark.unit
+    def test_reporter_returns_zero_or_valid(self):
+        """Returns 0.0 for insufficient data, else in [-1, 1]."""
+        model = StressModel(N=5, max_days=1, seed=42)
+        model.step()
+        corr = model._compute_daily_coping_support_corr()
+        assert isinstance(corr, float)
+        assert -1.0 <= corr <= 1.0
+
+    @pytest.mark.unit
+    def test_corr_with_support_boost_agents(self):
+        """Returns a valid correlation after running."""
+        model = StressModel(N=20, max_days=2, seed=42)
+        for _ in range(2):
+            model.step()
+        corr = model._compute_daily_coping_support_corr()
+        assert -1.0 <= corr <= 1.0
 
 
 if __name__ == "__main__":

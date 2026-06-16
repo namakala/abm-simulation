@@ -185,6 +185,8 @@ class StressModel(mesa.Model):
             "social_support_exchanges": lambda m: getattr(
                 m, "social_support_exchanges", 0
             ),  # Cumulative support exchanges
+            # Daily coping-support coupling diagnostic (Plan 011)
+            "daily_coping_support_corr": lambda m: m._compute_daily_coping_support_corr(),
         }
 
         # Define agent reporters (agent-level metrics)
@@ -744,6 +746,43 @@ class StressModel(mesa.Model):
                 valid_agents += 1
 
         return total_consecutive / valid_agents if valid_agents > 0 else 0.0
+
+    def _compute_daily_coping_support_corr(self) -> float:
+        """Compute per-step correlation between coping success and support exchanges.
+
+        Uses scipy.stats.pearsonr on agent-level ``coping_success`` and
+        ``support_boost`` for the current step. Returns NaN if insufficient
+        data (fewer than 3 valid agents) or if there is zero variance.
+
+        Returns:
+            Pearson r between coping_success and support_boost, or NaN.
+        """
+        import math
+        from scipy import stats
+
+        coping_vals = []
+        support_vals = []
+
+        for agent in self.agents:
+            # coping_success: ratio of successfully coped events today
+            events = getattr(agent, "last_daily_stress_events", [])
+            n_events = len(events)
+            if n_events > 0:
+                cope_ok = sum(1 for e in events if e.get("coped_successfully", False))
+                coping_vals.append(cope_ok / n_events)
+            else:
+                continue  # skip agents with no stress events today
+
+            # support_boost: within-day boost from support exchanges
+            support_vals.append(getattr(agent, "support_boost", 0.0))
+
+        if len(coping_vals) < 3:
+            return 0.0
+
+        r_val, _ = stats.pearsonr(coping_vals, support_vals)
+        if math.isnan(r_val) or math.isinf(r_val):
+            return 0.0
+        return float(r_val)
 
     def get_agent_time_series_data(self) -> pd.DataFrame:
         """
