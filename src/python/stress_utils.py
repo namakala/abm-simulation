@@ -1248,3 +1248,61 @@ def validate_theoretical_correlations(
             pass
 
     return True
+
+
+# ══════════════════════════════════════════════════════════════════
+# PSS-10 daily-event stress moving average (Issue 1, Proposal 1)
+# ══════════════════════════════════════════════════════════════════
+
+
+def append_daily_pss10_score(scores: list, new_score: int) -> list:
+    """Append a PSS-10 score using the partial moving average rule.
+
+    Implements an asymmetric consolidation:
+    - If ``scores`` is empty, ``new_score`` is appended directly.
+    - If ``new_score`` > current mean of ``scores``, it is appended directly
+      (higher stress is recorded faithfully).
+    - If ``new_score`` <= current mean of ``scores``, it is blended with the
+      current mean via ``round((new_score + prev_avg) / 2)`` and the blended
+      value is appended instead (lower stress is dampened toward the average).
+
+    The input list is not mutated — a new list is returned.
+
+    Args:
+        scores: Current list of daily PSS-10 event scores.
+        new_score: New PSS-10 score to append (0-40).
+
+    Returns:
+        New list with the score appended (possibly blended).
+    """
+    import copy
+
+    result = copy.copy(scores)
+
+    if not scores:
+        result.append(new_score)
+        return result
+
+    prev_avg = float(np.mean(scores))
+
+    if new_score > prev_avg:
+        result.append(new_score)
+    else:
+        blended = int(round((new_score + prev_avg) / 2.0))
+        result.append(blended)
+
+    return result
+
+
+def consolidate_daily_pss10(scores: list) -> int | None:
+    """Consolidate daily PSS-10 scores into a single rounded mean.
+
+    Args:
+        scores: List of daily PSS-10 event scores (after per-event blending).
+
+    Returns:
+        ``round(mean(scores))`` as an int, or ``None`` if ``scores`` is empty.
+    """
+    if not scores:
+        return None
+    return int(round(float(np.mean(scores))))

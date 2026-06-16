@@ -116,8 +116,14 @@ class TestAgentPSS10StepIntegration:
         assert 0 <= agent.stress_overload <= 1
         assert isinstance(agent.stressed, bool)
 
-    def test_pss10_score_consistency(self):
-        """Test that PSS-10 score remains consistent with responses after step."""
+    def test_pss10_score_after_step(self):
+        """Test that PSS-10 score is a valid consolidated daily value after step.
+
+        With the partial moving average consolidation, ``pss10`` is the
+        rounded mean of the day's blended event scores, while
+        ``pss10_responses`` reflects the last event's responses. These
+        may differ because consolidation averages multiple events.
+        """
         # Create a mock model
         model = Mock()
         model.seed = 42
@@ -132,9 +138,13 @@ class TestAgentPSS10StepIntegration:
         # Execute one step
         agent.step()
 
-        # PSS-10 score should match computed score from responses
-        expected_score = compute_pss10_score(agent.pss10_responses)
-        assert agent.pss10 == expected_score
+        # Both should be valid PSS-10 scores in [0, 40]
+        assert 0 <= agent.pss10 <= 40
+        assert 0 <= compute_pss10_score(agent.pss10_responses) <= 40
+
+        # pss10 is the consolidated daily score (may differ from last event)
+        # It should be a whole number (int)
+        assert isinstance(agent.pss10, int)
 
 
 class TestStressLevelPSS10Mapping:
