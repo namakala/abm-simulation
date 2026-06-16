@@ -89,6 +89,7 @@ def run_phase(
     current_overload = state.get("stress_overload", 0.5)
     recent_stress_intensity = state.get("recent_stress_intensity", 0.0)
     stress_momentum = state.get("stress_momentum", 0.0)
+    current_resilience = state.get("resilience", 0.5)
 
     updated_controllability, updated_overload, new_intensity, new_momentum = update_stress_dimensions_from_event(
         current_controllability=current_controllability,
@@ -100,6 +101,7 @@ def run_phase(
         volatility=volatility,
         recent_stress_intensity=recent_stress_intensity,
         stress_momentum=stress_momentum,
+        resilience=current_resilience,
     )
 
     # ── 7. Build PhaseOutput ────────────────────────────────────────

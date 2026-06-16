@@ -158,6 +158,9 @@ class AssumptionStressConfig:
     pss10_estimation_variance: int = field(
         default_factory=lambda: int(_env_float("ASSUMPTION_PSS10_ESTIMATION_VARIANCE", 3.0))
     )
+    resilience_buffer_coefficient: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_BUFFER_COEFFICIENT", 0.50)
+    )
     affect_homeostatic_rate: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_AFFECT_HOMEOSTATIC_RATE", 0.5)
     )

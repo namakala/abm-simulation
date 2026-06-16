@@ -914,12 +914,14 @@ def update_stress_dimensions_from_event(
     Returns:
         Tuple of (updated_controllability, updated_overload, recent_stress_intensity, stress_momentum)
     """
-    # Resilience buffer: higher resilience reduces impact of stress events
-    # on controllability/overload by up to 95% at resilience=1.0
-    resilience_buffer = 1.0 - resilience * 0.95
     # Get configuration for stress dimension updates
     cfg = get_config()
     assumptions = get_assumptions()
+
+    # Resilience buffer: higher resilience reduces impact of stress events
+    # on controllability/overload. Coefficient from assumption config.
+    buffer_coefficient = assumptions.stress.resilience_buffer_coefficient
+    resilience_buffer = 1.0 - resilience * buffer_coefficient
 
     if config is None:
         config = {

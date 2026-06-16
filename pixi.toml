@@ -1,6 +1,6 @@
 [workspace]
 authors = ["lam <lamuri.aly8@gmail.com>"]
-channels = ["conda-forge", "bioconda"]
+channels = ["conda-forge"]
 name = "ABM"
 platforms = ["osx-arm64", "linux-64"]
 version = "0.1.0"
@@ -49,3 +49,6 @@ pytest-benchmark = "*"
 coverage = "*"
 matplotlib = "*"
 seaborn = "*"
+jupyter = ">=1.1.1,<2"
+nbformat = ">=5.10.4,<6"
+ipykernel = ">=7.3.0,<8"

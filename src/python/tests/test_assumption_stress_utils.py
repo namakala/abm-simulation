@@ -100,6 +100,53 @@ class TestUpdateStressDimensionsAssumptions:
             reload_assumptions()
 
     @pytest.mark.unit
+    def test_resilience_buffer_default(self):
+        """Default resilience_buffer_coefficient is 0.50."""
+        from src.python.stress_utils import update_stress_dimensions_from_event
+
+        ctrl, overload, intensity, momentum = update_stress_dimensions_from_event(
+            current_controllability=0.5,
+            current_overload=0.5,
+            challenge=1.0,
+            hindrance=0.0,
+            coped_successfully=True,
+            is_stressful=True,
+            volatility=1.0,
+            resilience=0.5,  # non-zero to test buffer
+        )
+        # controllability_change_magnitude = 1.0*0.10 + 0.0*0.05 = 0.10
+        # event_effect = 0.10 * 1.0 * (1.0 - 0.5*0.50) = 0.10 * 0.75 = 0.075
+        # expected: 0.5 + 0 + 0.075 = 0.575
+        assert ctrl == pytest.approx(0.575, abs=0.01)
+
+    @pytest.mark.unit
+    def test_env_override_resilience_buffer(self, clean_env):
+        """ASSUMPTION_RESILIENCE_BUFFER_COEFFICIENT changes behavior."""
+        from src.python.stress_utils import update_stress_dimensions_from_event
+        from src.python.assumption_config import reload_assumptions
+
+        os.environ["ASSUMPTION_RESILIENCE_BUFFER_COEFFICIENT"] = "0.20"
+        try:
+            reload_assumptions()
+            ctrl, overload, intensity, momentum = update_stress_dimensions_from_event(
+                current_controllability=0.5,
+                current_overload=0.5,
+                challenge=1.0,
+                hindrance=0.0,
+                coped_successfully=True,
+                is_stressful=True,
+                volatility=1.0,
+                resilience=0.5,
+            )
+            # With coeff=0.20: buffer = 1.0 - 0.5*0.20 = 0.90
+            # event_effect = 0.10 * 1.0 * 0.90 = 0.09
+            # expected: 0.5 + 0 + 0.09 = 0.59
+            assert ctrl == pytest.approx(0.59, abs=0.01)
+        finally:
+            os.environ.pop("ASSUMPTION_RESILIENCE_BUFFER_COEFFICIENT", None)
+            reload_assumptions()
+
+    @pytest.mark.unit
     def test_env_override_homeostasis_all_stressful(self, clean_env):
         """Homeostasis rate affects controllability for stressful events."""
         from src.python.stress_utils import update_stress_dimensions_from_event
