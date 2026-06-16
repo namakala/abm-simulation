@@ -140,7 +140,7 @@ class StressModel(mesa.Model):
             # Social network and support metrics
             "social_support_rate": lambda m: m._calculate_social_support_rate(),  # Rate of social support exchanges
             "stress_events": lambda m: sum(
-                len(getattr(agent, "daily_stress_events", [])) for agent in m.agents
+                len(getattr(agent, "last_daily_stress_events", [])) for agent in m.agents
             ),  # Total stress events per day
             "network_density": lambda m: m._calculate_network_density(),  # Network connectivity measure
             # Population health categories (for cost-effectiveness analysis)
@@ -164,17 +164,21 @@ class StressModel(mesa.Model):
             ),  # Average consecutive hindrance events
             # Daily activity statistics for intervention modeling
             "total_stress_events": lambda m: sum(
-                len(getattr(agent, "daily_stress_events", [])) for agent in m.agents
+                len(getattr(agent, "last_daily_stress_events", [])) for agent in m.agents
             ),  # Total stress events
             "successful_coping": lambda m: sum(
-                sum(1 for event in getattr(agent, "daily_stress_events", []) if event.get("coped_successfully", False))
+                sum(
+                    1
+                    for event in getattr(agent, "last_daily_stress_events", [])
+                    if event.get("coped_successfully", False)
+                )
                 for agent in m.agents
             ),  # Successful coping instances
             "social_interactions": lambda m: sum(
-                getattr(agent, "daily_interactions", 0) for agent in m.agents
+                getattr(agent, "last_daily_interactions", 0) for agent in m.agents
             ),  # Total social interactions
             "support_exchanges": lambda m: sum(
-                getattr(agent, "daily_support_exchanges", 0) for agent in m.agents
+                getattr(agent, "last_daily_support_exchanges", 0) for agent in m.agents
             ),  # Total support exchanges
             # Cumulative tracking via DataCollector
             "total_interactions": lambda m: getattr(m, "total_interactions", 0),  # Cumulative social interactions
@@ -199,6 +203,20 @@ class StressModel(mesa.Model):
             "stress_overload": lambda a: getattr(a, "stress_overload", 0.5),  # Perceived overload
             # Individual stress event tracking
             "consecutive_hindrances": lambda a: getattr(a, "consecutive_hindrances", 0),  # Consecutive hindrance events
+            # Derived metrics from daily event aggregation
+            "coping_success": lambda a: (
+                sum(1 for e in getattr(a, "last_daily_stress_events", []) if e.get("coped_successfully", False))
+                / max(len(getattr(a, "last_daily_stress_events", [])), 1)
+            ),
+            "challenge_appraisal": lambda a: (
+                sum(e.get("challenge", 0.0) for e in getattr(a, "last_daily_stress_events", []))
+                / max(len(getattr(a, "last_daily_stress_events", [])), 1)
+            ),
+            "hindrance_appraisal": lambda a: (
+                sum(e.get("hindrance", 0.0) for e in getattr(a, "last_daily_stress_events", []))
+                / max(len(getattr(a, "last_daily_stress_events", [])), 1)
+            ),
+            "interaction_frequency": lambda a: getattr(a, "last_daily_interactions", 0),  # Daily interaction count
         }
 
         # Initialize DataCollector with comprehensive metrics
@@ -249,8 +267,8 @@ class StressModel(mesa.Model):
         self.agents.shuffle_do("step")
 
         # Update cumulative counters before data collection to ensure social_support_rate is calculated correctly
-        daily_social_interactions = sum(getattr(agent, "daily_interactions", 0) for agent in self.agents)
-        daily_support_exchanges = sum(getattr(agent, "daily_support_exchanges", 0) for agent in self.agents)
+        daily_social_interactions = sum(getattr(agent, "last_daily_interactions", 0) for agent in self.agents)
+        daily_support_exchanges = sum(getattr(agent, "last_daily_support_exchanges", 0) for agent in self.agents)
         self.total_interactions += daily_social_interactions
         self.social_support_exchanges += daily_support_exchanges
 
@@ -644,7 +662,7 @@ class StressModel(mesa.Model):
                 if not hasattr(agent, "daily_stress_events"):
                     continue
 
-                daily_events = agent.daily_stress_events
+                daily_events = getattr(agent, "last_daily_stress_events", [])
                 if not isinstance(daily_events, list):
                     continue
 
@@ -670,7 +688,7 @@ class StressModel(mesa.Model):
         total_events = 0
 
         for agent in self.agents:
-            daily_events = getattr(agent, "daily_stress_events", [])
+            daily_events = getattr(agent, "last_daily_stress_events", [])
             for event in daily_events:
                 total_challenge += event.get("challenge", 0.0)
                 total_events += 1
@@ -683,7 +701,7 @@ class StressModel(mesa.Model):
         total_events = 0
 
         for agent in self.agents:
-            daily_events = getattr(agent, "daily_stress_events", [])
+            daily_events = getattr(agent, "last_daily_stress_events", [])
             for event in daily_events:
                 total_hindrance += event.get("hindrance", 0.0)
                 total_events += 1
@@ -697,7 +715,7 @@ class StressModel(mesa.Model):
         total_events = 0
 
         for agent in self.agents:
-            daily_events = getattr(agent, "daily_stress_events", [])
+            daily_events = getattr(agent, "last_daily_stress_events", [])
             for event in daily_events:
                 total_challenge += event.get("challenge", 0.0)
                 total_hindrance += event.get("hindrance", 0.0)

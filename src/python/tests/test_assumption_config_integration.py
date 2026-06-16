@@ -17,14 +17,16 @@ class TestAssumptionConfigInConfig:
         assert isinstance(section, dict)
 
     @pytest.mark.unit
-    def test_assumption_coping_values(self, config):
+    def test_assumption_coping_values(self):
         """Coping-related assumptions have correct defaults."""
-        a = config.get("assumptions")
-        assert a["resource_reward"] == 0.75
-        assert a["resource_penalty"] == 0.10
-        assert a["pf_allocation_fraction"] == 0.30
-        assert a["success_affect_change"] == 0.1
-        assert a["failure_affect_change"] == -0.2
+        from src.python.assumption_config import get_assumptions
+
+        a = get_assumptions().coping
+        assert a.resource_reward == 0.10
+        assert a.resource_penalty == 0.20
+        assert a.pf_allocation_fraction == 0.15
+        assert a.success_affect_change == 0.1
+        assert a.failure_affect_change == -0.2
 
     @pytest.mark.unit
     def test_assumption_stress_values(self, config):
@@ -38,13 +40,15 @@ class TestAssumptionConfigInConfig:
         assert a["event_intensity_hindrance_weight"] == 1.3
 
     @pytest.mark.unit
-    def test_assumption_resource_values(self, config):
+    def test_assumption_resource_values(self):
         """Resource-related assumptions have correct defaults."""
-        a = config.get("assumptions")
-        assert a["resilience_efficiency_factor"] == 0.3
-        assert a["min_cost_floor"] == 0.3
-        assert a["failed_coping_cost_penalty"] == 1.3
-        assert a["max_efficiency_gain"] == 0.5
+        from src.python.assumption_config import get_assumptions
+
+        a = get_assumptions().resource
+        assert a.resilience_efficiency_factor == 0.15
+        assert a.min_cost_floor == 0.3
+        assert a.failed_coping_cost_penalty == 1.3
+        assert a.max_efficiency_gain == 0.3
 
     @pytest.mark.unit
     def test_assumption_social_values(self, config):

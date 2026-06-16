@@ -250,7 +250,9 @@ def complete_env_isolation():
     os.environ.clear()
 
     # Reset global config cache objects
-    config.config = None
+    from src.python.config import reload_config as _reload_config
+
+    _reload_config()
     reload_assumptions()
 
     # Run the test
@@ -259,5 +261,5 @@ def complete_env_isolation():
     # TEARDOWN: Restore environment to pre-test state
     os.environ.clear()
     os.environ.update(current_env)
-    config.config = None
+    _reload_config()
     reload_assumptions()

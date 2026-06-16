@@ -235,10 +235,10 @@ class TestEmpiricalCorrelations:
             "affect": "affect",
             "resources": "resources",
             "current_stress": "current_stress",
-            "coping_success": None,  # Not directly in agent data — need derived
-            "challenge_appraisal": None,
-            "hindrance_appraisal": None,
-            "interaction_frequency": None,
+            "coping_success": "coping_success",
+            "challenge_appraisal": "challenge_appraisal",
+            "hindrance_appraisal": "hindrance_appraisal",
+            "interaction_frequency": "interaction_frequency",
         }
         col_a = col_map.get(target["var1"])
         col_b = col_map.get(target["var2"])

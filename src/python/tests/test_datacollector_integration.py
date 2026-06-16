@@ -140,6 +140,9 @@ class TestDataCollectorAgentLevel:
         mock_agent.daily_stress_events = []  # Add this to prevent len() errors
         mock_agent.daily_interactions = 0  # Add this to prevent sum() errors
         mock_agent.daily_support_exchanges = 0  # Add this to prevent sum() errors
+        mock_agent.last_daily_interactions = 0  # Add this to prevent sum() errors
+        mock_agent.last_daily_support_exchanges = 0  # Add this to prevent sum() errors
+        mock_agent.last_daily_stress_events = []  # Add this to prevent len() errors
 
         # Replace one agent with mock
         original_agent = list(model.agents)[0]

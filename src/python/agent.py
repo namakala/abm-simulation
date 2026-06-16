@@ -339,9 +339,12 @@ def process_daily_reset(
     state_delta = {
         "daily_interactions": 0,
         "daily_support_exchanges": 0,
+        "daily_stress_events": [],  # cleared for new day
+        "last_daily_interactions": state.get("daily_interactions", 0),
+        "last_daily_support_exchanges": state.get("daily_support_exchanges", 0),
+        "last_daily_stress_events": list(state.get("daily_stress_events", [])),
         "affect": new_affect,
         "current_stress": new_stress,
-        "daily_stress_events": [],  # cleared for new day
         "stress_history": [],  # storage moved to model level
         "last_reset_day": current_day,
         "daily_pss10_scores": [],  # cleared for new day
@@ -560,6 +563,9 @@ class Person(mesa.Agent):
                 daily_hindrance_total += hindrance
                 stress_event_count += 1
 
+                # Track stress event for model-level reporting
+                coped_successfully = True  # Non-stressed → auto-cope
+
                 # ── Resilience activation phase (only if stressed) ──
                 if state.get("is_stressed", False):
                     activation_config = {
@@ -568,6 +574,20 @@ class Person(mesa.Agent):
                     }
                     activation_result = run_resilience_activation(state, activation_config, self._rng)
                     state = self._apply_delta(state, activation_result["state_delta"])
+                    coped_successfully = activation_result["observation"].get("coped_successfully", False)
+
+                # Append to daily stress events for model-level aggregation
+                daily_events = list(state.get("daily_stress_events", []))
+                daily_events.append(
+                    {
+                        "challenge": challenge,
+                        "hindrance": hindrance,
+                        "is_stressed": state.get("is_stressed", False),
+                        "stress_level": state.get("current_stress", 0.0),
+                        "coped_successfully": coped_successfully,
+                    }
+                )
+                state["daily_stress_events"] = daily_events
 
             elif action == "interact":
                 # ── Interaction phase ───────────────────────────────
@@ -1092,6 +1112,9 @@ class Person(mesa.Agent):
             "daily_pss10_scores",
             "daily_interactions",
             "daily_support_exchanges",
+            "last_daily_interactions",
+            "last_daily_support_exchanges",
+            "last_daily_stress_events",
             "protective_factors",
         }
 
