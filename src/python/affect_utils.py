@@ -427,6 +427,7 @@ def compute_coping_probability(
     hindrance: float,
     neighbor_affects: List[float],
     current_resilience: float = 0.5,
+    social_support_efficacy: float = 0.5,
     config: Optional[StressProcessingConfig] = None,
 ) -> float:
     """
@@ -435,12 +436,14 @@ def compute_coping_probability(
     Challenge increases coping probability, hindrance decreases it.
     Positive neighbor affects increase probability, negative decrease it.
     Higher resilience increases coping probability.
+    Higher social support efficacy increases coping probability.
 
     Args:
         challenge: Challenge component from event appraisal (0-1)
         hindrance: Hindrance component from event appraisal (0-1)
         neighbor_affects: List of neighbor affect values
         current_resilience: Agent's current resilience level (0-1)
+        social_support_efficacy: Agent's social_support protective factor (0-1)
         config: Stress processing configuration
 
     Returns:
@@ -448,6 +451,8 @@ def compute_coping_probability(
     """
     if config is None:
         config = StressProcessingConfig()
+
+    a = get_assumptions()
 
     # Base probability from configuration
     base_prob = config.base_coping_probability
@@ -463,10 +468,13 @@ def compute_coping_probability(
         social_effect = config.social_influence_factor * avg_neighbor_affect
 
     # Resilience boosts coping ability
-    resilience_effect = get_assumptions().coping.resilience_coping_factor * current_resilience
+    resilience_effect = a.coping.resilience_coping_factor * current_resilience
+
+    # Social support efficacy directly boosts coping (Plan 011)
+    social_support_effect = a.coping.social_support_factor * social_support_efficacy
 
     # Combine all effects
-    total_effect = challenge_effect + hindrance_effect + social_effect + resilience_effect
+    total_effect = challenge_effect + hindrance_effect + social_effect + resilience_effect + social_support_effect
 
     # Apply effects to base probability
     coping_prob = base_prob + total_effect
@@ -875,6 +883,7 @@ def determine_coping_outcome_and_psychological_impact(
     neighbor_affects: List[float],
     rng: Optional[np.random.Generator] = None,
     config: Optional[StressProcessingConfig] = None,
+    social_support_efficacy: float = 0.5,
 ) -> tuple[float, float, float, bool]:
     """
     Process stress event using new mechanism with challenge/hindrance effects.
@@ -888,6 +897,7 @@ def determine_coping_outcome_and_psychological_impact(
         neighbor_affects: List of neighbor affect values
         rng: Random number generator for reproducible testing
         config: Stress processing configuration
+        social_support_efficacy: Agent's social_support PF efficacy (0-1)
 
     Returns:
         Tuple of (new_affect, new_resilience, new_stress, coped_successfully)
@@ -896,7 +906,14 @@ def determine_coping_outcome_and_psychological_impact(
         config = StressProcessingConfig()
 
     # Compute coping probability based on challenge/hindrance, social influence, and resilience
-    coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, current_resilience, config)
+    coping_prob = compute_coping_probability(
+        challenge,
+        hindrance,
+        neighbor_affects,
+        current_resilience,
+        social_support_efficacy=social_support_efficacy,
+        config=config,
+    )
 
     # Determine if coping was successful
     if rng is None:

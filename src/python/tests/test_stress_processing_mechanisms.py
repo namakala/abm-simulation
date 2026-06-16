@@ -88,8 +88,10 @@ class TestCopingProbability:
         # Should be in valid range
         assert 0.0 <= coping_prob <= 1.0
 
-        # Without social influence, should be close to base probability
-        expected_prob = 0.5 + (0.2 * 0.5) - (0.3 * 0.5)  # 0.5 + 0.1 - 0.15 = 0.45
+        # Base + challenge - hindrance + social_support_effect
+        # 0.5 + (0.2*0.5) - (0.3*0.5) + (0.15*0.5) = 0.45 + 0.075 = 0.525
+        # Note: social_support_efficacy defaults to 0.5
+        expected_prob = 0.5 + (0.2 * 0.5) - (0.3 * 0.5) + (0.15 * 0.5)
         assert abs(coping_prob - expected_prob) < 1e-10
 
     def test_coping_probability_extreme_values(self):

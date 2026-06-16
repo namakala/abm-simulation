@@ -136,6 +136,49 @@ class TestCopingProbabilityTheory:
         )
         assert high_res >= low_res, f"Higher resilience should increase coping prob, got {high_res} < {low_res}"
 
+    def test_social_support_efficacy_increases_coping_prob(self):
+        """Higher social_support_efficacy -> higher coping probability."""
+        config = StressProcessingConfig()
+        low_ss = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.2,
+            config=config,
+        )
+        high_ss = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.8,
+            config=config,
+        )
+        assert high_ss > low_ss, f"Higher social_support should increase coping prob, got {high_ss} <= {low_ss}"
+
+    def test_social_support_effect_default_efficacy(self):
+        """Default social_support_efficacy=0.5 still adds a positive effect."""
+        config = StressProcessingConfig()
+        prob_default = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            config=config,
+        )
+        prob_zero = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.0,
+            config=config,
+        )
+        assert prob_default > prob_zero, (
+            f"Default efficacy should add positive effect, got {prob_default} <= {prob_zero}"
+        )
+
     def test_coping_prob_in_unit_range(self):
         """Coping probability is always in [0, 1]."""
         config = StressProcessingConfig()
