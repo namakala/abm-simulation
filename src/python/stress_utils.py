@@ -505,9 +505,11 @@ def generate_pss10_item_response(
         rng = np.random.default_rng()
 
     # Center stress dimensions: 0.5 = average stress, deviation = stress signal
-    # Higher controllability → lower response (negative offset through loading)
-    # Higher overload → higher response (positive offset through loading)
-    centered_c = 1.0 - controllability_score - 0.5  # [-0.5, 0.5]
+    # Items 4,5,7,8 (controllability items) are reverse-scored in compute_pss10_score.
+    # Higher controllability → higher raw response (offset positive) → after reversal
+    # the contribution becomes 4−response (lower). Higher overload → higher raw response
+    # (offset positive) → no reversal, so contribution is higher.
+    centered_c = controllability_score - 0.5  # [-0.5, 0.5] — positive when control high
     centered_o = overload_score - 0.5  # [-0.5, 0.5]
 
     # Bifactor model: item_mean as intercept + stress offset through loadings
@@ -664,7 +666,6 @@ def generate_pss10_from_stress_dimensions(
     stress_momentum: float = 0.0,
     affect: float = 0.0,
     resources: float = 0.5,
-    pss10_bias: float = 0.0,
     rng: Optional[np.random.Generator] = None,
     config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
@@ -727,15 +728,6 @@ def generate_pss10_from_stress_dimensions(
 
     # Calculate PSS-10 score
     pss10_score = compute_pss10_score(pss10_responses)
-
-    # Apply agent-specific PSS-10 bias to item responses
-    # This propagates the bias through the stress feedback loop
-    if pss10_bias != 0.0:
-        per_item_bias = pss10_bias / 10.0
-        for item_num in pss10_responses:
-            biased = int(round(max(0.0, min(4.0, pss10_responses[item_num] + per_item_bias))))
-            pss10_responses[item_num] = biased
-        pss10_score = compute_pss10_score(pss10_responses)
 
     # Update stressed status based on PSS-10 threshold
     pss10_threshold = config["threshold"]

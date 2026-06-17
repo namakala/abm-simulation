@@ -19,6 +19,7 @@ from src.python.stress_utils import (
     PSS10Item,
     create_pss10_mapping,
     generate_pss10_dimension_scores,
+    generate_pss10_from_stress_dimensions,
     generate_pss10_item_response,
     generate_pss10_responses,
     initialize_pss10_from_items,
@@ -168,11 +169,17 @@ class TestPSS10BifactorGeneration:
         assert isinstance(response, int)
 
     def test_stress_direction_controllability(self):
-        """Higher controllability (lower stress) → lower response."""
+        """Higher controllability (lower stress) → higher raw response.
+
+        Controllability items (4,5,7,8) are positively-worded (e.g.
+        "felt confident"), so higher control → more agreement → higher
+        raw response. The items are reverse-scored later in
+        compute_pss10_score so that higher control→lower PSS-10 total.
+        """
         rng = np.random.default_rng(42)
         rng2 = np.random.default_rng(42)
 
-        # Low controllability = high stress → higher response
+        # Low controllability = high stress → lower response on positively-worded items
         low_control = generate_pss10_item_response(
             item_mean=2.0,
             item_sd=0.5,
@@ -184,7 +191,7 @@ class TestPSS10BifactorGeneration:
             pss10_noise_sd=0.1,
             rng=rng,
         )
-        # High controllability = low stress → lower response
+        # High controllability = low stress → higher response on positively-worded items
         high_control = generate_pss10_item_response(
             item_mean=2.0,
             item_sd=0.5,
@@ -196,7 +203,7 @@ class TestPSS10BifactorGeneration:
             pss10_noise_sd=0.1,
             rng=rng2,
         )
-        assert low_control >= high_control
+        assert high_control >= low_control
 
     def test_stress_direction_overload(self):
         """Higher overload → higher response."""
@@ -404,6 +411,75 @@ class TestPSS10ResponseGeneration:
         assert len(responses) == 10
         for response in responses.values():
             assert 0 <= response <= 4
+
+    def test_pss10_score_direction_positive_with_stress(self):
+        """Final PSS-10 score must increase with stress.
+
+        Higher stress (low controllability + high overload) must produce
+        a HIGHER final PSS-10 score than lower stress (high controllability
+        + low overload). This tests the full pipeline: bifactor generation
+        + reverse-scoring in compute_pss10_score.
+
+        Uses a custom config where all items load purely on controllability
+        to isolate the controllability-dimension direction.
+        """
+        custom_config = {
+            "item_means": [2.0] * 10,
+            "item_sds": [0.3] * 10,
+            "load_controllability": [1.0] * 10,
+            "load_overload": [0.0] * 10,
+            "bifactor_correlation": 0.0,
+            "pss10_scale": 3.5,
+            "pss10_noise_sd": 0.1,
+        }
+
+        # Low stress: high controllability (0.9), overload neutral (0.5)
+        low_rng = np.random.default_rng(42)
+        high_rng = np.random.default_rng(42)
+
+        low_stress_responses = generate_pss10_responses(
+            controllability=0.9,
+            overload=0.5,
+            rng=low_rng,
+            config=custom_config,
+        )
+        low_stress_score = compute_pss10_score(low_stress_responses)
+
+        # High stress: low controllability (0.1), overload neutral (0.5)
+        high_stress_responses = generate_pss10_responses(
+            controllability=0.1,
+            overload=0.5,
+            rng=high_rng,
+            config=custom_config,
+        )
+        high_stress_score = compute_pss10_score(high_stress_responses)
+
+        assert high_stress_score > low_stress_score, (
+            f"PSS-10 should increase with stress (higher when controllability is lower): "
+            f"controllability=0.9 -> PSS-10={low_stress_score}, "
+            f"controllability=0.1 -> PSS-10={high_stress_score}"
+        )
+
+    def test_generate_pss10_from_stress_no_bias_parameter(self):
+        """generate_pss10_from_stress_dimensions must not have a pss10_bias param.
+
+        The function was refactored to generate PSS-10 purely from stress
+        dimensions. Daily N(0, SD) bias is applied later in
+        process_pss10_consolidation. Same seed + same inputs must yield
+        the same result.
+        """
+        import inspect
+
+        sig = inspect.signature(generate_pss10_from_stress_dimensions)
+        assert "pss10_bias" not in sig.parameters, "generate_pss10_from_stress_dimensions must not accept pss10_bias"
+
+        # Also verify determinism: same inputs + same seed = same output
+        rng_a = np.random.default_rng(42)
+        rng_b = np.random.default_rng(42)
+
+        a = generate_pss10_from_stress_dimensions(stress_controllability=0.5, stress_overload=0.5, rng=rng_a)
+        b = generate_pss10_from_stress_dimensions(stress_controllability=0.5, stress_overload=0.5, rng=rng_b)
+        assert a["pss10_score"] == b["pss10_score"]
 
 
 class TestPSS10Integration:

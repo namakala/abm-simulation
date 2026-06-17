@@ -264,9 +264,11 @@ def process_pss10_consolidation(
     alpha = get_assumptions().stress.pss10_smoothing_alpha
     new_smoothed = smooth_pss10_across_days(consolidated_pss10, prev_smoothed, alpha)
 
-    # Add persistent agent-specific bias (life-circumstance heterogeneity)
-    pss10_bias = state.get("pss10_bias", 0.0)
-    final_pss10 = int(round(max(0.0, min(40.0, new_smoothed + pss10_bias))))
+    # Add adaptive N(0, SD) bias — fresh draw each day to create
+    # between-person variance without persistent decorrelation
+    pss10_bias_sd = state.get("pss10_bias_sd", 2.0)
+    daily_bias = rng.normal(0, pss10_bias_sd)
+    final_pss10 = int(round(max(0.0, min(40.0, new_smoothed + daily_bias))))
 
     # ── Update stressed status ────────────────────────────────────
     stressed = final_pss10 >= pss10_threshold
@@ -520,21 +522,10 @@ class Person(mesa.Agent):
         self.stress_controllability = pss10_data["stress_controllability"]
         self.stress_overload = pss10_data["stress_overload"]
 
-        # Persistent agent-specific PSS-10 bias:
-        # Derived from initial agent traits to create between-person variance
-        # that preserves theoretical correlations. Each unit of deviation in
-        # the trait shifts PSS-10 by the specified amount.
-        self.pss10_bias = (
-            -(self.resilience - 0.5) * 5.0  # resilience ↑ → PSS-10 ↓
-            - (self.resources - 0.5) * 5.0  # resources ↑ → PSS-10 ↓
-            - self.affect * 3.0  # affect ↑ → PSS-10 ↓
-            + (self.stress_controllability - 0.5) * 3.0  # stress ↑ → PSS-10 ↑
-            + (self.stress_overload - 0.5) * 3.0  # stress ↑ → PSS-10 ↑
-            + self._rng.normal(0, 2.0)  # residual heterogeneity
-        )
-
-        # Apply persistent bias to initial PSS-10 score
-        self.pss10 = int(round(max(0.0, min(40.0, self.pss10 + self.pss10_bias))))
+        # Standard deviation for daily adaptive PSS-10 bias (Plan 011)
+        # Each consolidation day, a fresh N(0, pss10_bias_sd) is drawn and added
+        # to create between-person variance without persistent decorrelation.
+        self.pss10_bias_sd = 2.0
         self.pss10_smoothed = float(self.pss10)
 
     def step(self):
@@ -1093,7 +1084,7 @@ class Person(mesa.Agent):
             else dict(self.interaction_config),
             # Fixed traits
             "volatility": self.volatility,
-            "pss10_bias": self.pss10_bias,
+            "pss10_bias_sd": self.pss10_bias_sd,
             # Within-day support boost
             "support_boost": self.support_boost,
         }
