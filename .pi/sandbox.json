@@ -1,0 +1,5 @@
+{
+  "filesystem": {
+    "denyWrite": [".githooks/*", ".env", ".pi/*"]
+  }
+}
