@@ -229,7 +229,6 @@ def process_pss10_consolidation(
     current_stress = state.get("current_stress", 0.0)
     stress_controllability = state.get("stress_controllability", 0.5)
     stress_overload = state.get("stress_overload", 0.5)
-    pss10 = state.get("pss10", 0)
 
     # ── Read config ───────────────────────────────────────────────
     cfg = get_config()

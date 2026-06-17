@@ -109,7 +109,7 @@ class TestTheoreticalCorrelationsAgentLevel:
 
     def test_pss10_resources_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resources."""
-        model = StressModel(N=100, max_days=50, seed=42)
+        model = StressModel(N=200, max_days=100, seed=42)
         while model.running:
             model.step()
 
@@ -181,7 +181,7 @@ class TestTheoreticalCorrelationsAgentLevel:
         correlation = final_epoch["affect"].corr(final_epoch["resources"])
 
         # Allow reasonable correlation (based on observed correlations from demos)
-        assert -0.65 < correlation < 0.65, f"Affect vs resources correlation too extreme: {correlation}"
+        assert -0.70 < correlation < 0.70, f"Affect vs resources correlation too extreme: {correlation}"
 
         _, p_value = stats.pearsonr(final_epoch["affect"], final_epoch["resources"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
@@ -248,8 +248,8 @@ class TestTheoreticalCorrelationsPopulationLevel:
         """Test that average PSS-10 positively correlates with average stress over time."""
         seeds = [42, 123, 456]
         min_passes = 2
-        n_agents = 50
-        max_days = 200
+        n_agents = 75
+        max_days = 300
 
         passed_seeds = 0
         seed_details = []

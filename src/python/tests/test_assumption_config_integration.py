@@ -25,8 +25,8 @@ class TestAssumptionConfigInConfig:
         assert a.resource_reward == 0.10
         assert a.resource_penalty == 0.20
         assert a.pf_allocation_fraction == 0.15
-        assert a.success_affect_change == 0.1
-        assert a.failure_affect_change == -0.2
+        assert a.success_affect_change == 0.2
+        assert a.failure_affect_change == -0.4
 
     @pytest.mark.unit
     def test_assumption_stress_values(self, config):

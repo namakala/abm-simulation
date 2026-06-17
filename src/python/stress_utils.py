@@ -723,7 +723,9 @@ def generate_pss10_from_stress_dimensions(
     # dimensions (which are updated by events), not event intensity.
     # The base controllability/overload already capture event outcomes
     # through update_stress_dimensions_from_event.
-    dynamic_controllability = clamp(base_controllability + affect_influence + resource_buffer + resilience_influence, 0, 1)
+    dynamic_controllability = clamp(
+        base_controllability + affect_influence + resource_buffer + resilience_influence, 0, 1
+    )
     dynamic_overload = clamp(base_overload - affect_influence - resource_buffer - resilience_influence, 0, 1)
 
     # Apply stress momentum for predictive response

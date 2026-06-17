@@ -244,7 +244,7 @@ class Config:
         # PSS-10 SCORE GENERATION PARAMETERS
         # ==============================================
         self.pss10_item_means = self._get_env_array(
-            "PSS10_ITEM_MEAN", float, [1.25, 0.95, 1.45, 2.75, 3.05, 0.85, 2.85, 2.45, 1.55, 0.65], expected_length=10
+            "PSS10_ITEM_MEAN", float, [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5], expected_length=10
         )
         self.pss10_item_sds = self._get_env_array(
             "PSS10_ITEM_SD", float, [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8], expected_length=10
@@ -273,14 +273,14 @@ class Config:
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value("COPING_BASE_PROBABILITY", float, 0.5)
         self.coping_social_influence = self._get_env_value("COPING_SOCIAL_INFLUENCE", float, 0.1)
-        self.coping_challenge_bonus = self._get_env_value("COPING_CHALLENGE_BONUS", float, 0.15)
-        self.coping_hindrance_penalty = self._get_env_value("COPING_HINDRANCE_PENALTY", float, 0.6)
+        self.coping_challenge_bonus = self._get_env_value("COPING_CHALLENGE_BONUS", float, 0.2)
+        self.coping_hindrance_penalty = self._get_env_value("COPING_HINDRANCE_PENALTY", float, 0.3)
 
         # ==============================================
         # SOCIAL INTERACTION PARAMETERS
         # ==============================================
         self.interaction_influence_rate = self._get_env_value("INTERACTION_INFLUENCE_RATE", float, 0.05)
-        self.interaction_resilience_influence = self._get_env_value("INTERACTION_RESILIENCE_INFLUENCE", float, 0.12)
+        self.interaction_resilience_influence = self._get_env_value("INTERACTION_RESILIENCE_INFLUENCE", float, 0.05)
         self.interaction_max_neighbors = self._get_env_value("INTERACTION_MAX_NEIGHBORS", int, 10)
 
         # ==============================================

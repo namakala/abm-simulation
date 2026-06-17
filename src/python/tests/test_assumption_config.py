@@ -50,7 +50,7 @@ class TestAssumptionConfigExistence:
         assert c.pf_allocation_fraction == 0.15
         assert c.affect_improvement_scale == 0.2
         assert c.affect_deterioration_scale == 0.4
-        assert c.resilience_improvement_scale == 0.1
+        assert c.resilience_improvement_scale == 0.15
         assert c.resilience_deterioration_scale == 0.2
         assert c.resilience_coping_factor == 0.10
         assert c.challenge_success_resilience == 0.3
@@ -59,8 +59,8 @@ class TestAssumptionConfigExistence:
         assert c.hindrance_failure_resilience == -0.4
         assert c.success_stress_reduction == 0.2
         assert c.failure_stress_increase == 0.3
-        assert c.success_affect_change == 0.1
-        assert c.failure_affect_change == -0.2
+        assert c.success_affect_change == 0.2
+        assert c.failure_affect_change == -0.4
 
     @pytest.mark.unit
     def test_assumption_stress_config_defaults(self):

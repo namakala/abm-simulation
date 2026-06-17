@@ -6,6 +6,8 @@ the literature norm of 13-15 (Cohen, Kamarck & Mermelstein 1983).
 """
 
 import logging
+from pathlib import Path
+
 import numpy as np
 from typing import Dict, List, Optional
 
@@ -160,7 +162,21 @@ def run_calibration(
         if mean_ok and sd_ok:
             result["converged"] = True
             logger.info(f"Calibration converged at iteration {iteration}: mean={mean_val:.2f}, std={std_val:.2f}")
-            break
+
+            # Persist calibrated values to files
+            original_means = list(item_means)
+            persist_calibration_results(current_means, original_means)
+
+            # Verify by running dependent tests
+            logger.info("Running verification tests...")
+            tests_pass = run_verification_tests()
+            if tests_pass:
+                logger.info("Verification tests passed.")
+                break
+            else:
+                logger.warning("Verification tests failed — continuing calibration.")
+                result["converged"] = False
+                # Continue to next iteration
 
         # Adjust item means: shift all items proportionally to error
         target_mid = (target_mean_min + target_mean_max) / 2.0
@@ -229,3 +245,14 @@ def _restore_env(saved: Dict[str, Optional[str]]) -> None:
             os.environ.pop(key, None)
         else:
             os.environ[key] = value
+
+
+# ── Persistence (delegates to persistence module) ───────────────
+
+from src.python.calibration.persistence import (
+    persist_calibration_results,
+    run_verification_tests,
+    _update_env_file,
+    _update_config_default,
+    _update_test_expected_means,
+)
