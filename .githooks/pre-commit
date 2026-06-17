@@ -9,17 +9,10 @@ echo "==> Running pre-commit checks..."
 pixi run format
 pixi run lint
 
-# Only run PSS-10 unit tests if related files changed
+# Only run tests if .py files were staged
 if git diff --cached --name-only --diff-filter=ACMR | grep -q '\.py$'; then
-    echo "==> Running PSS-10 unit tests..."
-    python -m pytest src/python/tests/test_pss10_empirical.py -o "addopts=" --no-header -q
-    python -m pytest src/python/tests/test_agent_pss10_integration.py -o "addopts=" --no-header -q
-    python -m pytest src/python/tests/test_pss10_config.py -o "addopts=" --no-header -q
-    python -m pytest src/python/tests/test_pss10_comprehensive.py -o "addopts=" --no-header -q
-    python -m pytest src/python/tests/test_pss10_consolidation.py -o "addopts=" --no-header -q
-    python -m pytest src/python/tests/test_pss10_threshold.py -o "addopts=" --no-header -q
-    python -m pytest src/python/tests/test_generate_pss10_dimension_scores.py -o "addopts=" --no-header -q
-    python -m pytest src/python/tests/test_agent_initialization.py -o "addopts=" --no-header -q
+    pixi run test-cov
+    pixi run test-config
 else
     echo "==> No Python files changed, skipping tests."
 fi

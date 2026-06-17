@@ -712,9 +712,15 @@ def generate_pss10_from_stress_dimensions(
     resource_buffer = resources * 0.15  # Scale resources into [0, 0.15]
 
     # Apply recent stress intensity for immediate response
-    intensity_boost = recent_stress_intensity * config["sensitivity"]
-    dynamic_controllability = clamp(base_controllability - intensity_boost + affect_influence + resource_buffer, 0, 1)
-    dynamic_overload = clamp(base_overload + intensity_boost - affect_influence - resource_buffer, 0, 1)
+    # NOTE: intensity_boost is intentionally NOT applied here. It was
+    # previously subtracted from controllability and added to overload,
+    # but this created a transient PSS-10 response misaligned with the
+    # actual stress state. PSS-10 should reflect the agent's stress
+    # dimensions (which are updated by events), not event intensity.
+    # The base controllability/overload already capture event outcomes
+    # through update_stress_dimensions_from_event.
+    dynamic_controllability = clamp(base_controllability + affect_influence + resource_buffer, 0, 1)
+    dynamic_overload = clamp(base_overload - affect_influence - resource_buffer, 0, 1)
 
     # Apply stress momentum for predictive response
     momentum_adjustment = stress_momentum * config["momentum_weight"]

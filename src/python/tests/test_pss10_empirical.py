@@ -481,6 +481,49 @@ class TestPSS10ResponseGeneration:
         b = generate_pss10_from_stress_dimensions(stress_controllability=0.5, stress_overload=0.5, rng=rng_b)
         assert a["pss10_score"] == b["pss10_score"]
 
+    def test_intensity_boost_does_not_invert_controllability(self):
+        """intensity_boost must not reduce effective controllability.
+
+        The intensity_boost (= recent_stress_intensity * sensitivity)
+        is subtracted from dynamic_controllability in the current code.
+        This means high recent intensity REDUCES the effective
+        controllability, which via the bifactor model INCREASES PSS-10.
+
+        This creates an inversion: on days with many successfully-handled
+        events, stress_controllability goes UP (less stress) but
+        dynamic_controllability goes DOWN (due to intensity_boost).
+        The result: PSS-10 increases while current_stress decreases.
+
+        Scenario A: high control (0.8), low overload (0.2),
+                     high intensity (1.0) — good day, many events
+        Scenario B: moderate control (0.5), moderate overload (0.5),
+                     low intensity (0.1) — worse stress state, calm
+
+        A must produce LOWER PSS-10 than B because its underlying
+        stress dimensions are better, even with high intensity.
+        """
+        rng_a = np.random.default_rng(0)
+        rng_b = np.random.default_rng(0)
+
+        result_a = generate_pss10_from_stress_dimensions(
+            stress_controllability=0.8,
+            stress_overload=0.2,
+            recent_stress_intensity=1.0,
+            rng=rng_a,
+        )
+        result_b = generate_pss10_from_stress_dimensions(
+            stress_controllability=0.5,
+            stress_overload=0.5,
+            recent_stress_intensity=0.1,
+            rng=rng_b,
+        )
+
+        assert result_a["pss10_score"] < result_b["pss10_score"], (
+            f"PSS-10 must be driven by stress dimensions, not intensity_boost: "
+            f"A (high control, high intensity)={result_a['pss10_score']} >= "
+            f"B (moderate control, low intensity)={result_b['pss10_score']}"
+        )
+
 
 class TestPSS10Integration:
     """Test integration with existing stress processing mechanisms."""

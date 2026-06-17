@@ -264,11 +264,10 @@ def process_pss10_consolidation(
     alpha = get_assumptions().stress.pss10_smoothing_alpha
     new_smoothed = smooth_pss10_across_days(consolidated_pss10, prev_smoothed, alpha)
 
-    # Add adaptive N(0, SD) bias — fresh draw each day to create
-    # between-person variance without persistent decorrelation
-    pss10_bias_sd = state.get("pss10_bias_sd", 2.0)
-    daily_bias = rng.normal(0, pss10_bias_sd)
-    final_pss10 = int(round(max(0.0, min(40.0, new_smoothed + daily_bias))))
+    # Add persistent between-person bias (drawn from N(0, 2) at init)
+    # Applied once per consolidation, not during event generation
+    pss10_bias = state.get("pss10_bias", 0.0)
+    final_pss10 = int(round(max(0.0, min(40.0, new_smoothed + pss10_bias))))
 
     # ── Update stressed status ────────────────────────────────────
     stressed = final_pss10 >= pss10_threshold
@@ -522,10 +521,12 @@ class Person(mesa.Agent):
         self.stress_controllability = pss10_data["stress_controllability"]
         self.stress_overload = pss10_data["stress_overload"]
 
-        # Standard deviation for daily adaptive PSS-10 bias (Plan 011)
-        # Each consolidation day, a fresh N(0, pss10_bias_sd) is drawn and added
-        # to create between-person variance without persistent decorrelation.
-        self.pss10_bias_sd = 2.0
+        # Persistent between-person PSS-10 bias drawn from N(0, 2.0)
+        # This creates cross-sectional variance without trait-derived
+        # decorrelation. Applied once per consolidation, NOT in events.
+        self.pss10_bias = self._rng.normal(0, 2.0)
+        # Apply bias to initial PSS-10 score
+        self.pss10 = int(round(max(0.0, min(40.0, self.pss10 + self.pss10_bias))))
         self.pss10_smoothed = float(self.pss10)
 
     def step(self):
@@ -1084,7 +1085,7 @@ class Person(mesa.Agent):
             else dict(self.interaction_config),
             # Fixed traits
             "volatility": self.volatility,
-            "pss10_bias_sd": self.pss10_bias_sd,
+            "pss10_bias": self.pss10_bias,
             # Within-day support boost
             "support_boost": self.support_boost,
         }
