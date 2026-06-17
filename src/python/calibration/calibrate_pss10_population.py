@@ -6,12 +6,15 @@ the literature norm of 13-15 (Cohen, Kamarck & Mermelstein 1983).
 """
 
 import logging
-from pathlib import Path
 
 import numpy as np
 from typing import Dict, List, Optional
 
 from src.python.model import StressModel
+from src.python.calibration.persistence import (
+    persist_calibration_results,
+    run_verification_tests,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -245,14 +248,3 @@ def _restore_env(saved: Dict[str, Optional[str]]) -> None:
             os.environ.pop(key, None)
         else:
             os.environ[key] = value
-
-
-# ── Persistence (delegates to persistence module) ───────────────
-
-from src.python.calibration.persistence import (
-    persist_calibration_results,
-    run_verification_tests,
-    _update_env_file,
-    _update_config_default,
-    _update_test_expected_means,
-)

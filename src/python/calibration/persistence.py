@@ -11,9 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 _ENV_PATH = PROJECT_ROOT / ".env"
 _ENV_EXAMPLE_PATH = PROJECT_ROOT / ".env.example"
 _CONFIG_PATH = PROJECT_ROOT / "src" / "python" / "config.py"
-_TEST_COMPREHENSIVE_PATH = (
-    PROJECT_ROOT / "src" / "python" / "tests" / "test_pss10_comprehensive.py"
-)
+_TEST_COMPREHENSIVE_PATH = PROJECT_ROOT / "src" / "python" / "tests" / "test_pss10_comprehensive.py"
 
 
 def persist_calibration_results(
@@ -72,14 +70,12 @@ def _update_config_default(path: Path, item_means: List[float]) -> None:
     content = path.read_text()
     means_str = "[" + ", ".join(str(v) for v in item_means) + "]"
     pattern = r'("PSS10_ITEM_MEAN",\s*float,\s*)\[[^\]]+\]'
-    replacement = rf'\g<1>{means_str}'
+    replacement = rf"\g<1>{means_str}"
     new_content = re.sub(pattern, replacement, content)
     path.write_text(new_content)
 
 
-def _update_test_expected_means(
-    path: Path, old_means: List[float], new_means: List[float]
-) -> None:
+def _update_test_expected_means(path: Path, old_means: List[float], new_means: List[float]) -> None:
     """Replace all expected_means lists in the PSS-10 comprehensive test file."""
     path = Path(path)
     content = path.read_text()

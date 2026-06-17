@@ -53,11 +53,11 @@ class TestPersistCalibrationResults:
 
     def test_update_config_default_replaces_array(self):
         """_update_config_default replaces the PSS10_ITEM_MEAN default array in config.py."""
-        content = '''
+        content = """
         self.pss10_item_means = self._get_env_array(
             "PSS10_ITEM_MEAN", float, [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5], expected_length=10
         )
-'''
+"""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(content)
             tmp_path = f.name
@@ -74,10 +74,10 @@ class TestPersistCalibrationResults:
 
     def test_update_test_expected_means_replaces_all_occurrences(self):
         """_update_test_expected_means replaces all expected_means lists in test file."""
-        content = '''expected_means = [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
+        content = """expected_means = [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
         assert config.pss10_item_means == expected_means, f"Expected {expected_means}, got {config.pss10_item_means}"
         expected_means = [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
-'''
+"""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(content)
             tmp_path = f.name
@@ -104,15 +104,13 @@ class TestPersistCalibrationResults:
 
             config_path = Path(tmp_dir) / "config.py"
             config_path.write_text(
-                'self.pss10_item_means = self._get_env_array(\n'
+                "self.pss10_item_means = self._get_env_array(\n"
                 '    "PSS10_ITEM_MEAN", float, [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5], expected_length=10\n'
-                ')\n'
+                ")\n"
             )
 
             test_path = Path(tmp_dir) / "test_pss10_comprehensive.py"
-            test_path.write_text(
-                "expected_means = [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]\n"
-            )
+            test_path.write_text("expected_means = [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]\n")
 
             old_means = [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
 
