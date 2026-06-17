@@ -83,3 +83,31 @@ class TestRunCalibration:
         result = run_calibration(N=10, max_days=5, seeds=[42], max_iterations=0)
         assert result["n_iterations"] == 0
         assert result["final_mean"] == result["initial_mean"]
+
+
+class TestPSS10PopulationStatsEnvOverride:
+    """Test that compute_pss10_population_stats respects custom item_means."""
+
+    def get_default_mean(self):
+        """Helper: get the default PSS-10 mean as a baseline."""
+        return compute_pss10_population_stats(N=50, max_days=10, seed=42)["mean"]
+
+    def test_low_item_means_reduce_mean(self):
+        """Low item_means should produce a lower mean than defaults."""
+        default = self.get_default_mean()
+        low_result = compute_pss10_population_stats(N=50, max_days=10, seed=42, item_means=[0.5] * 10)
+        assert low_result["mean"] < default, f"Low item means gave {low_result['mean']:.2f}, expected < {default:.2f}"
+
+    def test_high_item_means_increase_mean(self):
+        """High item_means should produce a higher mean than defaults."""
+        default = self.get_default_mean()
+        high_result = compute_pss10_population_stats(N=50, max_days=10, seed=42, item_means=[3.5] * 10)
+        assert high_result["mean"] > default, (
+            f"High item means gave {high_result['mean']:.2f}, expected > {default:.2f}"
+        )
+
+    def test_low_vs_high_item_means_ordered_correctly(self):
+        """Low item_means should produce a strictly lower mean than high item_means."""
+        low = compute_pss10_population_stats(N=50, max_days=10, seed=42, item_means=[0.5] * 10)["mean"]
+        high = compute_pss10_population_stats(N=50, max_days=10, seed=42, item_means=[3.5] * 10)["mean"]
+        assert low < high, f"Low item means mean ({low:.2f}) should be < high item means mean ({high:.2f})"

@@ -15,6 +15,8 @@ from src.python.calibration.persistence import (
     persist_calibration_results,
     run_verification_tests,
 )
+from src.python.calibration.progress import CalibrationProgress
+from src.python.config import reload_config
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +63,7 @@ def compute_pss10_population_stats(
     """
     env_overrides = _build_env_overrides(item_means, item_sds)
     original_env = _apply_env_overrides(env_overrides)
+    reload_config()
 
     try:
         model = StressModel(N=N, max_days=max_days, seed=seed)
@@ -81,6 +84,7 @@ def compute_pss10_population_stats(
         return {"mean": float(np.mean(pss10_vals)), "std": float(np.std(pss10_vals))}
     finally:
         _restore_env(original_env)
+        reload_config()
 
 
 def run_calibration(
@@ -150,6 +154,8 @@ def run_calibration(
     current_means = list(item_means)
     current_sds = list(item_sds)
 
+    progress = CalibrationProgress(total=max_iterations, label="PSS-10 mean")
+
     for iteration in range(1, max_iterations + 1):
         mean_val, std_val = _measure_across_seeds(N, max_days, seeds, current_means, current_sds)
 
@@ -164,6 +170,7 @@ def run_calibration(
 
         if mean_ok and sd_ok:
             result["converged"] = True
+            progress.update(iteration, mean_val, std_val, converged=True)
             logger.info(f"Calibration converged at iteration {iteration}: mean={mean_val:.2f}, std={std_val:.2f}")
 
             # Persist calibrated values to files
@@ -175,11 +182,15 @@ def run_calibration(
             tests_pass = run_verification_tests()
             if tests_pass:
                 logger.info("Verification tests passed.")
+                progress.close()
                 break
             else:
                 logger.warning("Verification tests failed — continuing calibration.")
                 result["converged"] = False
+                progress.update(iteration, mean_val, std_val)
                 # Continue to next iteration
+        else:
+            progress.update(iteration, mean_val, std_val)
 
         # Adjust item means: shift all items proportionally to error
         target_mid = (target_mean_min + target_mean_max) / 2.0
@@ -187,6 +198,9 @@ def run_calibration(
         adjustment = error * learning_rate / 10.0  # spread across 10 items
 
         current_means = [max(0.0, min(4.0, m + adjustment)) for m in current_means]
+
+    else:
+        progress.close()
 
     return result
 
