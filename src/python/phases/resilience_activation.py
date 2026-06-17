@@ -157,6 +157,7 @@ def run_phase(
         stress_momentum=updated_momentum,
         affect=new_affect,
         resources=current_resources,
+        resilience=new_resilience,
         rng=rng,
     )
     new_pss10_responses = pss10_data["pss10_responses"]

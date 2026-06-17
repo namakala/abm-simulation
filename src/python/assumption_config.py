@@ -65,7 +65,7 @@ class AssumptionCopingConfig:
         default_factory=lambda: _env_float("ASSUMPTION_AFFECT_DETERIORATION_SCALE", 0.4)
     )
     resilience_improvement_scale: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_IMPROVEMENT_SCALE", 0.1)
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_IMPROVEMENT_SCALE", 0.15)
     )
     resilience_coping_factor: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_COPING_FACTOR", 0.10)
@@ -97,8 +97,8 @@ class AssumptionCopingConfig:
     support_boost_factor: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.10)
     )
-    success_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_SUCCESS_AFFECT_CHANGE", 0.1))
-    failure_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_FAILURE_AFFECT_CHANGE", -0.2))
+    success_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_SUCCESS_AFFECT_CHANGE", 0.2))
+    failure_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_FAILURE_AFFECT_CHANGE", -0.4))
 
 
 @dataclass(frozen=True)
@@ -167,12 +167,12 @@ class AssumptionStressConfig:
     resilience_buffer_coefficient: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_BUFFER_COEFFICIENT", 0.50)
     )
-    pss10_smoothing_alpha: float = field(default_factory=lambda: _env_float("ASSUMPTION_PSS10_SMOOTHING_ALPHA", 0.30))
+    pss10_smoothing_alpha: float = field(default_factory=lambda: _env_float("ASSUMPTION_PSS10_SMOOTHING_ALPHA", 0.50))
     affect_homeostatic_rate: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_HOMEOSTATIC_RATE", 0.5)
+        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_HOMEOSTATIC_RATE", 0.15)
     )
     resilience_homeostatic_rate: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE", 0.3)
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE", 0.35)
     )
 
 
@@ -256,7 +256,7 @@ class AssumptionResourceConfig:
     )
     buffering_boost_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_BOOST_RATE", 0.1))
     buffering_a_coefficient: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_A_COEFFICIENT", -0.03)
+        default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_A_COEFFICIENT", -0.015)
     )
     buffering_b_coefficient: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_B_COEFFICIENT", 0.5)

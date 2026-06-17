@@ -140,8 +140,8 @@ def process_affect_dynamics(
     # ── 3. Resource regeneration ──────────────────────────────────
     cfg = get_config()
     regen_params = ResourceParams(base_regeneration=cfg.get("resource", "base_regeneration"))
-    affect_mult = 1.0 + 0.5 * max(0.0, new_affect)
-    resil_mult = 1.0 + 0.3 * new_resilience
+    affect_mult = 1.0 + 0.25 * max(0.0, new_affect)
+    resil_mult = 1.0 + 0.20 * new_resilience
     base_regeneration = compute_resource_regeneration(resources, regen_params)
     new_resources = resources + base_regeneration * affect_mult * resil_mult
     new_resources = min(1.0, max(0.0, new_resources))
@@ -254,7 +254,19 @@ def process_pss10_consolidation(
     if daily_pss10_scores:
         consolidated_pss10 = int(round(float(np.mean(daily_pss10_scores))))
     else:
-        consolidated_pss10 = pss10  # keep existing
+        # Regenerate PSS-10 from current stress dimensions to keep it
+        # tracking the agent's actual state even on quiet days.
+        from src.python.stress_utils import generate_pss10_from_stress_dimensions
+
+        pss10_data = generate_pss10_from_stress_dimensions(
+            stress_controllability=stress_controllability,
+            stress_overload=stress_overload,
+            affect=state.get("affect", 0.0),
+            resources=state.get("resources", 0.5),
+            resilience=state.get("resilience", 0.5),
+            rng=rng,
+        )
+        consolidated_pss10 = pss10_data["pss10_score"]
 
     # ── Apply exponential smoothing across days (Plan 011) ────────
     from src.python.stress_utils import smooth_pss10_across_days
@@ -264,10 +276,10 @@ def process_pss10_consolidation(
     alpha = get_assumptions().stress.pss10_smoothing_alpha
     new_smoothed = smooth_pss10_across_days(consolidated_pss10, prev_smoothed, alpha)
 
-    # Add persistent between-person bias (drawn from N(0, 2) at init)
-    # Applied once per consolidation, not during event generation
-    pss10_bias = state.get("pss10_bias", 0.0)
-    final_pss10 = int(round(max(0.0, min(40.0, new_smoothed + pss10_bias))))
+    # Bias is only applied at initialization, not re-applied daily.
+    # Smoothed PSS-10 evolves from event-driven scores and quiet-day
+    # regeneration, staying coupled to stress dimensions.
+    final_pss10 = int(round(max(0.0, min(40.0, new_smoothed))))
 
     # ── Update stressed status ────────────────────────────────────
     stressed = final_pss10 >= pss10_threshold
@@ -522,8 +534,8 @@ class Person(mesa.Agent):
         self.stress_overload = pss10_data["stress_overload"]
 
         # Persistent between-person PSS-10 bias drawn from N(0, 2.0)
-        # This creates cross-sectional variance without trait-derived
-        # decorrelation. Applied once per consolidation, NOT in events.
+        # This creates moderate cross-sectional variance without trait-derived
+        # decorrelation. Applied once at initialization, NOT re-applied daily.
         self.pss10_bias = self._rng.normal(0, 2.0)
         # Apply bias to initial PSS-10 score
         self.pss10 = int(round(max(0.0, min(40.0, self.pss10 + self.pss10_bias))))
