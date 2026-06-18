@@ -16,6 +16,21 @@ from src.python.config import get_config
 # Load configuration
 config = get_config()
 
+
+def _compute_coping_success(agent) -> float:
+    """Compute coping success rate for actual stress events only.
+
+    Filters out non-stressful events where coped_successfully is always True,
+    which biases the metric positive and corrupts the Coping–Hindrance correlation.
+    """
+    events = getattr(agent, "last_daily_stress_events", [])
+    stress_events = [e for e in events if e.get("is_stressed", False)]
+    if not stress_events:
+        return 0.0
+    successes = sum(1 for e in stress_events if e.get("coped_successfully", False))
+    return successes / len(stress_events)
+
+
 # Initialize the model
 
 
@@ -206,10 +221,7 @@ class StressModel(mesa.Model):
             # Individual stress event tracking
             "consecutive_hindrances": lambda a: getattr(a, "consecutive_hindrances", 0),  # Consecutive hindrance events
             # Derived metrics from daily event aggregation
-            "coping_success": lambda a: (
-                sum(1 for e in getattr(a, "last_daily_stress_events", []) if e.get("coped_successfully", False))
-                / max(len(getattr(a, "last_daily_stress_events", [])), 1)
-            ),
+            "coping_success": _compute_coping_success,
             "challenge_appraisal": lambda a: (
                 sum(e.get("challenge", 0.0) for e in getattr(a, "last_daily_stress_events", []))
                 / max(len(getattr(a, "last_daily_stress_events", [])), 1)

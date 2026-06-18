@@ -68,7 +68,8 @@ class TestAgentPSS10Initialization:
         agent = Person(model)
 
         # Verify PSS-10 score is computed from responses plus persistent N(0, 2) bias
-        expected_score = int(round(max(0.0, min(40.0, compute_pss10_score(agent.pss10_responses) + agent.pss10_bias))))
+        score_from_responses = sum(agent.pss10_responses.values())
+        expected_score = int(round(max(0.0, min(40.0, score_from_responses + agent.pss10_bias))))
         assert agent.pss10 == expected_score
 
     def test_pss10_reproducibility(self):

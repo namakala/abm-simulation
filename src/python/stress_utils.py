@@ -411,6 +411,8 @@ def generate_pss10_dimension_scores(
     correlation: Optional[float] = None,
     rng: Optional[np.random.Generator] = None,
     deterministic: bool = False,
+    controllability_sd: Optional[float] = None,
+    overload_sd: Optional[float] = None,
 ) -> Tuple[float, float]:
     """
     Generate correlated controllability and overload dimension scores using multivariate normal distribution.
@@ -432,9 +434,13 @@ def generate_pss10_dimension_scores(
     if correlation is None:
         correlation = cfg.get("pss10", "bifactor_correlation")
 
-    # Get regularized standard deviations from config
-    controllability_sd = cfg.get("pss10", "controllability_sd") / 4
-    overload_sd = cfg.get("pss10", "overload_sd") / 4
+    # Get regularized standard deviations from config or optional params
+    config_controllability_sd = (
+        controllability_sd if controllability_sd is not None else cfg.get("pss10", "controllability_sd")
+    )
+    config_overload_sd = overload_sd if overload_sd is not None else cfg.get("pss10", "overload_sd")
+    controllability_sd = config_controllability_sd / 4
+    overload_sd = config_overload_sd / 4
 
     if deterministic:
         # Create a deterministic seed from input parameters
@@ -563,7 +569,13 @@ def generate_pss10_responses(
 
     # Generate correlated dimension scores
     correlated_controllability, correlated_overload = generate_pss10_dimension_scores(
-        controllability, overload, config["bifactor_correlation"], rng, deterministic
+        controllability,
+        overload,
+        config["bifactor_correlation"],
+        rng,
+        deterministic,
+        controllability_sd=config.get("controllability_sd"),
+        overload_sd=config.get("overload_sd"),
     )
 
     # Get PSS-10 item mapping
@@ -571,11 +583,17 @@ def generate_pss10_responses(
     responses = {}
 
     # Generate response for each item using bifactor model
+    # Reverse items (4,5,7,8): convert post-reversal item_means to pre-reversal
+    reverse_items = {4, 5, 7, 8}
     for item_num in range(1, 11):
         item = pss10_items[item_num]
 
+        item_mean = config["item_means"][item_num - 1]
+        if item_num in reverse_items:
+            item_mean = 4.0 - item_mean  # post-reversal → pre-reversal
+
         response = generate_pss10_item_response(
-            item_mean=config["item_means"][item_num - 1],
+            item_mean=item_mean,
             item_sd=config["item_sds"][item_num - 1],
             controllability_loading=item.weight_controllability,
             overload_loading=item.weight_overload,
@@ -643,8 +661,8 @@ def initialize_pss10_from_items(
         overload_scores.append(response / 4.0)
     stress_overload = np.mean(overload_scores) if overload_scores else 0.5
 
-    # Compute PSS-10 score (handles reversal via compute_pss10_score)
-    pss10_score = compute_pss10_score(pss10_responses)
+    # Compute PSS-10 score by summing all responses (item_means are already post-reversal)
+    pss10_score = sum(pss10_responses.values())
 
     # Set initial stressed status based on PSS-10 threshold
     pss10_threshold = config["threshold"]
@@ -709,11 +727,11 @@ def generate_pss10_from_stress_dimensions(
     base_overload = stress_overload
 
     # Protective factors modulate stress perception (Plan 007)
-    affect_influence = affect * 0.35  # Scale affect into [−0.35, 0.35]
+    affect_influence = affect * 0.35  # Scale affect into [-0.35, 0.35]
     # Higher resources buffer against perceived stress (0 resources = no buffering)
     resource_buffer = resources * 0.25  # Scale resources into [0, 0.25]
     # Higher resilience buffers perceived stress (shifts controllability up, overload down)
-    resilience_influence = (resilience - 0.5) * 0.60  # Scale into [−0.30, 0.30]
+    resilience_influence = (resilience - 0.5) * 0.60  # Scale into [-0.30, 0.30]
 
     # Apply recent stress intensity for immediate response
     # NOTE: intensity_boost is intentionally NOT applied here. It was
