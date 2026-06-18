@@ -23,6 +23,8 @@ sort-imports = "isort src/python/"
 security-bandit = "bandit -r src/python/"
 extract-env = "bash src/shell/extract_env.sh"
 update-env-example = "bash src/shell/update_env_example.sh"
+parameterize = "bash src/shell/parameterize_env.sh"
+force-parameterize = "bash src/shell/parameterize_env.sh --force"
 install-hooks = "git config core.hooksPath .githooks"
 
 [dependencies]
