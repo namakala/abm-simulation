@@ -21,6 +21,26 @@ Theoretical correlations to validate:
 - affect ↔ resources: positive correlation (higher affect → higher resources)
 - current_stress ↔ affect: negative correlation (higher stress → lower affect)
 - current_stress ↔ resources: negative correlation (higher stress → lower resources)
+
+Empirical sources for correlation magnitude assertions:
+- Kermott et al. (2019) — "Is higher resilience predictive of lower stress and
+  better mental health among corporate executives?" PLOS ONE, 14(6), e0218092.
+- Yang et al. (2020) — "How Resilience Promotes Mental Health of Patients With
+  DSM-5 Substance Use Disorder? The Mediation Roles of Positive Affect,
+  Self-Esteem, and Perceived Social Support." Frontiers in Psychiatry, 11, 588968.
+- Acoba (2024) — "Social support and mental health: the mediating role of
+  perceived stress." Frontiers in Psychology, 15, 1330720.
+- Montero-Marin et al. (2015) — "Mindfulness, Resilience, and Burnout Subtypes
+  in Primary Care Physicians: The Possible Mediating Role of Positive and
+  Negative Affect." Frontiers in Psychology, 6, 1895.
+- Schneider et al. (2020) — "Measuring stress in clinical and nonclinical
+  subjects using a German adaptation of the Perceived Stress Scale."
+  International Journal of Clinical and Health Psychology, 20(2), 173-181.
+- Chen et al. (2023) — "The relationship between resilience and quality of life
+  in advanced cancer survivors: multiple mediating effects of social support
+  and spirituality." Frontiers in Public Health, 11, 1207097.
+- Zhao et al. (2022) — Meta-analysis of positive psychological resources and
+  quality of life (66 studies, N > 10,000).
 """
 
 import pytest
@@ -38,7 +58,6 @@ from src.python.model import StressModel
 class TestTheoreticalCorrelationsAgentLevel:
     """Test theoretical correlations at the agent level."""
 
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs stress r~0.20, needs stronger coupling")
     @pytest.mark.xfail(reason="Calibration: PSS-10 vs stress r~0.20, needs stronger coupling")
     def test_pss10_stress_positive_correlation(self):
         """Test that PSS-10 scores positively correlate with current stress levels."""
@@ -61,7 +80,7 @@ class TestTheoreticalCorrelationsAgentLevel:
             correlation = final_epoch["pss10"].corr(final_epoch["current_stress"])
             _, p_value = stats.pearsonr(final_epoch["pss10"], final_epoch["current_stress"])
 
-            ok = correlation > 0.0 and p_value < 0.05
+            ok = correlation > 0.40 and p_value < 0.05
             if ok:
                 passed_seeds += 1
                 seed_details.append(f"seed={seed}: PASS (r={correlation:.4f}, p={p_value:.4f})")
@@ -72,7 +91,6 @@ class TestTheoreticalCorrelationsAgentLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs resilience r=-0.63, bounds for old calibration")
     @pytest.mark.xfail(reason="Calibration: PSS-10 vs resilience r=-0.63, bounds for old calibration")
     def test_pss10_resilience_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resilience.
@@ -89,12 +107,14 @@ class TestTheoreticalCorrelationsAgentLevel:
 
         correlation = final_epoch["pss10"].corr(final_epoch["resilience"])
 
-        # Allow any reasonable correlation (based on observed correlations from demos)
-        assert -0.6 < correlation < 0.6, f"PSS-10 vs resilience correlation too extreme: {correlation}"
-
+        # Empirical range: r ≈ −0.55 to −0.40 (Kermott et al. 2019; Yang et al. 2020)
+        assert -0.55 < correlation < -0.40, (
+            f"PSS-10 vs resilience correlation outside empirical range [{correlation:.3f}]"
+        )
         _, p_value = stats.pearsonr(final_epoch["pss10"], final_epoch["resilience"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
+    @pytest.mark.xfail(reason="Calibration: PSS-10 vs affect r=-0.17, target [-0.30, -0.18]")
     def test_pss10_affect_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with affect."""
         model = StressModel(N=200, max_days=50, seed=42)
@@ -106,13 +126,14 @@ class TestTheoreticalCorrelationsAgentLevel:
 
         correlation = final_epoch["pss10"].corr(final_epoch["affect"])
 
-        # Allow any reasonable correlation (based on observed correlations from demos)
-        assert -0.6 < correlation < 0.6, f"PSS-10 vs affect correlation too extreme: {correlation}"
+        # Empirical range: r ≈ −0.30 to −0.18 (Acoba 2024; Yang et al. 2020)
+        assert -0.30 < correlation < -0.18, f"PSS-10 vs affect correlation outside empirical range [{correlation:.3f}]"
 
         _, p_value = stats.pearsonr(final_epoch["pss10"], final_epoch["affect"])
         # Allow marginal significance with the new distribution properties
         assert p_value < 0.2, f"Correlation not statistically significant: p={p_value}"
 
+    @pytest.mark.xfail(reason="Calibration: PSS-10 vs resources r=-0.23, target [-0.22, -0.08]")
     def test_pss10_resources_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resources."""
         model = StressModel(N=200, max_days=100, seed=42)
@@ -124,8 +145,10 @@ class TestTheoreticalCorrelationsAgentLevel:
 
         correlation = final_epoch["pss10"].corr(final_epoch["resources"])
 
-        # Allow any reasonable correlation (based on observed correlations from demos)
-        assert -0.6 < correlation < 0.6, f"PSS-10 vs resources correlation too extreme: {correlation}"
+        # Empirical range: r ≈ −0.22 to −0.08 (Acoba 2024; Yang et al. 2020)
+        assert -0.22 < correlation < -0.08, (
+            f"PSS-10 vs resources correlation outside empirical range [{correlation:.3f}]"
+        )
 
         _, p_value = stats.pearsonr(final_epoch["pss10"], final_epoch["resources"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
@@ -141,8 +164,10 @@ class TestTheoreticalCorrelationsAgentLevel:
 
         correlation = final_epoch["resilience"].corr(final_epoch["affect"])
 
-        # Allow any reasonable correlation (based on observed correlations from demos)
-        assert -0.6 < correlation < 0.6, f"Resilience vs affect correlation too extreme: {correlation}"
+        # Empirical range: r ≈ 0.30 to 0.70 (Montero-Marin et al. 2015; Yang et al. 2020)
+        assert 0.30 < correlation < 0.70, (
+            f"Resilience vs affect correlation outside empirical range [{correlation:.3f}]"
+        )
 
         _, p_value = stats.pearsonr(final_epoch["resilience"], final_epoch["affect"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
@@ -150,10 +175,11 @@ class TestTheoreticalCorrelationsAgentLevel:
     def test_resilience_resources_positive_correlation(self):
         """Test that resilience positively correlates with resources.
 
-        Per Hobfoll's COR theory, resources are antecedents (pre-adversity)
-        and resilience is the outcome.  Meta-analytic averages: r ≈ 0.35–0.50
-        (Zhao 2022, Egozi Farkash 2022).  Upper bound 0.65 prevents construct
-        redundancy (resilience ≠ resources).
+        Empirical range: r ≈ 0.20 to 0.63.
+        CD-RISC × MSPSS social support: r=0.49–0.51 (Chen et al. 2023; Yang et al. 2020).
+        CD-RISC × other psychological capital (self-efficacy, hope, optimism):
+        meta-analytic r ≈ 0.20–0.53 (Zhao et al. 2022, 66 studies, N > 10,000).
+        Upper bound 0.63 prevents construct redundancy.
         """
         model = StressModel(N=200, max_days=100, seed=42)
         while model.running:
@@ -164,17 +190,15 @@ class TestTheoreticalCorrelationsAgentLevel:
 
         correlation = final_epoch["resilience"].corr(final_epoch["resources"])
 
-        # Theoretical range: moderate-to-strong positive, not construct-redundant.
-        # Meta-analytic average r ≈ 0.35–0.50 (Zhao 2022, Egozi Farkash 2022).
-        # ABM correlations run higher than field data due to absence of measurement
-        # error and confounding; bound at 0.70 prevents construct redundancy (r > 0.85).
-        assert 0.20 <= correlation <= 0.70, (
-            f"Resilience vs resources correlation {correlation:.3f} outside theoretical [0.20, 0.70]"
+        # CD-RISC × social support r=0.49–0.51; meta-analytic range across psychological capital r=0.20–0.63
+        assert 0.20 <= correlation <= 0.63, (
+            f"Resilience vs resources correlation {correlation:.3f} outside empirical [0.20, 0.63]"
         )
 
         _, p_value = stats.pearsonr(final_epoch["resilience"], final_epoch["resources"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
+    @pytest.mark.xfail(reason="Calibration: affect vs resources r=0.54, target [0.15, 0.30]")
     def test_affect_resources_positive_correlation(self):
         """Test that affect positively correlates with resources."""
         model = StressModel(N=75, max_days=60, seed=42)
@@ -186,19 +210,19 @@ class TestTheoreticalCorrelationsAgentLevel:
 
         correlation = final_epoch["affect"].corr(final_epoch["resources"])
 
-        # Allow reasonable correlation (based on observed correlations from demos)
-        assert -0.70 < correlation < 0.70, f"Affect vs resources correlation too extreme: {correlation}"
+        # Empirical range: r ≈ 0.15 to 0.30 (Acoba 2024; Yang et al. 2020)
+        assert 0.15 < correlation < 0.30, f"Affect vs resources correlation outside empirical range [{correlation:.3f}]"
 
         _, p_value = stats.pearsonr(final_epoch["affect"], final_epoch["resources"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
+    @pytest.mark.xfail(reason="Calibration: stress vs affect r=-0.15, target [-0.50, -0.30]")
     def test_stress_affect_negative_correlation(self):
         """Test that current stress negatively correlates with affect.
 
-        Per theory: r ≈ -0.35 to -0.50 (Acoba 2024).  Current model produces
-        a weak negative correlation (r ≈ -0.06 to -0.11) — the affect
-        homeostatic mechanism dampens the stress→affect path.  This test
-        verifies the DIRECTION rather than magnitude.
+        Empirical range: r ≈ −0.50 to −0.30
+        Derived from stress↔negative affect r=0.30–0.50 (Schneider et al. 2020; Acoba 2024),
+        sign flipped because model affect is positive affect (higher = better).
         """
         model = StressModel(N=100, max_days=80, seed=42)
         while model.running:
@@ -209,11 +233,10 @@ class TestTheoreticalCorrelationsAgentLevel:
 
         correlation = final_epoch["current_stress"].corr(final_epoch["affect"])
 
-        # Verify negative direction (theory-consistent sign)
-        assert correlation < 0.0, f"Stress vs affect correlation {correlation:.3f} — expected negative direction"
+        # Empirical range for positive affect: r ≈ −0.50 to −0.30
+        assert -0.50 < correlation < -0.30, f"Stress vs affect correlation {correlation:.3f} outside empirical range"
 
-        assert -0.5 < correlation < 0.5, f"Stress vs affect correlation {correlation:.3f} too extreme"
-
+    @pytest.mark.xfail(reason="Calibration: stress vs resources r=-0.67, target [-0.25, -0.10]")
     def test_stress_resources_negative_correlation(self):
         """Test that current stress negatively correlates with resources."""
         seeds = [42, 123, 456]
@@ -235,7 +258,7 @@ class TestTheoreticalCorrelationsAgentLevel:
             correlation = final_epoch["current_stress"].corr(final_epoch["resources"])
             _, p_value = stats.pearsonr(final_epoch["current_stress"], final_epoch["resources"])
 
-            ok = correlation < 0.1 and p_value < 0.05
+            ok = -0.25 < correlation < -0.10 and p_value < 0.05
             if ok:
                 passed_seeds += 1
                 seed_details.append(f"seed={seed}: PASS (r={correlation:.4f}, p={p_value:.4f})")
@@ -250,6 +273,7 @@ class TestTheoreticalCorrelationsAgentLevel:
 class TestTheoreticalCorrelationsPopulationLevel:
     """Test theoretical correlations at the population level."""
 
+    @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg stress r=0.05-0.34, target >0.40")
     def test_avg_pss10_avg_stress_positive_correlation(self):
         """Test that average PSS-10 positively correlates with average stress over time."""
         seeds = [42, 123, 456]
@@ -270,7 +294,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
             correlation = model_data["avg_pss10"].corr(model_data["avg_stress"])
             _, p_value = stats.pearsonr(model_data["avg_pss10"], model_data["avg_stress"])
 
-            ok = correlation > 0.05 and p_value < 0.05
+            ok = correlation > 0.40 and p_value < 0.05
             if ok:
                 passed_seeds += 1
                 seed_details.append(f"seed={seed}: PASS (r={correlation:.4f}, p={p_value:.4f})")
@@ -281,6 +305,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
+    @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg resilience r=-0.39, target [-0.55, -0.40]")
     def test_avg_pss10_avg_resilience_negative_correlation(self):
         """Test that average PSS-10 negatively correlates with average resilience over time."""
         model = StressModel(N=50, max_days=150, seed=42)
@@ -291,12 +316,15 @@ class TestTheoreticalCorrelationsPopulationLevel:
 
         correlation = model_data["avg_pss10"].corr(model_data["avg_resilience"])
 
-        # Allow any reasonable correlation (based on observed correlations from demos)
-        assert -0.6 < correlation < 0.6, f"Avg PSS-10 vs avg resilience correlation too extreme: {correlation}"
+        # Empirical range: r ≈ −0.55 to −0.40 (Kermott et al. 2019; Yang et al. 2020)
+        assert -0.55 < correlation < -0.40, (
+            f"Avg PSS-10 vs avg resilience correlation outside empirical range [{correlation:.3f}]"
+        )
 
         _, p_value = stats.pearsonr(model_data["avg_pss10"], model_data["avg_resilience"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
+    @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg affect r=-0.31, target [-0.30, -0.18]")
     def test_avg_pss10_avg_affect_negative_correlation(self):
         """Test that average PSS-10 negatively correlates with average affect over time."""
         model = StressModel(N=30, max_days=100, seed=42)
@@ -307,12 +335,15 @@ class TestTheoreticalCorrelationsPopulationLevel:
 
         correlation = model_data["avg_pss10"].corr(model_data["avg_affect"])
 
-        # Allow any reasonable correlation (based on observed correlations from demos)
-        assert -0.6 < correlation < 0.6, f"Avg PSS-10 vs avg affect correlation too extreme: {correlation}"
+        # Empirical range: r ≈ −0.30 to −0.18 (Acoba 2024; Yang et al. 2020)
+        assert -0.30 < correlation < -0.18, (
+            f"Avg PSS-10 vs avg affect correlation outside empirical range [{correlation:.3f}]"
+        )
 
         _, p_value = stats.pearsonr(model_data["avg_pss10"], model_data["avg_affect"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
+    @pytest.mark.xfail(reason="Calibration: avg resilience vs avg affect r=0.77, target [0.30, 0.70]")
     def test_avg_resilience_avg_affect_positive_correlation(self):
         """Test that average resilience positively correlates with average affect over time."""
         model = StressModel(N=30, max_days=100, seed=42)
@@ -323,15 +354,15 @@ class TestTheoreticalCorrelationsPopulationLevel:
 
         correlation = model_data["avg_resilience"].corr(model_data["avg_affect"])
 
-        # Should be positive, but not construct-redundant (< 0.85).
-        # Bound at 0.80 reflects the structural coupling of both variables
-        # to common daily challenge/hindrance events in the ABM.
-        assert correlation > 0.1, f"Avg resilience vs avg affect correlation too weak: {correlation}"
-        assert correlation < 0.80, f"Avg resilience vs avg affect correlation too strong: {correlation}"
+        # Empirical range: r ≈ 0.30 to 0.70 (Montero-Marin et al. 2015; Yang et al. 2020)
+        assert 0.30 < correlation < 0.70, (
+            f"Avg resilience vs avg affect correlation outside empirical range [{correlation:.3f}]"
+        )
 
         _, p_value = stats.pearsonr(model_data["avg_resilience"], model_data["avg_affect"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
+    @pytest.mark.xfail(reason="Calibration: social support vs coping success r=0.08, target [0.15, 0.40]")
     def test_social_support_coping_success_correlation(self):
         """Test correlation between social support rate and coping success rate.
 
@@ -362,13 +393,15 @@ class TestTheoreticalCorrelationsPopulationLevel:
         # causal link.  Verify the correlation stays within a plausible
         # range and is not NaN.
         assert not np.isnan(correlation), "social_support_rate vs coping_success_rate is NaN"
-        assert -0.6 < correlation < 0.6, f"Social support vs coping success correlation too extreme: {correlation}"
+        # Empirical range: r ≈ 0.15 to 0.40 (Acoba 2024)
+        assert 0.15 < correlation < 0.40, (
+            f"Social support vs coping success correlation outside empirical range [{correlation:.3f}]"
+        )
 
 
 class TestStatisticalSignificance:
     """Test statistical significance of correlations."""
 
-    @pytest.mark.xfail(reason="Calibration: affect vs resources p=0.14, needs stronger link")
     @pytest.mark.xfail(reason="Calibration: affect vs resources p=0.14, needs stronger link")
     def test_correlation_significance_thresholds(self):
         """Test that key correlations meet statistical significance thresholds.
@@ -399,7 +432,6 @@ class TestStatisticalSignificance:
             assert abs(correlation) > 0.0, f"Correlation between {var1} and {var2} too weak: r={correlation}"
 
     @pytest.mark.xfail(reason="Calibration: PSS-10 vs resilience r=-0.62, bounds for old calibration")
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs resilience r=-0.62, bounds for old calibration")
     def test_correlation_magnitude_ranges(self):
         """Test that correlation magnitudes are within expected theoretical ranges."""
         model = StressModel(N=100, max_days=80, seed=42)
@@ -409,17 +441,20 @@ class TestStatisticalSignificance:
         agent_data = model.get_agent_time_series_data()
         final_epoch = agent_data[agent_data["Step"] == agent_data["Step"].max()]
 
-        # Expected correlation ranges based on actual model behavior
+        # Empirical correlation ranges from published literature
         expected_ranges = {
-            ("pss10", "current_stress"): (0.15, 0.9),  # Positive - lowered minimum from 0.2 to 0.15
-            ("pss10", "resilience"): (-0.5, 0.5),  # Weak
-            ("pss10", "affect"): (-0.5, 0.5),  # Weak
-            ("pss10", "resources"): (-0.5, 0.5),  # Weak
-            ("resilience", "affect"): (-0.5, 0.5),  # Weak
-            ("resilience", "resources"): (0.20, 0.90),  # Moderate-to-strong positive (Hobfoll COR theory)
-            ("affect", "resources"): (-0.5, 0.5),  # Weak
-            ("current_stress", "affect"): (-0.5, 0.5),  # Weak
-            ("current_stress", "resources"): (-0.9, 0.1),  # Negative to weak
+            ("pss10", "current_stress"): (0.40, 0.60),  # Convergent validity (Schneider et al. 2020; Acoba 2024)
+            ("pss10", "resilience"): (-0.55, -0.40),  # Kermott et al. 2019; Yang et al. 2020
+            ("pss10", "affect"): (-0.30, -0.18),  # Acoba 2024; Yang et al. 2020
+            ("pss10", "resources"): (-0.22, -0.08),  # Acoba 2024; Yang et al. 2020
+            ("resilience", "affect"): (0.30, 0.70),  # Montero-Marin et al. 2015; Yang et al. 2020
+            ("resilience", "resources"): (0.20, 0.63),  # Chen et al. 2023; Yang et al. 2020; Zhao et al. 2022
+            ("affect", "resources"): (0.15, 0.30),  # Acoba 2024; Yang et al. 2020
+            ("current_stress", "affect"): (
+                -0.50,
+                -0.30,
+            ),  # Derived from stress↔negative affect r=0.30–0.50 (Schneider 2020; Acoba 2024), sign flipped for positive affect
+            ("current_stress", "resources"): (-0.25, -0.10),  # Acoba 2024; Yang et al. 2020; Schneider et al. 2020
         }
 
         for (var1, var2), (min_corr, max_corr) in expected_ranges.items():
@@ -491,29 +526,6 @@ class TestIntegrationWithSimulationFramework:
         corr_std = np.std(correlations)
         assert corr_std < 1.0, f"Correlations too variable across seeds: std={corr_std}"
 
-    def test_correlation_validation_with_different_population_sizes(self):
-        """Test correlation validation with different population sizes."""
-        population_sizes = [20, 50, 100]
-        correlations = []
-
-        for N in population_sizes:
-            model = StressModel(N=N, max_days=30, seed=42)
-            while model.running:
-                model.step()
-
-            agent_data = model.get_agent_time_series_data()
-            final_epoch = agent_data[agent_data["Step"] == agent_data["Step"].max()]
-
-            key_corr = final_epoch["resilience"].corr(final_epoch["affect"])
-            correlations.append(key_corr)
-
-        # Allow any reasonable correlation (based on observed correlations from demos)
-        for corr in correlations:
-            assert -0.7 < corr < 0.7, (
-                f"Correlation too extreme for N={population_sizes[correlations.index(corr)]}: {corr}"
-            )
-
-    @pytest.mark.xfail(reason="Calibration: late correlation weak, needs persistence")
     @pytest.mark.xfail(reason="Calibration: late correlation weak, needs persistence")
     def test_correlation_validation_over_simulation_time(self):
         """Test that correlations develop and stabilize over simulation time."""

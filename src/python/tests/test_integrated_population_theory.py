@@ -22,7 +22,14 @@ from src.python.model import StressModel
 pytestmark = pytest.mark.xfail(reason="Calibration still in progress — mean ~17.2 (target 13-15), SD ~5.6 (target 6-8)")
 
 # ── Empirical correlation targets ─────────────────────────────────
-# Source: docs/plans/009-integrated-population-tests.md
+# Sources:
+#   Kermott et al. (2019) — PLOS ONE, 14(6), e0218092.
+#   Yang et al. (2020) — Frontiers in Psychiatry, 11, 588968.
+#   Acoba (2024) — Frontiers in Psychology, 15, 1330720.
+#   Montero-Marin et al. (2015) — Frontiers in Psychology, 6, 1895.
+#   Schneider et al. (2020) — IJC&HP, 20(2), 173-181.
+#   Chen et al. (2023) — Frontiers in Public Health, 11, 1207097.
+#   Zhao et al. (2022) — Meta-analysis (66 studies, N > 10,000).
 
 CORRELATION_TARGETS = [
     # (label, var1, var2, r_target, ci_lower, ci_upper, source)
@@ -30,46 +37,46 @@ CORRELATION_TARGETS = [
         "label": "PSS-10 vs Resilience",
         "var1": "pss10",
         "var2": "resilience",
-        "r_target": -0.57,
-        "ci_lower": -0.645,
-        "ci_upper": -0.485,
-        "source": "Thomas & Zolkoski 2020",
+        "r_target": -0.475,
+        "ci_lower": -0.55,
+        "ci_upper": -0.40,
+        "source": "Kermott et al. 2019; Yang et al. 2020",
     },
     {
         "label": "PSS-10 vs Stress",
         "var1": "pss10",
         "var2": "current_stress",
-        "r_target": 0.295,
-        "ci_lower": 0.09,
-        "ci_upper": 0.55,
-        "source": "Cohen, Kamarck & Mermelstein 1983",
+        "r_target": 0.50,
+        "ci_lower": 0.40,
+        "ci_upper": 0.60,
+        "source": "Schneider et al. 2020; Acoba 2024",
     },
     {
         "label": "PSS-10 vs Affect",
         "var1": "pss10",
         "var2": "affect",
-        "r_target": -0.176,
-        "ci_lower": -0.267,
-        "ci_upper": -0.082,
-        "source": "Acoba 2024",
+        "r_target": -0.24,
+        "ci_lower": -0.30,
+        "ci_upper": -0.18,
+        "source": "Acoba 2024; Yang et al. 2020",
     },
     {
         "label": "PSS-10 vs Resources",
         "var1": "pss10",
         "var2": "resources",
-        "r_target": -0.180,
-        "ci_lower": -0.270,
-        "ci_upper": -0.086,
-        "source": "Acoba 2024",
+        "r_target": -0.15,
+        "ci_lower": -0.22,
+        "ci_upper": -0.08,
+        "source": "Acoba 2024; Yang et al. 2020",
     },
     {
         "label": "Resources vs Stress",
         "var1": "resources",
         "var2": "current_stress",
-        "r_target": -0.180,
-        "ci_lower": -0.270,
-        "ci_upper": -0.086,
-        "source": "Acoba 2024",
+        "r_target": -0.175,
+        "ci_lower": -0.25,
+        "ci_upper": -0.10,
+        "source": "Acoba 2024; Yang et al. 2020; Schneider et al. 2020",
     },
     {
         "label": "Coping vs Challenge",
@@ -98,6 +105,15 @@ CORRELATION_TARGETS = [
         "ci_upper": 0.336,
         "source": "Acoba 2024",
     },
+    {
+        "label": "Resilience vs Resources",
+        "var1": "resilience",
+        "var2": "resources",
+        "r_target": 0.415,
+        "ci_lower": 0.20,
+        "ci_upper": 0.63,
+        "source": "Chen et al. 2023; Yang et al. 2020; Zhao et al. 2022",
+    },
     # NOTE: Montero-Marin 2015 reports SEM gamma coefficients, not Pearson r.
     # These require standardized regression coefficient comparison, not Pearson CI.
     # Skipped in parametrized test — tested separately via direction check.
@@ -119,10 +135,10 @@ CORRELATION_TARGETS = [
         "label": "Affect vs Resources",
         "var1": "affect",
         "var2": "resources",
-        "r_target": 0.249,
-        "ci_lower": 0.158,
-        "ci_upper": 0.336,
-        "source": "Acoba 2024",
+        "r_target": 0.225,
+        "ci_lower": 0.15,
+        "ci_upper": 0.30,
+        "source": "Acoba 2024; Yang et al. 2020",
     },
 ]
 
@@ -266,6 +282,7 @@ class TestEmpiricalCorrelations:
             ("pss10", "affect", -1, "PSS-10 vs Affect should be negative"),
             ("pss10", "resources", -1, "PSS-10 vs Resources should be negative"),
             ("resilience", "affect", 1, "Resilience vs Affect should be positive"),
+            ("resilience", "resources", 1, "Resilience vs Resources should be positive"),
             ("affect", "resources", 1, "Affect vs Resources should be positive"),
         ]
 
