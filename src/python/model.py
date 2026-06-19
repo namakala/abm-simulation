@@ -31,6 +31,24 @@ def _compute_coping_success(agent) -> float:
     return successes / len(stress_events)
 
 
+def _compute_mean_hindrance(agent) -> float:
+    """Average hindrance for stressed events only (matches coping_success denominator)."""
+    events = getattr(agent, "last_daily_stress_events", [])
+    stress_events = [e for e in events if e.get("is_stressed", False)]
+    if not stress_events:
+        return 0.0
+    return float(np.mean([e.get("hindrance", 0.0) for e in stress_events]))
+
+
+def _compute_mean_challenge(agent) -> float:
+    """Average challenge for stressed events only (matches coping_success denominator)."""
+    events = getattr(agent, "last_daily_stress_events", [])
+    stress_events = [e for e in events if e.get("is_stressed", False)]
+    if not stress_events:
+        return 0.0
+    return float(np.mean([e.get("challenge", 0.0) for e in stress_events]))
+
+
 # Initialize the model
 
 
@@ -222,14 +240,8 @@ class StressModel(mesa.Model):
             "consecutive_hindrances": lambda a: getattr(a, "consecutive_hindrances", 0),  # Consecutive hindrance events
             # Derived metrics from daily event aggregation
             "coping_success": _compute_coping_success,
-            "challenge_appraisal": lambda a: (
-                sum(e.get("challenge", 0.0) for e in getattr(a, "last_daily_stress_events", []))
-                / max(len(getattr(a, "last_daily_stress_events", [])), 1)
-            ),
-            "hindrance_appraisal": lambda a: (
-                sum(e.get("hindrance", 0.0) for e in getattr(a, "last_daily_stress_events", []))
-                / max(len(getattr(a, "last_daily_stress_events", [])), 1)
-            ),
+            "challenge_appraisal": _compute_mean_challenge,
+            "hindrance_appraisal": _compute_mean_hindrance,
             "interaction_frequency": lambda a: getattr(a, "last_daily_interactions", 0),  # Daily interaction count
         }
 

@@ -19,9 +19,7 @@ sys.path.append(".")
 
 from src.python.model import StressModel
 
-pytestmark = pytest.mark.xfail(
-    reason="Needs config defaults updated in .env — PSS-10 distribution fix applied to code, .env values override"
-)
+pytestmark = pytest.mark.xfail(reason="Calibration still in progress — mean ~17.2 (target 13-15), SD ~5.6 (target 6-8)")
 
 # ── Empirical correlation targets ─────────────────────────────────
 # Source: docs/plans/009-integrated-population-tests.md

@@ -48,9 +48,9 @@ class TestAgentPSS10Initialization:
         assert isinstance(agent.pss10_responses, dict)
         assert len(agent.pss10_responses) == 10
 
-        # Check that current_stress is initialized from stress dimensions
-        # Formula: (stress_overload + (1.0 - stress_controllability)) / 2.0
-        expected_stress = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
+        # Check that current_stress is initialized from stress dimensions with dampening
+        stress_before = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
+        expected_stress = stress_before * 0.5  # config default pss10_stress_dampening=0.5
         assert abs(agent.current_stress - expected_stress) < 1e-6
 
         # Check that all PSS-10 responses are valid
@@ -367,15 +367,51 @@ class TestPSS10StressMechanismIntegration:
         if agent.pss10 == 40:
             assert agent.current_stress == 1.0
 
-        # Stress is computed from dimensions, not from pss10/40.0
+        # Stress is computed from dimensions with config dampening
         expected_stress = compute_stress_from_pss10(
             stress_controllability=agent.stress_controllability,
             stress_overload=agent.stress_overload,
+            dampening=0.5,  # matches config default pss10_stress_dampening
         )
         assert abs(agent.current_stress - expected_stress) < 1e-10
 
         # Ensure stress is always in valid range
         assert 0.0 <= agent.current_stress <= 1.0
+
+
+class TestPSS10ResilienceCoupling:
+    """Test resilience-coupled PSS-10 bias (issue #5)."""
+
+    def test_resilience_negatively_correlated_with_pss10(self):
+        """Test that higher resilience leads to lower PSS-10 scores on average."""
+        agents = []
+        for i in range(200):
+            model = Mock()
+            model.seed = i
+            agent = Person(model)
+            agents.append(agent)
+
+        resiliences = [a.resilience for a in agents]
+        pss10_scores = [a.pss10 for a in agents]
+        r = float(np.corrcoef(resiliences, pss10_scores)[0, 1])
+
+        # Should be clearly negative (theory: higher resilience → lower PSS-10)
+        assert r < -0.3, f"Resilience-PSS10 correlation r={r:.3f} should be negative"
+
+    def test_pss10_bias_updated_to_resilience_coupled(self):
+        """Test that pss10_bias exists and PSS-10 score is computed correctly."""
+        model = Mock()
+        model.seed = 42
+        agent = Person(model)
+
+        # Bias should exist
+        assert hasattr(agent, "pss10_bias")
+
+        # Score should be in valid range
+        assert 0 <= agent.pss10 <= 40
+
+        # Score should be int
+        assert isinstance(agent.pss10, int)
 
 
 def run_all_tests():

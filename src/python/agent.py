@@ -275,10 +275,10 @@ def process_pss10_consolidation(
     alpha = get_assumptions().stress.pss10_smoothing_alpha
     new_smoothed = smooth_pss10_across_days(consolidated_pss10, prev_smoothed, alpha)
 
-    # Bias is only applied at initialization, not re-applied daily.
-    # Smoothed PSS-10 evolves from event-driven scores and quiet-day
-    # regeneration, staying coupled to stress dimensions.
-    final_pss10 = int(round(max(0.0, min(40.0, new_smoothed))))
+    # Apply stored pss10_bias (resilience coupling + noise, set at initialization).
+    # This creates persistent between-person variance from trait-level buffering.
+    adjusted_pss10 = new_smoothed + state.get("pss10_bias", 0.0)
+    final_pss10 = int(round(max(0.0, min(40.0, adjusted_pss10))))
 
     # ── Update stressed status ────────────────────────────────────
     stressed = final_pss10 >= pss10_threshold
@@ -532,11 +532,16 @@ class Person(mesa.Agent):
         self.stress_controllability = pss10_data["stress_controllability"]
         self.stress_overload = pss10_data["stress_overload"]
 
-        # Persistent between-person PSS-10 bias drawn from N(0, 2.0)
-        # This creates moderate cross-sectional variance without trait-derived
-        # decorrelation. Applied once at initialization, NOT re-applied daily.
-        self.pss10_bias = self._rng.normal(0, 2.0)
-        # Apply bias to initial PSS-10 score
+        # Persistent between-person PSS-10 bias drawn from normal distribution
+        # with direct resilience penalty for theory-consistent shared variance.
+        # Higher resilience → lower PSS-10 score.
+        # Applied once at initialization, NOT re-applied daily.
+        coupling = config.get("pss10", "pss10_resilience_coupling")
+        bias_sd = config.get("pss10", "pss10_bias_sd")
+        resilience_dev = self.resilience - 0.5  # centered at sigmoid midpoint
+        resilience_penalty = -coupling * resilience_dev  # negative: high res → lower score
+        noise_term = self._rng.normal(0.0, bias_sd)
+        self.pss10_bias = resilience_penalty + noise_term
         self.pss10 = int(round(max(0.0, min(40.0, self.pss10 + self.pss10_bias))))
         self.pss10_smoothed = float(self.pss10)
 
@@ -956,8 +961,11 @@ class Person(mesa.Agent):
         This implements Step 3 of the PSS-10 workflow: using the initialized PSS-10 score
         to set the initial current_stress level for the agent.
         """
+        dampening = config.get("pss10", "pss10_stress_dampening")
         self.current_stress = compute_stress_from_pss10(
-            stress_controllability=self.stress_controllability, stress_overload=self.stress_overload
+            stress_controllability=self.stress_controllability,
+            stress_overload=self.stress_overload,
+            dampening=dampening,
         )
 
     def _update_stress_from_daily_pss10(self, daily_pss10_score):

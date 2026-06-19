@@ -244,10 +244,16 @@ class Config:
         # PSS-10 SCORE GENERATION PARAMETERS
         # ==============================================
         self.pss10_item_means = self._get_env_array(
-            "PSS10_ITEM_MEAN", float, [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5], expected_length=10
+            "PSS10_ITEM_MEAN",
+            float,
+            [1.43, 1.38, 1.51, 1.31, 1.50, 1.40, 1.43, 1.60, 1.14, 1.31],
+            expected_length=10,
         )
         self.pss10_item_sds = self._get_env_array(
-            "PSS10_ITEM_SD", float, [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8], expected_length=10
+            "PSS10_ITEM_SD",
+            float,
+            [0.89, 0.89, 0.93, 0.92, 0.80, 0.78, 0.78, 0.88, 0.91, 0.93],
+            expected_length=10,
         )
 
         # PSS-10 bifactor model parameters
@@ -268,7 +274,11 @@ class Config:
 
         # PSS-10 bifactor model scaling parameters (phase 2)
         self.pss10_scale = self._get_env_value("PSS10_SCALE", float, 3.5)
-        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 2.0)
+        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 3.5)
+        self.pss10_skew_a = self._get_env_value("PSS10_SKEW_A", float, 3.0)
+        self.pss10_bias_sd = self._get_env_value("PSS10_BIAS_SD", float, 4.0)
+        self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 10.0)
+        self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 0.5)
 
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value("COPING_BASE_PROBABILITY", float, 0.5)
@@ -638,6 +648,10 @@ class Config:
                 "momentum_weight": self._get_env_value("PSS10_MOMENTUM_WEIGHT", float, 0.3),
                 "pss10_scale": self.pss10_scale,
                 "pss10_noise_sd": self.pss10_noise_sd,
+                "pss10_skew_a": self.pss10_skew_a,
+                "pss10_bias_sd": self.pss10_bias_sd,
+                "pss10_resilience_coupling": self.pss10_resilience_coupling,
+                "pss10_stress_dampening": self.pss10_stress_dampening,
             },
             "interaction": {
                 "influence_rate": self.interaction_influence_rate,

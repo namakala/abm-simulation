@@ -442,6 +442,64 @@ def test_get_agent_time_series_data_with_error():
             assert not df.empty
 
 
+class TestCopingHindranceDenominator:
+    """Test that coping_success, hindrance_appraisal, challenge_appraisal
+    all use stressed-only events (no metric mismatch)."""
+
+    @pytest.mark.unit
+    def test_compute_mean_hindrance_exists(self):
+        """_compute_mean_hindrance is a callable in model module."""
+        from src.python.model import _compute_mean_hindrance
+
+        assert callable(_compute_mean_hindrance)
+
+    @pytest.mark.unit
+    def test_compute_mean_challenge_exists(self):
+        """_compute_mean_challenge is a callable in model module."""
+        from src.python.model import _compute_mean_challenge
+
+        assert callable(_compute_mean_challenge)
+
+    @pytest.mark.unit
+    def test_denominator_consistency(self):
+        """All three functions only count stressed events."""
+        from src.python.model import _compute_coping_success, _compute_mean_hindrance, _compute_mean_challenge
+
+        events = [
+            {"is_stressed": False, "hindrance": 0.1, "challenge": 0.5, "coped_successfully": True},
+            {"is_stressed": True, "hindrance": 0.6, "challenge": 0.2, "coped_successfully": True},
+            {"is_stressed": True, "hindrance": 0.8, "challenge": 0.1, "coped_successfully": False},
+        ]
+        mock = MagicMock()
+        mock.last_daily_stress_events = events
+
+        # Only the 2 stressed events should be counted
+        coping = _compute_coping_success(mock)
+        assert coping == 0.5, f"coping_success = {coping}, expected 0.5"
+
+        hindrance = _compute_mean_hindrance(mock)
+        assert hindrance == pytest.approx(0.7), f"hindrance = {hindrance}, expected 0.7"
+
+        challenge = _compute_mean_challenge(mock)
+        assert challenge == pytest.approx(0.15), f"challenge = {challenge}, expected 0.15"
+
+    @pytest.mark.unit
+    def test_no_stressed_events_returns_zero(self):
+        """All three return 0.0 when no stressed events exist."""
+        from src.python.model import _compute_coping_success, _compute_mean_hindrance, _compute_mean_challenge
+
+        events = [
+            {"is_stressed": False, "hindrance": 0.1, "challenge": 0.5, "coped_successfully": True},
+            {"is_stressed": False, "hindrance": 0.2, "challenge": 0.4, "coped_successfully": True},
+        ]
+        mock = MagicMock()
+        mock.last_daily_stress_events = events
+
+        assert _compute_coping_success(mock) == 0.0
+        assert _compute_mean_hindrance(mock) == 0.0
+        assert _compute_mean_challenge(mock) == 0.0
+
+
 class TestDailyCopingSupportCorr:
     """Tests for the daily_coping_support_corr model reporter."""
 

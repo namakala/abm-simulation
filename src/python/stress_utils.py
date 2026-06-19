@@ -483,6 +483,7 @@ def generate_pss10_item_response(
     overload_score: float,
     pss10_scale: float = 3.5,
     pss10_noise_sd: float = 1.15,
+    pss10_skew_a: float = 0.0,
     rng: Optional[np.random.Generator] = None,
 ) -> int:
     """
@@ -524,7 +525,9 @@ def generate_pss10_item_response(
     )
 
     # Measurement noise proportional to empirical item SD
-    raw = rng.normal(adjusted_mean, item_sd * pss10_noise_sd)
+    # Clamping at [0,4] creates natural right skew for items with means near 0
+    scale = item_sd * pss10_noise_sd
+    raw = rng.normal(adjusted_mean, scale)
 
     # Clamp to [0,4] and round to nearest integer
     return int(round(max(0.0, min(4.0, raw))))
@@ -565,6 +568,7 @@ def generate_pss10_responses(
             "bifactor_correlation": cfg.get("pss10", "bifactor_correlation"),
             "pss10_scale": cfg.get("pss10", "pss10_scale"),
             "pss10_noise_sd": cfg.get("pss10", "pss10_noise_sd"),
+            "pss10_skew_a": cfg.get("pss10", "pss10_skew_a"),
         }
 
     # Generate correlated dimension scores
@@ -601,6 +605,7 @@ def generate_pss10_responses(
             overload_score=correlated_overload,
             pss10_scale=config.get("pss10_scale", 3.5),
             pss10_noise_sd=config.get("pss10_noise_sd", 1.15),
+            pss10_skew_a=config.get("pss10_skew_a", 0.0),
             rng=rng,
         )
 
@@ -636,13 +641,22 @@ def initialize_pss10_from_items(
             "item_means": cfg.get("pss10", "item_means"),
             "item_sds": cfg.get("pss10", "item_sds"),
             "threshold": cfg.get("pss10", "threshold"),
+            "pss10_noise_sd": cfg.get("pss10", "pss10_noise_sd"),
+            "pss10_skew_a": cfg.get("pss10", "pss10_skew_a"),
         }
 
     # Generate each PSS-10 item response directly from item parameters
     pss10_responses = {}
     for item_num in range(1, 11):
         idx = item_num - 1
-        raw = rng.normal(config["item_means"][idx], config["item_sds"][idx])
+        item_mean = config["item_means"][idx]
+        item_sd = config["item_sds"][idx]
+        pss10_noise_sd = config.get("pss10_noise_sd", 2.0)
+        scale = item_sd * pss10_noise_sd
+
+        # Normal draw (clamping at [0,4] creates natural right skew)
+        raw = rng.normal(item_mean, scale)
+
         pss10_responses[item_num] = int(round(max(0.0, min(4.0, raw))))
 
     # Derive stress_controllability from items 4, 5, 7, 8
@@ -847,21 +861,27 @@ def update_stress_dimensions_from_pss10_feedback(
     return updated_controllability, updated_overload
 
 
-def compute_stress_from_pss10(stress_controllability: float, stress_overload: float) -> float:
+def compute_stress_from_pss10(
+    stress_controllability: float,
+    stress_overload: float,
+    dampening: float = 1.0,
+) -> float:
     """
     Compute stress level from PSS-10 dimensions using improved correlation formula.
 
     This function calculates stress_level as the mean of overload and the
-    inverted controllability.
+    inverted controllability, optionally dampened to weaken the stress cascade.
 
     Args:
         stress_controllability: Current stress controllability dimension ∈ [0,1]
         stress_overload: Current stress overload dimension ∈ [0,1]
+        dampening: Scaling factor for stress level (1.0 = no change, 0.5 = half)
 
     Returns:
         Computed stress level ∈ [0,1]
     """
     stress_level = (stress_overload + (1.0 - stress_controllability)) / 2.0
+    stress_level = stress_level * dampening
     return clamp(stress_level, 0.0, 1.0)
 
 
