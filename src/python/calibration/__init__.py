@@ -13,10 +13,27 @@ from src.python.calibration.calibrate_pss10_population import (
     run_verification_tests,
 )
 
+from src.python.calibration.correlation_sweep import (
+    compute_correlation_metrics,
+    run_sweep,
+    print_results,
+    SweepResult,
+    CORRELATION_TARGETS,
+    SWEEP_PARAMS,
+    FIXED_OVERRIDES,
+)
+
 __all__ = [
     "run_calibration",
     "compute_pss10_population_stats",
     "DEFAULT_CALIBRATION_PARAMS",
     "persist_calibration_results",
     "run_verification_tests",
+    "compute_correlation_metrics",
+    "run_sweep",
+    "print_results",
+    "SweepResult",
+    "CORRELATION_TARGETS",
+    "SWEEP_PARAMS",
+    "FIXED_OVERRIDES",
 ]
