@@ -58,7 +58,7 @@ from src.python.model import StressModel
 class TestTheoreticalCorrelationsAgentLevel:
     """Test theoretical correlations at the agent level."""
 
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs stress r~0.20, needs stronger coupling")
+    @pytest.mark.xfail(reason="Calibration: PSS-10 vs stress r~0.17-0.35, needs stronger coupling at small N")
     def test_pss10_stress_positive_correlation(self):
         """Test that PSS-10 scores positively correlate with current stress levels."""
         seeds = [42, 123, 456]
@@ -91,7 +91,7 @@ class TestTheoreticalCorrelationsAgentLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs resilience r=-0.63, bounds for old calibration")
+    @pytest.mark.xfail(reason="Calibration: PSS-10 vs resilience r=-0.31, bounds for calibration")
     def test_pss10_resilience_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resilience.
 
