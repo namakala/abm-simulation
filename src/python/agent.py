@@ -236,10 +236,15 @@ def process_pss10_consolidation(
 
     # ── Consolidate ───────────────────────────────────────────────
     if daily_pss10_scores:
-        # Compute new stress from PSS-10 dimensions
+        # Compute new stress from PSS-10 dimensions with same affect/resilience/
+        # resources modulation that generate_pss10_from_stress_dimensions uses.
+        # This aligns current_stress with the PSS-10 score's shared variance.
         new_stress_level = compute_stress_from_pss10(
             stress_controllability=stress_controllability,
             stress_overload=stress_overload,
+            affect=state.get("affect", 0.0),
+            resources=state.get("resources", 0.5),
+            resilience=state.get("resilience", 0.5),
         )
         smoothing_factor = 0.7
         current_stress = smoothing_factor * new_stress_level + (1.0 - smoothing_factor) * current_stress

@@ -56,13 +56,13 @@ class AssumptionCopingConfig:
     """
 
     resource_reward: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_REWARD", 0.10))
-    resource_penalty: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_PENALTY", 0.20))
+    resource_penalty: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_PENALTY", 0.10))
     pf_allocation_fraction: float = field(default_factory=lambda: _env_float("ASSUMPTION_PF_ALLOCATION_FRACTION", 0.15))
     affect_improvement_scale: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_AFFECT_IMPROVEMENT_SCALE", 0.2)
     )
     affect_deterioration_scale: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_DETERIORATION_SCALE", 0.4)
+        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_DETERIORATION_SCALE", 0.5)
     )
     resilience_improvement_scale: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_IMPROVEMENT_SCALE", 0.15)
@@ -92,10 +92,10 @@ class AssumptionCopingConfig:
         default_factory=lambda: _env_float("ASSUMPTION_FAILURE_STRESS_INCREASE", 0.3)
     )
     social_support_factor: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", 0.15)
+        default_factory=lambda: _env_float("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", 0.30)
     )
     support_boost_factor: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.10)
+        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.20)
     )
     success_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_SUCCESS_AFFECT_CHANGE", 0.2))
     failure_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_FAILURE_AFFECT_CHANGE", -0.4))
@@ -174,6 +174,7 @@ class AssumptionStressConfig:
     resilience_homeostatic_rate: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE", 0.35)
     )
+    stress_decay_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_STRESS_DECAY_RATE", 0.10))
 
 
 @dataclass(frozen=True)
@@ -194,7 +195,7 @@ class AssumptionResourceConfig:
     )
     min_cost_floor: float = field(default_factory=lambda: _env_float("ASSUMPTION_MIN_COST_FLOOR", 0.3))
     failed_coping_cost_penalty: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_FAILED_COPING_COST_PENALTY", 1.3)
+        default_factory=lambda: _env_float("ASSUMPTION_FAILED_COPING_COST_PENALTY", 0.8)
     )
     max_efficiency_gain: float = field(default_factory=lambda: _env_float("ASSUMPTION_MAX_EFFICIENCY_GAIN", 0.3))
     social_resilience_boost_factor: float = field(
@@ -232,7 +233,7 @@ class AssumptionResourceConfig:
         default_factory=lambda: _env_float("ASSUMPTION_EXCHANGE_AMOUNT_REDUCTION", 0.5)
     )
     affect_regeneration_multiplier: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", 0.1)
+        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", 0.03)
     )
     resilience_regeneration_multiplier: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_REGENERATION_MULTIPLIER", 0.05)

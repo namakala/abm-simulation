@@ -568,7 +568,7 @@ class TestCompleteStressProcessingLoop:
         # Test Step 3: Initial stress level should be based on PSS-10 score
         initial_stress = agent.current_stress
         expected_initial_stress = compute_stress_from_pss10(
-            agent.stress_controllability, agent.stress_overload, dampening=0.5
+            agent.stress_controllability, agent.stress_overload, dampening=1.0
         )
         assert abs(initial_stress - expected_initial_stress) < 1e-2, (
             "Step 3 failed: Initial stress should be based on PSS-10"

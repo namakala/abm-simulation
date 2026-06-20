@@ -865,24 +865,43 @@ def compute_stress_from_pss10(
     stress_controllability: float,
     stress_overload: float,
     dampening: float = 1.0,
+    affect: float = 0.0,
+    resources: float = 0.5,
+    resilience: float = 0.5,
 ) -> float:
     """
     Compute stress level from PSS-10 dimensions using improved correlation formula.
 
-    This function calculates stress_level as the mean of overload and the
-    inverted controllability, optionally dampened to weaken the stress cascade.
+    Applies the same affect/resilience/resources modulation that
+    ``generate_pss10_from_stress_dimensions`` uses, ensuring ``current_stress``
+    shares variance with PSS-10 through the same protective-factor pathways.
 
     Args:
         stress_controllability: Current stress controllability dimension ∈ [0,1]
         stress_overload: Current stress overload dimension ∈ [0,1]
         dampening: Scaling factor for stress level (1.0 = no change, 0.5 = half)
+        affect: Agent affect (-1 to 1), modulates perceived controllability
+        resources: Agent resources (0-1), buffers perceived overload
+        resilience: Agent resilience (0-1), buffers perceived stress
 
     Returns:
         Computed stress level ∈ [0,1]
     """
-    stress_level = (stress_overload + (1.0 - stress_controllability)) / 2.0
+    # Apply same protective-factor modulation as generate_pss10_from_stress_dimensions
+    # so current_stress shares variance with PSS-10 through affect/resilience/resources.
+    affect_influence = affect * 0.35
+    resource_buffer = resources * 0.25
+    resilience_influence = (resilience - 0.5) * 0.60
+
+    modulated_controllability = stress_controllability + affect_influence + resource_buffer + resilience_influence
+    modulated_controllability = max(0.0, min(1.0, modulated_controllability))
+
+    modulated_overload = stress_overload - affect_influence - resource_buffer - resilience_influence
+    modulated_overload = max(0.0, min(1.0, modulated_overload))
+
+    stress_level = (modulated_overload + (1.0 - modulated_controllability)) / 2.0
     stress_level = stress_level * dampening
-    return clamp(stress_level, 0.0, 1.0)
+    return max(0.0, min(1.0, stress_level))
 
 
 def update_stress_dimensions_from_event(

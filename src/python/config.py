@@ -238,7 +238,7 @@ class Config:
 
         self.stress_alpha_challenge = self._get_env_value("STRESS_ALPHA_CHALLENGE", float, 0.8)
         self.stress_alpha_hindrance = self._get_env_value("STRESS_ALPHA_HINDRANCE", float, 1.2)
-        self.stress_delta = self._get_env_value("STRESS_DELTA", float, 0.2)
+        self.stress_delta = self._get_env_value("STRESS_DELTA", float, 0.4)
 
         # ==============================================
         # PSS-10 SCORE GENERATION PARAMETERS
@@ -274,11 +274,11 @@ class Config:
 
         # PSS-10 bifactor model scaling parameters (phase 2)
         self.pss10_scale = self._get_env_value("PSS10_SCALE", float, 3.5)
-        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 3.5)
+        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 1.0)
         self.pss10_skew_a = self._get_env_value("PSS10_SKEW_A", float, 3.0)
-        self.pss10_bias_sd = self._get_env_value("PSS10_BIAS_SD", float, 4.0)
-        self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 10.0)
-        self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 0.5)
+        self.pss10_bias_sd = self._get_env_value("PSS10_BIAS_SD", float, 1.0)
+        self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 2.0)
+        self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 1.0)
 
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value("COPING_BASE_PROBABILITY", float, 0.5)
