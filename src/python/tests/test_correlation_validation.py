@@ -327,7 +327,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
     @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg affect r=-0.31, target [-0.30, -0.18]")
     def test_avg_pss10_avg_affect_negative_correlation(self):
         """Test that average PSS-10 negatively correlates with average affect over time."""
-        model = StressModel(N=30, max_days=100, seed=42)
+        model = StressModel(N=50, max_days=100, seed=42)
         while model.running:
             model.step()
 
@@ -346,7 +346,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
     @pytest.mark.xfail(reason="Calibration: avg resilience vs avg affect r=0.77, target [0.30, 0.70]")
     def test_avg_resilience_avg_affect_positive_correlation(self):
         """Test that average resilience positively correlates with average affect over time."""
-        model = StressModel(N=30, max_days=100, seed=42)
+        model = StressModel(N=50, max_days=100, seed=42)
         while model.running:
             model.step()
 
@@ -362,7 +362,9 @@ class TestTheoreticalCorrelationsPopulationLevel:
         _, p_value = stats.pearsonr(model_data["avg_resilience"], model_data["avg_affect"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
-    @pytest.mark.xfail(reason="Calibration: social support vs coping success r=0.08, target [0.15, 0.40]")
+    @pytest.mark.xfail(
+        reason="Calibration: social support vs coping success r=0.09-0.15 at N=50, needs stronger causal coupling"
+    )
     def test_social_support_coping_success_correlation(self):
         """Test correlation between social support rate and coping success rate.
 
@@ -371,7 +373,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
         short simulations — resulting in NaN correlation.  This test verifies
         the data is present and handles the zero-variance edge case.
         """
-        model = StressModel(N=30, max_days=100, seed=42)
+        model = StressModel(N=50, max_days=100, seed=42)
         while model.running:
             model.step()
 
@@ -508,7 +510,7 @@ class TestIntegrationWithSimulationFramework:
         correlations = []
 
         for seed in seeds:
-            model = StressModel(N=30, max_days=30, seed=seed)
+            model = StressModel(N=50, max_days=30, seed=seed)
             while model.running:
                 model.step()
 
@@ -526,10 +528,9 @@ class TestIntegrationWithSimulationFramework:
         corr_std = np.std(correlations)
         assert corr_std < 1.0, f"Correlations too variable across seeds: std={corr_std}"
 
-    @pytest.mark.xfail(reason="Calibration: late correlation weak, needs persistence")
     def test_correlation_validation_over_simulation_time(self):
         """Test that correlations develop and stabilize over simulation time."""
-        model = StressModel(N=30, max_days=50, seed=42)
+        model = StressModel(N=50, max_days=50, seed=42)
 
         correlations_over_time = []
         for step in range(10, 51, 10):  # Check every 10 steps
