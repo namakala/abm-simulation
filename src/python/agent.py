@@ -620,13 +620,11 @@ class Person(mesa.Agent):
                     state = self._apply_delta(state, activation_result["state_delta"])
                     coped_successfully = activation_result["observation"].get("coped_successfully", False)
 
-                    # Accumulate PSS-10 using partial moving average (Plan 011)
-                    from src.python.stress_utils import append_daily_pss10_score
-
+                    # Accumulate PSS-10 (Fix 6 — direct append, no asymmetric blending)
                     current_pss10 = state.get("pss10", 0)
                     if current_pss10 > 0:
                         daily_scores = list(state.get("daily_pss10_scores", []))
-                        daily_scores = append_daily_pss10_score(daily_scores, current_pss10)
+                        daily_scores.append(current_pss10)
                         state["daily_pss10_scores"] = daily_scores
 
                 # Append to daily stress events for model-level aggregation
