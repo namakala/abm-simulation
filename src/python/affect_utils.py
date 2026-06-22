@@ -65,6 +65,7 @@ class AffectDynamicsConfig:
     )
     homeostatic_rate: float = field(default_factory=lambda: get_assumptions().stress.affect_homeostatic_rate)
     influencing_neighbors: int = field(default_factory=lambda: get_config().get("influence", "influencing_neighbors"))
+    stress_erosion_rate: float = 0.30  # Mechanism coefficient: max stress erodes affect by up to 0.30
 
 
 @dataclass
@@ -1164,9 +1165,11 @@ def update_affect_dynamics(
     challenge: float = 0.0,
     hindrance: float = 0.0,
     affect_config: Optional[AffectDynamicsConfig] = None,
+    current_stress: float = 0.0,
 ) -> float:
     """
-    Update agent's affect based on peer influence, event appraisal, and homeostasis.
+    Update agent's affect based on peer influence, event appraisal, homeostasis,
+    and stress erosion (Fix 3 — direct stress->affect pathway).
 
     Args:
         current_affect: Agent's current affect
@@ -1175,6 +1178,7 @@ def update_affect_dynamics(
         challenge: Challenge component from recent events
         hindrance: Hindrance component from recent events
         affect_config: Affect dynamics configuration
+        current_stress: Current accumulated stress level (0-1), erodes affect
 
     Returns:
         New affect value
@@ -1187,8 +1191,11 @@ def update_affect_dynamics(
     appraisal_effect = compute_event_appraisal_effect(challenge, hindrance, current_affect, affect_config)
     homeostasis_effect = compute_homeostasis_effect(current_affect, baseline_affect, affect_config)
 
+    # Stress erosion effect on affect (Fix 3) — direct negative path
+    stress_erosion = -affect_config.stress_erosion_rate * current_stress
+
     # Combine all effects
-    total_effect = peer_effect + appraisal_effect + homeostasis_effect
+    total_effect = peer_effect + appraisal_effect + homeostasis_effect + stress_erosion
 
     # Apply the change
     new_affect = current_affect + total_effect

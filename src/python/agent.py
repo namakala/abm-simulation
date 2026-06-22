@@ -26,8 +26,6 @@ from src.python.affect_utils import (
     update_resilience_dynamics,
     AffectDynamicsConfig,
     ResilienceDynamicsConfig,
-    compute_resource_regeneration,
-    ResourceParams,
     compute_homeostatic_adjustment,
     scale_homeostatic_rate,
     StressProcessingConfig,
@@ -117,6 +115,7 @@ def process_affect_dynamics(
         challenge=daily_challenge,
         hindrance=daily_hindrance,
         affect_config=affect_cfg,
+        current_stress=current_stress,  # Fix 3 — direct stress->affect pathway
     )
 
     # ── 2. Resilience dynamics + PF boost ─────────────────────────
@@ -137,21 +136,14 @@ def process_affect_dynamics(
     )
     new_resilience = min(1.0, new_resilience + protective_boost)
 
-    # ── 3. Resource regeneration ──────────────────────────────────
-    cfg = get_config()
-    regen_params = ResourceParams(base_regeneration=cfg.get("resource", "base_regeneration"))
-    affect_mult = 1.0 + 0.25 * max(0.0, new_affect)
-    resil_mult = 1.0 + 0.20 * new_resilience
-    base_regeneration = compute_resource_regeneration(resources, regen_params)
-    new_resources = resources + base_regeneration * affect_mult * resil_mult
-    new_resources = min(1.0, max(0.0, new_resources))
+    # Resource regeneration moved to resource_allocation phase (Fix 2a — no duplication).
 
     # ── 4. Social resilience optimisation ─────────────────────────
     new_resilience = integrate_social_resilience_optimization(
         current_resilience=new_resilience,
         daily_interactions=daily_interactions,
         daily_support_exchanges=daily_support_exchanges,
-        resources=new_resources,
+        resources=resources,
         baseline_resilience=baseline_resilience,
         protective_factors=protective_factors,
         rng=rng,
@@ -166,8 +158,8 @@ def process_affect_dynamics(
     affect_homeostatic_rate = get_assumptions().stress.affect_homeostatic_rate
     resilience_homeostatic_rate = get_assumptions().stress.resilience_homeostatic_rate
 
-    scaled_affect_rate = scale_homeostatic_rate(affect_homeostatic_rate, new_resources, current_stress)
-    scaled_resilience_rate = scale_homeostatic_rate(resilience_homeostatic_rate, new_resources, current_stress)
+    scaled_affect_rate = scale_homeostatic_rate(affect_homeostatic_rate, resources, current_stress)
+    scaled_resilience_rate = scale_homeostatic_rate(resilience_homeostatic_rate, resources, current_stress)
 
     new_affect = compute_homeostatic_adjustment(
         initial_value=baseline_affect,
@@ -187,7 +179,7 @@ def process_affect_dynamics(
     state_delta = {
         "affect": new_affect,
         "resilience": new_resilience,
-        "resources": new_resources,
+        "resources": resources,  # unchanged — resource_allocation handles regeneration
         "consecutive_hindrances": new_consecutive_hindrances,
     }
 
@@ -197,7 +189,6 @@ def process_affect_dynamics(
             "mean": float(np.mean(neighbor_affects)) if neighbor_affects else 0.0,
         },
         "protective_boost": protective_boost,
-        "regeneration": base_regeneration * affect_mult * resil_mult,
     }
 
     return {"state_delta": state_delta, "observation": observation}
@@ -234,22 +225,16 @@ def process_pss10_consolidation(
     cfg = get_config()
     pss10_threshold = config.get("pss10_threshold", cfg.get("pss10", "threshold"))
 
-    # ── Consolidate ───────────────────────────────────────────────
-    if daily_pss10_scores:
-        # Compute new stress from PSS-10 dimensions with same affect/resilience/
-        # resources modulation that generate_pss10_from_stress_dimensions uses.
-        # This aligns current_stress with the PSS-10 score's shared variance.
-        new_stress_level = compute_stress_from_dimensions(
-            stress_controllability=stress_controllability,
-            stress_overload=stress_overload,
-            affect=state.get("affect", 0.0),
-            resources=state.get("resources", 0.5),
-            resilience=state.get("resilience", 0.5),
-        )
-        smoothing_factor = 0.7
-        current_stress = smoothing_factor * new_stress_level + (1.0 - smoothing_factor) * current_stress
-
-    # ── Clamp values ──────────────────────────────────────────────
+    # ── Compute current_stress from dimensions every day (Fix 4) ──
+    new_stress_level = compute_stress_from_dimensions(
+        stress_controllability=stress_controllability,
+        stress_overload=stress_overload,
+        affect=state.get("affect", 0.0),
+        resources=state.get("resources", 0.5),
+        resilience=state.get("resilience", 0.5),
+    )
+    smoothing_factor = 0.30  # Same alpha as PSS-10 smoothing (Fix 4)
+    current_stress = smoothing_factor * new_stress_level + (1.0 - smoothing_factor) * current_stress
     current_stress = clamp(current_stress, 0.0, 1.0)
     stress_controllability = clamp(stress_controllability, 0.0, 1.0)
     stress_overload = clamp(stress_overload, 0.0, 1.0)
@@ -280,9 +265,13 @@ def process_pss10_consolidation(
     alpha = get_assumptions().stress.pss10_smoothing_alpha
     new_smoothed = smooth_pss10_across_days(consolidated_pss10, prev_smoothed, alpha)
 
-    # Apply stored pss10_bias (resilience coupling + noise, set at initialization).
-    # This creates persistent between-person variance from trait-level buffering.
-    adjusted_pss10 = new_smoothed + state.get("pss10_bias", 0.0)
+    # Apply static pss10_bias + dynamic resilience coupling (Fix 5)
+    # Static bias preserves between-person variance from initialization.
+    # Dynamic penalty tracks real-time resilience changes every day.
+    resilience = state.get("resilience", 0.5)
+    coupling = cfg.get("pss10", "pss10_resilience_coupling")
+    daily_resilience_penalty = -coupling * (resilience - 0.5)
+    adjusted_pss10 = new_smoothed + state.get("pss10_bias", 0.0) + daily_resilience_penalty
     final_pss10 = int(round(max(0.0, min(40.0, adjusted_pss10))))
 
     # ── Update stressed status ────────────────────────────────────
