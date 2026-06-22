@@ -559,7 +559,7 @@ class TestCompleteStressProcessingLoop:
     def test_complete_pss10_workflow_integration(self):
         """Test the complete PSS-10 workflow: initialization, daily collection, and feedback loop."""
         from unittest.mock import patch
-        from src.python.stress_utils import compute_stress_from_pss10
+        from src.python.stress_utils import compute_stress_from_dimensions
 
         mock_model = Mock()
         mock_model.seed = 42
@@ -567,7 +567,7 @@ class TestCompleteStressProcessingLoop:
 
         # Test Step 3: Initial stress level should be based on PSS-10 score
         initial_stress = agent.current_stress
-        expected_initial_stress = compute_stress_from_pss10(
+        expected_initial_stress = compute_stress_from_dimensions(
             agent.stress_controllability, agent.stress_overload, dampening=1.0
         )
         assert abs(initial_stress - expected_initial_stress) < 1e-2, (
@@ -611,7 +611,7 @@ class TestCompleteStressProcessingLoop:
         # Test that the feedback mechanism creates realistic stress transitions
         # Stress should generally follow stress dimension trends (allowing for smoothing)
         final_stress = agent.current_stress
-        expected_final_stress = compute_stress_from_pss10(agent.stress_controllability, agent.stress_overload)
+        expected_final_stress = compute_stress_from_dimensions(agent.stress_controllability, agent.stress_overload)
 
         # The stress should be correlated with PSS-10 (though smoothed)
         stress_pss10_correlation = 1.0 - abs(final_stress - expected_final_stress)
@@ -651,7 +651,7 @@ class TestCompleteStressProcessingLoop:
 
     def test_pss10_stress_correlation_improvement(self):
         """Test that the correlation between avg_pss10 and avg_stress is improved with dimension-based formula."""
-        from src.python.stress_utils import compute_stress_from_pss10, generate_pss10_from_stress_dimensions
+        from src.python.stress_utils import compute_stress_from_dimensions, generate_pss10_from_stress_dimensions
 
         # Create multiple agents with different stress profiles
         agents = []
@@ -667,7 +667,7 @@ class TestCompleteStressProcessingLoop:
             agent.stress_overload = np.random.uniform(0, 1)
 
             # Compute stress from dimensions using the new formula
-            agent.current_stress = compute_stress_from_pss10(agent.stress_controllability, agent.stress_overload)
+            agent.current_stress = compute_stress_from_dimensions(agent.stress_controllability, agent.stress_overload)
 
             # Generate PSS-10 from the same dimensions
             pss10_data = generate_pss10_from_stress_dimensions(

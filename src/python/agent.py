@@ -16,7 +16,7 @@ from src.python.stress_utils import (
     ThresholdParams,
     initialize_pss10_from_items,
     update_stress_dimensions_from_event,
-    compute_stress_from_pss10,
+    compute_stress_from_dimensions,
 )
 
 from src.python.affect_utils import (
@@ -239,7 +239,7 @@ def process_pss10_consolidation(
         # Compute new stress from PSS-10 dimensions with same affect/resilience/
         # resources modulation that generate_pss10_from_stress_dimensions uses.
         # This aligns current_stress with the PSS-10 score's shared variance.
-        new_stress_level = compute_stress_from_pss10(
+        new_stress_level = compute_stress_from_dimensions(
             stress_controllability=stress_controllability,
             stress_overload=stress_overload,
             affect=state.get("affect", 0.0),
@@ -967,7 +967,7 @@ class Person(mesa.Agent):
         to set the initial current_stress level for the agent.
         """
         dampening = config.get("pss10", "pss10_stress_dampening")
-        self.current_stress = compute_stress_from_pss10(
+        self.current_stress = compute_stress_from_dimensions(
             stress_controllability=self.stress_controllability,
             stress_overload=self.stress_overload,
             dampening=dampening,
@@ -984,7 +984,7 @@ class Person(mesa.Agent):
             daily_pss10_score: The consolidated daily PSS-10 score (0-40)
         """
         # Compute new stress level using utility function
-        new_stress_level = compute_stress_from_pss10(
+        new_stress_level = compute_stress_from_dimensions(
             stress_controllability=self.stress_controllability, stress_overload=self.stress_overload
         )
 

@@ -15,7 +15,7 @@ from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.stress_utils import (
     compute_pss10_score,
-    compute_stress_from_pss10,
+    compute_stress_from_dimensions,
     generate_stress_event,
     apply_weights,
     StressEvent,
@@ -369,7 +369,7 @@ class TestPSS10StressMechanismIntegration:
             assert agent.current_stress == 1.0
 
         # Stress is computed from dimensions with config dampening + resource modulation
-        expected_stress = compute_stress_from_pss10(
+        expected_stress = compute_stress_from_dimensions(
             stress_controllability=agent.stress_controllability,
             stress_overload=agent.stress_overload,
             dampening=1.0,

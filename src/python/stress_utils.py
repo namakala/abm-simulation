@@ -861,7 +861,7 @@ def update_stress_dimensions_from_pss10_feedback(
     return updated_controllability, updated_overload
 
 
-def compute_stress_from_pss10(
+def compute_stress_from_dimensions(
     stress_controllability: float,
     stress_overload: float,
     dampening: float = 1.0,
