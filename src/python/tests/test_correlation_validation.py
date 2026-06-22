@@ -58,7 +58,6 @@ from src.python.model import StressModel
 class TestTheoreticalCorrelationsAgentLevel:
     """Test theoretical correlations at the agent level."""
 
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs stress r~0.17-0.35, needs stronger coupling at small N")
     def test_pss10_stress_positive_correlation(self):
         """Test that PSS-10 scores positively correlate with current stress levels."""
         seeds = [42, 123, 456]
@@ -198,7 +197,7 @@ class TestTheoreticalCorrelationsAgentLevel:
         _, p_value = stats.pearsonr(final_epoch["resilience"], final_epoch["resources"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
-    @pytest.mark.xfail(reason="Calibration: affect vs resources r=0.54, target [0.15, 0.30]")
+    @pytest.mark.xfail(reason="Calibration: affect vs resources p=0.10, not statistically significant at α=0.05")
     def test_affect_resources_positive_correlation(self):
         """Test that affect positively correlates with resources."""
         model = StressModel(N=75, max_days=60, seed=42)
@@ -273,7 +272,6 @@ class TestTheoreticalCorrelationsAgentLevel:
 class TestTheoreticalCorrelationsPopulationLevel:
     """Test theoretical correlations at the population level."""
 
-    @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg stress r=0.05-0.34, target >0.40")
     def test_avg_pss10_avg_stress_positive_correlation(self):
         """Test that average PSS-10 positively correlates with average stress over time."""
         seeds = [42, 123, 456]
