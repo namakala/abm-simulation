@@ -535,12 +535,17 @@ class TestPSS10ConfigurationIntegration:
 class TestPSS10ConfigurationEdgeCases:
     """Test PSS-10 configuration edge cases and error conditions."""
 
-    @pytest.mark.xfail(reason="Env var leak between tests in -m config run")
     def test_pss10_whitespace_handling(self):
         """Test PSS-10 configuration handles whitespace correctly."""
         with tempfile.TemporaryDirectory() as temp_dir:
             original_cwd = os.getcwd()
+            old_env = {k: v for k, v in os.environ.items() if k.startswith("PSS10")}
             try:
+                # Clear PSS10 vars for clean .env loading
+                for k in list(os.environ.keys()):
+                    if k.startswith("PSS10"):
+                        del os.environ[k]
+
                 os.chdir(temp_dir)
 
                 # Create .env file with extra whitespace
@@ -561,6 +566,12 @@ PSS10_ITEM_SD=0.89  0.89	0.93  0.92 0.80 0.78 0.78 0.88 0.91 0.93
 
             finally:
                 os.chdir(original_cwd)
+                # Restore PSS10 env vars
+                for k in list(os.environ.keys()):
+                    if k.startswith("PSS10"):
+                        if k not in old_env:
+                            del os.environ[k]
+                os.environ.update(old_env)
 
     def test_pss10_mixed_valid_invalid_env(self):
         """Test PSS-10 configuration with mix of valid and invalid environment variables."""

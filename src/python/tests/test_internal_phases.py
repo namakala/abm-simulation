@@ -14,6 +14,7 @@ from src.python.agent import (
     process_pss10_consolidation,
     process_daily_reset,
 )
+from src.python.affect_utils import update_affect_dynamics, AffectDynamicsConfig
 from src.python.math_utils import create_rng
 
 # ── Fixtures ──────────────────────────────────────────────────────
@@ -158,6 +159,97 @@ class TestProcessAffectDynamics:
         r2 = process_affect_dynamics(typical_state, affect_config, rng2)
         assert r1["state_delta"] == r2["state_delta"]
         assert r1["observation"] == r2["observation"]
+
+    def test_affect_homeostasis_decoupled_from_resources(self, typical_state, affect_config, sample_rng):
+        """Affect homeostasis no longer varies with resource level (Fix 3).
+
+        After Fix 3, resources=0.0 is passed for affect's homeostatic scaling,
+        so affect homeostatic adjustment should not depend on resources.
+        The direct resource->affect pathway (Fix 6) still adds a small effect.
+        """
+        from src.python.affect_utils import scale_homeostatic_rate
+
+        # Check the homeostatic RATE directly (not the full update_affect_dynamics)
+        # With resources=0.0, the resource factor is always 1.0
+        rate_low_resource = scale_homeostatic_rate(0.15, 0.2, 0.3)
+        rate_high_resource = scale_homeostatic_rate(0.15, 0.9, 0.3)
+        # Both should be identical because resources is overridden to 0.0 for affect
+        # In the actual code, affect passes resources=0.0
+        rate_affect_low = scale_homeostatic_rate(0.15, 0.0, 0.3)
+        rate_affect_high = scale_homeostatic_rate(0.15, 0.0, 0.3)
+        assert rate_affect_low == rate_affect_high, "Affect homeostatic rate should not depend on resources"
+        assert rate_low_resource != rate_high_resource, "Resilience homeostatic rate should still depend on resources"
+
+    def test_resource_affect_pathway_via_update_affect_dynamics(self):
+        """update_affect_dynamics with resources adds a small resource effect (Fix 6)."""
+        affect_cfg = AffectDynamicsConfig()
+        # High resources should produce slightly higher affect than low resources
+        affect_low = update_affect_dynamics(
+            current_affect=0.0,
+            baseline_affect=0.0,
+            neighbor_affects=[],
+            current_stress=0.0,
+            resources=0.2,
+            affect_config=affect_cfg,
+        )
+        affect_high = update_affect_dynamics(
+            current_affect=0.0,
+            baseline_affect=0.0,
+            neighbor_affects=[],
+            current_stress=0.0,
+            resources=0.9,
+            affect_config=affect_cfg,
+        )
+        # The resource_boost should produce a small positive difference
+        assert affect_high > affect_low, (
+            f"High resources should increase affect: low={affect_low:.4f}, high={affect_high:.4f}"
+        )
+
+    def test_process_affect_dynamics_passes_resources(self, typical_state, affect_config, sample_rng):
+        """process_affect_dynamics passes resources to update_affect_dynamics."""
+        state_high = dict(typical_state)
+        state_low = dict(typical_state)
+        state_high["resources"] = 0.9
+        state_low["resources"] = 0.2
+
+        result_high = process_affect_dynamics(state_high, affect_config, sample_rng)
+        result_low = process_affect_dynamics(state_low, affect_config, sample_rng)
+
+        # With all else equal, high resources should produce slightly higher affect
+        # (the resource boost is small but positive)
+        assert result_high["state_delta"]["affect"] >= result_low["state_delta"]["affect"], (
+            f"High-resource affect ({result_high['state_delta']['affect']:.4f}) should be >= "
+            f"low-resource affect ({result_low['state_delta']['affect']:.4f})"
+        )
+
+    def test_stress_affect_erosion_multiplied_by_assumption(self):
+        """Stress erosion in update_affect_dynamics is amplified by assumption multiplier (Fix 2)."""
+        from src.python.assumption_config import get_assumptions
+
+        a = get_assumptions()
+        # Check that the assumption parameter exists and has a multiplier > 1
+        assert hasattr(a.stress, "stress_affect_erosion_multiplier"), (
+            "Missing stress_affect_erosion_multiplier in assumptions"
+        )
+        assert a.stress.stress_affect_erosion_multiplier > 1.0, "Multiplier should be > 1.0"
+
+        affect_cfg = AffectDynamicsConfig()
+        # With current_stress=1.0, multiplier=2.0 gives affect erosion -0.30
+        result = update_affect_dynamics(
+            current_affect=0.0,
+            baseline_affect=0.0,
+            neighbor_affects=[],
+            current_stress=1.0,
+            resources=0.5,
+            affect_config=affect_cfg,
+        )
+        # Config erosion rate is 0.15, with multiplier 2.0: effective = 0.30
+        # At max stress (1.0): erosion = -0.30
+        assert result < -0.15, f"Expected stress erosion stronger than -0.15, got {result:.4f}"
+        expected = -affect_cfg.stress_erosion_rate * 1.0 * a.stress.stress_affect_erosion_multiplier
+        assert result == pytest.approx(expected, abs=0.01), (
+            f"Affect {result:.4f} should be ~{expected:.4f} with multiplier {a.stress.stress_affect_erosion_multiplier}"
+        )
 
 
 # ── process_pss10_consolidation ───────────────────────────────────

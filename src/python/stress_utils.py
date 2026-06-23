@@ -747,7 +747,9 @@ def generate_pss10_from_stress_dimensions(
     rsc = cfg.get("pss10", "pss10_resilience_coupling_item")
     affect_influence = affect * ac
     resource_buffer = resources * rc
-    resilience_influence = (resilience - 0.5) * rsc
+    # Amplified by assumption to increase resilience->PSS-10 correlation (Fix 4)
+    a = get_assumptions()
+    resilience_influence = (resilience - 0.5) * rsc * a.stress.pss10_resilience_item_amplifier
 
     # Apply recent stress intensity for immediate response
     # NOTE: intensity_boost is intentionally NOT applied here. It was

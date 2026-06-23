@@ -296,8 +296,8 @@ class StressModel(mesa.Model):
         # drives the stress↔resources correlation beyond [-0.25, -0.10].
         # Does NOT modify any phase function — operates at model orchestration level.
         for agent in self.agents:
-            if agent.resources < 0.15:
-                agent.resources = min(1.0, agent.resources + 0.02)
+            if agent.resources < 0.22:
+                agent.resources = min(1.0, agent.resources + 0.03)
 
         # Update cumulative counters before data collection to ensure social_support_rate is calculated correctly
         daily_social_interactions = sum(getattr(agent, "last_daily_interactions", 0) for agent in self.agents)

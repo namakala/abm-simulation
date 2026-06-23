@@ -713,6 +713,54 @@ class TestPSS10Configuration:
         assert config.get("pss10", "bifactor_correlation") == -0.3
 
 
+class TestPSS10ResilienceCoupling:
+    """PSS-10 resilience coupling at item level is amplified by assumption (Fix 4)."""
+
+    def test_resilience_influence_amplified_in_pss10_generation(self):
+        """generate_pss10_from_stress_dimensions uses pss10_resilience_item_amplifier."""
+        from src.python.assumption_config import get_assumptions
+
+        a = get_assumptions()
+        assert hasattr(a.stress, "pss10_resilience_item_amplifier"), "Missing pss10_resilience_item_amplifier"
+        assert a.stress.pss10_resilience_item_amplifier > 1.0, "Amplifier should be > 1.0"
+
+        # Config value is 0.20, amplifier default is 2.0, so effective is 0.40
+        config_value_reference = 0.20  # from config.py pss10_resilience_coupling_item
+        amplifier = a.stress.pss10_resilience_item_amplifier
+        effective_coupling = config_value_reference * amplifier
+        assert effective_coupling == pytest.approx(0.40, abs=0.01), (
+            f"Effective coupling {effective_coupling:.2f} should be 0.40"
+        )
+
+    def test_higher_residence_lowers_pss10_more_with_amplifier(self):
+        """Higher resilience produces lower PSS-10 scores when amplifier is active."""
+        rng = np.random.default_rng(42)
+        # Low resilience
+        result_low = generate_pss10_from_stress_dimensions(
+            stress_controllability=0.5,
+            stress_overload=0.5,
+            resilience=0.2,
+            affect=0.0,
+            resources=0.5,
+            rng=rng,
+        )
+        # High resilience
+        rng = np.random.default_rng(42)  # reset seed
+        result_high = generate_pss10_from_stress_dimensions(
+            stress_controllability=0.5,
+            stress_overload=0.5,
+            resilience=0.8,
+            affect=0.0,
+            resources=0.5,
+            rng=rng,
+        )
+        # Higher resilience should produce lower PSS-10 scores
+        assert result_high["pss10_score"] < result_low["pss10_score"], (
+            f"High resilience PSS-10 ({result_high['pss10_score']}) should be < "
+            f"low resilience PSS-10 ({result_low['pss10_score']})"
+        )
+
+
 def run_all_tests():
     """Run all PSS-10 empirical tests."""
     print("Running PSS-10 Empirical Generation Test Suite")

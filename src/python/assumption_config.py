@@ -95,7 +95,7 @@ class AssumptionCopingConfig:
         default_factory=lambda: _env_float("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", 0.30)
     )
     support_boost_factor: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.20)
+        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.40)
     )
     success_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_SUCCESS_AFFECT_CHANGE", 0.2))
     failure_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_FAILURE_AFFECT_CHANGE", -0.4))
@@ -175,6 +175,15 @@ class AssumptionStressConfig:
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE", 0.35)
     )
     stress_decay_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_STRESS_DECAY_RATE", 0.10))
+    resource_affect_coupling: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_AFFECT_COUPLING", 0.08)
+    )
+    stress_affect_erosion_multiplier: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_STRESS_AFFECT_EROSION_MULTIPLIER", 2.0)
+    )
+    pss10_resilience_item_amplifier: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_PSS10_RESILIENCE_ITEM_AMPLIFIER", 2.0)
+    )
 
 
 @dataclass(frozen=True)
@@ -257,7 +266,7 @@ class AssumptionResourceConfig:
     )
     buffering_boost_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_BOOST_RATE", 0.1))
     buffering_a_coefficient: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_A_COEFFICIENT", -0.015)
+        default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_A_COEFFICIENT", -0.008)
     )
     buffering_b_coefficient: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_B_COEFFICIENT", 0.5)

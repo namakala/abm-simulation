@@ -116,6 +116,7 @@ def process_affect_dynamics(
         hindrance=daily_hindrance,
         affect_config=affect_cfg,
         current_stress=current_stress,  # Fix 3 — direct stress->affect pathway
+        resources=resources,  # Fix 6 — direct resource->affect pathway
     )
 
     # ── 2. Resilience dynamics + PF boost ─────────────────────────
@@ -158,7 +159,9 @@ def process_affect_dynamics(
     affect_homeostatic_rate = get_assumptions().stress.affect_homeostatic_rate
     resilience_homeostatic_rate = get_assumptions().stress.resilience_homeostatic_rate
 
-    scaled_affect_rate = scale_homeostatic_rate(affect_homeostatic_rate, resources, current_stress)
+    # Fix 3: affect homeostasis does NOT use resources (breaks shared variance with resilience).
+    # Resilience still uses resources for its homeostatic scaling.
+    scaled_affect_rate = scale_homeostatic_rate(affect_homeostatic_rate, 0.0, current_stress)
     scaled_resilience_rate = scale_homeostatic_rate(resilience_homeostatic_rate, resources, current_stress)
 
     new_affect = compute_homeostatic_adjustment(

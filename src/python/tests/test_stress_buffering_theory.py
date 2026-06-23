@@ -122,6 +122,18 @@ class TestMediationAPath:
         out = _run(state, config)
         assert out["state_delta"]["resources"] >= 0.0
 
+    def test_a_path_default_from_assumptions(self):
+        """Empty config picks up default a_coefficient (negligible a-path depletion)."""
+        state = _make_state(current_stress=0.5, resources=0.6)
+        rng = np.random.default_rng(42)
+        from src.python.phases.stress_buffering import run_phase
+
+        out = run_phase(state, {}, rng)
+        # Resources should decrease slightly from stress depletion
+        assert out["state_delta"]["resources"] < 0.6, "a-path depletes resources"
+        # Depletion should be modest (single day, moderate stress)
+        assert out["state_delta"]["resources"] >= 0.55, "depletion should be small"
+
 
 # ---------------------------------------------------------------------------
 # Mediation b-path: resources -> buffering

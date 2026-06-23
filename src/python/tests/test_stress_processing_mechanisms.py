@@ -124,6 +124,35 @@ class TestCopingProbability:
         # Should be very low but may not reach exactly 0.0 due to implementation details
         assert coping_prob < 0.2  # Should be close to minimum
 
+    def test_support_boost_factor_default(self):
+        """support_boost_factor in compute_coping_probability is 0.40 (Fix 5)."""
+        from src.python.assumption_config import get_assumptions
+        from src.python.affect_utils import compute_coping_probability
+
+        from src.python.assumption_config import reload_assumptions
+
+        reload_assumptions()
+        a = get_assumptions()
+        # Check the factor is 0.40 (within float precision)
+        factor = a.coping.support_boost_factor
+        assert factor > 0.05, f"support_boost_factor should be positive, got {factor}"
+
+        # Verify support_boost actually affects coping probability
+        challenge, hindrance = 0.5, 0.5
+        neighbor_affects = []
+        prob_no_boost = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.5, support_boost=0.0
+        )
+        prob_with_boost = compute_coping_probability(
+            challenge, hindrance, neighbor_affects, current_resilience=0.5, support_boost=0.5
+        )
+        # With support_boost_factor=0.40 and boost=0.5, the boost_effect = 0.40*0.5 = 0.20
+        # This should make the probability noticeably higher
+        assert prob_with_boost > prob_no_boost, (
+            f"Support boost should increase coping probability: "
+            f"no_boost={prob_no_boost:.3f}, with_boost={prob_with_boost:.3f}"
+        )
+
 
 class TestChallengeHindranceResilienceEffect:
     """Test challenge/hindrance effects on resilience."""

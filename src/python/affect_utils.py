@@ -1168,10 +1168,11 @@ def update_affect_dynamics(
     hindrance: float = 0.0,
     affect_config: Optional[AffectDynamicsConfig] = None,
     current_stress: float = 0.0,
+    resources: float = 0.5,
 ) -> float:
     """
     Update agent's affect based on peer influence, event appraisal, homeostasis,
-    and stress erosion (Fix 3 — direct stress->affect pathway).
+    stress erosion (Fix 3), and resource boost (Fix 6).
 
     Args:
         current_affect: Agent's current affect
@@ -1181,6 +1182,7 @@ def update_affect_dynamics(
         hindrance: Hindrance component from recent events
         affect_config: Affect dynamics configuration
         current_stress: Current accumulated stress level (0-1), erodes affect
+        resources: Current resource level (0-1), provides small affect boost
 
     Returns:
         New affect value
@@ -1193,11 +1195,15 @@ def update_affect_dynamics(
     appraisal_effect = compute_event_appraisal_effect(challenge, hindrance, current_affect, affect_config)
     homeostasis_effect = compute_homeostasis_effect(current_affect, baseline_affect, affect_config)
 
-    # Stress erosion effect on affect (Fix 3) — direct negative path
-    stress_erosion = -affect_config.stress_erosion_rate * current_stress
+    # Stress erosion effect on affect (Fix 3 + Fix 2) — amplified by assumption multiplier
+    a = get_assumptions()
+    stress_erosion = -affect_config.stress_erosion_rate * current_stress * a.stress.stress_affect_erosion_multiplier
+
+    # Resource boost (Fix 6) — direct positive pathway from resources to affect
+    resource_boost = a.stress.resource_affect_coupling * (resources - 0.5)
 
     # Combine all effects
-    total_effect = peer_effect + appraisal_effect + homeostasis_effect + stress_erosion
+    total_effect = peer_effect + appraisal_effect + homeostasis_effect + stress_erosion + resource_boost
 
     # Apply the change
     new_affect = current_affect + total_effect
