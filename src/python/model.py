@@ -294,10 +294,11 @@ class StressModel(mesa.Model):
 
         # Apply soft resource floor (Fix 1) — prevents extreme depletion that
         # drives the stress↔resources correlation beyond [-0.25, -0.10].
-        # Does NOT modify any phase function — operates at model orchestration level.
+        # Raised threshold and lift amount (Plan 021) to maintain decoupling
+        # even with higher base regeneration.
         for agent in self.agents:
-            if agent.resources < 0.22:
-                agent.resources = min(1.0, agent.resources + 0.03)
+            if agent.resources < 0.30:
+                agent.resources = min(1.0, agent.resources + 0.05)
 
         # Update cumulative counters before data collection to ensure social_support_rate is calculated correctly
         daily_social_interactions = sum(getattr(agent, "last_daily_interactions", 0) for agent in self.agents)

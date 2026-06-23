@@ -4,17 +4,33 @@ Pytest configuration and shared fixtures for ABM simulation tests.
 
 import logging
 import os
-import pytest
+
 import numpy as np
 import networkx as nx
-from src.python.config import get_config, reload_config, config
+import pytest
+
 from src.python.assumption_config import reload_assumptions
+from src.python.config import get_config, reload_config, config
 from src.python.math_utils import create_rng
 from src.python.stress_utils import generate_stress_event
 from src.python.agent import Person
 from src.python.affect_utils import ProtectiveFactors, InteractionConfig, ResourceParams
 from src.python.stress_utils import ThresholdParams, AppraisalWeights
 from src.python.phases.interfaces import AgentState
+
+# ── Calibration env vars (Plan 021) ──────────────────────────────
+os.environ.setdefault("PSS10_NOISE_SD", "3.5")
+os.environ.setdefault("ASSUMPTION_PSS10_SMOOTHING_ALPHA", "0.85")
+os.environ.setdefault("PSS10_RESILIENCE_COUPLING", "3.5")
+os.environ.setdefault("PSS10_AFFECT_COUPLING", "0.20")
+os.environ.setdefault("ASSUMPTION_STRESS_AFFECT_EROSION_MULTIPLIER", "0.15")
+os.environ.setdefault("ASSUMPTION_RESOURCE_AFFECT_COUPLING", "0.02")
+os.environ.setdefault("STRESS_RESOURCE_COUPLING", "0.30")
+os.environ.setdefault("RESOURCE_BASE_REGENERATION", "0.50")
+os.environ.setdefault("AGENT_RESOURCE_COST", "0.03")
+
+# Reload assumption configs so they pick up the new env var values
+reload_assumptions()
 
 # ── Phase-specific fixtures ──────────────────────────────────────
 

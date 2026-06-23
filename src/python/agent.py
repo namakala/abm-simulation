@@ -150,12 +150,18 @@ def process_affect_dynamics(
         rng=rng,
     )
 
-    # ── 5. Consecutive hindrance decay ────────────────────────────
+    # ── 5. Interaction-frequency resilience boost (Plan 021) ──────
+    # Each daily interaction gives a small resilience boost, creating a
+    # within-day link between social activity and resilience.
+    interaction_boost = daily_interactions * 0.005
+    new_resilience = min(1.0, new_resilience + interaction_boost)
+
+    # ── 6. Consecutive hindrance decay ────────────────────────────
     new_consecutive_hindrances = consecutive_hindrances
     if consecutive_hindrances > 0:
         new_consecutive_hindrances = max(0.0, consecutive_hindrances - stress_decay_rate)
 
-    # ── 6. Homeostatic adjustment ─────────────────────────────────
+    # ── 7. Homeostatic adjustment ─────────────────────────────────
     affect_homeostatic_rate = get_assumptions().stress.affect_homeostatic_rate
     resilience_homeostatic_rate = get_assumptions().stress.resilience_homeostatic_rate
 
@@ -236,7 +242,7 @@ def process_pss10_consolidation(
         resources=state.get("resources", 0.5),
         resilience=state.get("resilience", 0.5),
     )
-    smoothing_factor = 0.30  # Same alpha as PSS-10 smoothing (Fix 4)
+    smoothing_factor = 0.50  # Increased for stronger pss10↔stress coupling (Plan 021)
     current_stress = smoothing_factor * new_stress_level + (1.0 - smoothing_factor) * current_stress
     current_stress = clamp(current_stress, 0.0, 1.0)
     stress_controllability = clamp(stress_controllability, 0.0, 1.0)
@@ -716,9 +722,10 @@ class Person(mesa.Agent):
         resource_result = run_resource_allocation(state, resource_config, self._rng)
         state = self._apply_delta(state, resource_result["state_delta"])
 
-        # Add small noise to resources for cross-sectional variation
+        # Add noise to resources for cross-sectional variation (Plan 021)
+        # Increased noise to decouple stress↔resources correlation.
         current_resources = state.get("resources", 0.5)
-        noise = self._rng.normal(0, 0.02) * current_resources
+        noise = self._rng.normal(0, 0.05) * current_resources + self._rng.normal(0, 0.02)
         state["resources"] = max(0.0, min(1.0, current_resources + noise))
 
         # 4c. Stress buffering (phase module)

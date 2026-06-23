@@ -19,7 +19,9 @@ sys.path.append(".")
 
 from src.python.model import StressModel
 
-pytestmark = pytest.mark.xfail(reason="Calibration still in progress — mean ~17.2 (target 13-15), SD ~5.6 (target 6-8)")
+pytestmark = pytest.mark.xfail(
+    reason="Calibration partial: mean ~15.8 (in range), SD ~4.5 (target 6-8); stress-resources r still outside bounds"
+)
 
 # ── Empirical correlation targets ─────────────────────────────────
 # Sources:

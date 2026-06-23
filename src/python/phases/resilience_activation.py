@@ -214,7 +214,10 @@ def run_phase(
     resource_penalty: float | None = None
 
     if coped_successfully:
-        resource_reward = base_resource_cost * _RESOURCE_REWARD_MULTIPLIER
+        # Reward ~95% of the cost back — making successful coping resource-neutral
+        # so that only failed coping events contribute to the stress↔resources
+        # negative correlation (Plan 021-structural-correlation-fixes).
+        resource_reward = optimized_cost * 0.95
         new_resources = clamp(new_resources + resource_reward, 0.0, 1.0)
 
         allocations = allocate_protective_factors(

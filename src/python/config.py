@@ -46,14 +46,14 @@ class Config:
         """Load environment variables from .env file if it exists."""
         env_path = Path(env_file)
 
-        if env_path.exists():
+        if env_path.exists() and env_path.is_file():
             try:
                 # Load environment variables from file
                 load_dotenv(env_path)
                 logger.info(f"Loaded environment from {env_path.absolute()}")
             except ImportError:
                 logger.warning("python-dotenv not installed, using system environment variables")
-        else:
+        elif not env_path.exists():
             logger.warning(f"Environment file {env_path.absolute()} not found, using system environment variables")
 
     def _get_env_value(
