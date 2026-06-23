@@ -279,6 +279,13 @@ class Config:
         self.pss10_bias_sd = self._get_env_value("PSS10_BIAS_SD", float, 1.0)
         self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 2.0)
         self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 1.0)
+        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.15)
+        self.pss10_resource_coupling = self._get_env_value("PSS10_RESOURCE_COUPLING", float, 0.0)
+        self.pss10_resilience_coupling_item = self._get_env_value("PSS10_RESILIENCE_COUPLING_ITEM", float, 0.20)
+        self.stress_affect_coupling = self._get_env_value("STRESS_AFFECT_COUPLING", float, 0.15)
+        self.stress_resource_coupling = self._get_env_value("STRESS_RESOURCE_COUPLING", float, 0.25)
+        self.stress_resilience_coupling = self._get_env_value("STRESS_RESILIENCE_COUPLING", float, 0.60)
+        self.stress_erosion_rate = self._get_env_value("STRESS_EROSION_RATE", float, 0.15)
 
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value("COPING_BASE_PROBABILITY", float, 0.5)
@@ -652,6 +659,13 @@ class Config:
                 "pss10_bias_sd": self.pss10_bias_sd,
                 "pss10_resilience_coupling": self.pss10_resilience_coupling,
                 "pss10_stress_dampening": self.pss10_stress_dampening,
+                "pss10_affect_coupling": self.pss10_affect_coupling,
+                "pss10_resource_coupling": self.pss10_resource_coupling,
+                "pss10_resilience_coupling_item": self.pss10_resilience_coupling_item,
+                "stress_affect_coupling": self.stress_affect_coupling,
+                "stress_resource_coupling": self.stress_resource_coupling,
+                "stress_resilience_coupling": self.stress_resilience_coupling,
+                "stress_erosion_rate": self.stress_erosion_rate,
             },
             "interaction": {
                 "influence_rate": self.interaction_influence_rate,

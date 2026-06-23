@@ -741,11 +741,13 @@ def generate_pss10_from_stress_dimensions(
     base_overload = stress_overload
 
     # Protective factors modulate stress perception (Plan 007)
-    affect_influence = affect * 0.35  # Scale affect into [-0.35, 0.35]
-    # Higher resources buffer against perceived stress (0 resources = no buffering)
-    resource_buffer = resources * 0.25  # Scale resources into [0, 0.25]
-    # Higher resilience buffers perceived stress (shifts controllability up, overload down)
-    resilience_influence = (resilience - 0.5) * 0.60  # Scale into [-0.30, 0.30]
+    # Coefficients are now config-driven (Plan 021)
+    ac = cfg.get("pss10", "pss10_affect_coupling")
+    rc = cfg.get("pss10", "pss10_resource_coupling")
+    rsc = cfg.get("pss10", "pss10_resilience_coupling_item")
+    affect_influence = affect * ac
+    resource_buffer = resources * rc
+    resilience_influence = (resilience - 0.5) * rsc
 
     # Apply recent stress intensity for immediate response
     # NOTE: intensity_boost is intentionally NOT applied here. It was
@@ -887,11 +889,18 @@ def compute_stress_from_dimensions(
     Returns:
         Computed stress level ∈ [0,1]
     """
+    from src.python.config import get_config
+
+    cfg = get_config()
     # Apply same protective-factor modulation as generate_pss10_from_stress_dimensions
     # so current_stress shares variance with PSS-10 through affect/resilience/resources.
-    affect_influence = affect * 0.35
-    resource_buffer = resources * 0.25
-    resilience_influence = (resilience - 0.5) * 0.60
+    # Coefficients are now config-driven (Plan 021)
+    sac = cfg.get("pss10", "stress_affect_coupling")
+    src = cfg.get("pss10", "stress_resource_coupling")
+    srsc = cfg.get("pss10", "stress_resilience_coupling")
+    affect_influence = affect * sac
+    resource_buffer = resources * src
+    resilience_influence = (resilience - 0.5) * srsc
 
     modulated_controllability = stress_controllability + affect_influence + resource_buffer + resilience_influence
     modulated_controllability = max(0.0, min(1.0, modulated_controllability))

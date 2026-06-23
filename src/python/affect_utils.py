@@ -65,7 +65,9 @@ class AffectDynamicsConfig:
     )
     homeostatic_rate: float = field(default_factory=lambda: get_assumptions().stress.affect_homeostatic_rate)
     influencing_neighbors: int = field(default_factory=lambda: get_config().get("influence", "influencing_neighbors"))
-    stress_erosion_rate: float = 0.30  # Mechanism coefficient: max stress erodes affect by up to 0.30
+    stress_erosion_rate: float = field(
+        default_factory=lambda: get_config().get("pss10", "stress_erosion_rate")
+    )  # Mechanism coefficient: max stress erodes affect by up to 0.15
 
 
 @dataclass
