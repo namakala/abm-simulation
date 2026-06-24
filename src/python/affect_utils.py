@@ -1169,10 +1169,11 @@ def update_affect_dynamics(
     affect_config: Optional[AffectDynamicsConfig] = None,
     current_stress: float = 0.0,
     resources: float = 0.5,
+    current_resilience: float = 0.5,
 ) -> float:
     """
     Update agent's affect based on peer influence, event appraisal, homeostasis,
-    stress erosion (Fix 3), and resource boost (Fix 6).
+    stress erosion (Fix 3), and resource boost (Fix 2).
 
     Args:
         current_affect: Agent's current affect
@@ -1183,6 +1184,7 @@ def update_affect_dynamics(
         affect_config: Affect dynamics configuration
         current_stress: Current accumulated stress level (0-1), erodes affect
         resources: Current resource level (0-1), provides small affect boost
+        current_resilience: Current resilience (0-1), creates resource↔affect interaction
 
     Returns:
         New affect value
@@ -1199,8 +1201,14 @@ def update_affect_dynamics(
     a = get_assumptions()
     stress_erosion = -affect_config.stress_erosion_rate * current_stress * a.stress.stress_affect_erosion_multiplier
 
-    # Resource boost (Fix 6) — direct positive pathway from resources to affect
-    resource_boost = a.stress.resource_affect_coupling * (resources - 0.5)
+    # Resource-affect interaction with resilience (Fix 2)
+    # Creates stronger resource→affect link for agents with extreme resilience:
+    #   low resilience + low resources → strong negative affect effect
+    #   high resilience + high resources → strong positive affect effect
+    # The base coupling (0.02) is unchanged; resilience deviation amplifies it.
+    resilience_dev = current_resilience - 0.5  # [-0.5, 0.5]
+    interaction_factor = 1.0 + resilience_dev * 2.0  # [0.0, 2.0]
+    resource_boost = a.stress.resource_affect_coupling * (resources - 0.5) * interaction_factor
 
     # Combine all effects
     total_effect = peer_effect + appraisal_effect + homeostasis_effect + stress_erosion + resource_boost

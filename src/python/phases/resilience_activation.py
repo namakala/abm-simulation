@@ -38,8 +38,6 @@ PHASE_FREQUENCY: PhaseFrequency = "event_driven"
 # Assumption-parameterized constants (Plan 007)
 # Loaded from ASSUMPTION_* env vars; falls back to spec defaults.
 _assumptions = get_assumptions()
-_RESOURCE_REWARD_MULTIPLIER = _assumptions.coping.resource_reward
-_RESOURCE_PENALTY_MULTIPLIER = _assumptions.coping.resource_penalty
 _PF_ALLOCATION_FRACTION = _assumptions.coping.pf_allocation_fraction
 
 
@@ -208,18 +206,15 @@ def run_phase(
     # ── STEP 8: Increment stress breach count ───────────────────────
     new_stress_breach_count = state.get("stress_breach_count", 0) + 1
 
-    # ── STEP 9: Resource reward / penalty + PF allocation ───────────
+    # ── STEP 9: PF allocation only (Fix 1 — no reward/penalty) ────
+    # Resource costs are decoupled from coping success/failure to reduce
+    # the stress↔resources correlation. The depletion in Step 6 is the same
+    # for both outcomes. Successful coping still triggers PF investment.
     new_protective_factors = dict(protective_factors)
     resource_reward: float | None = None
     resource_penalty: float | None = None
 
     if coped_successfully:
-        # Reward ~95% of the cost back — making successful coping resource-neutral
-        # so that only failed coping events contribute to the stress↔resources
-        # negative correlation (Plan 021-structural-correlation-fixes).
-        resource_reward = optimized_cost * 0.95
-        new_resources = clamp(new_resources + resource_reward, 0.0, 1.0)
-
         allocations = allocate_protective_factors(
             available_resources=new_resources * _PF_ALLOCATION_FRACTION,
             current_resilience=new_resilience,
@@ -236,9 +231,6 @@ def run_phase(
 
         total_allocated = sum(allocations.values())
         new_resources = clamp(new_resources - total_allocated, 0.0, 1.0)
-    else:
-        resource_penalty = base_resource_cost * _RESOURCE_PENALTY_MULTIPLIER
-        new_resources = clamp(new_resources - resource_penalty, 0.0, 1.0)
 
     # ── Build state_delta ───────────────────────────────────────────
     state_delta: Dict[str, Any] = {

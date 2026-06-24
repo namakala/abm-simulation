@@ -222,6 +222,58 @@ class TestProcessAffectDynamics:
             f"low-resource affect ({result_low['state_delta']['affect']:.4f})"
         )
 
+    def test_update_affect_dynamics_resilience_interaction(self):
+        """update_affect_dynamics resilience interaction amplifies resource effect (Fix 2)."""
+        affect_cfg = AffectDynamicsConfig()
+        # High resilience + high resources should produce strongest affect
+        high_res_high_res = update_affect_dynamics(
+            current_affect=0.0,
+            baseline_affect=0.0,
+            neighbor_affects=[],
+            current_stress=0.0,
+            resources=0.9,
+            affect_config=affect_cfg,
+            current_resilience=0.8,
+        )
+        # Low resilience + low resources should produce lowest affect
+        low_res_low_res = update_affect_dynamics(
+            current_affect=0.0,
+            baseline_affect=0.0,
+            neighbor_affects=[],
+            current_stress=0.0,
+            resources=0.2,
+            affect_config=affect_cfg,
+            current_resilience=0.2,
+        )
+        assert high_res_high_res > low_res_low_res, (
+            f"High res+res affect ({high_res_high_res:.4f}) should be > low res+res affect ({low_res_low_res:.4f})"
+        )
+
+    def test_update_affect_dynamics_accepts_resilience_param(self):
+        """update_affect_dynamics accepts optional current_resilience param."""
+        affect_cfg = AffectDynamicsConfig()
+        # Should work with default resilience (0.5)
+        result = update_affect_dynamics(
+            current_affect=0.0,
+            baseline_affect=0.0,
+            neighbor_affects=[],
+            current_stress=0.0,
+            resources=0.5,
+            affect_config=affect_cfg,
+        )
+        assert -1.0 <= result <= 1.0
+        # Should work with explicit resilience
+        result2 = update_affect_dynamics(
+            current_affect=0.0,
+            baseline_affect=0.0,
+            neighbor_affects=[],
+            current_stress=0.0,
+            resources=0.5,
+            affect_config=affect_cfg,
+            current_resilience=0.8,
+        )
+        assert -1.0 <= result2 <= 1.0
+
     def test_stress_affect_erosion_multiplied_by_assumption(self):
         """Stress erosion in update_affect_dynamics is amplified by assumption multiplier (Fix 2)."""
         from src.python.assumption_config import get_assumptions

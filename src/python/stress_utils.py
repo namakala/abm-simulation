@@ -746,7 +746,11 @@ def generate_pss10_from_stress_dimensions(
     rc = cfg.get("pss10", "pss10_resource_coupling")
     rsc = cfg.get("pss10", "pss10_resilience_coupling_item")
     affect_influence = affect * ac
-    resource_buffer = resources * rc
+    resource_buffer = resources * rc  # remains 0.0 by design
+    # Direct resource stress buffer (Fix 2)
+    # Creates a resource→PSS-10 link without changing pss10_resource_coupling.
+    # High resources reduce perceived stress; low resources amplify it.
+    resource_buffer_override = (resources - 0.5) * 0.05
     # Amplified by assumption to increase resilience->PSS-10 correlation (Fix 4)
     a = get_assumptions()
     resilience_influence = (resilience - 0.5) * rsc * a.stress.pss10_resilience_item_amplifier
@@ -760,9 +764,13 @@ def generate_pss10_from_stress_dimensions(
     # The base controllability/overload already capture event outcomes
     # through update_stress_dimensions_from_event.
     dynamic_controllability = clamp(
-        base_controllability + affect_influence + resource_buffer + resilience_influence, 0, 1
+        base_controllability + affect_influence + resource_buffer + resilience_influence + resource_buffer_override,
+        0,
+        1,
     )
-    dynamic_overload = clamp(base_overload - affect_influence - resource_buffer - resilience_influence, 0, 1)
+    dynamic_overload = clamp(
+        base_overload - affect_influence - resource_buffer - resilience_influence - resource_buffer_override, 0, 1
+    )
 
     # Apply stress momentum for predictive response
     momentum_adjustment = stress_momentum * config["momentum_weight"]

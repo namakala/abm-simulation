@@ -852,14 +852,11 @@ class TestObservationContent:
         assert "delta_affect" in obs
 
     def test_observation_contains_resource_details(self):
-        """Observation includes resource cost/reward/penalty info."""
+        """Observation includes resource cost info (Fix 1: reward/penalty removed)."""
         result = run_phase(copy.deepcopy(BASE_STATE), SUCCESS_CONFIG, np.random.default_rng(42))
         obs = result["observation"]
-        if obs["coped_successfully"]:
-            assert "resource_reward" in obs
-            assert "resource_cost" in obs
-        else:
-            assert "resource_penalty" in obs
+        assert "resource_cost" in obs
+        assert "coped_successfully" in obs
 
 
 class TestSupportBoostCopingProbability:

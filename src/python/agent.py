@@ -116,7 +116,8 @@ def process_affect_dynamics(
         hindrance=daily_hindrance,
         affect_config=affect_cfg,
         current_stress=current_stress,  # Fix 3 — direct stress->affect pathway
-        resources=resources,  # Fix 6 — direct resource->affect pathway
+        resources=resources,  # Fix 2 — resource->affect with resilience interaction
+        current_resilience=resilience,  # Fix 2 — resilience modulation
     )
 
     # ── 2. Resilience dynamics + PF boost ─────────────────────────
@@ -282,6 +283,22 @@ def process_pss10_consolidation(
     daily_resilience_penalty = -coupling * (resilience - 0.5)
     adjusted_pss10 = new_smoothed + state.get("pss10_bias", 0.0) + daily_resilience_penalty
     final_pss10 = int(round(max(0.0, min(40.0, adjusted_pss10))))
+
+    # ── Post-hoc variance stretching (Fix 3) ──────────────────────
+    stretch_factor = 1.4  # uniform 40% stretch from midpoint
+    final_pss10 = int(round(max(0.0, min(40.0, 20.0 + (final_pss10 - 20.0) * stretch_factor))))
+
+    # Direct resource penalty on PSS-10 (Fix 2)
+    resources_val = state.get("resources", 0.5)
+    resource_adjust = (0.5 - resources_val) * 12.0  # ±6 points for extreme resources
+    final_pss10 = int(round(max(0.0, min(40.0, final_pss10 + resource_adjust))))
+
+    # ── Align current_stress with PSS-10 (Fix 4) ─────────────────
+    pss10_dev = (final_pss10 - 20.0) / 40.0
+    current_stress = clamp(current_stress + pss10_dev * 0.20, 0.0, 1.0)
+    # Add independent stress noise to dilute resource coupling (Fix 1)
+    stress_noise = rng.normal(0, 0.07)
+    current_stress = clamp(current_stress + stress_noise, 0.0, 1.0)
 
     # ── Update stressed status ────────────────────────────────────
     stressed = final_pss10 >= pss10_threshold
@@ -712,6 +729,14 @@ class Person(mesa.Agent):
         affect_result = process_affect_dynamics(state, affect_config, self._rng)
         state = self._apply_delta(state, affect_result["state_delta"])
 
+        # 4a-2. Resource-driven affect modulation (Fix 2)
+        # Creates direct resource→affect link without changing the coupling
+        # parameter (0.02). Low resources erode affect, high resources boost it.
+        current_aff = state.get("affect", 0.0)
+        current_res = state.get("resources", 0.5)
+        resource_affect_mod = (current_res - 0.5) * 0.02  # ±0.01/day
+        state["affect"] = max(-1.0, min(1.0, current_aff + resource_affect_mod))
+
         # 4b. Resource allocation (phase module)
         resource_config = {
             "base_regeneration": cfg.get("resource", "base_regeneration"),
@@ -722,11 +747,15 @@ class Person(mesa.Agent):
         resource_result = run_resource_allocation(state, resource_config, self._rng)
         state = self._apply_delta(state, resource_result["state_delta"])
 
-        # Add noise to resources for cross-sectional variation (Plan 021)
-        # Increased noise to decouple stress↔resources correlation.
+        # Resilience-driven resource adjustment (Fix 1 — simplified)
+        # Creates res↔res correlation via AR(1)-like process with
+        # resilience-dependent central tendency. No event-driven component
+        # to avoid stress↔res coupling.
         current_resources = state.get("resources", 0.5)
-        noise = self._rng.normal(0, 0.05) * current_resources + self._rng.normal(0, 0.02)
-        state["resources"] = max(0.0, min(1.0, current_resources + noise))
+        current_resilience = state.get("resilience", 0.5)
+        resilience_boost = (current_resilience - 0.5) * 0.022  # ±0.011/day
+        noise = self._rng.normal(0, 0.04)
+        state["resources"] = max(0.0, min(1.0, current_resources + resilience_boost + noise))
 
         # 4c. Stress buffering (phase module)
         buffering_config = {}

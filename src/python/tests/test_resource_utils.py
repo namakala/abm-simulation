@@ -367,12 +367,17 @@ class TestComputeResourceDepletionWithResilience:
         resilience = 0.5
         config = ResourceOptimizationConfig()
         remaining = compute_resource_depletion_with_resilience(current_resources, cost, resilience, True, False, config)
-        expected_cost = cost * (1.0 - resilience * 0.15)
-        expected_remaining = max(0.0, current_resources - expected_cost)
-        assert remaining == expected_remaining
+        # With resilience-deficit penalty: cost = 0.0925 * 1.25 = 0.115625
+        expected_remaining = 0.684375
+        assert abs(remaining - expected_remaining) < 1e-4
 
-    def test_failed_coping_penalty(self):
-        """Test penalty for failed coping."""
+    def test_failed_coping_no_penalty(self):
+        """Test that coping outcome no longer affects resource depletion (Fix 1).
+
+        Resource costs must be decoupled from coping success/failure to
+        reduce the stress↔resources correlation. Both success and failure
+        should have the same resource cost for identical inputs.
+        """
         current_resources = 0.8
         cost = 0.1
         resilience = 0.5
@@ -383,7 +388,9 @@ class TestComputeResourceDepletionWithResilience:
         failure_remaining = compute_resource_depletion_with_resilience(
             current_resources, cost, resilience, False, False, config
         )
-        assert failure_remaining < success_remaining
+        assert failure_remaining == success_remaining, (
+            f"Failed coping should not cost more: success={success_remaining:.4f}, failure={failure_remaining:.4f}"
+        )
 
     def test_minimum_cost_enforcement(self):
         """Test minimum cost is enforced."""

@@ -348,11 +348,20 @@ def compute_resource_depletion_with_resilience(
     a = get_assumptions()
 
     # Apply resilience-based cost optimization
+    # NOTE: coping_successful is no longer used for cost (Fix 1 — decouple
+    # resources from event outcomes to reduce stress↔resources correlation).
+    # Instead, a resilience-deficit multiplier amplifies cost for low-resilience
+    # agents, preserving the resilience↔resources link without tying it to
+    # coping outcomes.
     optimized_cost = cost * (1.0 - current_resilience * config.resilience_efficiency_factor)
 
-    # Failed coping attempts cost more (inefficient resource use)
-    if not coping_successful:
-        optimized_cost *= a.resource.failed_coping_cost_penalty  # 1.3 (30% penalty)
+    # Resilience-deficit multiplier: low resilience pays more, high resilience less
+    # This replaces the old failed-coping penalty (1.3x) that created spurious
+    # stress↔resources correlation. The 0.5 factor amplifies the resilience
+    # signal without creating a stress↔resources coupling.
+    resilience_deficit = 1.0 - current_resilience  # [0, 1]
+    deficit_penalty = 1.0 + resilience_deficit * 0.5  # range [1.0, 1.5]
+    optimized_cost *= deficit_penalty
 
     # Ensure minimum cost even with very high resilience
     optimized_cost = max(cost * a.resource.min_cost_floor, optimized_cost)

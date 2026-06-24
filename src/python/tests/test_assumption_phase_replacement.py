@@ -24,8 +24,6 @@ class TestResilienceActivationAssumptions:
         importlib.reload(ra)
 
         a = get_assumptions()
-        assert ra._RESOURCE_REWARD_MULTIPLIER == a.coping.resource_reward
-        assert ra._RESOURCE_PENALTY_MULTIPLIER == a.coping.resource_penalty
         assert ra._PF_ALLOCATION_FRACTION == a.coping.pf_allocation_fraction
 
     @pytest.mark.unit
@@ -33,7 +31,7 @@ class TestResilienceActivationAssumptions:
         """After env var set and reload_assumptions, new module load uses new value."""
         from src.python.assumption_config import reload_assumptions
 
-        os.environ["ASSUMPTION_RESOURCE_REWARD"] = "0.5"
+        os.environ["ASSUMPTION_PF_ALLOCATION_FRACTION"] = "0.5"
         try:
             reload_assumptions()
             # Re-import the phase module to trigger fresh module-level assignments
@@ -41,11 +39,10 @@ class TestResilienceActivationAssumptions:
             import src.python.phases.resilience_activation as ra
 
             importlib.reload(ra)
-            assert ra._RESOURCE_REWARD_MULTIPLIER == 0.5
+            assert ra._PF_ALLOCATION_FRACTION == 0.5
         finally:
-            os.environ.pop("ASSUMPTION_RESOURCE_REWARD", None)
+            os.environ.pop("ASSUMPTION_PF_ALLOCATION_FRACTION", None)
             reload_assumptions()
-            # Restore defaults by re-importing
             import importlib
             import src.python.phases.resilience_activation as ra
 
@@ -73,20 +70,20 @@ class TestResilienceActivationAssumptions:
             importlib.reload(ra)
 
     @pytest.mark.unit
-    def test_env_override_resource_penalty(self, clean_env):
-        """ASSUMPTION_RESOURCE_PENALTY changes module constant."""
+    def test_env_override_pf_allocation_fraction_twice(self, clean_env):
+        """ASSUMPTION_PF_ALLOCATION_FRACTION changes module constant (second source)."""
         from src.python.assumption_config import reload_assumptions
 
-        os.environ["ASSUMPTION_RESOURCE_PENALTY"] = "0.2"
+        os.environ["ASSUMPTION_PF_ALLOCATION_FRACTION"] = "0.3"
         try:
             reload_assumptions()
             import importlib
             import src.python.phases.resilience_activation as ra
 
             importlib.reload(ra)
-            assert ra._RESOURCE_PENALTY_MULTIPLIER == 0.2
+            assert ra._PF_ALLOCATION_FRACTION == 0.3
         finally:
-            os.environ.pop("ASSUMPTION_RESOURCE_PENALTY", None)
+            os.environ.pop("ASSUMPTION_PF_ALLOCATION_FRACTION", None)
             reload_assumptions()
             import importlib
             import src.python.phases.resilience_activation as ra
