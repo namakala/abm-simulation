@@ -275,18 +275,19 @@ class TestProcessAffectDynamics:
         assert -1.0 <= result2 <= 1.0
 
     def test_stress_affect_erosion_multiplied_by_assumption(self):
-        """Stress erosion in update_affect_dynamics is amplified by assumption multiplier (Fix 2)."""
+        """Stress erosion in update_affect_dynamics uses assumption multiplier (calibrated 0.15)."""
         from src.python.assumption_config import get_assumptions
 
         a = get_assumptions()
-        # Check that the assumption parameter exists and has a multiplier > 1
+        # Check that the assumption parameter exists
         assert hasattr(a.stress, "stress_affect_erosion_multiplier"), (
             "Missing stress_affect_erosion_multiplier in assumptions"
         )
-        assert a.stress.stress_affect_erosion_multiplier > 1.0, "Multiplier should be > 1.0"
+        # Calibrated default is 0.15 (weakens stress erosion of affect)
+        assert a.stress.stress_affect_erosion_multiplier < 1.0, "Calibrated multiplier should be < 1.0"
 
         affect_cfg = AffectDynamicsConfig()
-        # With current_stress=1.0, multiplier=2.0 gives affect erosion -0.30
+        # With current_stress=1.0, multiplier=0.15 gives affect erosion -0.0225
         result = update_affect_dynamics(
             current_affect=0.0,
             baseline_affect=0.0,
@@ -295,9 +296,9 @@ class TestProcessAffectDynamics:
             resources=0.5,
             affect_config=affect_cfg,
         )
-        # Config erosion rate is 0.15, with multiplier 2.0: effective = 0.30
-        # At max stress (1.0): erosion = -0.30
-        assert result < -0.15, f"Expected stress erosion stronger than -0.15, got {result:.4f}"
+        # Config erosion rate is 0.15, with multiplier 0.15: effective = 0.0225
+        # At max stress (1.0): erosion = -0.0225
+        assert result < 0.0, f"Expected negative stress erosion, got {result:.4f}"
         expected = -affect_cfg.stress_erosion_rate * 1.0 * a.stress.stress_affect_erosion_multiplier
         assert result == pytest.approx(expected, abs=0.01), (
             f"Affect {result:.4f} should be ~{expected:.4f} with multiplier {a.stress.stress_affect_erosion_multiplier}"

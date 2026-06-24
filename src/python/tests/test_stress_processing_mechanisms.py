@@ -43,9 +43,9 @@ class TestCopingProbability:
         # With high challenge and low hindrance, probability should be above base
         expected_base_effect = 0.5 + (0.2 * 0.8) - (0.3 * 0.2)  # 0.5 + 0.16 - 0.06 = 0.6
         expected_social_effect = 0.1 * np.mean(neighbor_affects)  # 0.1 * 0.5 = 0.05
-        expected_prob = expected_base_effect + expected_social_effect  # 0.65
-
-        assert abs(coping_prob - expected_prob) < 0.1  # Allow some tolerance for calculation method
+        expected_support_effect = 0.3 * 0.5  # social_support_factor * efficacy
+        expected_prob = expected_base_effect + expected_social_effect + expected_support_effect  # 0.8
+        assert abs(coping_prob - expected_prob) < 0.1
 
     def test_coping_probability_high_hindrance(self):
         """Test coping probability with high hindrance and negative social influence."""
@@ -89,9 +89,9 @@ class TestCopingProbability:
         assert 0.0 <= coping_prob <= 1.0
 
         # Base + challenge - hindrance + social_support_effect
-        # 0.5 + (0.2*0.5) - (0.3*0.5) + (0.15*0.5) = 0.45 + 0.075 = 0.525
-        # Note: social_support_efficacy defaults to 0.5
-        expected_prob = 0.5 + (0.2 * 0.5) - (0.3 * 0.5) + (0.15 * 0.5)
+        # 0.5 + (0.2*0.5) - (0.3*0.5) + (0.3*0.5) = 0.5 + 0.1 - 0.15 + 0.15 = 0.6
+        # Note: social_support_efficacy defaults to 0.5, social_support_factor defaults to 0.30
+        expected_prob = 0.5 + (0.2 * 0.5) - (0.3 * 0.5) + (0.3 * 0.5)
         assert abs(coping_prob - expected_prob) < 1e-10
 
     def test_coping_probability_extreme_values(self):
@@ -122,7 +122,8 @@ class TestCopingProbability:
         )
 
         # Should be very low but may not reach exactly 0.0 due to implementation details
-        assert coping_prob < 0.2  # Should be close to minimum
+        # Social support effect (0.30 * 0.5 = 0.15) keeps minimum above 0.2
+        assert coping_prob < 0.3  # Should be close to minimum
 
     def test_support_boost_factor_default(self):
         """support_boost_factor in compute_coping_probability is 0.40 (Fix 5)."""

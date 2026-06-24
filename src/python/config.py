@@ -205,7 +205,7 @@ class Config:
         self.agent_stress_probability = self._get_env_value("AGENT_STRESS_PROBABILITY", float, 0.2)
         self.agent_coping_success_rate = self._get_env_value("AGENT_COPING_SUCCESS_RATE", float, 0.5)
         self.agent_subevents_per_day = self._get_env_value("AGENT_SUBEVENTS_PER_DAY", int, 3)
-        self.agent_resource_cost = self._get_env_value("AGENT_RESOURCE_COST", float, 0.05)
+        self.agent_resource_cost = self._get_env_value("AGENT_RESOURCE_COST", float, 0.03)
 
         # Additional agent attributes for backward compatibility
         self.agent_initial_resilience = self.agent_initial_resilience_mean
@@ -274,16 +274,16 @@ class Config:
 
         # PSS-10 bifactor model scaling parameters (phase 2)
         self.pss10_scale = self._get_env_value("PSS10_SCALE", float, 3.5)
-        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 1.0)
+        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 3.5)
         self.pss10_skew_a = self._get_env_value("PSS10_SKEW_A", float, 3.0)
         self.pss10_bias_sd = self._get_env_value("PSS10_BIAS_SD", float, 1.0)
-        self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 2.0)
+        self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 3.5)
         self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 1.0)
-        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.15)
+        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.20)
         self.pss10_resource_coupling = self._get_env_value("PSS10_RESOURCE_COUPLING", float, 0.0)
         self.pss10_resilience_coupling_item = self._get_env_value("PSS10_RESILIENCE_COUPLING_ITEM", float, 0.20)
         self.stress_affect_coupling = self._get_env_value("STRESS_AFFECT_COUPLING", float, 0.15)
-        self.stress_resource_coupling = self._get_env_value("STRESS_RESOURCE_COUPLING", float, 0.25)
+        self.stress_resource_coupling = self._get_env_value("STRESS_RESOURCE_COUPLING", float, 0.30)
         self.stress_resilience_coupling = self._get_env_value("STRESS_RESILIENCE_COUPLING", float, 0.60)
         self.stress_erosion_rate = self._get_env_value("STRESS_EROSION_RATE", float, 0.15)
 
@@ -330,7 +330,7 @@ class Config:
         self.protective_formal_intervention = self._get_env_value("PROTECTIVE_FORMAL_INTERVENTION", float, 0.5)
         self.protective_psychological_capital = self._get_env_value("PROTECTIVE_PSYCHOLOGICAL_CAPITAL", float, 0.5)
 
-        self.resource_base_regeneration = self._get_env_value("RESOURCE_BASE_REGENERATION", float, 0.25)
+        self.resource_base_regeneration = self._get_env_value("RESOURCE_BASE_REGENERATION", float, 0.50)
         self.resource_allocation_cost = self._get_env_value("RESOURCE_ALLOCATION_COST", float, 0.15)
         self.resource_cost_exponent = self._get_env_value("RESOURCE_COST_EXPONENT", float, 1.5)
 

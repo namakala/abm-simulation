@@ -167,7 +167,7 @@ class AssumptionStressConfig:
     resilience_buffer_coefficient: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_BUFFER_COEFFICIENT", 0.50)
     )
-    pss10_smoothing_alpha: float = field(default_factory=lambda: _env_float("ASSUMPTION_PSS10_SMOOTHING_ALPHA", 0.50))
+    pss10_smoothing_alpha: float = field(default_factory=lambda: _env_float("ASSUMPTION_PSS10_SMOOTHING_ALPHA", 0.85))
     affect_homeostatic_rate: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_AFFECT_HOMEOSTATIC_RATE", 0.15)
     )
@@ -176,10 +176,10 @@ class AssumptionStressConfig:
     )
     stress_decay_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_STRESS_DECAY_RATE", 0.10))
     resource_affect_coupling: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_AFFECT_COUPLING", 0.08)
+        default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_AFFECT_COUPLING", 0.02)
     )
     stress_affect_erosion_multiplier: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_STRESS_AFFECT_EROSION_MULTIPLIER", 2.0)
+        default_factory=lambda: _env_float("ASSUMPTION_STRESS_AFFECT_EROSION_MULTIPLIER", 0.15)
     )
     pss10_resilience_item_amplifier: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_PSS10_RESILIENCE_ITEM_AMPLIFIER", 2.0)

@@ -485,14 +485,15 @@ class TestStressFromPSS10:
     def test_dampening_default_is_unchanged(self):
         """dampening=1.0 with default modulation (resources=0.5 buffers)."""
         stress = compute_stress_from_dimensions(0.3, 0.7)
-        # With default resources=0.5: buffer=0.125, modulated_c=0.425, modulated_o=0.575
-        # stress = (0.575 + 1.0 - 0.425) / 2.0 = 0.575
-        assert stress == pytest.approx(0.575)
+        # With stress_resource_coupling=0.30, resources=0.5: buffer=0.15
+        # modulated_c=0.45, modulated_o=0.55
+        # stress = (0.55 + 1.0 - 0.45) / 2.0 = 0.55
+        assert stress == pytest.approx(0.55)
 
     def test_dampening_reduces_stress_level(self):
         """dampening=0.5 halves the modulated stress level."""
         stress = compute_stress_from_dimensions(0.3, 0.7, dampening=0.5)
-        assert stress == pytest.approx(0.2875)
+        assert stress == pytest.approx(0.275)
 
     def test_dampening_clamps_to_01(self):
         """Result is always clamped to [0, 1]."""

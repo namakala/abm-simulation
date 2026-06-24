@@ -141,7 +141,8 @@ class TestAgentIntegration:
         # Should be higher than base probability due to positive social influence
         expected_base = 0.5 + (config.challenge_bonus * challenge) - (config.hindrance_penalty * hindrance)
         expected_social = config.social_influence_factor * np.mean(neighbor_affects)
-        expected_prob = expected_base + expected_social
+        expected_support = 0.3 * 0.5  # social_support_factor * efficacy
+        expected_prob = expected_base + expected_social + expected_support
 
         assert coping_prob > 0.5  # Should be above base probability
         assert abs(coping_prob - expected_prob) < 0.1

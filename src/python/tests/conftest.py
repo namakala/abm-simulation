@@ -18,18 +18,7 @@ from src.python.affect_utils import ProtectiveFactors, InteractionConfig, Resour
 from src.python.stress_utils import ThresholdParams, AppraisalWeights
 from src.python.phases.interfaces import AgentState
 
-# ── Calibration env vars (Plan 021) ──────────────────────────────
-os.environ.setdefault("PSS10_NOISE_SD", "3.5")
-os.environ.setdefault("ASSUMPTION_PSS10_SMOOTHING_ALPHA", "0.85")
-os.environ.setdefault("PSS10_RESILIENCE_COUPLING", "3.5")
-os.environ.setdefault("PSS10_AFFECT_COUPLING", "0.20")
-os.environ.setdefault("ASSUMPTION_STRESS_AFFECT_EROSION_MULTIPLIER", "0.15")
-os.environ.setdefault("ASSUMPTION_RESOURCE_AFFECT_COUPLING", "0.02")
-os.environ.setdefault("STRESS_RESOURCE_COUPLING", "0.30")
-os.environ.setdefault("RESOURCE_BASE_REGENERATION", "0.50")
-os.environ.setdefault("AGENT_RESOURCE_COST", "0.03")
-
-# Reload assumption configs so they pick up the new env var values
+# Initialize assumption config cache at import time
 reload_assumptions()
 
 # ── Phase-specific fixtures ──────────────────────────────────────
@@ -257,21 +246,21 @@ def setup_test_logging():
 # Start with a clean env vars for each run
 @pytest.fixture(autouse=True)
 def complete_env_isolation():
-    """Complete environment isolation for each test."""
+    """Complete environment isolation for each test.
 
-    # SETUP: Save current environment and reset to clean state
+    Saves env before test (config defaults are loaded), restores after.
+    Does NOT clear at setup — tests see config defaults + any explicit
+    env var overrides from other fixtures.
+    """
+
+    # SETUP: Save current environment
     current_env = dict(os.environ)
 
-    # Clear all environment variables and restore to pristine state
-    os.environ.clear()
-
-    # Reset global config cache objects
     from src.python.config import reload_config as _reload_config
 
     _reload_config()
     reload_assumptions()
 
-    # Run the test
     yield
 
     # TEARDOWN: Restore environment to pre-test state

@@ -50,8 +50,9 @@ class TestAgentPSS10Initialization:
 
         # Check that current_stress is initialized from stress dimensions with dampening
         stress_before = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
-        # With dampening=1.0 and default resources=0.5: buffer=0.125 subtracts from both dims
-        expected_stress = stress_before - 0.125
+        # With dampening=1.0, stress_resource_coupling=0.30, resources=0.5:
+        # buffer=0.15 subtracts from both dims
+        expected_stress = stress_before - 0.15
         assert abs(agent.current_stress - expected_stress) < 1e-6
 
         # Check that all PSS-10 responses are valid
