@@ -17,7 +17,6 @@ class TestAssumptionConfigInConfig:
         assert isinstance(section, dict)
 
     @pytest.mark.unit
-    @pytest.mark.xfail(reason="Env leak in full --cov suite: ASSUMPTION_RESOURCE_PENALTY set by external module")
     def test_assumption_coping_values(self):
         """Coping-related assumptions have correct defaults."""
         from src.python.assumption_config import get_assumptions
@@ -41,9 +40,6 @@ class TestAssumptionConfigInConfig:
         assert a["event_intensity_hindrance_weight"] == 1.3
 
     @pytest.mark.unit
-    @pytest.mark.xfail(
-        reason="Env leak in full --cov suite: ASSUMPTION_FAILED_COPING_COST_PENALTY set by external module"
-    )
     def test_assumption_resource_values(self):
         """Resource-related assumptions have correct defaults."""
         from src.python.assumption_config import get_assumptions

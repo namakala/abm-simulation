@@ -21,6 +21,35 @@ from src.python.phases.interfaces import AgentState
 # Initialize assumption config cache at import time
 reload_assumptions()
 
+# Env vars that can leak between tests (from _apply_overrides, Config() in temp dirs, etc.)
+_LEAKING_ENV_KEYS = [
+    "ASSUMPTION_RESOURCE_PENALTY",
+    "ASSUMPTION_FAILED_COPING_COST_PENALTY",
+    "ASSUMPTION_AFFECT_DETERIORATION_SCALE",
+    "ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER",
+    "ASSUMPTION_RESILIENCE_IMPROVEMENT_SCALE",
+    "ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR",
+    "ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR",
+    "ASSUMPTION_RESILIENCE_COPING_FACTOR",
+    "ASSUMPTION_CONTROLLABILITY_HOMEOSTASIS_RATE",
+    "ASSUMPTION_OVERLOAD_HOMEOSTASIS_RATE",
+    "PSS10_RESILIENCE_COUPLING",
+    "PSS10_BIAS_SD",
+    "PSS10_STRESS_DAMPENING",
+    "PSS10_NOISE_SD",
+    "PSS10_ITEM_MEAN",
+    "PSS10_ITEM_SD",
+    "PSS10_SCALE",
+    "PSS10_BIFACTOR_COR",
+    "PSS10_LOAD_CONTROLLABILITY",
+    "PSS10_SKEW_A",
+    "PSS10_THRESHOLD",
+    "PSS10_CONTROLLABILITY_SD",
+    "PSS10_OVERLOAD_SD",
+    "PSS10_ESTIMATION_BASE",
+    "STRESS_DELTA",
+]
+
 # ── Phase-specific fixtures ──────────────────────────────────────
 
 
@@ -248,13 +277,13 @@ def setup_test_logging():
 def complete_env_isolation():
     """Complete environment isolation for each test.
 
-    Saves env before test (config defaults are loaded), restores after.
-    Does NOT clear at setup — tests see config defaults + any explicit
-    env var overrides from other fixtures.
+    Clears env at setup so each test starts with config defaults.
+    Saves env before clearing and restores after.
     """
 
-    # SETUP: Save current environment
+    # SETUP: Clear environment for proper isolation
     current_env = dict(os.environ)
+    os.environ.clear()
 
     from src.python.config import reload_config as _reload_config
 
