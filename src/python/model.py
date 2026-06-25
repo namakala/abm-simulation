@@ -171,7 +171,12 @@ class StressModel(mesa.Model):
                 np.mean([getattr(agent, "current_stress", 0.0) for agent in m.agents]) if m.agents else 0.0
             ),  # Average current stress
             # Social network and support metrics
-            "social_support_rate": lambda m: m._calculate_social_support_rate(),  # Rate of social support exchanges
+            "social_support_rate": lambda m: (
+                m._calculate_social_support_rate()
+            ),  # Cumulative rate of social support exchanges
+            "daily_social_support_rate": lambda m: (
+                m._calculate_daily_social_support_rate()
+            ),  # Per-step social support rate
             "stress_events": lambda m: sum(
                 len(getattr(agent, "last_daily_stress_events", [])) for agent in m.agents
             ),  # Total stress events per day
@@ -335,11 +340,18 @@ class StressModel(mesa.Model):
         }
 
     def _calculate_social_support_rate(self) -> float:
-        """Calculate rate of social support exchanges in the population."""
+        """Calculate cumulative rate of social support exchanges."""
         if self.total_interactions == 0:
             return 0.0
-
         return self.social_support_exchanges / self.total_interactions
+
+    def _calculate_daily_social_support_rate(self) -> float:
+        """Calculate per-step social support rate from agent daily values."""
+        daily_interactions = sum(getattr(agent, "last_daily_interactions", 0) for agent in self.agents)
+        daily_support = sum(getattr(agent, "last_daily_support_exchanges", 0) for agent in self.agents)
+        if daily_interactions == 0:
+            return 0.0
+        return daily_support / daily_interactions
 
     def _calculate_network_density(self) -> float:
         """Calculate approximate network density based on agent connections."""

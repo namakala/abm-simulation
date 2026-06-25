@@ -95,7 +95,7 @@ class AssumptionCopingConfig:
         default_factory=lambda: _env_float("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", 0.30)
     )
     support_boost_factor: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.40)
+        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.60)
     )
     success_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_SUCCESS_AFFECT_CHANGE", 0.2))
     failure_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_FAILURE_AFFECT_CHANGE", -0.4))
@@ -174,12 +174,16 @@ class AssumptionStressConfig:
     resilience_homeostatic_rate: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE", 0.35)
     )
-    stress_decay_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_STRESS_DECAY_RATE", 0.10))
+    # WP6: Set to 0.20 to balance stress persistence vs over-correlation.
+    stress_decay_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_STRESS_DECAY_RATE", 0.20))
     resource_affect_coupling: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_AFFECT_COUPLING", 0.02)
     )
+    # WP5: Reduced from 0.15 to 0.10 to lower resilience↔affect temporal correlation.
+    # The stress_decay fix (10% instead of 35%) made stress persist longer,
+    # which amplified shared stress→affect and stress→resilience pathways.
     stress_affect_erosion_multiplier: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_STRESS_AFFECT_EROSION_MULTIPLIER", 0.15)
+        default_factory=lambda: _env_float("ASSUMPTION_STRESS_AFFECT_EROSION_MULTIPLIER", 0.08)
     )
     pss10_resilience_item_amplifier: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_PSS10_RESILIENCE_ITEM_AMPLIFIER", 2.0)
@@ -241,11 +245,13 @@ class AssumptionResourceConfig:
     exchange_amount_reduction_factor: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_EXCHANGE_AMOUNT_REDUCTION", 0.5)
     )
+    # WP2: Reduced from 0.1 to 0.02 and 0.05 to 0.02 to break
+    # the affect↔resources positive feedback loop.
     affect_regeneration_multiplier: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", 0.1)
+        default_factory=lambda: _env_float("ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", 0.02)
     )
     resilience_regeneration_multiplier: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_REGENERATION_MULTIPLIER", 0.05)
+        default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_REGENERATION_MULTIPLIER", 0.02)
     )
     # Phase-level constants (beyond the original spec 62)
     efficiency_return_factor: float = field(

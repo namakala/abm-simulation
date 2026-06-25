@@ -245,7 +245,8 @@ class TestAgentInitializationCore:
         # With dampening=1.0, stress_resource_coupling=0.30, resources=0.5:
         # buffer=0.15 subtracts from both dims
         # stress = (overload - 0.15 + 1 - controllability - 0.15) / 2 = stress_before - 0.15
-        expected_stress = stress_before - 0.15
+        # With stress_resource_coupling=0.15, resources=0.5: buffer=0.075
+        expected_stress = stress_before - 0.075
         assert abs(agent.current_stress - expected_stress) < 1e-6
         assert agent.daily_stress_events == []
         assert agent.stress_history == []

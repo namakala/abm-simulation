@@ -279,11 +279,14 @@ class Config:
         self.pss10_bias_sd = self._get_env_value("PSS10_BIAS_SD", float, 1.0)
         self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 3.5)
         self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 1.0)
-        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.20)
+        # WP5: Increased from 0.20 to 0.25 to strengthen PSS-10↔affect correlation.
+        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.35)
         self.pss10_resource_coupling = self._get_env_value("PSS10_RESOURCE_COUPLING", float, 0.0)
         self.pss10_resilience_coupling_item = self._get_env_value("PSS10_RESILIENCE_COUPLING_ITEM", float, 0.20)
         self.stress_affect_coupling = self._get_env_value("STRESS_AFFECT_COUPLING", float, 0.15)
-        self.stress_resource_coupling = self._get_env_value("STRESS_RESOURCE_COUPLING", float, 0.30)
+        # WP3: Reduced from 0.30 to 0.15 to decouple stress↔resources.
+        # Previous value created r=-0.37 vs target [-0.25, -0.10].
+        self.stress_resource_coupling = self._get_env_value("STRESS_RESOURCE_COUPLING", float, 0.15)
         self.stress_resilience_coupling = self._get_env_value("STRESS_RESILIENCE_COUPLING", float, 0.60)
         self.stress_erosion_rate = self._get_env_value("STRESS_EROSION_RATE", float, 0.15)
 

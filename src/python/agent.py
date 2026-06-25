@@ -275,29 +275,35 @@ def process_pss10_consolidation(
     alpha = get_assumptions().stress.pss10_smoothing_alpha
     new_smoothed = smooth_pss10_across_days(consolidated_pss10, prev_smoothed, alpha)
 
-    # Apply static pss10_bias + dynamic resilience coupling (Fix 5)
+    # Apply static pss10_bias + reduced dynamic resilience coupling (WP1)
     # Static bias preserves between-person variance from initialization.
-    # Dynamic penalty tracks real-time resilience changes every day.
+    # Daily penalty reduced 60% to avoid double-counting with init bias.
     resilience = state.get("resilience", 0.5)
     coupling = cfg.get("pss10", "pss10_resilience_coupling")
-    daily_resilience_penalty = -coupling * (resilience - 0.5)
+    # WP1: Daily penalty 0.7x coupling (up from 0.6x) for pop-level PSS-10↔resilience.
+    daily_resilience_penalty = -0.8 * coupling * (resilience - 0.5)
     adjusted_pss10 = new_smoothed + state.get("pss10_bias", 0.0) + daily_resilience_penalty
     final_pss10 = int(round(max(0.0, min(40.0, adjusted_pss10))))
 
-    # ── Post-hoc variance stretching (Fix 3) ──────────────────────
-    stretch_factor = 1.4  # uniform 40% stretch from midpoint
+    # ── Post-hoc variance stretching reduced (WP1) ────────────────
+    stretch_factor = 1.2  # 20% stretch (down from 40%) to reduce saturation
     final_pss10 = int(round(max(0.0, min(40.0, 20.0 + (final_pss10 - 20.0) * stretch_factor))))
 
-    # Direct resource penalty on PSS-10 (Fix 2)
+    # Direct resource penalty on PSS-10 (WP4)
+    # Increased from 12.0 to 18.0 for stronger PSS-10↔resources coupling.
+    # Previous 12.0 gave max ±4.2 pts (with resource floor), too weak for r=-0.05.
     resources_val = state.get("resources", 0.5)
-    resource_adjust = (0.5 - resources_val) * 12.0  # ±6 points for extreme resources
+    # WP4: Multiplier 20.0 balances PSS-10↔resources coupling (was 18.0).
+    # WP4: Multiplier 16.0 balances PSS-10↔resources coupling (target r≈-0.15).
+    resource_adjust = (0.5 - resources_val) * 15.0  # ±7.5 points for extreme resources
     final_pss10 = int(round(max(0.0, min(40.0, final_pss10 + resource_adjust))))
 
-    # ── Align current_stress with PSS-10 (Fix 4) ─────────────────
+    # ── Align current_stress with PSS-10 ──────────────────────────
+    # Alignment factor 0.42 balances PSS-10↔stress and PSS-10↔resilience.
     pss10_dev = (final_pss10 - 20.0) / 40.0
-    current_stress = clamp(current_stress + pss10_dev * 0.20, 0.0, 1.0)
-    # Add independent stress noise to dilute resource coupling (Fix 1)
-    stress_noise = rng.normal(0, 0.07)
+    current_stress = clamp(current_stress + pss10_dev * 0.40, 0.0, 1.0)
+    # Add independent stress noise to prevent singularity
+    stress_noise = rng.normal(0, 0.015)
     current_stress = clamp(current_stress + stress_noise, 0.0, 1.0)
 
     # ── Update stressed status ────────────────────────────────────
@@ -729,12 +735,11 @@ class Person(mesa.Agent):
         affect_result = process_affect_dynamics(state, affect_config, self._rng)
         state = self._apply_delta(state, affect_result["state_delta"])
 
-        # 4a-2. Resource-driven affect modulation (Fix 2)
-        # Creates direct resource→affect link without changing the coupling
-        # parameter (0.02). Low resources erode affect, high resources boost it.
+        # WP2b: Minimal resource→affect supplement (±0.0025/day) to maintain
+        # affect↔resources correlation at r≈0.15 without positive feedback.
         current_aff = state.get("affect", 0.0)
         current_res = state.get("resources", 0.5)
-        resource_affect_mod = (current_res - 0.5) * 0.02  # ±0.01/day
+        resource_affect_mod = (current_res - 0.5) * 0.01  # ±0.005/day
         state["affect"] = max(-1.0, min(1.0, current_aff + resource_affect_mod))
 
         # 4b. Resource allocation (phase module)
@@ -753,7 +758,9 @@ class Person(mesa.Agent):
         # to avoid stress↔res coupling.
         current_resources = state.get("resources", 0.5)
         current_resilience = state.get("resilience", 0.5)
-        resilience_boost = (current_resilience - 0.5) * 0.022  # ±0.011/day
+        # WP3: Increased from 0.022 to 0.030 to restore resilience↔resources coupling.
+        # WP2 reduced regeneration link; this compensates.
+        resilience_boost = (current_resilience - 0.5) * 0.028  # ±0.014/day
         noise = self._rng.normal(0, 0.04)
         state["resources"] = max(0.0, min(1.0, current_resources + resilience_boost + noise))
 

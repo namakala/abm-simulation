@@ -45,7 +45,7 @@ def _compute_regeneration(
 
     Formula::
 
-        R' = base_regeneration × (1 - R) × (1 + 0.5 × max(0, A)) × (1 + 0.3 × resilience)
+        R' = base_regeneration × (1 - R) × (1 + 0.2 × max(0, A)) × (1 + 0.2 × resilience)
 
     Args:
         resources: Current resource level in [0, 1].

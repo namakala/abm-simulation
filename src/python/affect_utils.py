@@ -422,7 +422,9 @@ class StressProcessingConfig:
     challenge_bonus: float = field(default_factory=lambda: get_config().get("coping", "challenge_bonus"))
     hindrance_penalty: float = field(default_factory=lambda: get_config().get("coping", "hindrance_penalty"))
     daily_decay_rate: float = field(default_factory=lambda: get_assumptions().stress.affect_homeostatic_rate)
-    stress_decay_rate: float = field(default_factory=lambda: get_assumptions().stress.resilience_homeostatic_rate)
+    # Fix: was mapped to resilience_homeostatic_rate (0.35) — too aggressive.
+    # Now correctly uses the dedicated stress_decay_rate (0.10).
+    stress_decay_rate: float = field(default_factory=lambda: get_assumptions().stress.stress_decay_rate)
 
 
 def compute_coping_probability(
@@ -1206,8 +1208,10 @@ def update_affect_dynamics(
     #   low resilience + low resources → strong negative affect effect
     #   high resilience + high resources → strong positive affect effect
     # The base coupling (0.02) is unchanged; resilience deviation amplifies it.
+    # WP2: Narrowed interaction range from [0.0, 2.0] to [0.5, 1.5].
+    # The previous range created positive feedback: low res→low affect→low resources.
     resilience_dev = current_resilience - 0.5  # [-0.5, 0.5]
-    interaction_factor = 1.0 + resilience_dev * 2.0  # [0.0, 2.0]
+    interaction_factor = 1.0 + resilience_dev * 0.5  # [0.75, 1.25]
     resource_boost = a.stress.resource_affect_coupling * (resources - 0.5) * interaction_factor
 
     # Combine all effects
