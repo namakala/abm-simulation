@@ -280,7 +280,7 @@ class Config:
         self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 3.5)
         self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 1.0)
         # WP5: Increased from 0.20 to 0.25 to strengthen PSS-10↔affect correlation.
-        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.40)
+        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.30)
         self.pss10_resource_coupling = self._get_env_value("PSS10_RESOURCE_COUPLING", float, 0.0)
         self.pss10_resilience_coupling_item = self._get_env_value("PSS10_RESILIENCE_COUPLING_ITEM", float, 0.20)
         self.stress_affect_coupling = self._get_env_value("STRESS_AFFECT_COUPLING", float, 0.15)

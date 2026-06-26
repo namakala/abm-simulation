@@ -753,8 +753,11 @@ class Person(mesa.Agent):
         # WP3: Increased from 0.022 to 0.030 to restore resilience↔resources coupling.
         # WP2 reduced regeneration link; this compensates.
         resilience_boost = (current_resilience - 0.5) * 0.028  # ±0.014/day
+        # WP4: Affect→resource feedback. Higher affect → faster resource regen.
+        current_affect = state.get("affect", 0.0)
+        affect_boost = current_affect * 0.006  # ±0.006/day
         noise = self._rng.normal(0, 0.04)
-        state["resources"] = max(0.0, min(1.0, current_resources + resilience_boost + noise))
+        state["resources"] = max(0.0, min(1.0, current_resources + resilience_boost + affect_boost + noise))
 
         # 4c. Stress buffering (phase module)
         buffering_config = {}
