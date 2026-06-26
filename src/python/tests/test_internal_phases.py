@@ -372,6 +372,31 @@ class TestProcessPss10Consolidation:
         assert "num_events" in obs
         assert obs["num_events"] == 2
 
+    def test_pss10_does_not_influence_current_stress(self, typical_state, sample_rng):
+        """PSS-10 score does not feed back into current_stress.
+
+        PSS-10 is a measurement variable, not a causal input.
+        Same stress dimensions + different PSS-10 = same current_stress.
+        """
+        import copy
+
+        base = copy.deepcopy(typical_state)
+        base["daily_pss10_scores"] = [20]
+
+        low_stress = copy.deepcopy(base)
+        low_stress["daily_pss10_scores"] = [5]  # Low PSS-10
+
+        high_stress = copy.deepcopy(base)
+        high_stress["daily_pss10_scores"] = [35]  # High PSS-10
+
+        r1 = process_pss10_consolidation(low_stress, {}, sample_rng)
+        r2 = process_pss10_consolidation(high_stress, {}, sample_rng)
+
+        stress_1 = r1["state_delta"]["current_stress"]
+        stress_2 = r2["state_delta"]["current_stress"]
+
+        assert abs(stress_1 - stress_2) < 1e-10, f"PSS-10 leaked into current_stress: {stress_1} vs {stress_2}"
+
     def test_deterministic(self, typical_state):
         """Same input produces same output."""
         rng1 = create_rng(99)

@@ -273,8 +273,8 @@ class Config:
         self.pss10_threshold = self._get_env_value("PSS10_THRESHOLD", int, 27)
 
         # PSS-10 bifactor model scaling parameters (phase 2)
-        self.pss10_scale = self._get_env_value("PSS10_SCALE", float, 3.5)
-        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 3.5)
+        self.pss10_scale = self._get_env_value("PSS10_SCALE", float, 6.0)
+        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 2.0)
         self.pss10_skew_a = self._get_env_value("PSS10_SKEW_A", float, 3.0)
         self.pss10_bias_sd = self._get_env_value("PSS10_BIAS_SD", float, 1.0)
         self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 3.5)

@@ -298,14 +298,6 @@ def process_pss10_consolidation(
     resource_adjust = (0.5 - resources_val) * 12.0  # ±6.0 points for extreme resources
     final_pss10 = int(round(max(0.0, min(40.0, final_pss10 + resource_adjust))))
 
-    # ── Align current_stress with PSS-10 ──────────────────────────
-    # Alignment factor 0.42 balances PSS-10↔stress and PSS-10↔resilience.
-    pss10_dev = (final_pss10 - 20.0) / 40.0
-    current_stress = clamp(current_stress + pss10_dev * 0.40, 0.0, 1.0)
-    # Add independent stress noise to prevent singularity
-    stress_noise = rng.normal(0, 0.015)
-    current_stress = clamp(current_stress + stress_noise, 0.0, 1.0)
-
     # ── Update stressed status ────────────────────────────────────
     stressed = final_pss10 >= pss10_threshold
 
