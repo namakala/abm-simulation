@@ -280,8 +280,12 @@ class Config:
         self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 3.5)
         self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 1.0)
         # WP5: Increased from 0.20 to 0.25 to strengthen PSS-10↔affect correlation.
-        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.30)
-        self.pss10_resource_coupling = self._get_env_value("PSS10_RESOURCE_COUPLING", float, 0.0)
+        # WP5: Reduced from 0.30 to 0.27 to weaken overshoot in seed 42 (r=-0.31 vs [-0.30,-0.18]).
+        # 0.27 balances seed 42 (still a touch strong) against seed 456 (needs stronger).
+        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.27)
+        # WP5: Increased from 0.0 to 0.05 to add direct resource→PSS-10 path.
+        # Previously zero by design; now creates explicit coupling alongside the override.
+        self.pss10_resource_coupling = self._get_env_value("PSS10_RESOURCE_COUPLING", float, 0.05)
         self.pss10_resilience_coupling_item = self._get_env_value("PSS10_RESILIENCE_COUPLING_ITEM", float, 0.20)
         self.stress_affect_coupling = self._get_env_value("STRESS_AFFECT_COUPLING", float, 0.15)
         # WP3: Reduced from 0.30 to 0.15 to decouple stress↔resources.

@@ -727,11 +727,12 @@ class Person(mesa.Agent):
         affect_result = process_affect_dynamics(state, affect_config, self._rng)
         state = self._apply_delta(state, affect_result["state_delta"])
 
-        # WP2b: Minimal resource→affect supplement (±0.0025/day) to maintain
-        # affect↔resources correlation at r≈0.15 without positive feedback.
+        # WP5: Strengthened resource→affect supplement (±0.01/day, was ±0.005)
+        # to improve affect↔resources cross-sectional correlation (target r≈0.20).
+        # Bidirectional coupling reduces seed-dependent variance.
         current_aff = state.get("affect", 0.0)
         current_res = state.get("resources", 0.5)
-        resource_affect_mod = (current_res - 0.5) * 0.01  # ±0.005/day
+        resource_affect_mod = (current_res - 0.5) * 0.02  # ±0.01/day
         state["affect"] = max(-1.0, min(1.0, current_aff + resource_affect_mod))
 
         # 4b. Resource allocation (phase module)
@@ -750,14 +751,20 @@ class Person(mesa.Agent):
         # to avoid stress↔res coupling.
         current_resources = state.get("resources", 0.5)
         current_resilience = state.get("resilience", 0.5)
-        # WP3: Increased from 0.022 to 0.030 to restore resilience↔resources coupling.
-        # WP2 reduced regeneration link; this compensates.
-        resilience_boost = (current_resilience - 0.5) * 0.028  # ±0.014/day
+        # WP5: Increased from 0.028 to 0.033 to strengthen resilience↔resources
+        # cross-sectional correlation (target r≈0.25-0.30).
+        resilience_boost = (current_resilience - 0.5) * 0.033  # ±0.0165/day
         # WP4: Affect→resource feedback. Higher affect → faster resource regen.
         current_affect = state.get("affect", 0.0)
         affect_boost = current_affect * 0.006  # ±0.006/day
+        # WP5: PSS-10→resource penalty. High PSS-10 reduces resource regeneration.
+        # Creates direct PSS-10↔resources coupling alongside affect-mediated path.
+        current_pss10 = state.get("pss10", 0)
+        pss10_cost = (current_pss10 / 40.0 - 0.5) * 0.01  # ±0.005/day
         noise = self._rng.normal(0, 0.04)
-        state["resources"] = max(0.0, min(1.0, current_resources + resilience_boost + affect_boost + noise))
+        state["resources"] = max(
+            0.0, min(1.0, current_resources + resilience_boost + affect_boost + pss10_cost + noise)
+        )
 
         # 4c. Stress buffering (phase module)
         buffering_config = {}
