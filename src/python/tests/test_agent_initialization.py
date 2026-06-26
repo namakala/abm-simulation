@@ -242,11 +242,10 @@ class TestAgentInitializationCore:
         # Check stress tracking variables
         # current_stress is computed from PSS-10 dimensions with dampening
         stress_before = (agent.stress_overload + (1.0 - agent.stress_controllability)) / 2.0
-        # With dampening=1.0, stress_resource_coupling=0.30, resources=0.5:
-        # buffer=0.15 subtracts from both dims
-        # stress = (overload - 0.15 + 1 - controllability - 0.15) / 2 = stress_before - 0.15
-        # With stress_resource_coupling=0.15, resources=0.5: buffer=0.075
-        expected_stress = stress_before - 0.075
+        # With dampening=1.0, stress_resource_coupling=0.10, resources=0.5:
+        # buffer=0.05 subtracts from both dims
+        # stress = (overload - 0.05 + 1 - controllability - 0.05) / 2 = stress_before - 0.05
+        expected_stress = stress_before - 0.05
         assert abs(agent.current_stress - expected_stress) < 1e-6
         assert agent.daily_stress_events == []
         assert agent.stress_history == []

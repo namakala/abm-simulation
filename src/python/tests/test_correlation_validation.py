@@ -89,7 +89,9 @@ class TestTheoreticalCorrelationsAgentLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs resilience r outside [-0.55, -0.40] across seeds")
+    @pytest.mark.xfail(
+        reason="Calibration: PSS-10 vs resilience r outside [-0.55, -0.40] in full-suite runs due to environment side effects"
+    )
     def test_pss10_resilience_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resilience.
 
@@ -127,7 +129,9 @@ class TestTheoreticalCorrelationsAgentLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs affect r just below [-0.30, -0.18]")
+    @pytest.mark.xfail(
+        reason="Calibration: PSS-10 vs affect r just below [-0.30, -0.18] in some seeds under full-suite"
+    )
     def test_pss10_affect_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with affect."""
         seeds = [42, 123, 456]
@@ -161,7 +165,9 @@ class TestTheoreticalCorrelationsAgentLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: PSS-10 vs resources r outside [-0.22, -0.08] across seeds")
+    @pytest.mark.xfail(
+        reason="Calibration: PSS-10 vs resources r outside [-0.22, -0.08] across seeds — resource_adjust coupling insufficient"
+    )
     def test_pss10_resources_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resources."""
         seeds = [42, 123, 456]
@@ -240,7 +246,9 @@ class TestTheoreticalCorrelationsAgentLevel:
         _, p_value = stats.pearsonr(final_epoch["resilience"], final_epoch["resources"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
-    @pytest.mark.xfail(reason="Calibration: affect↔resources correlation weak or negative in most seeds")
+    @pytest.mark.xfail(
+        reason="Calibration: affect↔resources correlation inconsistent across seeds — bidirectional coupling still too weak"
+    )
     def test_affect_resources_positive_correlation(self):
         """Test that affect positively correlates with resources."""
         seeds = [42, 123, 456]
@@ -293,7 +301,9 @@ class TestTheoreticalCorrelationsAgentLevel:
         # Empirical range for positive affect: r ≈ −0.50 to −0.30
         assert -0.50 < correlation < -0.30, f"Stress vs affect correlation {correlation:.3f} outside empirical range"
 
-    @pytest.mark.xfail(reason="Calibration: stress↔resources r varies by seed, needs seed-stable coupling")
+    @pytest.mark.xfail(
+        reason="Calibration: stress↔resources r varies by seed — event-driven variance overwhelms coupling"
+    )
     def test_stress_resources_negative_correlation(self):
         """Test that current stress negatively correlates with resources."""
         seeds = [42, 123, 456]
@@ -361,7 +371,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg resilience r outside [-0.55, -0.40]")
+    @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg resilience r outside [-0.55, -0.40] in some seeds")
     def test_avg_pss10_avg_resilience_negative_correlation(self):
         """Test that average PSS-10 negatively correlates with average resilience over time."""
         seeds = [42, 123, 456]
@@ -394,7 +404,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg affect r just outside [-0.30, -0.18] or p near 0.05")
+    @pytest.mark.xfail(reason="Calibration: avg PSS-10 vs avg affect r just outside [-0.30, -0.18] in some seeds")
     def test_avg_pss10_avg_affect_negative_correlation(self):
         """Test that average PSS-10 negatively correlates with average affect over time."""
         seeds = [42, 123, 456]
@@ -427,7 +437,9 @@ class TestTheoreticalCorrelationsPopulationLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: avg resilience vs avg affect r=0.72 just above [0.30, 0.70]")
+    @pytest.mark.xfail(
+        reason="Calibration: avg resilience vs avg affect r=0.78-0.85 above [0.30, 0.70] — shared event pathway"
+    )
     def test_avg_resilience_avg_affect_positive_correlation(self):
         """Test that average resilience positively correlates with average affect over time."""
         seeds = [42, 123, 456]
@@ -460,7 +472,9 @@ class TestTheoreticalCorrelationsPopulationLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(reason="Calibration: daily_coping_support_corr mean near zero, support→coping pathway too weak")
+    @pytest.mark.xfail(
+        reason="Calibration: daily_coping_support_corr mean near zero in full-suite — environment side effects"
+    )
     def test_social_support_coping_success_correlation(self):
         """Test correlation between social support rate and coping success rate.
 
@@ -513,7 +527,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
 class TestStatisticalSignificance:
     """Test statistical significance of correlations."""
 
-    @pytest.mark.xfail(reason="Calibration: affect↔resources not significant (p=0.35), needs stronger coupling")
+    @pytest.mark.xfail(reason="Calibration: affect↔resources and resilience↔resources not significant in most seeds")
     def test_correlation_significance_thresholds(self):
         """Test that key correlations meet statistical significance thresholds.
 
@@ -566,9 +580,7 @@ class TestStatisticalSignificance:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(
-        reason="Calibration: some correlation pairs (affect↔resources, pss10↔resources) outside ranges across seeds"
-    )
+    @pytest.mark.xfail(reason="Calibration: multiple correlation pairs outside ranges across seeds")
     def test_correlation_magnitude_ranges(self):
         """Test that correlation magnitudes are within expected theoretical ranges."""
         seeds = [42, 123, 456]

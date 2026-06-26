@@ -95,7 +95,7 @@ class AssumptionCopingConfig:
         default_factory=lambda: _env_float("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", 0.30)
     )
     support_boost_factor: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 0.60)
+        default_factory=lambda: _env_float("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", 1.20)
     )
     success_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_SUCCESS_AFFECT_CHANGE", 0.2))
     failure_affect_change: float = field(default_factory=lambda: _env_float("ASSUMPTION_FAILURE_AFFECT_CHANGE", -0.4))
@@ -177,7 +177,7 @@ class AssumptionStressConfig:
     # WP6: Set to 0.20 to balance stress persistence vs over-correlation.
     stress_decay_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_STRESS_DECAY_RATE", 0.20))
     resource_affect_coupling: float = field(
-        default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_AFFECT_COUPLING", 0.02)
+        default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_AFFECT_COUPLING", 0.08)
     )
     # WP5: Reduced from 0.15 to 0.10 to lower resilience↔affect temporal correlation.
     # The stress_decay fix (10% instead of 35%) made stress persist longer,

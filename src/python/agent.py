@@ -281,7 +281,7 @@ def process_pss10_consolidation(
     resilience = state.get("resilience", 0.5)
     coupling = cfg.get("pss10", "pss10_resilience_coupling")
     # WP1: Daily penalty 0.7x coupling (up from 0.6x) for pop-level PSS-10↔resilience.
-    daily_resilience_penalty = -0.8 * coupling * (resilience - 0.5)
+    daily_resilience_penalty = -0.5 * coupling * (resilience - 0.5)
     adjusted_pss10 = new_smoothed + state.get("pss10_bias", 0.0) + daily_resilience_penalty
     final_pss10 = int(round(max(0.0, min(40.0, adjusted_pss10))))
 
@@ -295,7 +295,7 @@ def process_pss10_consolidation(
     resources_val = state.get("resources", 0.5)
     # WP4: Multiplier 20.0 balances PSS-10↔resources coupling (was 18.0).
     # WP4: Multiplier 16.0 balances PSS-10↔resources coupling (target r≈-0.15).
-    resource_adjust = (0.5 - resources_val) * 15.0  # ±7.5 points for extreme resources
+    resource_adjust = (0.5 - resources_val) * 12.0  # ±6.0 points for extreme resources
     final_pss10 = int(round(max(0.0, min(40.0, final_pss10 + resource_adjust))))
 
     # ── Align current_stress with PSS-10 ──────────────────────────
