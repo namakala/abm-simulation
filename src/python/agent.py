@@ -52,7 +52,9 @@ from src.python.phases import (
 )
 from src.python.phases.interaction import process_interaction as phase_process_interaction
 
-# Load configuration
+# Module-level config reference for internal methods (_initialize_pss10_scores, etc.)
+# These are only called during Person.__init__ which runs once per instance.
+# For other code, use get_config() at point of access.
 config = get_config()
 
 
@@ -732,7 +734,9 @@ class Person(mesa.Agent):
         # Bidirectional coupling reduces seed-dependent variance.
         current_aff = state.get("affect", 0.0)
         current_res = state.get("resources", 0.5)
-        resource_affect_mod = (current_res - 0.5) * 0.02  # ±0.01/day
+        # Fix 4: Further reduced from 0.02 to 0.012 to avoid affect↔resources overshoot.
+        # resource_affect_mod at 0.016 still overshoots (r≈0.31-0.39).
+        resource_affect_mod = (current_res - 0.5) * 0.012  # ±0.006/day
         state["affect"] = max(-1.0, min(1.0, current_aff + resource_affect_mod))
 
         # 4b. Resource allocation (phase module)
@@ -751,16 +755,20 @@ class Person(mesa.Agent):
         # to avoid stress↔res coupling.
         current_resources = state.get("resources", 0.5)
         current_resilience = state.get("resilience", 0.5)
-        # WP5: Increased from 0.028 to 0.033 to strengthen resilience↔resources
+        # WP5: Increased from 0.033 to 0.038 to strengthen resilience↔resources
         # cross-sectional correlation (target r≈0.25-0.30).
-        resilience_boost = (current_resilience - 0.5) * 0.033  # ±0.0165/day
+        # Fix 4: Further increase to push r above 0.20 threshold.
+        resilience_boost = (current_resilience - 0.5) * 0.038  # ±0.019/day
         # WP4: Affect→resource feedback. Higher affect → faster resource regen.
+        # Fix 4: Kept at 0.006 — was increased to 0.008 but caused overshoot.
         current_affect = state.get("affect", 0.0)
         affect_boost = current_affect * 0.006  # ±0.006/day
         # WP5: PSS-10→resource penalty. High PSS-10 reduces resource regeneration.
         # Creates direct PSS-10↔resources coupling alongside affect-mediated path.
+        # Fix 2: Fixed sign — low PSS-10 boosts, high PSS-10 penalizes.
+        # Fix 4: Reduced magnitude 0.01→0.003 to compensate for sign fix.
         current_pss10 = state.get("pss10", 0)
-        pss10_cost = (current_pss10 / 40.0 - 0.5) * 0.01  # ±0.005/day
+        pss10_cost = (0.5 - current_pss10 / 40.0) * 0.003  # ±0.0015/day
         noise = self._rng.normal(0, 0.04)
         state["resources"] = max(
             0.0, min(1.0, current_resources + resilience_boost + affect_boost + pss10_cost + noise)

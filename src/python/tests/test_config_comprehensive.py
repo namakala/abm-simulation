@@ -562,3 +562,36 @@ class TestConfigEdgeCases:
         config = Config()
         # Should not raise any exceptions
         config.validate()
+
+
+class TestModelConfigIsolation:
+    """Test that model instances use per-call config (Fix 1).
+
+    model.py must NOT cache `config = get_config()` at module level.
+    Each StressModel instance should fetch fresh config so that
+    env var changes between instantiations are picked up correctly.
+    """
+
+    def test_model_uses_per_instance_config(self):
+        """Changing env vars between instantiations must affect new models."""
+        from src.python.model import StressModel
+        from src.python.config import reload_config
+
+        # First instance uses default config
+        model1 = StressModel(N=50, max_days=10, seed=42)
+        assert model1.num_agents == 50  # sanity check
+
+        # Change an env var and reload
+        os.environ["SIMULATION_NUM_AGENTS"] = "25"
+        reload_config()
+
+        # Second instance should pick up the NEW config value
+        model2 = StressModel()
+        assert model2.num_agents == 25, (
+            f"Expected model2.num_agents=25, got {model2.num_agents}. "
+            f"Module-level config cache is stale — Fix 1 required."
+        )
+
+        # Cleanup
+        del os.environ["SIMULATION_NUM_AGENTS"]
+        reload_config()

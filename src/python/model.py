@@ -13,8 +13,9 @@ from mesa import DataCollector
 from src.python.agent import Person
 from src.python.config import get_config
 
-# Load configuration
-config = get_config()
+# NOTE: Do NOT cache config at module level.
+# Tests may call reload_config() between model instantiations,
+# so we fetch fresh config at point of use.
 
 
 def _compute_coping_success(agent) -> float:
@@ -108,11 +109,11 @@ class StressModel(mesa.Model):
 
         # Use config values if parameters not provided
         if N is None:
-            N = config.get("simulation", "num_agents")
+            N = get_config().get("simulation", "num_agents")
         if max_days is None:
-            max_days = config.get("simulation", "max_days")
+            max_days = get_config().get("simulation", "max_days")
         if seed is None:
-            seed = config.get("simulation", "seed")
+            seed = get_config().get("simulation", "seed")
 
         self.max_days = max_days
         self.num_agents = N
@@ -122,7 +123,9 @@ class StressModel(mesa.Model):
         self._initialize_datacollector()
 
         # Build social network
-        G = nx.watts_strogatz_graph(n=N, k=config.get("network", "watts_k"), p=config.get("network", "watts_p"))
+        G = nx.watts_strogatz_graph(
+            n=N, k=get_config().get("network", "watts_k"), p=get_config().get("network", "watts_p")
+        )
         self.grid = NetworkGrid(G)
 
         # Create and register agents with enhanced capabilities
