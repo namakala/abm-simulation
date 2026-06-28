@@ -762,17 +762,14 @@ class Person(mesa.Agent):
         # WP4: Affect→resource feedback. Higher affect → faster resource regen.
         # Fix 4: Kept at 0.006 — was increased to 0.008 but caused overshoot.
         current_affect = state.get("affect", 0.0)
-        affect_boost = current_affect * 0.006  # ±0.006/day
-        # WP5: PSS-10→resource penalty. High PSS-10 reduces resource regeneration.
-        # Creates direct PSS-10↔resources coupling alongside affect-mediated path.
-        # Fix 2: Fixed sign — low PSS-10 boosts, high PSS-10 penalizes.
-        # Fix 4: Reduced magnitude 0.01→0.003 to compensate for sign fix.
-        current_pss10 = state.get("pss10", 0)
-        pss10_cost = (0.5 - current_pss10 / 40.0) * 0.003  # ±0.0015/day
+        affect_boost = (
+            current_affect * 0.005
+        )  # ±0.005/day — slightly reduced to compensate for overload modulation in stress buffering
+        # PSS-10→resources removed — PSS-10 is a measurement output, not causal.
+        # Correlation between PSS-10 and resources now emerges from shared common
+        # cause (stress_overload) in the stress buffering phase.
         noise = self._rng.normal(0, 0.04)
-        state["resources"] = max(
-            0.0, min(1.0, current_resources + resilience_boost + affect_boost + pss10_cost + noise)
-        )
+        state["resources"] = max(0.0, min(1.0, current_resources + resilience_boost + affect_boost + noise))
 
         # 4c. Stress buffering (phase module)
         buffering_config = {}

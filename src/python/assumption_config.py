@@ -274,6 +274,7 @@ class AssumptionResourceConfig:
     buffering_a_coefficient: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_A_COEFFICIENT", -0.008)
     )
+    buffering_a_overload: float = field(default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_A_OVERLOAD", -0.0))
     buffering_b_coefficient: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_BUFFERING_B_COEFFICIENT", 0.5)
     )

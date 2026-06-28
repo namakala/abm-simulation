@@ -108,10 +108,11 @@ class TestMediationAPath:
         assert out["observation"]["a_coefficient"] == -0.5
 
     def test_resource_depletion_formula(self):
-        """Resources decrease by a * stress."""
-        state = _make_state(current_stress=0.4, resources=0.7)
+        """Resources decrease by a * stress (with overload=0 → no modulation)."""
+        state = _make_state(current_stress=0.4, resources=0.7, stress_overload=0.0)
         config = _make_config(a_coefficient=-0.3)
         out = _run(state, config)
+        # With overload=0, effective_stress = current_stress * (1.0 + 0.2 * 0) = current_stress
         expected = max(0.0, min(1.0, 0.7 + (-0.3 * 0.4)))
         assert out["state_delta"]["resources"] == pytest.approx(expected)
 

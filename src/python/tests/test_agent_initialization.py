@@ -823,29 +823,110 @@ class TestAgentPopulationVariation:
         assert not np.allclose(correlation_matrix, 1.0, atol=0.1)
 
 
-class TestPss10ResourceSign:
-    """Test that PSS-10→resource cost has correct sign (Fix 2).
+class TestCurrentStressResourcePath:
+    """current_stress directly drives resource depletion.
 
-    The formula at agent.py line 763 must penalize high PSS-10 and
-    boost low PSS-10. The current formula does the opposite.
+    Stress itself (not PSS-10) affects resources through the
+    stress buffering a-path.
     """
 
-    def test_pss10_cost_sign_is_correct(self):
-        """After Fix 2: low PSS-10 boosts, high PSS-10 penalizes."""
-        pss10_low = 10
-        pss10_high = 30
+    def test_current_stress_drives_resource_depletion(self):
+        """Agents with different current_stress get different depletion."""
+        from src.python.phases.stress_buffering import run_phase
+        from src.python.phases.interfaces import AgentState
 
-        # FIXED formula
-        cost_low = (0.5 - pss10_low / 40.0) * 0.01
-        cost_high = (0.5 - pss10_high / 40.0) * 0.01
+        base_state: AgentState = {
+            "resilience": 0.5,
+            "baseline_resilience": 0.5,
+            "affect": 0.0,
+            "baseline_affect": 0.0,
+            "resources": 0.5,
+            "current_stress": 0.0,
+            "pss10": 20,
+            "stressed": False,
+            "volatility": 0.0,
+            "daily_interactions": 0,
+            "daily_support_exchanges": 0,
+            "stress_controllability": 0.5,
+            "stress_overload": 0.5,
+            "consecutive_hindrances": 0.0,
+            "protective_factors": {
+                "social_support": 0.5,
+                "family_support": 0.5,
+                "formal_intervention": 0.5,
+                "psychological_capital": 0.5,
+            },
+        }
 
-        # Low PSS-10 should ADD to resources (positive cost → boost)
-        assert cost_low > 0, f"Low PSS-10 should boost resources, got cost={cost_low}"
-        # High PSS-10 should SUBTRACT from resources (negative cost → penalty)
-        assert cost_high < 0, f"High PSS-10 should penalize resources, got cost={cost_high}"
-        # Magnitude should decrease as PSS-10 approaches 20
-        assert cost_low < 0.005, f"Low PSS-10 boost too large: {cost_low}"
-        assert cost_high > -0.005, f"High PSS-10 penalty too large: {cost_high}"
+        from numpy.random import default_rng
+
+        rng = default_rng(42)
+
+        # Same overload but different current_stress; overload modulates
+        state_low = dict(base_state)
+        state_low["current_stress"] = 0.1
+        state_low["stress_overload"] = 0.5
+        state_high = dict(base_state)
+        state_high["current_stress"] = 0.9
+        state_high["stress_overload"] = 0.5
+
+        result_low = run_phase(state_low, {}, rng)
+        result_high = run_phase(state_high, {}, rng)
+
+        # Higher current_stress should deplete more resources
+        res_low = result_low["state_delta"]["resources"]
+        res_high = result_high["state_delta"]["resources"]
+        assert res_high < res_low, (
+            f"Higher current_stress should deplete more resources: "
+            f"stress=0.1 → {res_low:.4f}, stress=0.9 → {res_high:.4f}"
+        )
+
+    def test_overload_modulates_stress_depletion(self):
+        """Overload modulates current_stress impact on resources."""
+        from src.python.phases.stress_buffering import run_phase
+        from src.python.phases.interfaces import AgentState
+
+        base_state: AgentState = {
+            "resilience": 0.5,
+            "baseline_resilience": 0.5,
+            "affect": 0.0,
+            "baseline_affect": 0.0,
+            "resources": 0.5,
+            "current_stress": 0.5,
+            "pss10": 20,
+            "stressed": False,
+            "volatility": 0.0,
+            "daily_interactions": 0,
+            "daily_support_exchanges": 0,
+            "stress_controllability": 0.5,
+            "stress_overload": 0.5,
+            "consecutive_hindrances": 0.0,
+            "protective_factors": {
+                "social_support": 0.5,
+                "family_support": 0.5,
+                "formal_intervention": 0.5,
+                "psychological_capital": 0.5,
+            },
+        }
+
+        from numpy.random import default_rng
+
+        rng = default_rng(42)
+
+        state_low = dict(base_state)
+        state_low["stress_overload"] = 0.0
+        state_high = dict(base_state)
+        state_high["stress_overload"] = 1.0
+
+        result_low = run_phase(state_low, {}, rng)
+        result_high = run_phase(state_high, {}, rng)
+
+        res_low = result_low["state_delta"]["resources"]
+        res_high = result_high["state_delta"]["resources"]
+        assert res_high < res_low, (
+            f"Higher overload should amplify resource depletion: "
+            f"overload=0.0 → {res_low:.4f}, overload=1.0 → {res_high:.4f}"
+        )
 
 
 class TestPopulationDistributionVariability:
