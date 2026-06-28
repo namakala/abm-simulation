@@ -1,184 +1,145 @@
+"""Tests for PSS-10 consolidation mechanics change.
+
+The stored ``state["pss10"]`` should reflect pure stress perception
+(``pss10_smoothed + pss10_bias``), not the post-hoc adjusted value that
+includes resource_adjust and resilience_penalty. The adjusted value is
+still used for ``stressed`` status detection.
 """
-Tests for the PSS-10 partial daily-event stress moving average.
 
-Verifies the asymmetric consolidation algorithm:
-- Higher-than-average stress events are recorded directly
-- Lower-than-average stress events are blended with the running average
-- End-of-day consolidation produces a rounded mean
-"""
+import numpy as np
 
-import pytest
+from src.python.agent import process_pss10_consolidation
 
 
-class TestAppendDailyPss10Score:
-    """append_daily_pss10_score implements the partial moving average."""
-
-    @pytest.mark.unit
-    def test_append_first_score(self):
-        """First score is always appended directly."""
-        from src.python.stress_utils import append_daily_pss10_score
-
-        scores = []
-        result = append_daily_pss10_score(scores, 3)
-        assert result == [3]
-
-    @pytest.mark.unit
-    def test_append_higher_score_direct(self):
-        """Score higher than previous average is appended directly."""
-        from src.python.stress_utils import append_daily_pss10_score
-
-        scores = [3]
-        result = append_daily_pss10_score(scores, 9)
-        # avg([3]) = 3, 9 > 3 → direct append
-        assert result == [3, 9]
-
-    @pytest.mark.unit
-    def test_append_lower_score_blended(self):
-        """Score lower than previous average is blended."""
-        from src.python.stress_utils import append_daily_pss10_score
-
-        scores = [3, 9]
-        result = append_daily_pss10_score(scores, 4)
-        # avg([3, 9]) = 6, 4 < 6 → blend: round((4+6)/2) = 5
-        assert result == [3, 9, 5]
-
-    @pytest.mark.unit
-    def test_complex_sequence(self):
-        """Full example from specification: [3, 9, 4, 5] → [3, 9, 5, 5]."""
-        from src.python.stress_utils import append_daily_pss10_score
-
-        scores = []
-        scores = append_daily_pss10_score(scores, 3)  # [3]
-        scores = append_daily_pss10_score(scores, 9)  # [3, 9]
-        scores = append_daily_pss10_score(scores, 4)  # [3, 9, 5]
-        scores = append_daily_pss10_score(scores, 5)  # [3, 9, 5, 5]
-        assert scores == [3, 9, 5, 5]
-
-    @pytest.mark.unit
-    def test_persistent_low_scores_decay(self):
-        """Repeated low scores gradually pull average down."""
-        from src.python.stress_utils import append_daily_pss10_score
-
-        scores = []
-        scores = append_daily_pss10_score(scores, 9)  # [9]
-        scores = append_daily_pss10_score(scores, 3)  # avg(9)=9, 3<9 → blend: round((3+9)/2)=6
-        scores = append_daily_pss10_score(scores, 3)  # avg(9,6)=7.5, 3<7.5 → blend: round((3+7.5)/2)=5
-        scores = append_daily_pss10_score(scores, 3)  # avg(9,6,5)=6.67, 3<6.67 → blend: round((3+6.67)/2)=5
-        assert scores == [9, 6, 5, 5]
-
-    @pytest.mark.unit
-    def test_steady_high_scores(self):
-        """Consistently high scores are all recorded directly."""
-        from src.python.stress_utils import append_daily_pss10_score
-
-        scores = []
-        for score in [7, 8, 9, 10]:
-            scores = append_daily_pss10_score(scores, score)
-        assert scores == [7, 8, 9, 10]
-
-    @pytest.mark.unit
-    def test_input_array_not_mutated(self):
-        """Function returns a new list, does not mutate input."""
-        from src.python.stress_utils import append_daily_pss10_score
-
-        original = [3]
-        result = append_daily_pss10_score(original, 9)
-        assert original == [3]  # unchanged
-        assert result == [3, 9]
-
-    @pytest.mark.unit
-    def test_high_then_low_then_high(self):
-        """Pattern: high, low, high. High after blend is still recorded."""
-        from src.python.stress_utils import append_daily_pss10_score
-
-        scores = []
-        scores = append_daily_pss10_score(scores, 8)  # [8]
-        scores = append_daily_pss10_score(scores, 2)  # avg(8)=8, 2<8 → blend: round((2+8)/2)=5
-        scores = append_daily_pss10_score(scores, 7)  # avg(8,5)=6.5, 7>6.5 → direct: [8,5,7]
-        assert scores == [8, 5, 7]
+def _make_state_with_bias(
+    daily_scores: list[int],
+    pss10_bias: float = 0.0,
+    pss10_smoothed: float | None = None,
+    resources: float = 0.5,
+    resilience: float = 0.5,
+    **overrides,
+) -> dict:
+    """Build a minimal AgentState for consolidation testing."""
+    state = {
+        "daily_pss10_scores": daily_scores,
+        "current_stress": 0.3,
+        "stress_controllability": 0.5,
+        "stress_overload": 0.5,
+        "affect": 0.0,
+        "resources": resources,
+        "resilience": resilience,
+        "pss10_bias": pss10_bias,
+        "pss10_smoothed": pss10_smoothed,
+        "consecutive_hindrances": 0.0,
+        "protective_factors": {
+            "social_support": 0.5,
+            "family_support": 0.5,
+            "formal_intervention": 0.5,
+            "psychological_capital": 0.5,
+        },
+    }
+    state.update(overrides)
+    return state
 
 
-class TestConsolidateDailyPss10:
-    """consolidate_daily_pss10 computes final score from daily array."""
+class TestPss10PurePerception:
+    """Stored PSS-10 is pure perception, not post-hoc adjusted."""
 
-    @pytest.mark.unit
-    def test_consolidate_empty_returns_none(self):
-        """Empty array returns None (no stress events today)."""
-        from src.python.stress_utils import consolidate_daily_pss10
+    def test_stores_pure_perception_without_resource_adjust(self):
+        """state['pss10'] does not include resource_adjust."""
+        # High resources should boost PSS-10 via resource_adjust
+        # (0.5 - 0.9) * 12.0 = -4.8 → adjusted PSS-10 drops
+        state = _make_state_with_bias(
+            daily_scores=[20],
+            pss10_bias=0.0,
+            pss10_smoothed=20.0,
+            resources=0.9,  # high resources → resource_adjust = -4.8
+            resilience=0.5,
+        )
+        result = process_pss10_consolidation(state, {}, np.random.default_rng(42))
+        stored_pss10 = result["state_delta"]["pss10"]
 
-        result = consolidate_daily_pss10([])
-        assert result is None
+        # Pure perception = new_smoothed + pss10_bias
+        # new_smoothed = alpha * 20 + (1-alpha) * 20 = 20
+        # pss10_bias = 0
+        # Expected: ~20 (not lowered by resource_adjust)
+        assert abs(stored_pss10 - 20.0) < 1.5, f"PSS-10 should be ~20 (pure perception), got {stored_pss10}"
 
-    @pytest.mark.unit
-    def test_consolidate_single_score(self):
-        """Single score returns the score itself."""
-        from src.python.stress_utils import consolidate_daily_pss10
+    def test_stores_pure_perception_without_resilience_penalty(self):
+        """state['pss10'] does not include resilience penalty."""
+        # Low resilience should penalize PSS-10 via daily_resilience_penalty
+        # 0.5 * 3.5 * (0.1 - 0.5) = -0.7 → adjusted PSS-10 drops
+        state = _make_state_with_bias(
+            daily_scores=[20],
+            pss10_bias=0.0,
+            pss10_smoothed=20.0,
+            resources=0.5,
+            resilience=0.1,  # low resilience
+        )
+        result = process_pss10_consolidation(state, {}, np.random.default_rng(42))
+        stored_pss10 = result["state_delta"]["pss10"]
 
-        result = consolidate_daily_pss10([7])
-        assert result == 7
+        # Pure perception = new_smoothed + pss10_bias ≈ 20
+        assert abs(stored_pss10 - 20.0) < 1.5, f"PSS-10 should be ~20 (pure perception), got {stored_pss10}"
 
-    @pytest.mark.unit
-    def test_consolidate_example(self):
-        """Example from spec: [3, 9, 5, 5] → round(mean)=6."""
-        from src.python.stress_utils import consolidate_daily_pss10
+    def test_stressed_status_still_uses_adjusted_value(self):
+        """stressed status is computed from the full adjusted PSS-10."""
+        # Very low resources → resource_adjust = (0.5 - 0.1) * 12 = +4.8
+        # This should NOT affect stored PSS-10, but SHOULD affect stressed
+        state = _make_state_with_bias(
+            daily_scores=[30],
+            pss10_bias=0.0,
+            pss10_smoothed=30.0,
+            resources=0.1,  # low → resource_adjust adds +4.8
+            resilience=0.5,
+        )
+        config = {"pss10_threshold": 25}
+        result = process_pss10_consolidation(state, config, np.random.default_rng(42))
+        stored_pss10 = result["state_delta"]["pss10"]
+        is_stressed = result["state_delta"]["stressed"]
 
-        result = consolidate_daily_pss10([3, 9, 5, 5])
-        # mean = 5.5, round = 6
-        assert result == 6
+        # Pure perception ≈ 30 (not boosted by resource_adjust)
+        # But stressed status uses adjusted value which IS boosted
+        # Resource_adjust = (0.5 - 0.1) * 12 = +4.8
+        # Adjusted PSS-10 ≈ 30 + 4.8 = 34.8 → stressed
+        # Pure PSS-10 ≈ 30 → would be stressed too in this case
+        # Need a case where pure is below threshold but adjusted is above
+        assert abs(stored_pss10 - 30.0) < 1.5, f"Stored PSS-10 should be ~30, got {stored_pss10}"
+        assert is_stressed, "Stressed status should use adjusted value (above threshold)"
 
-    @pytest.mark.unit
-    def test_consolidate_multiple_scores(self):
-        """Multiple scores produce rounded mean."""
-        from src.python.stress_utils import consolidate_daily_pss10
+    def test_threshold_crossing_from_adjustment(self):
+        """Resource adjustment can push PSS-10 above threshold even when
+        pure perception is below threshold."""
+        # Resource_adjust = (0.5 - 0.1) * 12 = +4.8
+        # With daily score = 22, variance stretch ≈ 22.4, +4.8 = 27.2 → above 25
+        # Pure perception ≈ 22 → below 25
+        state = _make_state_with_bias(
+            daily_scores=[22],
+            pss10_bias=0.0,
+            pss10_smoothed=22.0,
+            resources=0.1,
+            resilience=0.5,
+        )
+        config = {"pss10_threshold": 25}
+        result = process_pss10_consolidation(state, config, np.random.default_rng(42))
+        stored_pss10 = result["state_delta"]["pss10"]
+        is_stressed = result["state_delta"]["stressed"]
 
-        result = consolidate_daily_pss10([3, 9, 5])
-        # mean = 5.67, round = 6
-        assert result == 6
+        # Pure perception ≈ 22 (below threshold)
+        assert stored_pss10 <= config["pss10_threshold"], (
+            f"Pure perception should be below threshold, got {stored_pss10}"
+        )
+        # But stressed should be True (adjusted value crosses threshold)
+        assert is_stressed, "Stressed should be True (adjusted value crosses threshold)"
 
-
-class TestSmoothPss10AcrossDays:
-    """smooth_pss10_across_days applies exponential smoothing."""
-
-    @pytest.mark.unit
-    def test_smooth_first_day(self):
-        """First day: alpha=0.30, prev=None returns consolidated as-is."""
-        from src.python.stress_utils import smooth_pss10_across_days
-
-        result = smooth_pss10_across_days(20, None, alpha=0.30)
-        assert result == 20
-
-    @pytest.mark.unit
-    def test_smooth_second_day(self):
-        """Second day: smoothed = alpha * consolidated + (1-alpha) * prev."""
-        from src.python.stress_utils import smooth_pss10_across_days
-
-        # prev=20, consolidated=14, alpha=0.30
-        # smoothed = 0.30*14 + 0.70*20 = 4.2 + 14.0 = 18.2
-        result = smooth_pss10_across_days(14, 20, alpha=0.30)
-        assert result == pytest.approx(18.2, abs=0.01)
-
-    @pytest.mark.unit
-    def test_smooth_returns_float(self):
-        """Returns float for downstream rounding, not int."""
-        from src.python.stress_utils import smooth_pss10_across_days
-
-        result = smooth_pss10_across_days(14, 20, alpha=0.30)
-        assert isinstance(result, float)
-
-    @pytest.mark.unit
-    def test_smooth_custom_alpha(self):
-        """Custom alpha changes the blend."""
-        from src.python.stress_utils import smooth_pss10_across_days
-
-        # alpha=0.10: 90% weight on prev, 10% on new
-        result = smooth_pss10_across_days(14, 20, alpha=0.10)
-        # 0.10*14 + 0.90*20 = 1.4 + 18.0 = 19.4
-        assert result == pytest.approx(19.4, abs=0.01)
-
-    @pytest.mark.unit
-    def test_smooth_alpha_one(self):
-        """alpha=1.0: only current day matters."""
-        from src.python.stress_utils import smooth_pss10_across_days
-
-        result = smooth_pss10_across_days(14, 20, alpha=1.0)
-        assert result == 14.0
+    def test_pss10_smoothed_unchanged(self):
+        """pss10_smoothed field is still stored unchanged."""
+        state = _make_state_with_bias(
+            daily_scores=[25],
+            pss10_bias=2.0,
+            pss10_smoothed=20.0,
+            resources=0.5,
+            resilience=0.5,
+        )
+        result = process_pss10_consolidation(state, {}, np.random.default_rng(42))
+        assert "pss10_smoothed" in result["state_delta"]

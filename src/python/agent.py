@@ -304,8 +304,12 @@ def process_pss10_consolidation(
     stressed = final_pss10 >= pss10_threshold
 
     # ── Build PhaseOutput ─────────────────────────────────────────
+    # Store pure perception (pss10_smoothed + bias) for analysis.
+    # Post-hoc adjustments (resource_adjust, resilience_penalty, stretch)
+    # only affect stressed status detection, not the stored PSS-10 score.
+    pure_perception = int(round(max(0.0, min(40.0, new_smoothed + state.get("pss10_bias", 0.0)))))
     state_delta = {
-        "pss10": final_pss10,
+        "pss10": pure_perception,
         "pss10_smoothed": new_smoothed,
         "current_stress": current_stress,
         "stress_controllability": stress_controllability,

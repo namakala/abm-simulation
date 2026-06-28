@@ -251,6 +251,8 @@ class StressModel(mesa.Model):
             "challenge_appraisal": _compute_mean_challenge,
             "hindrance_appraisal": _compute_mean_hindrance,
             "interaction_frequency": lambda a: getattr(a, "last_daily_interactions", 0),  # Daily interaction count
+            # Stressed status (based on adjusted PSS-10, not pure perception)
+            "stressed": lambda a: getattr(a, "stressed", False),  # High-stress status flag
         }
 
         # Initialize DataCollector with comprehensive metrics
