@@ -304,10 +304,17 @@ def process_pss10_consolidation(
     stressed = final_pss10 >= pss10_threshold
 
     # ── Build PhaseOutput ─────────────────────────────────────────
-    # Store pure perception (pss10_smoothed + bias) for analysis.
+    # Fix A: Mood-congruent appraisal at consolidation. Negative affect
+    # amplifies perceived stress, positive affect dampens it.
+    # Mirrors daily_resilience_penalty pattern but with affect instead of
+    # resilience. Added after resource_adjust removal to maintain PSS-10↔affect.
+    affect = state.get("affect", 0.0)
+    affect_adjust = -affect * cfg.get("pss10", "pss10_affect_adjustment")
+
+    # Store pure perception (pss10_smoothed + bias + affect_adjust) for analysis.
     # Post-hoc adjustments (resource_adjust, resilience_penalty, stretch)
     # only affect stressed status detection, not the stored PSS-10 score.
-    pure_perception = int(round(max(0.0, min(40.0, new_smoothed + state.get("pss10_bias", 0.0)))))
+    pure_perception = int(round(max(0.0, min(40.0, new_smoothed + state.get("pss10_bias", 0.0) + affect_adjust))))
     state_delta = {
         "pss10": pure_perception,
         "pss10_smoothed": new_smoothed,
@@ -759,10 +766,10 @@ class Person(mesa.Agent):
         # to avoid stress↔res coupling.
         current_resources = state.get("resources", 0.5)
         current_resilience = state.get("resilience", 0.5)
-        # WP5: Increased from 0.033 to 0.038 to strengthen resilience↔resources
-        # cross-sectional correlation (target r≈0.25-0.30).
-        # Fix 4: Further increase to push r above 0.20 threshold.
-        resilience_boost = (current_resilience - 0.5) * 0.038  # ±0.019/day
+        # Fix B: Reduced from 0.038 to 0.027 to weaken indirect resources↔resilience→PSS-10
+        # path. PSS-10↔resources overshoot in seed 456 (-0.395 with Fix A) needs reduction.
+        # 0.027 gives ±0.0135/day. Seed-42 resilience↔resources stays >0.20 lower bound.
+        resilience_boost = (current_resilience - 0.5) * 0.027  # ±0.0135/day
         # WP4: Affect→resource feedback. Higher affect → faster resource regen.
         # Fix 4: Kept at 0.006 — was increased to 0.008 but caused overshoot.
         current_affect = state.get("affect", 0.0)

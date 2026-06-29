@@ -283,6 +283,10 @@ class Config:
         # WP5: Reduced from 0.30 to 0.27 to weaken overshoot in seed 42 (r=-0.31 vs [-0.30,-0.18]).
         # 0.27 balances seed 42 (still a touch strong) against seed 456 (needs stronger).
         self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.25)
+        # Fix A: Mood-congruent appraisal at consolidation. Negative affect amplifies
+        # perceived stress. Added after PSS-10 became pure perception (resource_adjust
+        # removed). Follows daily_resilience_penalty pattern.
+        self.pss10_affect_adjustment = self._get_env_value("PSS10_AFFECT_ADJUSTMENT", float, 3.0)
         # Fix 4: Reduced from 0.05 to 0.03 to compensate for PSS-10→resource sign fix.
         self.pss10_resource_coupling = self._get_env_value("PSS10_RESOURCE_COUPLING", float, 0.03)
         self.pss10_resilience_coupling_item = self._get_env_value("PSS10_RESILIENCE_COUPLING_ITEM", float, 0.20)
@@ -666,6 +670,7 @@ class Config:
                 "pss10_resilience_coupling": self.pss10_resilience_coupling,
                 "pss10_stress_dampening": self.pss10_stress_dampening,
                 "pss10_affect_coupling": self.pss10_affect_coupling,
+                "pss10_affect_adjustment": self.pss10_affect_adjustment,
                 "pss10_resource_coupling": self.pss10_resource_coupling,
                 "pss10_resilience_coupling_item": self.pss10_resilience_coupling_item,
                 "stress_affect_coupling": self.stress_affect_coupling,

@@ -82,6 +82,62 @@ class TestPss10PurePerception:
         # Pure perception = new_smoothed + pss10_bias ≈ 20
         assert abs(stored_pss10 - 20.0) < 1.5, f"PSS-10 should be ~20 (pure perception), got {stored_pss10}"
 
+    def test_negative_affect_increases_pure_perception(self):
+        """Negative affect increases the stored pure PSS-10 (mood-congruent appraisal)."""
+        # Negative affect should boost PSS-10 via affect adjustment
+        state_neg = _make_state_with_bias(
+            daily_scores=[20],
+            pss10_bias=0.0,
+            pss10_smoothed=20.0,
+            resources=0.5,
+            resilience=0.5,
+            affect=-0.5,  # negative affect
+        )
+        state_pos = _make_state_with_bias(
+            daily_scores=[20],
+            pss10_bias=0.0,
+            pss10_smoothed=20.0,
+            resources=0.5,
+            resilience=0.5,
+            affect=0.5,  # positive affect
+        )
+        result_neg = process_pss10_consolidation(state_neg, {}, np.random.default_rng(42))
+        result_pos = process_pss10_consolidation(state_pos, {}, np.random.default_rng(42))
+        pss10_neg = result_neg["state_delta"]["pss10"]
+        pss10_pos = result_pos["state_delta"]["pss10"]
+
+        # Negative affect → higher PSS-10 than positive affect
+        assert pss10_neg > pss10_pos, (
+            f"Negative affect ({pss10_neg}) should give higher PSS-10 than positive ({pss10_pos})"
+        )
+
+    def test_affect_adjustment_is_proportional(self):
+        """The affect adjustment to PSS-10 is proportional to affect magnitude."""
+        results = {}
+        for affect_val in [-0.5, 0.0, 0.5]:
+            state = _make_state_with_bias(
+                daily_scores=[20],
+                pss10_bias=0.0,
+                pss10_smoothed=20.0,
+                resources=0.5,
+                resilience=0.5,
+                affect=affect_val,
+            )
+            result = process_pss10_consolidation(state, {}, np.random.default_rng(42))
+            results[affect_val] = result["state_delta"]["pss10"]
+
+        # Affect = 0 gives baseline. Affect = -0.5 should deviate more than affect = 0.5
+        # because -affect * k means negative → higher
+        diff_neg = results[-0.5] - results[0.0]
+        diff_pos = results[0.0] - results[0.5]
+        assert diff_neg > 0, f"Negative affect should increase PSS-10, got diff={diff_neg}"
+        assert diff_pos > 0, f"Positive affect should decrease PSS-10, got diff={diff_pos}"
+        # Both differences should be roughly equal (proportional)
+        ratio = diff_neg / diff_pos if diff_pos > 0 else 999
+        assert 0.5 < ratio < 2.0, (
+            f"Asymmetric proportional adjustment: diff_neg={diff_neg:.2f}, diff_pos={diff_pos:.2f}, ratio={ratio:.2f}"
+        )
+
     def test_stressed_status_still_uses_adjusted_value(self):
         """stressed status is computed from the full adjusted PSS-10."""
         # Very low resources → resource_adjust = (0.5 - 0.1) * 12 = +4.8
