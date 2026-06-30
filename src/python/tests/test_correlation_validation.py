@@ -89,9 +89,6 @@ class TestTheoreticalCorrelationsAgentLevel:
             f"Only {passed_seeds}/{len(seeds)} seeds passed (need {min_passes}).\n" + "\n".join(seed_details)
         )
 
-    @pytest.mark.xfail(
-        reason="Test pollution: 3/3 seeds fail in full suite (r≈-0.71/-0.68/-0.77) but pass in isolation (r≈-0.47)"
-    )
     def test_pss10_resilience_negative_correlation(self):
         """Test that PSS-10 scores negatively correlate with resilience.
 
@@ -252,7 +249,9 @@ class TestTheoreticalCorrelationsAgentLevel:
         _, p_value = stats.pearsonr(final_epoch["resilience"], final_epoch["resources"])
         assert p_value < 0.05, f"Correlation not statistically significant: p={p_value}"
 
-    @pytest.mark.xfail(reason="Test pollution: 1/3 seeds pass in full suite but 3/3 pass in isolation")
+    @pytest.mark.xfail(
+        reason="Test pollution: env var leakage from preceding tests shifts affect↔resources correlation by ~0.02-0.04, pushing 2/3 seeds below 0.15 significance threshold"
+    )
     def test_affect_resources_positive_correlation(self):
         """Test that affect positively correlates with resources."""
         seeds = [42, 123, 456]
@@ -497,7 +496,7 @@ class TestTheoreticalCorrelationsPopulationLevel:
         )
 
     @pytest.mark.xfail(
-        reason="Test pollution: 0/3 seeds pass in full suite (mean coupling ~ -0.05) but pass in isolation"
+        reason="Test pollution: 0/3 seeds pass in full suite (coupling≈-0.04/-0.05), pass after 5-polluter run — additional polluters beyond known 5 files"
     )
     def test_social_support_coping_success_correlation(self):
         """Test correlation between social support rate and coping success rate.
