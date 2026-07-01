@@ -16,11 +16,23 @@ import tempfile
 from pathlib import Path
 
 
-import pytest
 from src.python.config import Config
 
 
-@pytest.mark.xfail(reason="Env leak: PSS10_ITEM_MEAN set by prior test overrides temp env file")
+_PSS10_ENV_KEYS = ("PSS10_ITEM_MEAN", "PSS10_ITEM_SD")
+
+
+def _clear_pss10_env() -> None:
+    """Remove PSS10 array env vars so a temp .env file is authoritative.
+
+    load_dotenv uses override=False, so any pre-set os.environ value
+    (e.g. from a stray repo .env loaded by reload_config) would win over
+    the temp file. Clear these keys first.
+    """
+    for key in _PSS10_ENV_KEYS:
+        os.environ.pop(key, None)
+
+
 def test_bracket_notation_parsing():
     """Test bracket notation parsing with the exact format requested by user."""
     print("1. Testing bracket notation parsing with exact format requested...")
@@ -33,6 +45,8 @@ PSS10_ITEM_SD=[1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8]
         env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
+        # Clear leaked env vars so the temp .env file is authoritative
+        _clear_pss10_env()
         # Test configuration loading
         config = Config(str(env_file))
 
@@ -46,7 +60,6 @@ PSS10_ITEM_SD=[1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8]
         print("✓ Bracket notation parsing works correctly")
 
 
-@pytest.mark.xfail(reason="Env leak: PSS10_ITEM_MEAN set by prior test overrides temp env file")
 def test_backward_compatibility():
     """Test backward compatibility with space-separated format."""
     print("2. Testing backward compatibility with space-separated format...")
@@ -59,6 +72,8 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
         env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
+        # Clear leaked env vars so the temp .env file is authoritative
+        _clear_pss10_env()
         # Test configuration loading
         config = Config(str(env_file))
 
@@ -72,7 +87,6 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
         print("✓ Backward compatibility with space-separated format works correctly")
 
 
-@pytest.mark.xfail(reason="Env leak: PSS10_ITEM_MEAN set by prior test overrides temp env file")
 def test_mixed_format_usage():
     """Test mixed format usage (bracket for one array, space-separated for another)."""
     print("3. Testing mixed format usage...")
@@ -85,6 +99,8 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
         env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
+        # Clear leaked env vars so the temp .env file is authoritative
+        _clear_pss10_env()
         # Test configuration loading
         config = Config(str(env_file))
 
@@ -98,7 +114,6 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
         print("✓ Mixed format usage works correctly")
 
 
-@pytest.mark.xfail(reason="Env leak: PSS10_ITEM_MEAN set by prior test overrides temp env file")
 def test_whitespace_handling():
     """Test whitespace handling in bracket notation."""
     print("4. Testing whitespace handling in bracket notation...")
@@ -111,6 +126,8 @@ PSS10_ITEM_SD= [1.1,  0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8 ]
         env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
+        # Clear leaked env vars so the temp .env file is authoritative
+        _clear_pss10_env()
         # Test configuration loading
         config = Config(str(env_file))
 
