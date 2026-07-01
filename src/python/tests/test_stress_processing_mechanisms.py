@@ -9,8 +9,9 @@ This file tests the core stress processing functionality including:
 - Complete stress processing pipeline
 """
 
+import os
+
 import numpy as np
-import pytest
 from src.python.affect_utils import (
     compute_coping_probability,
     compute_challenge_hindrance_resilience_effect,
@@ -19,6 +20,7 @@ from src.python.affect_utils import (
     determine_coping_outcome_and_psychological_impact,
     StressProcessingConfig,
 )
+from src.python.assumption_config import reload_assumptions
 
 
 class TestCopingProbability:
@@ -72,11 +74,13 @@ class TestCopingProbability:
 
         assert coping_prob < 0.5  # Should be below base probability
 
-    @pytest.mark.xfail(
-        reason="Full-suite env contamination: a sibling test pollutes .env with ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR via reload_config"
-    )
     def test_coping_probability_no_neighbors(self):
         """Test coping probability with no social influence."""
+        # Guard: prior test may have polluted .env with a non-default
+        # ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR.  Purge it so the 0.30
+        # default is used regardless of execution order.
+        os.environ.pop("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", None)
+        reload_assumptions()
         config = StressProcessingConfig(
             base_coping_probability=0.5, challenge_bonus=0.2, hindrance_penalty=0.3, social_influence_factor=0.1
         )
