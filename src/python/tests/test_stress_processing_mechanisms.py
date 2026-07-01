@@ -72,7 +72,9 @@ class TestCopingProbability:
 
         assert coping_prob < 0.5  # Should be below base probability
 
-    @pytest.mark.xfail(reason="Env clear changes social_support_factor default, test needs update")
+    @pytest.mark.xfail(
+        reason="Full-suite env contamination: a sibling test pollutes .env with ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR via reload_config"
+    )
     def test_coping_probability_no_neighbors(self):
         """Test coping probability with no social influence."""
         config = StressProcessingConfig(
