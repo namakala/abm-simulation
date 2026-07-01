@@ -1,0 +1,148 @@
+---
+title: "Social Interaction — Affect Convergence and Support Exchange"
+format: html
+---
+
+## Overview
+
+This demo exercises the core dyadic interaction function
+`process_interaction()` directly (not the `run_phase` stub). We vary
+partner affect [-1, 1] and self affect [-1, 1] across all five stress
+state scenarios, observing affect/resilience convergence, resource
+exchange, and support detection.
+
+The theory predicts:
+
+- **Negativity bias**: negative influences are amplified 1.5× relative to
+  positive influences of the same magnitude.
+- **Convergence dynamics**: affect and resilience move toward each other,
+  mediated by `influence_rate`.
+- **Support detection**: when total convergence magnitude exceeds a
+  threshold, support is detected.
+- **Five state-machine scenarios**: win-win (both stressed + support),
+  lose-lose (both stressed, no support), self-helped (self stressed +
+  support), self-harmed (self stressed, no support), mutual-growth (neither
+  stressed).
+
+## Code
+
+```{python}
+#| label: setup
+#| message: false
+
+import sys
+import os
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from numpy.random import Generator, PCG64
+
+# .qmd runs from its own directory; go up 2 levels to project root
+PROJECT_ROOT = pathlib.Path(os.getcwd()).resolve().parents[2]
+sys.path.append(str(PROJECT_ROOT))
+
+from src.python.phases.interaction import process_interaction
+```
+
+```{python}
+#| label: sweep
+#| message: false
+
+N_PARTNER_A = 20
+N_SELF_A = 5
+
+rng = Generator(PCG64(42))
+
+records = []
+
+stress_combos = [
+    (False, False),   # neither stressed -> small PF boost
+    (True,  False),   # self stressed only
+    (True,  True),    # both stressed
+]
+
+for self_stressed, partner_stressed in stress_combos:
+    for partner_affect in np.linspace(-1, 1, N_PARTNER_A):
+        for self_affect in np.linspace(-1, 1, N_SELF_A):
+            self_state = {
+                "affect": self_affect,
+                "resilience": 0.5,
+                "stressed": self_stressed,
+            }
+            partner_state = {
+                "affect": partner_affect,
+                "resilience": 0.5,
+                "stressed": partner_stressed,
+            }
+            config = {
+                "influence_rate": 0.05,
+                "resilience_influence": 0.05,
+                "support_threshold": 0.02,
+                "boost": 0.10,
+                "cost": 0.05,
+                "small_boost": 0.02,
+            }
+
+            self_out, partner_out = process_interaction(self_state, partner_state, config, rng)
+
+            records.append({
+                "self_affect": self_affect,
+                "partner_affect": partner_affect,
+                "self_stressed": int(self_stressed),
+                "partner_stressed": int(partner_stressed),
+                "self_affect_change": self_out["state_delta"].get("affect", 0),
+                "partner_affect_change": partner_out["state_delta"].get("affect", 0),
+                "self_resilience_change": self_out["state_delta"].get("resilience", 0),
+                "partner_resilience_change": partner_out["state_delta"].get("resilience", 0),
+                "self_resource_change": self_out["state_delta"].get("resources", 0),
+                "partner_resource_change": partner_out["state_delta"].get("resources", 0),
+                "support_occurred": int(self_out["observation"]["support_occurred"]),
+            })
+
+df = pd.DataFrame(records)
+```
+
+```{python}
+#| label: fig-correlogram
+#| fig-cap: "8×8 correlogram of interaction variables, colored by support exchange"
+#| fig-width: 12
+#| fig-height: 12
+
+vars_ = [
+    "self_affect", "partner_affect", "self_affect_change", "partner_affect_change",
+    "self_resilience_change", "partner_resilience_change",
+    "self_resource_change", "partner_resource_change",
+]
+
+g = sns.PairGrid(
+    df,
+    vars=vars_,
+    hue="support_occurred",
+    palette={0: "#bdc3c7", 1: "#e67e22"},
+    diag_sharey=False,
+)
+g.map_upper(sns.scatterplot, s=4, alpha=0.4)
+g.map_lower(sns.scatterplot, s=4, alpha=0.4)
+g.map_diag(sns.kdeplot, fill=True)
+g.add_legend(title="Support", bbox_to_anchor=(1.05, 0.5), loc="center left")
+
+plt.suptitle("Interaction — Affect Convergence and Resource Exchange", y=1.02, fontsize=13)
+plt.show()
+```
+
+## Observed Patterns
+
+- **Negativity bias**: negative `partner_affect` or `self_affect` produces a
+  disproportionately large affect change (1.5× multiplier), visible as
+  asymmetry in the change variables.
+- **Support detection**: support (orange) occurs when convergence magnitude
+  is high — typically when affect values differ substantially and stress
+  states amplify responses.
+- **Resource exchange**: both-stressed + support → both get boost (win-win).
+  Both-stressed without support → both pay cost (lose-lose).
+- **Mutual growth**: neither stressed → small PF boost (social_support
+  increase) but no resource change.
+- **Affect convergence**: self and partner affect changes are opposites —
+  each agent moves toward the other's affect value.
