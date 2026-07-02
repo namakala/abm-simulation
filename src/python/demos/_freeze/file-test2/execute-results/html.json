@@ -1,0 +1,12 @@
+{
+  "hash": "f29370e42247480fb6cb059b46dec640",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: File Test 2\nexecute-dir: project\n---\n\n::: {#cc22aae6 .cell execution_count=1}\n``` {.python .cell-code}\nimport os, pathlib\nprint(\"__file__:\", __file__ if \"__file__\" in dir() else \"NOT AVAILABLE\")\nprint(\"CWD:\", os.getcwd())\n```\n\n::: {.cell-output .cell-output-stdout}\n```\n__file__: NOT AVAILABLE\nCWD: /home/lam/data/professional/Documents/academy/_postgrad/PhD-course/2023-pharmaco-economics/journey-log/research/abm-simulation/src/python/demos\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "file-test2_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

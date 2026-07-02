@@ -1,0 +1,12 @@
+{
+  "hash": "7a8509e4908f7046e4e0540a9286d57b",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: Import Test 3\n---\n\n::: {#94efcf68 .cell execution_count=1}\n``` {.python .cell-code}\nimport os\nprint(\"PYTHONPATH:\", os.environ.get(\"PYTHONPATH\",\"(not set)\"))\nfrom src.python.agent import Person\nprint(\"Person imported:\", Person)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\nPYTHONPATH: /home/lam/data/professional/Documents/academy/_postgrad/PhD-course/2023-pharmaco-economics/journey-log/research/abm-simulation\n```\n:::\n\n::: {.cell-output .cell-output-stderr}\n```\nEnvironment file /home/lam/data/professional/Documents/academy/_postgrad/PhD-course/2023-pharmaco-economics/journey-log/research/abm-simulation/src/python/demos/.env not found, using system environment variables\n```\n:::\n\n::: {.cell-output .cell-output-stdout}\n```\nPerson imported: <class 'src.python.agent.Person'>\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "import-test3_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

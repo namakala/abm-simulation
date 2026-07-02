@@ -5,6 +5,10 @@
 *outputs*
 test*csv
 
+# Quarto demos
+src/python/demos/*.html
+src/python/demos/_site/
+
 # Environment variables and configuration
 .env
 .env.local

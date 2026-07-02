@@ -26,9 +26,8 @@ update-env-example = "bash src/shell/update_env_example.sh"
 parameterize = "bash src/shell/parameterize_env.sh"
 force-parameterize = "bash src/shell/parameterize_env.sh --force"
 install-hooks = "git config core.hooksPath .githooks"
-quarto = "quarto render"
-serve = "bash src/shell/serve.sh"
-serve-quick = "python -m http.server 9000 --directory src/python/demos"
+quarto = "bash src/shell/quarto-render.sh"
+serve = "quarto preview src/python/demos --port 9000"
 
 [dependencies]
 mesa = "3.3.0.*"

@@ -1,0 +1,12 @@
+{
+  "hash": "f5380ec407cff5f06aa7551f04d4c083",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: Exec Env Test\nexecute:\n  env:\n    MY_TEST_VAR: \"hello-from-quarto-yml\"\n---\n\n::: {#75461a06 .cell execution_count=1}\n``` {.python .cell-code}\nimport os\nprint(\"MY_TEST_VAR:\", os.environ.get(\"MY_TEST_VAR\", \"(not set)\"))\n```\n\n::: {.cell-output .cell-output-stdout}\n```\nMY_TEST_VAR: (not set)\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "exec-env-test_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

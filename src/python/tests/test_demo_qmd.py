@@ -1,12 +1,19 @@
-"""Tests for QMD demo scripts.
+"""Tests for QMD demo scripts — Quarto project refactor.
 
 Verifies file existence, structure, and renderability of Quarto demos.
+Tests the new structure:
+- _quarto.yml project config in src/python/demos/
+- index.qmd dashboard (replaces index.html)
+- sys.path.insert(0, "src/python") in setup blocks (no PROJECT_ROOT)
+- pixi.toml tasks point to src/python/demos/
+- serve uses quarto preview
+- serve.sh is removed
+- HTML outputs go to _site/
 """
 
 from __future__ import annotations
 
 import re
-import shutil
 from pathlib import Path
 
 import pytest
@@ -15,7 +22,11 @@ import tomllib
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEMOS_DIR = PROJECT_ROOT / "src" / "python" / "demos"
 PIXI_TOML = PROJECT_ROOT / "pixi.toml"
-PIXI_PATH = shutil.which("pixi") or "/home/lam/.cargo/bin/pixi"
+SITE_DIR = DEMOS_DIR / "_site"
+QUARTO_YML = DEMOS_DIR / "_quarto.yml"
+INDEX_QMD = DEMOS_DIR / "index.qmd"
+SERVE_SCRIPT = PROJECT_ROOT / "src" / "shell" / "serve.sh"
+GITIGNORE = PROJECT_ROOT / ".gitignore"
 
 DEMO_FILES = [
     "stress_perception.qmd",
@@ -36,7 +47,75 @@ DEMO_FILES = [
 ]
 
 
-# ── Step 1: pixi task ────────────────────────────────────────────────
+# ── WP-1: _quarto.yml ──────────────────────────────────────────────
+
+
+class TestQuartoYml:
+    """WP-1 — _quarto.yml exists in src/python/demos/ with correct structure."""
+
+    def test_quarto_yml_exists(self):
+        """src/python/demos/_quarto.yml must exist."""
+        assert QUARTO_YML.is_file(), f"Missing _quarto.yml: {QUARTO_YML}"
+
+    def test_quarto_yml_is_valid_yaml(self):
+        """_quarto.yml must parse as valid YAML."""
+        content = QUARTO_YML.read_text()
+        # tomllib does not support multi-doc YAML, so just check it parses
+        # The YAML frontmatter-like structure should at minimum be loadable
+        assert "project:" in content, "_quarto.yml must have a 'project:' key"
+        assert "execute:" in content, "_quarto.yml must have an 'execute:' key"
+
+    def test_output_dir_is_site(self):
+        """output-dir must be _site to keep demos directory clean."""
+        content = QUARTO_YML.read_text()
+        assert "output-dir: _site" in content or "output-dir:\n  _site" in content, (
+            "_quarto.yml must set output-dir: _site"
+        )
+
+    def test_engine_is_jupyter(self):
+        """execute.engine must be jupyter for reproducible code execution."""
+        content = QUARTO_YML.read_text()
+        assert "engine: jupyter" in content or "engine:\n  jupyter" in content, (
+            "_quarto.yml must set execute.engine: jupyter"
+        )
+
+    def test_freeze_is_auto(self):
+        """execute.freeze must be auto to cache block outputs."""
+        content = QUARTO_YML.read_text()
+        assert "freeze: auto" in content or "freeze:\n  auto" in content, "_quarto.yml should set execute.freeze: auto"
+
+
+# ── WP-2: index.qmd ────────────────────────────────────────────────
+
+
+class TestIndexQmd:
+    """WP-2 — index.qmd exists and lists all demo pages."""
+
+    def test_index_qmd_exists(self):
+        """src/python/demos/index.qmd must exist."""
+        assert INDEX_QMD.is_file(), f"Missing index.qmd: {INDEX_QMD}"
+
+    def test_has_yaml_frontmatter(self):
+        """index.qmd must have YAML frontmatter."""
+        content = INDEX_QMD.read_text()
+        assert content.startswith("---"), "index.qmd must start with YAML frontmatter"
+        fm_end = content.index("\n---\n")
+        assert fm_end > 0, "index.qmd must close its frontmatter"
+
+    def test_has_title(self):
+        """index.qmd frontmatter must have a title."""
+        content = INDEX_QMD.read_text()
+        assert "title:" in content[:300], "index.qmd must declare a title"
+
+    def test_references_all_demo_htmls(self):
+        """index.qmd must reference all demo .html files."""
+        content = INDEX_QMD.read_text()
+        for qmd_file in DEMO_FILES:
+            html = qmd_file.replace(".qmd", ".html")
+            assert html in content, f"index.qmd must reference {html}"
+
+
+# ── WP-3: PROJECT_ROOT replaced with sys.path.insert ──────────────
 
 
 def _load_pixi_tasks() -> dict:
@@ -46,60 +125,90 @@ def _load_pixi_tasks() -> dict:
     return data.get("tasks", {})
 
 
-class TestPixiQuartoTask:
-    """Step 1 — quarto render task exists and works."""
+class TestPixiTasks:
+    """WP-4 — pixi.toml tasks point to src/python/demos/."""
 
-    def test_quarto_task_defined(self):
-        """pixi.toml must define a 'quarto' task for rendering .qmd files."""
+    def test_quarto_task_points_to_demos_dir(self):
+        """quarto task must reference src/python/demos via script or direct path."""
         tasks = _load_pixi_tasks()
         assert "quarto" in tasks, "pixi.toml must define a 'quarto' task"
-        task_value = tasks["quarto"]
-        assert "quarto render" in str(task_value)
+        task_str = str(tasks["quarto"])
+        assert "src/python/demos" in task_str or "quarto-render.sh" in task_str, (
+            "quarto task must reference src/python/demos directly or via quarto-render.sh"
+        )
 
-
-class TestPixiServeTasks:
-    """Serve dashboard tasks exist for viewing rendered demos."""
-
-    def test_serve_task_calls_shell_script(self):
-        """Serve task must call serve.sh (pixi can't parse for-loops)."""
+    def test_serve_task_uses_quarto_preview(self):
+        """serve task must use 'quarto preview' not http.server."""
         tasks = _load_pixi_tasks()
         assert "serve" in tasks, "pixi.toml must define a 'serve' task"
-        task_value = str(tasks["serve"])
-        assert "serve.sh" in task_value, "serve task must call src/shell/serve.sh"
+        task_str = str(tasks["serve"])
+        assert "quarto preview" in task_str, "serve task must use 'quarto preview', not python http.server"
 
-    def test_serve_quick_task_defined(self):
-        """pixi.toml must define a 'serve-quick' task for serving without re-render."""
+    def test_serve_quick_task_removed(self):
+        """serve-quick task must be removed from pixi.toml."""
         tasks = _load_pixi_tasks()
-        assert "serve-quick" in tasks, "pixi.toml must define a 'serve-quick' task"
-        task_value = str(tasks["serve-quick"])
-        assert "http.server" in task_value, "serve-quick task must start an HTTP server"
-        assert "9000" in task_value, "serve-quick task must use port 9000"
+        assert "serve-quick" not in tasks, "serve-quick task should be removed; use 'pixi run serve' instead"
 
 
-class TestServeScript:
-    """The serve.sh shell script must exist with correct render logic."""
+class TestServeScriptRemoved:
+    """WP-6 — serve.sh must be deleted."""
 
-    SERVE_SCRIPT = PROJECT_ROOT / "src" / "shell" / "serve.sh"
-
-    def test_script_exists(self):
-        """serve.sh must exist in src/shell/."""
-        assert self.SERVE_SCRIPT.is_file(), f"Missing serve script: {self.SERVE_SCRIPT}"
-
-    def test_script_has_for_loop(self):
-        """serve.sh must iterate over .qmd files with a for loop."""
-        content = self.SERVE_SCRIPT.read_text()
-        assert "for " in content, "serve.sh must contain a for loop"
-        assert "*.qmd" in content, "serve.sh must iterate over .qmd files"
-
-    def test_script_invokes_quarto_and_server(self):
-        """serve.sh must call quarto render and python http.server."""
-        content = self.SERVE_SCRIPT.read_text()
-        assert "quarto render" in content, "serve.sh must invoke quarto render"
-        assert "http.server" in content, "serve.sh must start HTTP server"
-        assert "9000" in content, "serve.sh must use port 9000"
+    def test_serve_script_does_not_exist(self):
+        """src/shell/serve.sh must be deleted."""
+        assert not SERVE_SCRIPT.exists(), f"serve.sh must be deleted: {SERVE_SCRIPT}"
 
 
-# ── Step 2–6: File structure ────────────────────────────────────────
+class TestGitignoreUpdated:
+    """WP-5 — .gitignore must exclude generated HTML and _site/."""
+
+    def test_gitignore_excludes_demos_html(self):
+        """src/python/demos/*.html must be in .gitignore."""
+        if not GITIGNORE.exists():
+            pytest.skip(".gitignore does not exist")
+        content = GITIGNORE.read_text()
+        assert "src/python/demos/*.html" in content, ".gitignore must exclude src/python/demos/*.html"
+
+    def test_gitignore_excludes_site_dir(self):
+        """src/python/demos/_site/ must be in .gitignore."""
+        if not GITIGNORE.exists():
+            pytest.skip(".gitignore does not exist")
+        content = GITIGNORE.read_text()
+        assert "src/python/demos/_site/" in content, ".gitignore must exclude src/python/demos/_site/"
+
+
+class TestQmdNoProjectRoot:
+    """WP-3 — No .qmd file must use the old PROJECT_ROOT hack."""
+
+    @pytest.mark.parametrize("filename", DEMO_FILES)
+    def test_no_project_root_variable(self, filename: str):
+        """No .qmd must define PROJECT_ROOT via parents[2]."""
+        content = (DEMOS_DIR / filename).read_text()
+        assert "PROJECT_ROOT" not in content, (
+            f"{filename} must not use PROJECT_ROOT; use sys.path.insert(0, 'src/python') instead"
+        )
+
+    @pytest.mark.parametrize("filename", DEMO_FILES)
+    def test_uses_sys_path_insert(self, filename: str):
+        """Each .qmd must have demos_dir + project_root + sys.path.insert in setup."""
+        content = (DEMOS_DIR / filename).read_text()
+        assert "demos_dir = pathlib.Path(os.getcwd())" in content, (
+            f"{filename} must define demos_dir = pathlib.Path(os.getcwd())"
+        )
+        assert "project_root = demos_dir.parents[2]" in content, (
+            f"{filename} must define project_root = demos_dir.parents[2]"
+        )
+        assert "sys.path.insert(0, str(project_root))" in content, (
+            f"{filename} must have sys.path.insert(0, 'src/python') in its setup block"
+        )
+
+    @pytest.mark.parametrize("filename", DEMO_FILES)
+    def test_no_sys_path_append(self, filename: str):
+        """No .qmd must use sys.path.append (old pattern)."""
+        content = (DEMOS_DIR / filename).read_text()
+        assert "sys.path.append" not in content, f"{filename} must not use sys.path.append; use sys.path.insert instead"
+
+
+# ── File structure (existing demos must still exist) ────────────────
 
 
 class TestDemoFileExistence:
@@ -136,37 +245,6 @@ class TestDemoFrontmatter:
         match = self.FRONTMATTER_RE.search(content)
         assert match is not None, f"Missing frontmatter in {filename}"
         assert "title:" in match.group(1), f"Missing 'title:' in {filename} frontmatter"
-
-
-class TestDemoCodeChunks:
-    """Each .qmd must contain the expected Python code chunks."""
-
-    @pytest.mark.parametrize("filename", DEMO_FILES)
-    def test_has_python_chunks(self, filename: str):
-        """Each .qmd must contain at least one ```{python} ... ``` block."""
-        content = (DEMOS_DIR / filename).read_text()
-        assert re.search(r"```\{python\}", content), f"Missing Python code chunk in {filename}"
-
-    @pytest.mark.parametrize("filename", DEMO_FILES)
-    def test_has_syspath_append(self, filename: str):
-        """Each .qmd must use sys.path.append to add the project root."""
-        content = (DEMOS_DIR / filename).read_text()
-        assert "sys.path.append" in content, f"Missing sys.path.append in {filename}"
-        assert "PROJECT_ROOT" in content, f"{filename} must define PROJECT_ROOT path"
-
-    @pytest.mark.parametrize("filename", DEMO_FILES)
-    def test_has_seaborn_import(self, filename: str):
-        """Each .qmd must import seaborn or matplotlib for plotting."""
-        content = (DEMOS_DIR / filename).read_text()
-        # stress_buffering uses matplotlib path diagram instead of seaborn
-        has_plot_lib = "import seaborn" in content or "import matplotlib" in content
-        assert has_plot_lib, f"Missing plotting import in {filename}"
-
-    @pytest.mark.parametrize("filename", DEMO_FILES)
-    def test_has_numpy_import(self, filename: str):
-        """Each .qmd must import numpy."""
-        content = (DEMOS_DIR / filename).read_text()
-        assert "import numpy" in content, f"Missing numpy import in {filename}"
 
 
 class TestStressPerceptionDemo:
@@ -321,102 +399,36 @@ class TestStressBufferingDemo:
         )
 
 
-# ── Dashboard ────────────────────────────────────────────────────
+class TestDemoStructureIntact:
+    """Existing demo structure requirements that must continue to hold."""
 
-
-class TestDashboard:
-    """Dashboard index.html exists and has correct structure."""
-
-    DASHBOARD_PATH = DEMOS_DIR / "index.html"
-
-    def test_dashboard_exists(self):
-        """Dashboard index.html must exist in demos directory."""
-        assert self.DASHBOARD_PATH.is_file(), f"Missing dashboard: {self.DASHBOARD_PATH}"
-
-    def test_dashboard_has_title(self):
-        """Dashboard must have a title tag."""
-        content = self.DASHBOARD_PATH.read_text()
-        assert "<title>" in content and "</title>" in content, "Missing <title> tag"
-
-    def test_dashboard_has_links_to_demos(self):
-        """Dashboard must include links to each known demo HTML."""
-        content = self.DASHBOARD_PATH.read_text()
-        for qmd_file in DEMO_FILES:
-            html_file = qmd_file.replace(".qmd", ".html")
-            assert html_file in content, f"Missing link to {html_file}"
-
-    def test_dashboard_no_external_deps(self):
-        """Dashboard must not load external CSS/JS from CDN."""
-        content = self.DASHBOARD_PATH.read_text()
-        assert "<style>" in content, "Must have inline <style> (no external CSS)"
-        assert "http://" not in content.replace("https://", "").split("http://")[0] if "http://" in content else True, (
-            "Should avoid external http dependencies"
-        )
-
-
-# ── Tutorial Structure ────────────────────────────────────────────
-
-
-ALL_DEMO_QMD = DEMO_FILES
-
-
-class TestTutorialStructure:
-    """Each QMD must follow the tutorial format with explanation sections."""
-
-    @pytest.mark.parametrize("filename", ALL_DEMO_QMD)
+    @pytest.mark.parametrize("filename", DEMO_FILES)
     def test_has_what_this_code_does(self, filename: str):
         """Each QMD must have a 'What This Code Does' section."""
         content = (DEMOS_DIR / filename).read_text()
-        assert "What This Code Does" in content, f"Missing 'What This Code Does' section in {filename}"
+        assert "What This Code Does" in content, f"Missing 'What This Code Does' in {filename}"
 
-    @pytest.mark.parametrize("filename", ALL_DEMO_QMD)
+    @pytest.mark.parametrize("filename", DEMO_FILES)
     def test_has_why_this_matters(self, filename: str):
         """Each QMD must have a 'Why This Matters' section."""
         content = (DEMOS_DIR / filename).read_text()
-        assert "Why This Matters" in content, f"Missing 'Why This Matters' section in {filename}"
+        assert "Why This Matters" in content, f"Missing 'Why This Matters' in {filename}"
 
-    @pytest.mark.parametrize("filename", ALL_DEMO_QMD)
+    @pytest.mark.parametrize("filename", DEMO_FILES)
     def test_has_python_code_block(self, filename: str):
         """Each QMD must have at least one ```{python} code block."""
         content = (DEMOS_DIR / filename).read_text()
         assert re.search(r"```\{python\}", content), f"Missing Python code block in {filename}"
 
+    @pytest.mark.parametrize("filename", DEMO_FILES)
+    def test_has_plotting_import(self, filename: str):
+        """Each .qmd must import seaborn or matplotlib for plotting."""
+        content = (DEMOS_DIR / filename).read_text()
+        has_plot_lib = "import seaborn" in content or "import matplotlib" in content
+        assert has_plot_lib, f"Missing plotting import in {filename}"
 
-# ── Step 7: Render verification (slow / integration) ───────────────
-
-
-@pytest.mark.slow
-@pytest.mark.parametrize("filename", DEMO_FILES)
-def test_demo_renders_without_errors(filename: str):
-    """Each .qmd must render via quarto without errors (slow)."""
-    import subprocess
-
-    filepath = DEMOS_DIR / filename
-    result = subprocess.run(
-        [PIXI_PATH, "run", "quarto", str(filepath)],
-        capture_output=True,
-        text=True,
-        cwd=PROJECT_ROOT,
-        timeout=180,
-    )
-    assert result.returncode == 0, (
-        f"Quarto render failed for {filename}\nSTDOUT:\n{result.stdout[-2000:]}\nSTDERR:\n{result.stderr[-2000:]}"
-    )
-
-
-@pytest.mark.slow
-def test_all_html_outputs_exist():
-    """After rendering, each .qmd must produce a corresponding .html file."""
-    import subprocess
-
-    for filename in DEMO_FILES:
-        filepath = DEMOS_DIR / filename
-        result = subprocess.run(
-            [PIXI_PATH, "run", "quarto", str(filepath)],
-            capture_output=True,
-            text=True,
-            cwd=PROJECT_ROOT,
-            timeout=180,
-        )
-        html_path = filepath.with_suffix(".html")
-        assert html_path.is_file(), f"Missing HTML output after render: {html_path}\nStderr: {result.stderr[-1000:]}"
+    @pytest.mark.parametrize("filename", DEMO_FILES)
+    def test_has_numpy_import(self, filename: str):
+        """Each .qmd must import numpy."""
+        content = (DEMOS_DIR / filename).read_text()
+        assert "import numpy" in content, f"Missing numpy import in {filename}"

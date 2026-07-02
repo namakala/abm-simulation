@@ -1,0 +1,12 @@
+{
+  "hash": "62e8a8c6ced92098626fc51d38f843fa",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: Import Test 2\n---\n\n::: {#9db51bc1 .cell execution_count=1}\n``` {.python .cell-code}\nimport os\nprint(\"PYTHONPATH:\", os.environ.get(\"PYTHONPATH\",\"(not set)\"))\nprint(\"HAS_src:\", os.path.exists(\"src\"))\nfrom src.python.agent import Person\nprint(\"Person imported:\", Person)\n```\n\n::: {.cell-output .cell-output-stdout}\n```\nPYTHONPATH: /home/lam/data/professional/Documents/academy/_postgrad/PhD-course/2023-pharmaco-economics/journey-log/research/abm-simulation\nHAS_src: False\n```\n:::\n\n::: {.cell-output .cell-output-stderr}\n```\nEnvironment file /home/lam/data/professional/Documents/academy/_postgrad/PhD-course/2023-pharmaco-economics/journey-log/research/abm-simulation/src/python/demos/.env not found, using system environment variables\n```\n:::\n\n::: {.cell-output .cell-output-stdout}\n```\nPerson imported: <class 'src.python.agent.Person'>\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "import-test2_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

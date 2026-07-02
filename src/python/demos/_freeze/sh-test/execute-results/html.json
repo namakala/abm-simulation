@@ -1,0 +1,12 @@
+{
+  "hash": "6e7c2bf3bd959bffc4c78026905a1fc1",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: Shell Test\n---\n\n::: {#ca8c834c .cell execution_count=1}\n``` {.python .cell-code}\nimport os\nprint(\"CWD:\", os.getcwd())\nprint(\"HAS_src:\", os.path.exists(\"src\"))\n```\n\n::: {.cell-output .cell-output-stdout}\n```\nCWD: /home/lam/data/professional/Documents/academy/_postgrad/PhD-course/2023-pharmaco-economics/journey-log/research/abm-simulation/src/python/demos\nHAS_src: False\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "sh-test_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

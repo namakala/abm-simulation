@@ -22,8 +22,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from numpy.random import Generator, PCG64
 
-PROJECT_ROOT = pathlib.Path(os.getcwd()).resolve().parents[2]
-sys.path.append(str(PROJECT_ROOT))
+demos_dir = pathlib.Path(os.getcwd())
+project_root = demos_dir.parents[2]
+sys.path.insert(0, str(project_root))
 
 from src.python.phases.resilience_activation import run_phase
 ```

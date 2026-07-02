@@ -1,0 +1,12 @@
+{
+  "hash": "c040f6847e7aa8e050c26d4d18e778c0",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: Quarto YML Test\n---\n\n::: {#7d670563 .cell execution_count=1}\n``` {.python .cell-code}\nimport os, pathlib\ncwd = os.getcwd()\nprint(\"CWD:\", cwd)\nqyml = pathlib.Path(\"src/python/demos/_quarto.yml\")\nprint(\"_quarto.yml exists:\", qyml.exists())\nprint(\"_quarto.yml exists from cwd:\", qyml.exists() if cwd == str(qyml.parent) else \"not applicable\")\n# Try to read _quarto.yml from cwd\ntry:\n    with open(\"_quarto.yml\") as f:\n        print(\"ROOT _quarto.yml:\", f.read(100))\nexcept:\n    print(\"No _quarto.yml at root\")\ntry:\n    with open(\"src/python/demos/_quarto.yml\") as f:\n        print(\"DEMOS _quarto.yml:\", f.read(100))\nexcept:\n    print(\"No _quarto.yml in demos\")\n```\n\n::: {.cell-output .cell-output-stdout}\n```\nCWD: /home/lam/data/professional/Documents/academy/_postgrad/PhD-course/2023-pharmaco-economics/journey-log/research/abm-simulation/src/python/demos\n_quarto.yml exists: False\n_quarto.yml exists from cwd: not applicable\nROOT _quarto.yml: project:\n  type: website\n  output-dir: _site\n\nexecute:\n  engine: jupyter\n  freeze: auto\n\nformat:\n  h\nNo _quarto.yml in demos\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "quarto-yml-test_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

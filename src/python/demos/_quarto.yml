@@ -1,0 +1,12 @@
+project:
+  type: website
+  output-dir: _site
+
+execute:
+  engine: jupyter
+  freeze: auto
+
+format:
+  html:
+    anchor-sections: true
+    code-fold: show
