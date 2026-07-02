@@ -84,3 +84,33 @@ class TestAgentInitializationDemoConfig:
 
         missing = REQUIRED_CONFIG_KEYS - keys_in_config
         assert not missing, f"agent_initialization_demo.qmd config is missing keys: {missing}"
+
+
+class TestIndexQmdLinks:
+    """Tests for link correctness in index.qmd."""
+
+    def test_no_links_with_site_prefix(self):
+        """index.qmd must not contain markdown links with _site/ prefix."""
+        qmd_path = pathlib.Path(__file__).resolve().parents[3] / "src" / "python" / "demos" / "index.qmd"
+        content = qmd_path.read_text()
+        lines = content.split("\n")
+        offending = []
+        for lineno, line in enumerate(lines, start=1):
+            # Find markdown links: [text](url)
+            idx = 0
+            while True:
+                start = line.find("](", idx)
+                if start == -1:
+                    break
+                url_start = start + 2
+                url_end = line.find(")", url_start)
+                if url_end == -1:
+                    break
+                url = line[url_start:url_end]
+                if url.startswith("_site/"):
+                    offending.append(f"  Line {lineno}: {url}")
+                idx = url_end + 1
+        assert not offending, (
+            f"index.qmd has {len(offending)} link(s) with `_site/` prefix. "
+            "Remove `_site/` prefix so links work with `quarto preview`:\n" + "\n".join(offending)
+        )
