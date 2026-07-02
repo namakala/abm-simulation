@@ -1,0 +1,89 @@
+---
+title: "Stress Pipeline Debug — PSS-10 Correlation Validation"
+format: html
+---
+
+## What This Code Does
+
+This demo runs a simulation and tracks detailed per-agent data at each step: resilience, affect, stress, PSS-10, coping outcomes, challenge/hindrance values, and social influence. It computes step-by-step correlation matrices to validate that expected theoretical relationships — especially the negative correlation between resilience/affect and PSS-10 — hold throughout the simulation lifecycle.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+PROJECT_ROOT = pathlib.Path(os.getcwd()).resolve().parents[2]
+sys.path.append(str(PROJECT_ROOT))
+
+from src.python.model import StressModel
+```
+
+## Simulation and Data Collection
+
+```{python}
+#| label: simulate
+n_agents, n_steps, seed = 20, 30, 42
+model = StressModel(N=n_agents, max_days=n_steps, seed=seed)
+
+records = []
+for step in range(n_steps):
+    model.step()
+    for i, agent in enumerate(model.agents):
+        records.append({
+            "step": step, "agent": i,
+            "resilience": agent.resilience,
+            "affect": agent.affect,
+            "current_stress": getattr(agent, "current_stress", 0),
+            "pss10": agent.pss10,
+        })
+
+df = pd.DataFrame(records)
+print(f"Collected {len(df)} agent-step records ({n_steps} steps × {n_agents} agents)")
+```
+
+## Correlation Over Time
+
+```{python}
+#| label: corr_time
+# Compute correlation at each step
+step_corrs = df.groupby("step").apply(
+    lambda g: g[["resilience", "affect", "current_stress", "pss10"]].corr().iloc[0, 3],
+    include_groups=False
+).reset_index()
+step_corrs.columns = ["step", "resilience_pss10_corr"]
+print("Resilience-PSS10 correlation by step:")
+print(step_corrs.to_string(index=False))
+```
+
+## Overall Correlation Matrix
+
+```{python}
+#| label: corr_overall
+vars_ = ["resilience", "affect", "current_stress", "pss10"]
+corr_matrix = df[vars_].corr()
+print(corr_matrix.round(4))
+```
+
+## Correlation Trends
+
+```{python}
+#| label: plot
+plt.figure(figsize=(8, 4))
+plt.plot(step_corrs["step"], step_corrs["resilience_pss10_corr"], marker=".", color="#3498db")
+plt.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
+plt.xlabel("Step"); plt.ylabel("Resilience-PSS10 Correlation")
+plt.title("Correlation Trend Over Simulation Steps")
+plt.tight_layout()
+plt.show()
+```
+
+## Why This Matters for the Simulation
+
+Debugging the stress pipeline is critical for ensuring model validity. The expected negative correlation between resilience and PSS-10 reflects the theoretical understanding that higher resilience buffers against perceived stress. If this correlation breaks down at any point in the pipeline, it indicates a bug or conceptual flaw in the stress processing mechanics. This demo provides the diagnostic tools needed to pinpoint such breakdowns.

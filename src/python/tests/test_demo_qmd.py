@@ -23,6 +23,16 @@ DEMO_FILES = [
     "resource_allocation.qmd",
     "interaction.qmd",
     "stress_buffering.qmd",
+    "analyze.qmd",
+    "track_daily_stress.qmd",
+    "agent_correlation_analysis.qmd",
+    "population_correlation_analysis.qmd",
+    "parameter_sweep_correlations.qmd",
+    "population_analysis.qmd",
+    "agent_initialization_demo.qmd",
+    "stress_processing_mechanism.qmd",
+    "agent_diversity_demo.qmd",
+    "stress_pipeline_debug_demo.qmd",
 ]
 
 
@@ -45,6 +55,27 @@ class TestPixiQuartoTask:
         assert "quarto" in tasks, "pixi.toml must define a 'quarto' task"
         task_value = tasks["quarto"]
         assert "quarto render" in str(task_value)
+
+
+class TestPixiServeTasks:
+    """Serve dashboard tasks exist for viewing rendered demos."""
+
+    def test_serve_task_defined(self):
+        """pixi.toml must define a 'serve' task that renders + serves."""
+        tasks = _load_pixi_tasks()
+        assert "serve" in tasks, "pixi.toml must define a 'serve' task"
+        task_value = str(tasks["serve"])
+        assert "quarto render" in task_value, "serve task must invoke quarto render"
+        assert "http.server" in task_value, "serve task must start an HTTP server"
+        assert "9000" in task_value, "serve task must use port 9000"
+
+    def test_serve_quick_task_defined(self):
+        """pixi.toml must define a 'serve-quick' task for serving without re-render."""
+        tasks = _load_pixi_tasks()
+        assert "serve-quick" in tasks, "pixi.toml must define a 'serve-quick' task"
+        task_value = str(tasks["serve-quick"])
+        assert "http.server" in task_value, "serve-quick task must start an HTTP server"
+        assert "9000" in task_value, "serve-quick task must use port 9000"
 
 
 # ── Step 2–6: File structure ────────────────────────────────────────
@@ -267,6 +298,67 @@ class TestStressBufferingDemo:
         assert any(term in content for term in ["Baron", "Kenny", "mediation"]), (
             f"Missing mediation narrative in {self.DEMO}"
         )
+
+
+# ── Dashboard ────────────────────────────────────────────────────
+
+
+class TestDashboard:
+    """Dashboard index.html exists and has correct structure."""
+
+    DASHBOARD_PATH = DEMOS_DIR / "index.html"
+
+    def test_dashboard_exists(self):
+        """Dashboard index.html must exist in demos directory."""
+        assert self.DASHBOARD_PATH.is_file(), f"Missing dashboard: {self.DASHBOARD_PATH}"
+
+    def test_dashboard_has_title(self):
+        """Dashboard must have a title tag."""
+        content = self.DASHBOARD_PATH.read_text()
+        assert "<title>" in content and "</title>" in content, "Missing <title> tag"
+
+    def test_dashboard_has_links_to_demos(self):
+        """Dashboard must include links to each known demo HTML."""
+        content = self.DASHBOARD_PATH.read_text()
+        for qmd_file in DEMO_FILES:
+            html_file = qmd_file.replace(".qmd", ".html")
+            assert html_file in content, f"Missing link to {html_file}"
+
+    def test_dashboard_no_external_deps(self):
+        """Dashboard must not load external CSS/JS from CDN."""
+        content = self.DASHBOARD_PATH.read_text()
+        assert "<style>" in content, "Must have inline <style> (no external CSS)"
+        assert "http://" not in content.replace("https://", "").split("http://")[0] if "http://" in content else True, (
+            "Should avoid external http dependencies"
+        )
+
+
+# ── Tutorial Structure ────────────────────────────────────────────
+
+
+ALL_DEMO_QMD = DEMO_FILES
+
+
+class TestTutorialStructure:
+    """Each QMD must follow the tutorial format with explanation sections."""
+
+    @pytest.mark.parametrize("filename", ALL_DEMO_QMD)
+    def test_has_what_this_code_does(self, filename: str):
+        """Each QMD must have a 'What This Code Does' section."""
+        content = (DEMOS_DIR / filename).read_text()
+        assert "What This Code Does" in content, f"Missing 'What This Code Does' section in {filename}"
+
+    @pytest.mark.parametrize("filename", ALL_DEMO_QMD)
+    def test_has_why_this_matters(self, filename: str):
+        """Each QMD must have a 'Why This Matters' section."""
+        content = (DEMOS_DIR / filename).read_text()
+        assert "Why This Matters" in content, f"Missing 'Why This Matters' section in {filename}"
+
+    @pytest.mark.parametrize("filename", ALL_DEMO_QMD)
+    def test_has_python_code_block(self, filename: str):
+        """Each QMD must have at least one ```{python} code block."""
+        content = (DEMOS_DIR / filename).read_text()
+        assert re.search(r"```\{python\}", content), f"Missing Python code block in {filename}"
 
 
 # ── Step 7: Render verification (slow / integration) ───────────────

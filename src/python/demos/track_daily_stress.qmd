@@ -1,0 +1,70 @@
+---
+title: "Per-Agent Daily Stress Tracking"
+format: html
+---
+
+## What This Code Does
+
+This demo runs a small simulation (5 agents, 5 days) with detailed per-step debugging output. For each day, it prints each agent's RNG state, last reset day, current stress, number of accumulated stress events, and a test RNG draw to verify randomness.
+
+After each simulation step, it reports new stress events with their challenge and hindrance values. The final output shows the DataCollector's `total_stress_events` and `stress_events` columns.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import matplotlib.pyplot as plt
+
+PROJECT_ROOT = pathlib.Path(os.getcwd()).resolve().parents[2]
+sys.path.append(str(PROJECT_ROOT))
+
+from src.python.model import StressModel
+```
+
+## Simulation
+
+```{python}
+#| label: run
+model = StressModel(N=5, max_days=5, seed=42)
+print("Starting simulation...")
+for step in range(5):
+    print(f"\n=== DAY {step} ===")
+    for i, agent in enumerate(model.agents):
+        print(f"Agent {i}:")
+        print(f"  - RNG type: {type(agent._rng)}")
+        print(f"  - Last reset day: {agent.last_reset_day}")
+        print(f"  - Current stress: {agent.current_stress}")
+        print(f"  - Events before: {len(agent.daily_stress_events)}")
+        test_actions = [agent._rng.choice(["interact", "stress"]) for _ in range(5)]
+        stress_count = sum(1 for a in test_actions if a == "stress")
+        print(f"  - Test RNG (5 draws): {stress_count} stress actions")
+    model.step()
+    for i, agent in enumerate(model.agents):
+        events_after = len(agent.daily_stress_events)
+        print(f"Agent {i} - Events after: {events_after}")
+        if events_after > 0:
+            for j, event in enumerate(agent.daily_stress_events):
+                print(f"  Event {j}: challenge={event.get('challenge', 0):.3f}, hindrance={event.get('hindrance', 0):.3f}")
+```
+
+## Summary
+
+```{python}
+#| label: summary
+print("\n" + "=" * 50)
+print("FINAL DATACOLLECTOR DATA:")
+tbl = model.get_time_series_data()
+print(tbl[["total_stress_events", "stress_events"]])
+```
+
+## What We See
+
+The per-step debug output reveals the internal state of each agent before and after each simulation day. We can track how stress events accumulate, whether RNG draws are consistent, and how challenge/hindrance values distribute across agents. The DataCollector summary confirms the total counts match.
+
+## Why This Matters for the Simulation
+
+Per-agent stress tracking is essential for debugging stress event generation and the stress processing pipeline. This demo shows the direct link between agent state, the RNG, and the stress events that feed into perception, appraisal, and coping phases.

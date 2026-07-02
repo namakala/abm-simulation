@@ -1,0 +1,71 @@
+---
+title: "Population-Level Correlation Analysis"
+format: html
+---
+
+## What This Code Does
+
+This demo runs a full simulation and extracts population-level time series data (averages across all agents per step). It computes a Pearson correlation matrix on population means: avg PSS-10, resilience, affect, stress, resources, social support rate, and coping success rate.
+
+Population-level correlations reveal emergent macro-patterns that arise from individual agent interactions — distinct from agent-level correlations in the previous demo.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+PROJECT_ROOT = pathlib.Path(os.getcwd()).resolve().parents[2]
+sys.path.append(str(PROJECT_ROOT))
+
+from src.python.model import StressModel
+```
+
+## Simulation
+
+```{python}
+#| label: simulate
+days, agents, seed = 100, 30, 42
+print(f"Running simulation with {agents} agents for {days} days (seed={seed})...")
+model = StressModel(N=agents, max_days=days, seed=seed)
+while model.running:
+    model.step()
+
+model_data = model.get_time_series_data()
+print(f"Simulation done. Data shape: {model_data.shape}")
+```
+
+## Correlation Matrix
+
+```{python}
+#| label: corr
+vars_of_interest = ["avg_pss10", "avg_resilience", "avg_affect", "avg_stress", "avg_resources", "social_support_rate", "coping_success_rate"]
+available = [v for v in vars_of_interest if v in model_data.columns]
+print(f"Analyzing: {available}")
+
+corr = model_data[available].corr()
+print(corr.to_string(float_format="%.4f"))
+```
+
+## Interpretation
+
+```{python}
+#| label: interpret
+for i, v1 in enumerate(available):
+    for j, v2 in enumerate(available):
+        if i < j:
+            r = corr.loc[v1, v2]
+            strength = "Strong" if abs(r) > 0.7 else "Moderate" if abs(r) > 0.3 else "Weak"
+            direction = "positive" if r > 0 else "negative"
+            print(f"{v1} ↔ {v2}: {strength} {direction} (r={r:.4f})")
+```
+
+## Why This Matters for the Simulation
+
+Population-level correlations capture emergent dynamics that agent-level analysis may miss. For example, a strong correlation between avg_stress and coping_success_rate may indicate that the population adapts to stress over time — or that high stress overwhelms coping capacity. These patterns validate the model's aggregate behaviour against theoretical expectations.

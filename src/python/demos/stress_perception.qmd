@@ -3,30 +3,18 @@ title: "Stress Perception — Challenge/Hindrance Appraisal"
 format: html
 ---
 
-## Overview
+## What This Code Does
 
-This demo exercises the stress perception phase in isolation. We vary the two
-appraisal weight parameters — omega_c (controllability weight) and omega_o
-(overload weight) — and observe their effect on challenge, hindrance,
-appraised stress, and threshold classification.
+This demo exercises the stress perception phase in isolation. It varies the two appraisal weight parameters — `omega_c` (controllability weight) and `omega_o` (overload weight) — across the full [0, 1] range and observes their effect on challenge, hindrance, appraised stress, and threshold classification.
 
-The theory predicts:
+The theory predicts monotonicity: higher `omega_c` produces higher challenge; higher `omega_o` produces higher hindrance. The effective threshold combines both dimensions with opposite signs (`base_threshold + 0.15×challenge − 0.25×hindrance`), making challenge protective and hindrance a vulnerability factor.
 
-- **Monotonicity**: Higher omega_c produces higher challenge; higher omega_o
-  produces higher hindrance.
-- **Complementarity**: The effective threshold =
-  `base_threshold + 0.15×challenge − 0.25×hindrance`. Challenge raises the
-  threshold (protective), hindrance lowers it (vulnerability).
-- **Classification**: `is_stressed` = `appraised_stress > effective_threshold`.
-
-## Code
+## Setup
 
 ```{python}
 #| label: setup
-#| message: false
-
-import sys
 import os
+import sys
 import pathlib
 import numpy as np
 import pandas as pd
@@ -34,48 +22,37 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from numpy.random import Generator, PCG64
 
-# .qmd runs from its own directory; go up 2 levels to project root
 PROJECT_ROOT = pathlib.Path(os.getcwd()).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
 
 from src.python.phases.stress_perception import run_phase
 ```
 
+## Step 1: Sweep Omega_c (Controllability) and Omega_o (Overload)
+
+This first sweep runs the perception phase with a fixed mid-range state (controllability=0.5, overload=0.5) and varies both weight parameters. The results record challenge, hindrance, appraised stress, effective threshold, and the binary stress classification.
+
 ```{python}
 #| label: sweep
-#| message: false
-
-N_C = 20
-N_O = 20
-
+N_C, N_O = 20, 20
 rng = Generator(PCG64(42))
-
 records = []
 
 for omega_c in np.linspace(0, 1, N_C):
     for omega_o in np.linspace(0, 1, N_O):
         state = {
-            "stress_controllability": 0.5,
-            "stress_overload": 0.5,
-            "volatility": 0.5,
-            "recent_stress_intensity": 0.0,
-            "stress_momentum": 0.0,
-            "resilience": 0.5,
+            "stress_controllability": 0.5, "stress_overload": 0.5,
+            "volatility": 0.5, "recent_stress_intensity": 0.0,
+            "stress_momentum": 0.0, "resilience": 0.5,
         }
         config = {
-            "omega_c": omega_c,
-            "omega_o": omega_o,
-            "bias": 0.0,
-            "gamma": 6.0,
-            "delta": 0.2,
-            "base_threshold": 0.5,
-            "challenge_scale": 0.15,
-            "hindrance_scale": 0.25,
+            "omega_c": omega_c, "omega_o": omega_o, "bias": 0.0,
+            "gamma": 6.0, "delta": 0.2, "base_threshold": 0.5,
+            "challenge_scale": 0.15, "hindrance_scale": 0.25,
         }
         out = run_phase(state, config, rng)
         records.append({
-            "omega_c": omega_c,
-            "omega_o": omega_o,
+            "omega_c": omega_c, "omega_o": omega_o,
             "challenge": out["observation"]["challenge"],
             "hindrance": out["observation"]["hindrance"],
             "appraised_stress": out["observation"]["appraised_stress"],
@@ -84,49 +61,41 @@ for omega_c in np.linspace(0, 1, N_C):
         })
 
 df = pd.DataFrame(records)
+print(f"Generated {len(df)} data points ({N_C}×{N_O} sweep)")
 ```
+
+## Step 2: Correlogram Analysis
+
+The PairGrid below shows all pairwise relationships between the six variables. The diagonal shows density distributions; off-diagonal scatter plots reveal correlations.
 
 ```{python}
 #| label: fig-correlogram
-#| fig-cap: "6×6 PairGrid correlogram of stress perception variables with annotated Pearson r"
-#| fig-width: 9
-#| fig-height: 9
-
 vars_ = ["omega_c", "omega_o", "challenge", "hindrance", "appraised_stress", "effective_threshold"]
 g = sns.PairGrid(df[vars_], diag_sharey=False)
 g.map_upper(sns.scatterplot, s=8, alpha=0.4)
 g.map_lower(sns.scatterplot, s=8, alpha=0.4)
 g.map_diag(sns.kdeplot, fill=True)
 
-# Annotate upper triangle with Pearson r
 for i, var_i in enumerate(vars_):
     for j, var_j in enumerate(vars_):
         if i < j:
             r_val = df[[var_i, var_j]].corr().iloc[0, 1]
             ax = g.axes[i, j]
-            ax.text(
-                0.95, 0.95, f"r={r_val:.2f}",
-                transform=ax.transAxes,
-                ha="right", va="top",
-                fontsize=8,
-                bbox=dict(boxstyle="round,pad=0.2", facecolor="wheat", alpha=0.7),
-            )
+            ax.text(0.95, 0.95, f"r={r_val:.2f}", transform=ax.transAxes,
+                    ha="right", va="top", fontsize=8,
+                    bbox=dict(boxstyle="round,pad=0.2", facecolor="wheat", alpha=0.7))
 
 plt.suptitle("Stress Perception — Omega Sweep Correlogram", y=1.02, fontsize=13)
 plt.show()
 ```
 
-## Observed Patterns
+## What We See
 
-The correlogram above shows:
+- **omega_c vs challenge** — monotonic positive correlation (r ≈ 1.0). Higher controllability weight amplifies challenge appraisal.
+- **omega_o vs hindrance** — likewise monotonic positive (r ≈ 1.0). Higher overload weight amplifies hindrance.
+- **Complementarity in threshold** — challenge raises the threshold (protective), hindrance lowers it (vulnerability), visible in opposite-sign correlations with `effective_threshold`.
+- **Classification boundary** — `is_stressed` divides the omega space: the challenge/hindrance balance determines whether `appraised_stress > effective_threshold`.
 
-- **omega_c vs challenge** — monotonic positive correlation. Higher
-  controllability weight amplifies challenge appraisal.
-- **omega_o vs hindrance** — likewise monotonic positive. Higher overload
-  weight amplifies hindrance.
-- **Complementarity in threshold** — the effective threshold combines both
-  dimensions with opposite signs. Challenge dampens stress classification;
-  hindrance amplifies it.
-- **Classification boundary** — `is_stressed` (not shown in the correlogram)
-  divides the space: when `appraised_stress > threshold`, the event is
-  classified as stressful.
+## Why This Matters for the Simulation
+
+Stress perception is the gateway to all downstream stress processing. The monotonic relationship between appraisal weights and challenge/hindrance outputs ensures that the perception phase responds predictably to parameter changes. The complementarity of challenge and hindrance in threshold computation implements a core theoretical prediction: protective factors raise the bar for stress classification while vulnerability factors lower it. This directly affects coping outcomes, resource allocation, and ultimately population-level stress dynamics.
