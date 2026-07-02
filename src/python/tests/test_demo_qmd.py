@@ -60,14 +60,12 @@ class TestPixiQuartoTask:
 class TestPixiServeTasks:
     """Serve dashboard tasks exist for viewing rendered demos."""
 
-    def test_serve_task_defined(self):
-        """pixi.toml must define a 'serve' task that renders + serves."""
+    def test_serve_task_calls_shell_script(self):
+        """Serve task must call serve.sh (pixi can't parse for-loops)."""
         tasks = _load_pixi_tasks()
         assert "serve" in tasks, "pixi.toml must define a 'serve' task"
         task_value = str(tasks["serve"])
-        assert "quarto render" in task_value, "serve task must invoke quarto render"
-        assert "http.server" in task_value, "serve task must start an HTTP server"
-        assert "9000" in task_value, "serve task must use port 9000"
+        assert "serve.sh" in task_value, "serve task must call src/shell/serve.sh"
 
     def test_serve_quick_task_defined(self):
         """pixi.toml must define a 'serve-quick' task for serving without re-render."""
@@ -76,6 +74,29 @@ class TestPixiServeTasks:
         task_value = str(tasks["serve-quick"])
         assert "http.server" in task_value, "serve-quick task must start an HTTP server"
         assert "9000" in task_value, "serve-quick task must use port 9000"
+
+
+class TestServeScript:
+    """The serve.sh shell script must exist with correct render logic."""
+
+    SERVE_SCRIPT = PROJECT_ROOT / "src" / "shell" / "serve.sh"
+
+    def test_script_exists(self):
+        """serve.sh must exist in src/shell/."""
+        assert self.SERVE_SCRIPT.is_file(), f"Missing serve script: {self.SERVE_SCRIPT}"
+
+    def test_script_has_for_loop(self):
+        """serve.sh must iterate over .qmd files with a for loop."""
+        content = self.SERVE_SCRIPT.read_text()
+        assert "for " in content, "serve.sh must contain a for loop"
+        assert "*.qmd" in content, "serve.sh must iterate over .qmd files"
+
+    def test_script_invokes_quarto_and_server(self):
+        """serve.sh must call quarto render and python http.server."""
+        content = self.SERVE_SCRIPT.read_text()
+        assert "quarto render" in content, "serve.sh must invoke quarto render"
+        assert "http.server" in content, "serve.sh must start HTTP server"
+        assert "9000" in content, "serve.sh must use port 9000"
 
 
 # ── Step 2–6: File structure ────────────────────────────────────────

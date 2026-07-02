@@ -27,7 +27,7 @@ parameterize = "bash src/shell/parameterize_env.sh"
 force-parameterize = "bash src/shell/parameterize_env.sh --force"
 install-hooks = "git config core.hooksPath .githooks"
 quarto = "quarto render"
-serve = "quarto render src/python/demos/ && python -m http.server 9000 --directory src/python/demos"
+serve = "bash src/shell/serve.sh"
 serve-quick = "python -m http.server 9000 --directory src/python/demos"
 
 [dependencies]
