@@ -540,6 +540,9 @@ class Person(mesa.Agent):
         # Within-day support boost from recent support exchanges
         self.support_boost = 0.0
 
+        # Phase output instrumentation for demo metric extraction
+        self._last_phase_outputs: dict = {}
+
         # Track whether network adaptation has been applied
         self._adapted_network = False
 
@@ -587,6 +590,9 @@ class Person(mesa.Agent):
 
         State flows through phases via ``_build_agent_state`` → ``_apply_delta`` → ``_write_back_state``.
         """
+        # ── 0. Reset phase output instrumentation ───────────────────
+        self._last_phase_outputs = {}
+
         # ── 1. Build agent state ────────────────────────────────────
         state = self._build_agent_state()
 
@@ -624,6 +630,7 @@ class Person(mesa.Agent):
                     "hindrance_scale": cfg.get("threshold", "hindrance_scale"),
                 }
                 perception_result = run_stress_perception(state, perception_config, self._rng)
+                self._last_phase_outputs["stress_perception"] = perception_result
                 state = self._apply_delta(state, perception_result["state_delta"])
 
                 # Accumulate challenge/hindrance for daily dynamics
@@ -643,6 +650,7 @@ class Person(mesa.Agent):
                         "base_resource_cost": base_resource_cost,
                     }
                     activation_result = run_resilience_activation(state, activation_config, self._rng)
+                    self._last_phase_outputs["resilience_activation"] = activation_result
                     state = self._apply_delta(state, activation_result["state_delta"])
                     coped_successfully = activation_result["observation"].get("coped_successfully", False)
 
@@ -689,6 +697,8 @@ class Person(mesa.Agent):
                     self_output, partner_output = phase_process_interaction(
                         state, partner_state, interaction_config, self._rng
                     )
+                    self._last_phase_outputs["interaction_self"] = self_output
+                    self._last_phase_outputs["interaction_partner"] = partner_output
                     # Interaction phase returns CHANGE (delta) values
                     for key, value in self_output["state_delta"].items():
                         if key in state:
@@ -738,6 +748,7 @@ class Person(mesa.Agent):
             "stress_decay_rate": cfg.get("dynamics", "stress_decay_rate"),
         }
         affect_result = process_affect_dynamics(state, affect_config, self._rng)
+        self._last_phase_outputs["affect_dynamics"] = affect_result
         state = self._apply_delta(state, affect_result["state_delta"])
 
         # WP5: Strengthened resource→affect supplement (±0.01/day, was ±0.005)
@@ -758,6 +769,7 @@ class Person(mesa.Agent):
             "protective_improvement_rate": cfg.get("resource", "protective_improvement_rate"),
         }
         resource_result = run_resource_allocation(state, resource_config, self._rng)
+        self._last_phase_outputs["resource_allocation"] = resource_result
         state = self._apply_delta(state, resource_result["state_delta"])
 
         # Resilience-driven resource adjustment (Fix 1 — simplified)
@@ -785,16 +797,19 @@ class Person(mesa.Agent):
         # 4c. Stress buffering (phase module)
         buffering_config = {}
         buffering_result = run_stress_buffering(state, buffering_config, self._rng)
+        self._last_phase_outputs["stress_buffering"] = buffering_result
         state = self._apply_delta(state, buffering_result["state_delta"])
 
         # 4d. PSS-10 consolidation (internal phase)
         pss10_config = {"pss10_threshold": pss10_threshold}
         pss10_result = process_pss10_consolidation(state, pss10_config, self._rng)
+        self._last_phase_outputs["pss10_consolidation"] = pss10_result
         state = self._apply_delta(state, pss10_result["state_delta"])
 
         # 4e. Daily reset (internal phase)
         reset_config = {"current_day": getattr(self.model, "day", 0)}
         reset_result = process_daily_reset(state, reset_config, self._rng)
+        self._last_phase_outputs["daily_reset"] = reset_result
         state = self._apply_delta(state, reset_result["state_delta"])
 
         # ── 5. Write back state ─────────────────────────────────────

@@ -44,6 +44,9 @@ DEMO_FILES = [
     "stress_processing_mechanism.qmd",
     "agent_diversity_demo.qmd",
     "stress_pipeline_debug_demo.qmd",
+    "module_isolation.qmd",
+    "simulation_individual.qmd",
+    "simulation_population.qmd",
 ]
 
 

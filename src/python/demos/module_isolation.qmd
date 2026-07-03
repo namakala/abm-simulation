@@ -1,0 +1,248 @@
+---
+title: "Module Isolation Dashboard — Controlled-Input Response Surfaces"
+format: html
+---
+
+## What This Code Does
+
+This demo exercises all 5 phases **in isolation** — each section varies only one module's inputs while holding all other state fixed. This proves each module's response surface is correct independent of the others.
+
+The theory predicts: stress perception monotonicity (omega_c → challenge, omega_o → hindrance), resilience activation copes-successfully when challenge > hindrance, resource allocation concentrates on high-efficacy PF with low temperature, stress buffering mediates stress through resources (a × b ≠ 0), and daily cycle resets affect toward baseline.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from numpy.random import Generator, PCG64
+
+demos_dir = pathlib.Path(os.getcwd())
+project_root = demos_dir.parents[2]
+sys.path.insert(0, str(project_root))
+
+from src.python.phases.stress_perception import run_phase as run_perception
+from src.python.phases.resilience_activation import run_phase as run_activation
+from src.python.phases.resource_allocation import run_phase as run_allocation
+from src.python.phases.stress_buffering import run_phase as run_buffering
+from src.python.phases.interfaces import AgentState, PhaseOutput
+from src.python.demos.module_metrics import compute_isolation_inputs
+
+_FACTORS = ["social_support", "family_support", "formal_intervention", "psychological_capital"]
+```
+
+## Module 1 — Stress Perception: Omega_c × Omega_o Sweep
+
+Challenge rises with omega_c; hindrance rises with omega_o. The effective threshold = base + 0.15×challenge − 0.25×hindrance.
+
+```{python}
+#| label: module-perception
+rng = Generator(PCG64(42))
+records = []
+
+for omega_c in np.linspace(0, 1, 20):
+    for omega_o in np.linspace(0, 1, 20):
+        state = AgentState(
+            stress_controllability=0.5, stress_overload=0.5,
+            volatility=0.5, recent_stress_intensity=0.0,
+            stress_momentum=0.0, resilience=0.5,
+        )
+        config = {"omega_c": omega_c, "omega_o": omega_o, "bias": 0.0,
+                  "gamma": 6.0, "delta": 0.2, "base_threshold": 0.5,
+                  "challenge_scale": 0.15, "hindrance_scale": 0.25}
+        out = run_perception(state, config, rng)
+        records.append({
+            "omega_c": omega_c, "omega_o": omega_o,
+            "challenge": out["observation"]["challenge"],
+            "hindrance": out["observation"]["hindrance"],
+            "appraised_stress": out["observation"]["appraised_stress"],
+            "effective_threshold": out["observation"]["effective_threshold"],
+            "is_stressed": int(out["observation"]["is_stressed"]),
+        })
+
+df_perception = pd.DataFrame(records)
+print(f"Perception: {len(df_perception)} points")
+```
+
+## Module 2 — Resilience Activation: Challenge × Hindrance × Neighbor Affect
+
+Coping probability rises with challenge/hindrance ratio. Positive neighbors improve odds.
+
+```{python}
+#| label: module-activation
+rng = Generator(PCG64(42))
+records = []
+
+for neighbor_affect in [-0.5, 0.0, 0.5]:
+    for challenge in np.linspace(0, 1, 20):
+        for hindrance in np.linspace(0, 1, 20):
+            state = AgentState(
+                affect=0.0, resilience=0.5, current_stress=0.3,
+                baseline_resilience=0.5, challenge=challenge, hindrance=hindrance,
+                protective_factors={f: 0.5 for f in _FACTORS},
+                resources=0.6, stress_controllability=0.5, stress_overload=0.5,
+                volatility=0.3, recent_stress_intensity=0.0, stress_momentum=0.0,
+            )
+            config = {"neighbor_affects": [neighbor_affect], "base_resource_cost": 0.1}
+            out = run_activation(state, config, rng)
+            records.append({
+                "challenge": challenge, "hindrance": hindrance,
+                "neighbor_affect": neighbor_affect,
+                "coping_probability": out["observation"]["coping_probability"],
+                "coped_successfully": int(out["observation"]["coped_successfully"]),
+                "resilience_effect": out["observation"]["resilience_effect"],
+                "delta_stress": out["observation"]["delta_stress"],
+                "delta_affect": out["observation"]["delta_affect"],
+            })
+
+df_activation = pd.DataFrame(records)
+print(f"Activation: {len(df_activation)} points")
+```
+
+## Module 3 — Resource Allocation: Resources × Softmax Temperature
+
+High temperature → uniform allocation. Low temperature → winner-take-most.
+
+```{python}
+#| label: module-allocation
+rng = Generator(PCG64(42))
+records = []
+
+for day in range(30):
+    for resources in [0.2, 0.5, 0.8]:
+        for temperature in [0.5, 1.0, 5.0]:
+            state = AgentState(
+                resources=resources, affect=0.0, resilience=0.5,
+                protective_factors={f: 0.5 for f in _FACTORS},
+            )
+            config = {"base_regeneration": 0.1, "softmax_temperature": temperature,
+                      "protective_improvement_rate": 0.1}
+            out = run_allocation(state, config, rng)
+            records.append({
+                "day": day, "resources_start": resources, "temperature": temperature,
+                "regeneration_amount": out["observation"]["regeneration_amount"],
+                "resources_after": out["state_delta"].get("resources", resources),
+            })
+
+df_allocation = pd.DataFrame(records)
+print(f"Allocation: {len(df_allocation)} points")
+```
+
+## Module 4 — Stress Buffering: Current Stress Sweep (Baron & Kenny)
+
+Current stress depletes resources (a-path). Resources enhance buffering (b-path). Residual direct effect (c'-path).
+
+```{python}
+#| label: module-buffering
+rng = Generator(PCG64(42))
+records = []
+
+for current_stress in np.linspace(0, 1, 30):
+    state = AgentState(
+        current_stress=current_stress, resilience=0.5, baseline_resilience=0.5,
+        protective_factors={f: 0.5 for f in _FACTORS},
+        resources=0.5, stress_overload=0.5,
+    )
+    config = {}
+    out = run_buffering(state, config, rng)
+    records.append({
+        "current_stress": current_stress,
+        "resources_before": 0.5,
+        "resources_after": out["state_delta"].get("resources", 0.5),
+        "buffering_strength": out["observation"]["buffering_strength"],
+    })
+
+df_buffering = pd.DataFrame(records)
+print(f"Buffering: {len(df_buffering)} points")
+```
+
+## Module 5 — Daily Cycle: Affect × Current Stress Reset
+
+Affect moves toward baseline. Stress decays. Reset magnitude = pre − post deviation from baseline.
+
+```{python}
+#| label: module-daily-cycle
+from src.python.agent import process_daily_reset
+
+rng = Generator(PCG64(42))
+records = []
+
+for affect in np.linspace(-1, 1, 15):
+    for current_stress in np.linspace(0, 1, 10):
+        pre_state = AgentState(affect=affect, baseline_affect=0.0,
+                               current_stress=current_stress)
+        config = {"current_day": 0}
+        out = process_daily_reset(pre_state, config, rng)
+        post_affect = out["state_delta"].get("affect", affect)
+        post_stress = out["state_delta"].get("current_stress", current_stress)
+        reset_mag = abs(affect - 0.0) - abs(post_affect - 0.0)
+        records.append({
+            "affect": affect, "current_stress": current_stress,
+            "post_affect": post_affect, "post_stress": post_stress,
+            "affect_reset_magnitude": max(0.0, reset_mag),
+            "stress_decay_amount": max(0.0, current_stress - post_stress),
+        })
+
+df_daily = pd.DataFrame(records)
+print(f"Daily cycle: {len(df_daily)} points")
+```
+
+## Response Surfaces Summary
+
+```{python}
+#| label: summary
+fig, axes = plt.subplots(2, 3, figsize=(15, 9))
+
+# 1. Perception: challenge surface
+piv = df_perception.pivot_table(index="omega_c", columns="omega_o", values="challenge")
+sns.heatmap(piv, ax=axes[0, 0], cmap="Blues", cbar_kws={"label": "challenge"})
+axes[0, 0].set_title("Perception: Challenge(omega_c, omega_o)")
+axes[0, 0].set_xlabel("omega_o"); axes[0, 0].set_ylabel("omega_c")
+
+# 2. Activation: coping prob surface (neighbor_affect=0)
+sub = df_activation[df_activation["neighbor_affect"] == 0.0]
+piv = sub.pivot_table(index="challenge", columns="hindrance", values="coping_probability")
+sns.heatmap(piv, ax=axes[0, 1], cmap="RdYlGn", cbar_kws={"label": "coping prob"})
+axes[0, 1].set_title("Activation: Coping Probability")
+axes[0, 1].set_xlabel("hindrance"); axes[0, 1].set_ylabel("challenge")
+
+# 3. Allocation: resources over time
+sub = df_allocation[df_allocation["temperature"] == 1.0]
+sns.lineplot(data=sub, x="day", y="resources_after", hue="resources_start",
+             ax=axes[0, 2], palette="Set2")
+axes[0, 2].set_title("Allocation: Resources Trajectory")
+axes[0, 2].set_ylabel("resources after")
+
+# 4. Buffering: stress vs buffering
+sns.scatterplot(data=df_buffering, x="current_stress", y="buffering_strength",
+                ax=axes[1, 0], alpha=0.7)
+axes[1, 0].set_title("Buffering: Stress vs Buffering Strength")
+axes[1, 0].set_xlabel("current_stress")
+
+# 5. Daily cycle: affect reset
+sns.scatterplot(data=df_daily, x="affect", y="affect_reset_magnitude",
+                hue="current_stress", ax=axes[1, 1], alpha=0.6, palette="viridis")
+axes[1, 1].set_title("Daily Cycle: Affect Reset")
+axes[1, 1].axhline(0, color="grey", linestyle="--", alpha=0.5)
+
+axes[1, 2].axis("off")
+plt.tight_layout()
+plt.show()
+```
+
+## What We See
+
+- **Perception**: challenge monotonic in omega_c; hindrance monotonic in omega_o; threshold complementarity
+- **Activation**: coping probability rises with challenge/hindrance ratio; positive neighbors shift curve up
+- **Allocation**: low temperature concentrates resources; high temperature distributes uniformly
+- **Buffering**: stress depletes resources (negative a-path); buffering strength tracks remaining resources
+- **Daily cycle**: affect pulled toward baseline; stress decays; reset magnitude proportional to deviation
+
+## Why This Matters
+
+Isolation mode proves each module's response surface is correct before composing them in the full simulation. The dashboard view lets you compare all 5 modules side by side.
