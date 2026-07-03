@@ -122,10 +122,10 @@ class StressModel(mesa.Model):
         # Initialize DataCollector for population and agent metrics
         self._initialize_datacollector()
 
-        # Build social network
-        G = nx.watts_strogatz_graph(
-            n=N, k=get_config().get("network", "watts_k"), p=get_config().get("network", "watts_p")
-        )
+        # Build social network with valid k < n for Watts-Strogatz
+        k = get_config().get("network", "watts_k")
+        k = min(k, max(0, N - 1))  # clamp: must be < n
+        G = nx.watts_strogatz_graph(n=N, k=k, p=get_config().get("network", "watts_p"))
         self.grid = NetworkGrid(G)
 
         # Create and register agents with enhanced capabilities
