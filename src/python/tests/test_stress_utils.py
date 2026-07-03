@@ -92,15 +92,15 @@ class TestStressAppraisal:
         event_max_challenge = StressEvent(1.0, 0.0)
         challenge, hindrance = apply_weights(event_max_challenge)
 
-        assert challenge > 0.99  # Should be very close to 1.0
-        assert hindrance < 0.01  # Should be very close to 0.0
+        assert challenge > 0.90  # Very high challenge (gamma=3: 0.953)
+        assert hindrance < 0.10  # Very low hindrance
 
         # Case 2: Maximum hindrance scenario
         event_max_hindrance = StressEvent(0.0, 1.0)
         challenge, hindrance = apply_weights(event_max_hindrance)
 
-        assert challenge < 0.01  # Should be very close to 0.0
-        assert hindrance > 0.99  # Should be very close to 1.0
+        assert challenge < 0.10  # Very low challenge
+        assert hindrance > 0.90  # Very high hindrance (gamma=3: 0.953)
 
     def test_sigmoid_function(self):
         """Test the sigmoid function used in challenge/hindrance mapping."""

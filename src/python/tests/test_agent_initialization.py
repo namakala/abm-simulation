@@ -673,7 +673,9 @@ class TestAgentPopulationVariation:
         assert 0.1 < resilience_mean < 0.9
 
         # Should have reasonable spread
-        assert 0.05 < resilience_std < 0.4
+        # Lower bound adjusted for gamma=3.0 (Fix 3) — lower sigmoid steepness
+        # produces slightly narrower resilience distribution
+        assert 0.04 < resilience_std < 0.4
 
         # Test affect distribution (tanh transformed)
         affect_values = [agent.affect for agent in agents]
@@ -699,7 +701,9 @@ class TestAgentPopulationVariation:
         assert 0.1 < resources_mean < 0.9
 
         # Should have reasonable spread
-        assert 0.05 < resources_std < 0.4
+        # Lower bound adjusted for gamma=3.0 (Fix 3) — lower sigmoid steepness
+        # produces slightly narrower resource distribution
+        assert 0.03 < resources_std < 0.4
 
     def test_agent_population_bounds_strictly_enforced(self):
         """Test that transformation functions strictly enforce bounds."""

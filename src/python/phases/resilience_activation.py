@@ -128,7 +128,10 @@ def run_phase(
         config=stress_config,
     )
     resilience_effect = compute_challenge_hindrance_resilience_effect(
-        challenge=challenge, hindrance=hindrance, coped_successfully=coped_successfully
+        challenge=challenge,
+        hindrance=hindrance,
+        coped_successfully=coped_successfully,
+        current_resilience=current_resilience,
     )
 
     # ── STEP 2: Update stress dimensions from event ─────────────────
@@ -206,15 +209,21 @@ def run_phase(
     # ── STEP 8: Increment stress breach count ───────────────────────
     new_stress_breach_count = state.get("stress_breach_count", 0) + 1
 
-    # ── STEP 9: PF allocation only (Fix 1 — no reward/penalty) ────
-    # Resource costs are decoupled from coping success/failure to reduce
-    # the stress↔resources correlation. The depletion in Step 6 is the same
-    # for both outcomes. Successful coping still triggers PF investment.
+    # ── STEP 9: PF allocation + resource reward (Fix 4) ──────────
+    # Successful coping yields a small resource reward, compensating for
+    # the PF allocation cost. This restores the face-valid relationship
+    # where successful copers end with more resources than failed copers,
+    # without recreating the stress↔resources correlation.
     new_protective_factors = dict(protective_factors)
     resource_reward: float | None = None
     resource_penalty: float | None = None
 
     if coped_successfully:
+        # Resource reward for mastering a challenge (Fix 4)
+        reward = 0.03  # flat reward, independent of challenge magnitude
+        new_resources = clamp(new_resources + reward, 0.0, 1.0)
+        resource_reward = reward
+
         allocations = allocate_protective_factors(
             available_resources=new_resources * _PF_ALLOCATION_FRACTION,
             current_resilience=new_resilience,

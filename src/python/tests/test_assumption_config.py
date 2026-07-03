@@ -47,7 +47,7 @@ class TestAssumptionConfigExistence:
         c = AssumptionCopingConfig()
         assert c.resource_reward == 0.10
         assert c.resource_penalty == 0.20
-        assert c.pf_allocation_fraction == 0.15
+        assert c.pf_allocation_fraction == 0.05
         assert c.affect_improvement_scale == 0.2
         assert c.affect_deterioration_scale == 0.4
         assert c.resilience_improvement_scale == 0.15

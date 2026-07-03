@@ -502,10 +502,18 @@ def compute_coping_probability(
 
 
 def compute_challenge_hindrance_resilience_effect(
-    challenge: float, hindrance: float, coped_successfully: bool, config: Optional[StressProcessingConfig] = None
+    challenge: float,
+    hindrance: float,
+    coped_successfully: bool,
+    config: Optional[StressProcessingConfig] = None,
+    current_resilience: float = 0.5,
 ) -> float:
     """
     Compute resilience change based on challenge/hindrance and coping outcome.
+
+    Applies ceiling damping: the raw delta is scaled by ``(1 - R)`` so that
+    resilience growth slows as R approaches 1.0, preventing ceiling saturation
+    (Fix 1).
 
     When coping fails:
     - Hindrance greatly reduces resilience (-0.3 to -0.5)
@@ -520,6 +528,8 @@ def compute_challenge_hindrance_resilience_effect(
         hindrance: Hindrance component from event appraisal (0-1)
         coped_successfully: Whether coping was successful
         config: Stress processing configuration
+        current_resilience: Current resilience level (0-1). Used for ceiling
+            damping. Higher R → smaller delta. Default 0.5 for backward compat.
 
     Returns:
         Resilience change
@@ -539,6 +549,12 @@ def compute_challenge_hindrance_resilience_effect(
         challenge_effect = a.coping.challenge_failure_resilience * challenge  # -0.1
 
     total_effect = hindrance_effect + challenge_effect
+
+    # Ceiling damping: diminishing returns as resilience approaches 1.0
+    # Linear taper (1 - R) gives zero gain at R=1.0 (Fix 1)
+    ceiling_damping = 1.0 - current_resilience
+    total_effect *= ceiling_damping
+
     return total_effect
 
 
@@ -586,8 +602,12 @@ def compute_stress_decay(current_stress: float, config: Optional[StressProcessin
     if config is None:
         config = StressProcessingConfig()
 
-    # Exponential decay toward zero
+    # Exponential decay toward baseline stress floor
+    # Floor prevents asymptote to absolute zero — stress fluctuates
+    # around a small non-zero level, preserving multi-day event traces.
+    STRESS_FLOOR = 0.03
     decayed_stress = current_stress * (1.0 - config.stress_decay_rate)
+    decayed_stress = max(STRESS_FLOOR, decayed_stress)
 
     # Clamp to valid range
     return clamp(decayed_stress, 0.0, 1.0)
@@ -942,7 +962,9 @@ def determine_coping_outcome_and_psychological_impact(
     coped_successfully = rng.random() < coping_prob
 
     # Compute resilience effect based on challenge/hindrance and coping outcome
-    resilience_effect = compute_challenge_hindrance_resilience_effect(challenge, hindrance, coped_successfully, config)
+    resilience_effect = compute_challenge_hindrance_resilience_effect(
+        challenge, hindrance, coped_successfully, config, current_resilience=current_resilience
+    )
 
     # Update resilience
     new_resilience = current_resilience + resilience_effect

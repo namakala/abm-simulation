@@ -285,6 +285,11 @@ def complete_env_isolation():
     current_env = dict(os.environ)
     os.environ.clear()
 
+    # Set explicit defaults for Fix 3/4 to prevent env-var pollution
+    os.environ["APPRAISAL_GAMMA"] = "3.0"
+    os.environ["ASSUMPTION_STRESS_DECAY_RATE"] = "0.08"
+    os.environ["ASSUMPTION_PF_ALLOCATION_FRACTION"] = "0.05"
+
     from src.python.config import reload_config as _reload_config
 
     _reload_config()
@@ -297,3 +302,8 @@ def complete_env_isolation():
     os.environ.update(current_env)
     _reload_config()
     reload_assumptions()
+    # Reload phase modules that cache assumption constants at import time
+    import importlib
+    import src.python.phases.resilience_activation as _ra
+
+    importlib.reload(_ra)

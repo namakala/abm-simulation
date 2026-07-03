@@ -57,7 +57,7 @@ class AssumptionCopingConfig:
 
     resource_reward: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_REWARD", 0.10))
     resource_penalty: float = field(default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_PENALTY", 0.20))
-    pf_allocation_fraction: float = field(default_factory=lambda: _env_float("ASSUMPTION_PF_ALLOCATION_FRACTION", 0.15))
+    pf_allocation_fraction: float = field(default_factory=lambda: _env_float("ASSUMPTION_PF_ALLOCATION_FRACTION", 0.05))
     affect_improvement_scale: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_AFFECT_IMPROVEMENT_SCALE", 0.2)
     )
@@ -175,7 +175,7 @@ class AssumptionStressConfig:
         default_factory=lambda: _env_float("ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE", 0.35)
     )
     # WP6: Set to 0.20 to balance stress persistence vs over-correlation.
-    stress_decay_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_STRESS_DECAY_RATE", 0.20))
+    stress_decay_rate: float = field(default_factory=lambda: _env_float("ASSUMPTION_STRESS_DECAY_RATE", 0.08))
     resource_affect_coupling: float = field(
         default_factory=lambda: _env_float("ASSUMPTION_RESOURCE_AFFECT_COUPLING", 0.08)
     )

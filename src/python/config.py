@@ -228,7 +228,7 @@ class Config:
         self.appraisal_omega_c = self._get_env_value("APPRAISAL_OMEGA_C", float, 1.0)
         self.appraisal_omega_o = self._get_env_value("APPRAISAL_OMEGA_O", float, 1.0)
         self.appraisal_bias = self._get_env_value("APPRAISAL_BIAS", float, 0.0)
-        self.appraisal_gamma = self._get_env_value("APPRAISAL_GAMMA", float, 6.0)
+        self.appraisal_gamma = self._get_env_value("APPRAISAL_GAMMA", float, 3.0)
 
         self.threshold_base_threshold = self._get_env_value("THRESHOLD_BASE_THRESHOLD", float, 0.5)
         self.threshold_challenge_scale = self._get_env_value("THRESHOLD_CHALLENGE_SCALE", float, 0.15)

@@ -422,8 +422,9 @@ class TestAsymmetry:
     def test_overload_effect_formula(self):
         """DeltaR_o = -0.4 * min(h_c / eta, 1.0) for failed coping on hindrance."""
         hi_value = 0.7
+        # Pass current_resilience=0.0 to isolate formula test from ceiling damping
         total_effect = compute_challenge_hindrance_resilience_effect(
-            challenge=0.0, hindrance=hi_value, coped_successfully=False
+            challenge=0.0, hindrance=hi_value, coped_successfully=False, current_resilience=0.0
         )
         expected_overload = -0.4 * hi_value
         assert abs(total_effect - expected_overload) < 1e-10, (
@@ -433,8 +434,9 @@ class TestAsymmetry:
     def test_overload_capped_at_one(self):
         """Overload effect uses min(h_c / eta, 1.0) - test with extreme hindrance."""
         hi_value = 1.0
+        # Pass current_resilience=0.0 to isolate formula test from ceiling damping
         effect = compute_challenge_hindrance_resilience_effect(
-            challenge=0.0, hindrance=hi_value, coped_successfully=False
+            challenge=0.0, hindrance=hi_value, coped_successfully=False, current_resilience=0.0
         )
         assert effect == -0.4, f"Max overload effect should be -0.4, got {effect}"
 

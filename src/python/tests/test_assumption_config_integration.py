@@ -24,7 +24,7 @@ class TestAssumptionConfigInConfig:
         a = get_assumptions().coping
         assert a.resource_reward == 0.10
         assert a.resource_penalty == 0.20
-        assert a.pf_allocation_fraction == 0.15
+        assert a.pf_allocation_fraction == 0.05
         assert a.success_affect_change == 0.2
         assert a.failure_affect_change == -0.4
 

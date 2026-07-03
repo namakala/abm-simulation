@@ -331,8 +331,9 @@ class TestStressDecay:
 
         decayed_stress = compute_stress_decay(current_stress, config)
 
-        # Should remain zero
-        assert decayed_stress == 0.0
+        # Should be at floor (0.03) — Fix 2 stress floor prevents asymptote to zero
+        STRESS_FLOOR = 0.03
+        assert decayed_stress == STRESS_FLOOR, f"Expected floor {STRESS_FLOOR}, got {decayed_stress}"
 
     def test_stress_decay_complete_decay(self):
         """Test stress decay with high decay rate."""
@@ -342,8 +343,9 @@ class TestStressDecay:
 
         decayed_stress = compute_stress_decay(current_stress, config)
 
-        # Should decay to zero with 100% decay rate
-        assert decayed_stress == 0.0
+        # Should decay to floor (0.03) — Fix 2 stress floor prevents asymptote to zero
+        STRESS_FLOOR = 0.03
+        assert decayed_stress == STRESS_FLOOR, f"Expected floor {STRESS_FLOOR}, got {decayed_stress}"
 
     def test_stress_decay_clamping(self):
         """Test that decayed stress is properly clamped."""
