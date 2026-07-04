@@ -172,11 +172,13 @@ def compute_appraised_stress(
         cfg = get_config()
         config = {"delta": cfg.get("stress_params", "delta")}
 
-    # Theoretical specification: L = 1 + δ*(hindrance - challenge) (removed magnitude)
+    # Theoretical specification: L = 0.5 + δ*(hindrance - challenge)
+    # Baseline 0.5 anchors balanced events (h≈c) at moderate stress (L≈0.5),
+    # giving the threshold system room to distinguish manageable vs overwhelming.
     polarity_effect = config["delta"] * (hindrance - challenge)
-    stress_load = 1.0 + polarity_effect
+    stress_load = 0.5 + polarity_effect
 
-    return min(stress_load, 1.0)  # Cap at 1.0
+    return max(0.0, min(1.0, stress_load))  # Clamp to [0, 1]
 
 
 def evaluate_stress_threshold(

@@ -624,7 +624,7 @@ class Person(mesa.Agent):
                     "omega_o": cfg.get("appraisal", "omega_o"),
                     "bias": cfg.get("appraisal", "bias"),
                     "gamma": cfg.get("appraisal", "gamma"),
-                    "delta": 0.2,  # stress_perception default
+                    "delta": 0.2,  # stress_perception delta
                     "base_threshold": cfg.get("threshold", "base_threshold"),
                     "challenge_scale": cfg.get("threshold", "challenge_scale"),
                     "hindrance_scale": cfg.get("threshold", "hindrance_scale"),
