@@ -51,10 +51,17 @@ _FACTORS = ["social_support", "family_support", "formal_intervention", "psycholo
 #| label: run
 model = StressModel(N=50, max_days=30, seed=42)
 
+agent_all_events: dict[int, list[dict]] = {a.unique_id: [] for a in model.agents}
+
 daily_aggregates = []
 
 for day in range(model.max_days):
     model.step()
+
+    # Accumulate stress events across all days
+    for agent in model.agents:
+        events = getattr(agent, "last_daily_stress_events", [])
+        agent_all_events[agent.unique_id].extend(events)
 
     # Collect per-agent metrics
     all_perception = []
@@ -149,7 +156,7 @@ axes[0].set_ylim(0, 1)
 # Coping success rate distribution across agents
 coping_rates = []
 for agent in model.agents:
-    events = getattr(agent, "last_daily_stress_events", [])
+    events = agent_all_events.get(agent.unique_id, [])
     stressful_events = [e for e in events if e.get("is_stressed", False)]
     if stressful_events:
         successes = sum(1 for e in stressful_events if e.get("coped_successfully", False))
@@ -205,7 +212,7 @@ for agent in model.agents:
     buff_out = last.get("stress_buffering")
     if buff_out:
         final_buffering.append(buff_out["observation"].get("buffering_strength", 0))
-        events = getattr(agent, "last_daily_stress_events", [])
+        events = agent_all_events.get(agent.unique_id, [])
         stressful_events = [e for e in events if e.get("is_stressed", False)]
         success_rate = (
             sum(1 for e in stressful_events if e.get("coped_successfully", False))
