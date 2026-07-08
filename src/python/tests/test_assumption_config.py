@@ -61,6 +61,17 @@ class TestAssumptionConfigExistence:
         assert c.failure_stress_increase == 0.3
         assert c.success_affect_change == 0.2
         assert c.failure_affect_change == -0.4
+        # Coping factor defaults (Fix: reduce social support and support boost)
+        # Guard: prior tests may have polluted env with non-default values.
+        import os
+        from src.python.assumption_config import reload_assumptions
+
+        os.environ.pop("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", None)
+        os.environ.pop("ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR", None)
+        reload_assumptions()
+        c2 = AssumptionCopingConfig()
+        assert c2.social_support_factor == 0.20, f"Expected 0.20, got {c2.social_support_factor}"
+        assert c2.support_boost_factor == 0.30, f"Expected 0.30, got {c2.support_boost_factor}"
 
     @pytest.mark.unit
     def test_assumption_stress_config_defaults(self):

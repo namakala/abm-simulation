@@ -77,7 +77,7 @@ class TestCopingProbability:
     def test_coping_probability_no_neighbors(self):
         """Test coping probability with no social influence."""
         # Guard: prior test may have polluted .env with a non-default
-        # ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR.  Purge it so the 0.30
+        # ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR.  Purge it so the code
         # default is used regardless of execution order.
         os.environ.pop("ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR", None)
         reload_assumptions()
@@ -97,9 +97,9 @@ class TestCopingProbability:
         assert 0.0 <= coping_prob <= 1.0
 
         # Base + challenge - hindrance + social_support_effect
-        # 0.5 + (0.2*0.5) - (0.3*0.5) + (0.3*0.5) = 0.5 + 0.1 - 0.15 + 0.15 = 0.6
-        # Note: social_support_efficacy defaults to 0.5, social_support_factor defaults to 0.30
-        expected_prob = 0.5 + (0.2 * 0.5) - (0.3 * 0.5) + (0.3 * 0.5)
+        # 0.5 + (0.2*0.5) - (0.3*0.5) + (0.2*0.5) = 0.5 + 0.1 - 0.15 + 0.10 = 0.55
+        # Note: social_support_efficacy defaults to 0.5, social_support_factor defaults to 0.20
+        expected_prob = 0.5 + (0.2 * 0.5) - (0.3 * 0.5) + (0.2 * 0.5)
         assert abs(coping_prob - expected_prob) < 1e-10
 
     def test_coping_probability_extreme_values(self):

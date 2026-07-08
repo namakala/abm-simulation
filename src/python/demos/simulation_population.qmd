@@ -150,9 +150,10 @@ axes[0].set_ylim(0, 1)
 coping_rates = []
 for agent in model.agents:
     events = getattr(agent, "last_daily_stress_events", [])
-    if events:
-        successes = sum(1 for e in events if e.get("coped_successfully", False))
-        coping_rates.append(successes / len(events))
+    stressful_events = [e for e in events if e.get("is_stressed", False)]
+    if stressful_events:
+        successes = sum(1 for e in stressful_events if e.get("coped_successfully", False))
+        coping_rates.append(successes / len(stressful_events))
 
 axes[1].hist(coping_rates, bins=15, color="#2ecc71", alpha=0.7)
 axes[1].axvline(x=np.mean(coping_rates), color="red", linestyle="--", label=f"mean={np.mean(coping_rates):.2f}")
@@ -205,7 +206,11 @@ for agent in model.agents:
     if buff_out:
         final_buffering.append(buff_out["observation"].get("buffering_strength", 0))
         events = getattr(agent, "last_daily_stress_events", [])
-        success_rate = sum(1 for e in events if e.get("coped_successfully", False)) / max(len(events), 1)
+        stressful_events = [e for e in events if e.get("is_stressed", False)]
+        success_rate = (
+            sum(1 for e in stressful_events if e.get("coped_successfully", False))
+            / max(len(stressful_events), 1)
+        )
         final_coping.append(success_rate)
 
 if final_buffering:
