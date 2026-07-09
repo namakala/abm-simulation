@@ -307,3 +307,95 @@ def complete_env_isolation():
     import src.python.phases.resilience_activation as _ra
 
     importlib.reload(_ra)
+
+
+def run_stress_cycle(agent):
+    """Run one stress perception + (if stressed) resilience activation cycle.
+
+    Replaces the deleted Person.stressful_event() for test use.
+    Generates an event, appraises it, and handles both stressed/non-stressed paths.
+
+    Returns (challenge, hindrance) tuple.
+    """
+    from src.python.config import get_config
+    from src.python.stress_utils import (
+        generate_stress_event,
+        process_stress_event,
+        AppraisalWeights,
+        ThresholdParams,
+        update_stress_dimensions_from_event,
+    )
+    from src.python.affect_utils import get_neighbor_affects
+    from src.python.phases.resilience_activation import run_phase as run_resilience_activation
+
+    cfg = get_config()
+    event = generate_stress_event(rng=agent._rng)
+    weights = AppraisalWeights(
+        omega_c=cfg.get("appraisal", "omega_c"),
+        omega_o=cfg.get("appraisal", "omega_o"),
+        bias=cfg.get("appraisal", "bias"),
+        gamma=cfg.get("appraisal", "gamma"),
+    )
+    threshold_params = ThresholdParams(
+        base_threshold=cfg.get("threshold", "base_threshold"),
+        challenge_scale=cfg.get("threshold", "challenge_scale"),
+        hindrance_scale=cfg.get("threshold", "hindrance_scale"),
+    )
+    is_stressed, challenge, hindrance = process_stress_event(event, threshold_params, weights, rng=agent._rng)
+    state = agent._build_agent_state()
+    state.update(
+        {
+            "challenge": challenge,
+            "hindrance": hindrance,
+            "is_stressed": is_stressed,
+            "event_controllability": event.controllability,
+            "event_overload": event.overload,
+        }
+    )
+    if not is_stressed:
+        (
+            state["stress_controllability"],
+            state["stress_overload"],
+            state["recent_stress_intensity"],
+            state["stress_momentum"],
+        ) = update_stress_dimensions_from_event(
+            current_controllability=state["stress_controllability"],
+            current_overload=state["stress_overload"],
+            challenge=challenge,
+            hindrance=hindrance,
+            coped_successfully=True,
+            is_stressful=False,
+            volatility=state["volatility"],
+            recent_stress_intensity=state["recent_stress_intensity"],
+            stress_momentum=state["stress_momentum"],
+        )
+        agent._write_back_state(state)
+        return challenge, hindrance
+    neighbor_affects = get_neighbor_affects(agent, agent.model)
+    activation_result = run_resilience_activation(
+        state,
+        {
+            "neighbor_affects": neighbor_affects,
+            "base_resource_cost": cfg.get("agent", "resource_cost"),
+        },
+        agent._rng,
+    )
+    state = agent._apply_delta(state, activation_result["state_delta"])
+    pss10 = state.get("pss10", 0)
+    if pss10 > 0:
+        scores = list(state.get("daily_pss10_scores", []))
+        scores.append(pss10)
+        state["daily_pss10_scores"] = scores
+    agent._write_back_state(state)
+    agent.daily_stress_events.append(
+        {
+            "challenge": challenge,
+            "hindrance": hindrance,
+            "is_stressed": is_stressed,
+            "stress_level": state.get("current_stress", 0.0),
+            "coped_successfully": activation_result["observation"].get("coped_successfully", False),
+            "event_controllability": event.controllability,
+            "event_overload": event.overload,
+        }
+    )
+    return challenge, hindrance
