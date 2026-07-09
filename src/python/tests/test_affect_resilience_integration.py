@@ -36,6 +36,7 @@ from src.python.affect_utils import (
     compute_cumulative_overload,
 )
 from src.python.stress_utils import StressEvent
+from src.python.tests.conftest import run_stress_cycle
 
 
 def mock_pss10_responses_func(*args, **kwargs):
@@ -315,7 +316,7 @@ class TestStressEventScenario:
         initial_affect = agent.affect
 
         # Process challenge event
-        with patch("src.python.agent.generate_stress_event") as mock_generate:
+        with patch("src.python.stress_utils.generate_stress_event") as mock_generate:
             challenge_event = StressEvent(controllability=0.9, overload=0.1)
             mock_generate.return_value = challenge_event
 
@@ -337,7 +338,7 @@ class TestStressEventScenario:
                     # Mock full responses
                     mock_pss10_responses.return_value = {1: 2, 2: 2, 3: 2, 4: 3, 5: 3, 6: 2, 7: 3, 8: 3, 9: 2, 10: 2}
 
-                    agent.stressful_event()
+                    run_stress_cycle(agent)
 
         # Verify the test behavior
         affect_change = agent.affect - initial_affect
@@ -370,7 +371,7 @@ class TestStressEventScenario:
         initial_affect = agent.affect
 
         # Process hindrance event
-        with patch("src.python.agent.generate_stress_event") as mock_generate:
+        with patch("src.python.stress_utils.generate_stress_event") as mock_generate:
             # Create a proper StressEvent with actual float values
             hindrance_event = StressEvent(controllability=0.1, overload=0.9)
             # Ensure the attributes are actual floats, not MagicMock objects
@@ -397,7 +398,7 @@ class TestStressEventScenario:
                     # Mock full responses
                     mock_pss10_responses.return_value = {1: 2, 2: 2, 3: 2, 4: 3, 5: 3, 6: 2, 7: 3, 8: 3, 9: 2, 10: 2}
 
-                    agent.stressful_event()
+                    run_stress_cycle(agent)
 
         # Hindrance should tend to worsen affect
         affect_change = agent.affect - initial_affect
@@ -622,7 +623,7 @@ class TestCumulativeOverloadScenario:
         # Simulate multiple hindrance events
         # Simulate multiple hindrance events
         for i in range(5):
-            with patch("src.python.agent.generate_stress_event") as mock_generate:
+            with patch("src.python.stress_utils.generate_stress_event") as mock_generate:
                 # Create a proper StressEvent with actual float values
                 hindrance_event = StressEvent(controllability=0.1, overload=0.9)
                 # Ensure the attributes are actual floats, not MagicMock objects
@@ -660,13 +661,13 @@ class TestCumulativeOverloadScenario:
                             10: 2,
                         }  # Return valid PSS-10 responses (0-4)
 
-                        agent.stressful_event()
+                        run_stress_cycle(agent)
                         mock_pss10_responses.side_effect = mock_pss10_responses_func
 
                         # Also need to mock the generate_pss10_dimension_scores function directly
                         with patch("src.python.stress_utils.generate_pss10_dimension_scores") as mock_dimension_scores:
                             mock_dimension_scores.return_value = (0.8, 0.2)  # Return valid float values
-                            agent.stressful_event()
+                            run_stress_cycle(agent)
 
         # After multiple hindrance events, resilience should be reduced
         resilience_loss = initial_resilience - agent.resilience
@@ -700,7 +701,7 @@ class TestCumulativeOverloadScenario:
 
         # Simulate overload condition (multiple consecutive hindrances)
         for i in range(4):
-            with patch("src.python.agent.generate_stress_event") as mock_generate:
+            with patch("src.python.stress_utils.generate_stress_event") as mock_generate:
                 # Create a proper StressEvent with actual float values
                 hindrance_event = StressEvent(controllability=0.1, overload=0.9)
                 # Ensure the attributes are actual floats, not MagicMock objects
@@ -736,7 +737,7 @@ class TestCumulativeOverloadScenario:
                         mock_dimension_scores.return_value = (0.2, 0.8)  # Valid controllability, overload
                         mock_item_response.return_value = 2  # Valid PSS-10 response (0-4)
 
-                        agent.stressful_event()
+                        run_stress_cycle(agent)
 
         # Now simulate recovery period (no stress events)
         # In a real scenario, this would involve multiple steps with no hindrance events
