@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.config import get_config
 from src.python.stress_utils import StressEvent
+from src.python.tests.conftest import run_stress_cycle
 
 
 class MockModel:
@@ -221,8 +222,8 @@ class TestAgentInteractions:
 class TestAgentStressEvents:
     """Test agent stress event processing."""
 
-    @patch("src.python.agent.process_stress_event")
-    @patch("src.python.agent.generate_stress_event")
+    @patch("src.python.stress_utils.process_stress_event")
+    @patch("src.python.stress_utils.generate_stress_event")
     def test_agent_stressful_event_processing(self, mock_generate_stress, mock_process_stress):
         """Test that stressful events are processed correctly."""
         # Setup mocks
@@ -233,10 +234,8 @@ class TestAgentStressEvents:
         model = MockModel(seed=42)
         agent = Person(model)
 
-        # Record initial state
-
-        # Execute stressful event
-        agent.stressful_event()
+        # Execute stressful event via test helper
+        run_stress_cycle(agent)
 
         # Verify utility functions were called
         mock_generate_stress.assert_called_once()
@@ -252,13 +251,10 @@ class TestAgentStressEvents:
         model = MockModel(seed=42)
         agent = Person(model)
 
-        # Record initial state
-
-        # Execute stressful event (no stress should occur)
-        agent.stressful_event()
+        # Execute stressful event via test helper (no stress should occur)
+        run_stress_cycle(agent)
 
         # State should be largely unchanged (only resource regeneration)
-        # Note: In real implementation, resources might regenerate slightly
         assert -1.0 <= agent.affect <= 1.0
         assert 0.0 <= agent.resilience <= 1.0
         assert 0.0 <= agent.resources <= 1.0
@@ -324,7 +320,7 @@ class TestAgentResourceManagement:
         # Mock no stress scenario - create event that won't trigger stress
         with (
             patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
-            patch("src.python.agent.process_stress_event") as mock_process_stress,
+            patch("src.python.stress_utils.process_stress_event") as mock_process_stress,
             patch("src.python.affect_utils.determine_coping_outcome_and_psychological_impact") as mock_new_mechanism,
         ):
             # Create event with low magnitude that won't exceed threshold
@@ -334,15 +330,15 @@ class TestAgentResourceManagement:
             # Also mock the new mechanism to ensure no resource consumption
             mock_new_mechanism.return_value = (agent.affect, agent.resilience, 0.0, False)  # coped_successfully=False
 
-            # Execute stressful event
-            agent.stressful_event()
+            # Execute stressful event via test helper
+            run_stress_cycle(agent)
 
         # Resources should be largely unchanged when not stressed
         # Note: Initial resources are transformed via sigmoid, so actual value may be different from mean
         initial_resources = agent.resources  # Get actual transformed value
 
-        # Execute stressful event (should not consume significant resources when not stressed)
-        agent.stressful_event()
+        # Execute stressful event via test helper (should not consume significant resources when not stressed)
+        run_stress_cycle(agent)
 
         # Resources should be largely unchanged (only minor regeneration effects at most)
         # When not stressed, resources should not decrease significantly
