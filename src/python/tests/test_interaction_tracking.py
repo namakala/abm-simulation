@@ -614,7 +614,7 @@ class TestEdgeCases:
             # Mock step to only do interactions (no stress events)
             with (
                 patch("src.python.agent.sample_poisson", return_value=1),
-                patch.object(agent, "stressful_event") as mock_stress,
+                patch("src.python.tests.conftest.run_stress_cycle") as mock_stress,
             ):
                 mock_stress.return_value = (0.0, 0.0)  # No stress
                 agent.step()
@@ -907,7 +907,7 @@ class TestConfigurationIntegration:
                 agent.daily_support_exchanges = 0
 
                 # Mock stress events to focus on interactions
-                with patch.object(agent, "stressful_event") as mock_stress:
+                with patch("src.python.tests.conftest.run_stress_cycle") as mock_stress:
                     mock_stress.return_value = (0.0, 0.0)
 
                     agent.step()
@@ -958,7 +958,7 @@ class TestConfigurationIntegration:
 
         with patch("src.python.agent.sample_poisson", return_value=5):
             # Mock stress events
-            with patch.object(agent, "stressful_event") as mock_stress:
+            with patch("src.python.tests.conftest.run_stress_cycle") as mock_stress:
                 mock_stress.return_value = (0.3, 0.2)
 
                 agent.step()
