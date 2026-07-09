@@ -23,6 +23,7 @@ from src.python.stress_utils import (
     validate_theoretical_correlations,
     _update_recent_stress_intensity,
 )
+from src.python.tests.conftest import run_stress_cycle
 
 
 class TestCompleteStressProcessingLoop:
@@ -230,18 +231,18 @@ class TestCompleteStressProcessingLoop:
         )
 
         # Mock generate_stress_event to always return a stressful event
-        stressful_event = StressEvent(controllability=0.1, overload=0.9)
+        stress_event = StressEvent(controllability=0.1, overload=0.9)
 
         # Mock process_stress_event to ensure is_stressed=True
         with (
-            patch("src.python.agent.generate_stress_event", return_value=stressful_event),
-            patch("src.python.agent.process_stress_event", return_value=(True, 0.1, 0.9)),
+            patch("src.python.stress_utils.generate_stress_event", return_value=stress_event),
+            patch("src.python.stress_utils.process_stress_event", return_value=(True, 0.1, 0.9)),
             patch(
                 "src.python.phases.resilience_activation.determine_coping_outcome_and_psychological_impact",
                 return_value=(agent.affect, agent.resilience, 0.5, True),
             ),
         ):
-            challenge, hindrance = agent.stressful_event()
+            challenge, hindrance = run_stress_cycle(agent)
 
         # Validate that all components were updated
         assert agent.current_stress != initial_stress or initial_stress == 0.0
@@ -478,8 +479,8 @@ class TestCompleteStressProcessingLoop:
                 }
             )
 
-            # Process complete loop using existing stressful_event method
-            challenge, hindrance = agent.stressful_event()
+            # Process complete loop using test helper
+            challenge, hindrance = run_stress_cycle(agent)
 
             # Validate all bounds are maintained
             assert 0.0 <= agent.current_stress <= 1.0
@@ -537,7 +538,7 @@ class TestCompleteStressProcessingLoop:
 
             # Process and track trends
 
-            challenge, hindrance = agent.stressful_event()
+            challenge, hindrance = run_stress_cycle(agent)
 
             controllability_trend.append(agent.stress_controllability)
             overload_trend.append(agent.stress_overload)
