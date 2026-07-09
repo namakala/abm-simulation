@@ -28,7 +28,6 @@ from src.python.stress_utils import (
     update_stress_dimensions_from_event,
     generate_pss10_from_stress_dimensions,
     update_stress_dimensions_from_pss10_feedback,
-    validate_theoretical_correlations,
 )
 from src.python.math_utils import clamp
 from src.python.assumption_config import get_assumptions
@@ -173,19 +172,7 @@ def run_phase(
         current_resources=current_resources,
     )
 
-    # ── STEP 5: Validate theoretical correlations ───────────────────
-    validate_theoretical_correlations(
-        challenge=challenge,
-        hindrance=hindrance,
-        coped_successfully=coped_successfully,
-        stress_controllability=final_controllability,
-        stress_overload=final_overload,
-        pss10_score=new_pss10,
-        current_stress=new_stress,
-        pss10_responses=new_pss10_responses,
-    )
-
-    # ── STEP 6: Resource cost and depletion ─────────────────────────
+    # ── STEP 5: Resource cost and depletion ─────────────────────────
     resource_config = ResourceOptimizationConfig()
     optimized_cost = compute_resilience_optimized_resource_cost(
         base_cost=base_resource_cost,
