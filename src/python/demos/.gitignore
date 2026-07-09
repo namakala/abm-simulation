@@ -1,2 +1,3 @@
 /.quarto/
-src/python/demos/_freeze/
+_freeze/
+*.quarto_ipynb
