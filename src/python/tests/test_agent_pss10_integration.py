@@ -13,6 +13,7 @@ import numpy as np
 from unittest.mock import Mock, patch
 
 from src.python.agent import Person
+from src.python.tests.conftest import run_stress_cycle
 from src.python.stress_utils import (
     compute_pss10_score,
     compute_stress_from_dimensions,
@@ -274,8 +275,8 @@ class TestPSS10StressMechanismIntegration:
         initial_responses = agent.pss10_responses.copy()
         initial_stress_levels = (agent.stress_controllability, agent.stress_overload)
 
-        # Execute a stressful event
-        challenge, hindrance = agent.stressful_event()
+        # Execute a stress cycle
+        challenge, hindrance = run_stress_cycle(agent)
 
         # Should return valid challenge/hindrance values
         assert 0 <= challenge <= 1
