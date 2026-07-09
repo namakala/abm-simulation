@@ -22,6 +22,7 @@ from src.python.affect_utils import (
 )
 from src.python.stress_utils import generate_stress_event, StressEvent
 from src.python.config import get_config
+from src.python.tests.conftest import run_stress_cycle
 
 
 class TestAgentIntegration:
@@ -45,9 +46,9 @@ class TestAgentIntegration:
         agent.consecutive_hindrances = 0
 
         # Mock stress event generation to avoid RNG issues
-        with patch.object(agent, "stressful_event", return_value=(0.5, 0.5)):
-            # Call stressful_event method
-            challenge, hindrance = agent.stressful_event()
+        with patch("src.python.tests.conftest.run_stress_cycle", return_value=(0.5, 0.5)):
+            # Call stress cycle via test helper
+            challenge, hindrance = run_stress_cycle(agent)
 
             # Check that challenge and hindrance are in valid ranges
             assert 0.0 <= challenge <= 1.0
@@ -259,7 +260,7 @@ class TestEndToEndWorkflows:
 
         # Mock stress event generation and processing
         with (
-            patch.object(agent, "stressful_event", return_value=(0.5, 0.5)),
+            patch("src.python.tests.conftest.run_stress_cycle", return_value=(0.5, 0.5)),
             patch("src.python.agent.compute_daily_affect_reset", return_value=0.3) as mock_affect_reset,
             patch("src.python.agent.compute_stress_decay", return_value=0.2) as mock_stress_decay,
             patch("numpy.random.random", return_value=0.5),
@@ -293,19 +294,12 @@ class TestEndToEndWorkflows:
         agent.current_stress = 0.2
 
         # Mock multiple stress events
-
         with (
-            patch.object(agent, "stressful_event", return_value=(0.5, 0.5)),
+            patch("src.python.tests.conftest.run_stress_cycle", return_value=(0.5, 0.5)),
             patch("numpy.random.random", return_value=0.5),
         ):
             # Execute step with multiple stress events
             agent.step()
-
-            # Verify that the step completed successfully (stress events may or may not be called)
-            # The important thing is that the agent state is valid after the step
-
-            # Verify that the agent state is valid after step (stress events may or may not occur)
-            # The important thing is that the step completed and state is valid
 
             # Verify final state
             assert 0.0 <= agent.resilience <= 1.0
@@ -386,7 +380,7 @@ class TestErrorHandling:
         # Should handle gracefully with no neighbors
         with patch("numpy.random.random", return_value=0.5):
             # Should not raise an error
-            challenge, hindrance = agent.stressful_event()
+            challenge, hindrance = run_stress_cycle(agent)
 
             # Should still return valid values
             assert 0.0 <= challenge <= 1.0
