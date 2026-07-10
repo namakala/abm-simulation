@@ -10,12 +10,7 @@ import mesa
 
 # Import utility modules
 from src.python.stress_utils import (
-    generate_stress_event,
-    process_stress_event,
-    AppraisalWeights,
-    ThresholdParams,
     initialize_pss10_from_items,
-    update_stress_dimensions_from_event,
     compute_stress_from_dimensions,
 )
 
@@ -930,100 +925,6 @@ class Person(mesa.Agent):
             "partner_affect_change": partner_affect_change,
             "partner_resilience_change": partner_resilience_change,
         }
-
-    def stressful_event(self):
-        """
-        Process a stressful event (Plan 008 delegation wrapper).
-
-        Deprecated: prefer using Person.step() which handles the full phase
-        pipeline.  This method is kept for backward compatibility with tests.
-        Calls generate_stress_event (pachable) then delegates to the phase
-        pipeline for resilience activation.
-
-        Returns:
-            Tuple of (challenge, hindrance) values for the event
-        """
-        # Generate event (uses module-level import that tests can patch)
-        event = generate_stress_event(rng=self._rng)
-
-        # Get configuration
-        cfg = get_config()
-        weights = AppraisalWeights(
-            omega_c=cfg.get("appraisal", "omega_c"),
-            omega_o=cfg.get("appraisal", "omega_o"),
-            bias=cfg.get("appraisal", "bias"),
-            gamma=cfg.get("appraisal", "gamma"),
-        )
-        threshold_params = ThresholdParams(
-            base_threshold=cfg.get("threshold", "base_threshold"),
-            challenge_scale=cfg.get("threshold", "challenge_scale"),
-            hindrance_scale=cfg.get("threshold", "hindrance_scale"),
-        )
-
-        # Appraise event and check threshold
-        is_stressed, challenge, hindrance = process_stress_event(event, threshold_params, weights, rng=self._rng)
-
-        # Build state and apply stress perception delta
-        state = self._build_agent_state()
-        state["challenge"] = challenge
-        state["hindrance"] = hindrance
-        state["is_stressed"] = is_stressed
-        state["event_controllability"] = event.controllability
-        state["event_overload"] = event.overload
-
-        if not is_stressed:
-            # Update stress dimensions for non-stressful event
-            (
-                state["stress_controllability"],
-                state["stress_overload"],
-                state["recent_stress_intensity"],
-                state["stress_momentum"],
-            ) = update_stress_dimensions_from_event(
-                current_controllability=state["stress_controllability"],
-                current_overload=state["stress_overload"],
-                challenge=challenge,
-                hindrance=hindrance,
-                coped_successfully=True,
-                is_stressful=False,
-                volatility=state["volatility"],
-                recent_stress_intensity=state["recent_stress_intensity"],
-                stress_momentum=state["stress_momentum"],
-            )
-            self._write_back_state(state)
-            return challenge, hindrance
-
-        # Stressed: run resilience activation via phase function
-        neighbor_affects = get_neighbor_affects(self, self.model)
-        activation_config = {
-            "neighbor_affects": neighbor_affects,
-            "base_resource_cost": cfg.get("agent", "resource_cost"),
-        }
-        activation_result = run_resilience_activation(state, activation_config, self._rng)
-        state = self._apply_delta(state, activation_result["state_delta"])
-
-        # Ensure daily_pss10_scores reflects the latest event
-        pss10 = state.get("pss10", 0)
-        if pss10 > 0:
-            # Flush to daily_pss10_scores via state
-            scores = list(state.get("daily_pss10_scores", []))
-            scores.append(pss10)
-            state["daily_pss10_scores"] = scores
-
-        # Write back and track stress event
-        self._write_back_state(state)
-        self.daily_stress_events.append(
-            {
-                "challenge": challenge,
-                "hindrance": hindrance,
-                "is_stressed": is_stressed,
-                "stress_level": state.get("current_stress", 0.0),
-                "coped_successfully": activation_result["observation"].get("coped_successfully", False),
-                "event_controllability": event.controllability,
-                "event_overload": event.overload,
-            }
-        )
-
-        return challenge, hindrance
 
     def _initialize_stress_from_pss10(self):
         """

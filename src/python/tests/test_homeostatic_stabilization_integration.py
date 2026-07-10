@@ -81,8 +81,8 @@ class TestHomeostaticStabilizationIntegration:
 
         # Mock a stress event that should cause disruption
         with (
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
-            patch("src.python.agent.process_stress_event") as mock_process_stress,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.process_stress_event") as mock_process_stress,
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
             patch.object(agent, "_rng") as mock_rng,
         ):
@@ -147,7 +147,7 @@ class TestHomeostaticStabilizationIntegration:
 
         with (
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
             patch.object(agent, "_rng") as mock_rng,
         ):
             # Mock no events for several days
@@ -230,7 +230,7 @@ class TestHomeostaticStabilizationIntegration:
 
         with (
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
             patch.object(agent_low, "_rng") as mock_rng_low,
             patch.object(agent_high, "_rng") as mock_rng_high,
         ):
@@ -289,7 +289,7 @@ class TestHomeostaticStabilizationIntegration:
 
         with (
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
             patch.object(agent, "_rng") as mock_rng,
         ):
             # Mock no events for clean testing
@@ -355,7 +355,7 @@ class TestHomeostaticStabilizationIntegration:
 
         with (
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
             patch.object(agent, "_rng") as mock_rng,
         ):
             # Mock no events for multiple days
@@ -411,8 +411,8 @@ class TestHomeostaticStabilizationIntegration:
 
         with (
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
-            patch("src.python.agent.process_stress_event") as mock_process_stress,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.process_stress_event") as mock_process_stress,
             patch.object(agent, "_rng") as mock_rng,
         ):
             # Create extreme stress event
@@ -444,7 +444,7 @@ class TestHomeostaticStabilizationIntegration:
         # Run recovery days with no events
         with (
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
             patch.object(agent, "_rng") as mock_rng,
         ):
             mock_sample_poisson.return_value = 0
@@ -555,7 +555,7 @@ class TestHomeostaticStabilizationEdgeCases:
 
         with (
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
             patch.object(agent, "_rng") as mock_rng,
         ):
             mock_sample_poisson.return_value = 0
@@ -603,7 +603,7 @@ class TestHomeostaticStabilizationEdgeCases:
 
         with (
             patch("src.python.agent.sample_poisson") as mock_sample_poisson,
-            patch("src.python.agent.generate_stress_event") as mock_stress_event,
+            patch("src.python.stress_utils.generate_stress_event") as mock_stress_event,
             patch.object(agent, "_rng") as mock_rng,
         ):
             mock_sample_poisson.return_value = 0
