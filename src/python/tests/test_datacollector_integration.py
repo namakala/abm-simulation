@@ -137,6 +137,8 @@ class TestDataCollectorAgentLevel:
         mock_agent.stress_controllability = 0.5
         mock_agent.stress_overload = 0.5
         mock_agent.consecutive_hindrances = 0
+        mock_agent.support_boost = 0.0
+        mock_agent.stress_breach_count = 0  # Prevent network adaptation error
         mock_agent.daily_stress_events = []  # Add this to prevent len() errors
         mock_agent.daily_interactions = 0  # Add this to prevent sum() errors
         mock_agent.daily_support_exchanges = 0  # Add this to prevent sum() errors

@@ -303,6 +303,24 @@ class AssumptionSocialConfig:
 
 
 @dataclass(frozen=True)
+class AssumptionNetworkConfig:
+    """Network adaptation constants (3 fields).
+
+    Controls similarity computation weights for homophily-based rewiring.
+    """
+
+    similarity_stress_weight: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_NETWORK_ADAPTATION_SIMILARITY_STRESS_WEIGHT", 1.0)
+    )
+    similarity_affect_weight: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_NETWORK_ADAPTATION_SIMILARITY_AFFECT_WEIGHT", 1.0)
+    )
+    similarity_resilience_weight: float = field(
+        default_factory=lambda: _env_float("ASSUMPTION_NETWORK_ADAPTATION_SIMILARITY_RESILIENCE_WEIGHT", 1.0)
+    )
+
+
+@dataclass(frozen=True)
 class AssumptionBufferingConfig:
     """Stress-buffering constants (6 fields).
 
@@ -345,6 +363,7 @@ class AssumptionConfig:
     stress: AssumptionStressConfig = field(default_factory=AssumptionStressConfig)
     resource: AssumptionResourceConfig = field(default_factory=AssumptionResourceConfig)
     social: AssumptionSocialConfig = field(default_factory=AssumptionSocialConfig)
+    network: AssumptionNetworkConfig = field(default_factory=AssumptionNetworkConfig)
     buffering: AssumptionBufferingConfig = field(default_factory=AssumptionBufferingConfig)
 
 

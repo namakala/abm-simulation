@@ -1,6 +1,5 @@
 # Import modules
 
-import networkx as nx
 import numpy as np
 import pandas as pd
 import mesa
@@ -12,6 +11,8 @@ from mesa import DataCollector
 
 from src.python.agent import Person
 from src.python.config import get_config
+from src.python.assumption_config import get_assumptions
+from src.python.network_utils import build_watts_strogatz_network, apply_stress_adaptation
 
 # NOTE: Do NOT cache config at module level.
 # Tests may call reload_config() between model instantiations,
@@ -125,7 +126,8 @@ class StressModel(mesa.Model):
         # Build social network with valid k < n for Watts-Strogatz
         k = get_config().get("network", "watts_k")
         k = min(k, max(0, N - 1))  # clamp: must be < n
-        G = nx.watts_strogatz_graph(n=N, k=k, p=get_config().get("network", "watts_p"))
+        p = get_config().get("network", "watts_p")
+        G = build_watts_strogatz_network(N=N, k=k, p=p, rng=self.rng)
         self.grid = NetworkGrid(G)
 
         # Create and register agents with enhanced capabilities
@@ -378,19 +380,32 @@ class StressModel(mesa.Model):
         pass
 
     def _apply_network_adaptation(self):
-        """Apply network adaptation mechanisms across all agents."""
-        # This method coordinates network adaptation at the model level
-        # Individual agents handle their own adaptation in their step() method
-        # but the model can track population-level adaptation metrics
+        """Apply network adaptation mechanisms across all agents.
 
-        adaptation_count = 0
-        for agent in self.agents:
-            # Check if agent performed network adaptation (tracked via attribute)
-            if hasattr(agent, "_adapted_network") and agent._adapted_network:
-                adaptation_count += 1
-                agent._adapted_network = False  # Reset for next day
+        Delegates to ``apply_stress_adaptation`` from ``network_utils``
+        which rewires edges when agents have breached the stress threshold.
+        Updates ``self.grid`` with the modified graph.
 
-        return adaptation_count
+        Returns:
+            Number of edges rewired this step.
+        """
+        agents_list = list(self.agents)
+        if not agents_list:
+            return 0
+
+        config = get_config()
+        assumptions = get_assumptions()
+        adaptation_config = {
+            "adaptation_threshold": config.get("network", "adaptation_threshold"),
+            "homophily_strength": config.get("network", "homophily_strength"),
+            "stress_weight": assumptions.network.similarity_stress_weight,
+            "affect_weight": assumptions.network.similarity_affect_weight,
+            "resilience_weight": assumptions.network.similarity_resilience_weight,
+        }
+
+        new_G, rewired_count = apply_stress_adaptation(self.grid.G, agents_list, adaptation_config, self.rng)
+        self.grid = NetworkGrid(new_G)
+        return rewired_count
 
     def get_network_adaptation_summary(self) -> Dict[str, Any]:
         """Get summary of network adaptation across the population."""
