@@ -172,7 +172,19 @@ Where:
 - $\Delta \mathfrak{R}_i, \Delta \mathfrak{R}_j$ are resilience changes for agents $i,j$
 - $\Delta \text{resources}$ is resource transfer between agents
 
-**Implementation**: [`interact()`](../../src/python/agent.py#L392-L521) method in `agent.py`
+## Win-Win / Lose-Lose State Machine
+
+The interaction phase runs a resource exchange state machine based on both agents' stress and support status:
+
+| Self Stressed | Partner Stressed | Support Occurred | Outcome |
+|:---:|:---:|:---:|---|
+| T | T | T | Both resources +boost (win-win) |
+| T | T | F | Both resources -cost (lose-lose) |
+| T | F | T | Self +boost, partner unchanged |
+| T | F | F | Self -cost, partner unchanged |
+| F | F | _ | Both PF social_support +small_boost |
+
+**Implementation**: [`run_phase()`](../../src/python/phases/interaction.py) phase function
 
 ## Interaction Impact Analysis
 

@@ -213,10 +213,10 @@ The affect dynamics system includes validated correlations with other agent vari
 **Validated Correlation Ranges:**
 - Affect ↔ Resources: $r \in [-0.2, 0.4]$ (weak correlation)
 - Affect ↔ Current Stress: $r \in [-0.2, 0.2]$ (weak correlation)
-- Affect ↔ Resilience: $r \in [-0.5, 0.5]$ (variable correlation)
+- Affect ↔ Resilience: $r \in [0.30, 0.70]$ (positive correlation)
 - Affect ↔ PSS-10: $r \in [-0.3, 0.3]$ (weak correlation)
 
-**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) validates these correlation ranges and statistical significance.
+**Implementation**: [`parameter_sweep_correlations.qmd`](../../src/python/demos/parameter_sweep_correlations.qmd) and [`population_correlation_analysis.qmd`](../../src/python/demos/population_correlation_analysis.qmd) validate these correlation ranges and statistical significance.
 
 ### Calibration Targets
 
