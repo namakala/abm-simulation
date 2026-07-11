@@ -449,23 +449,27 @@ class TestCopingHindranceDenominator:
     all use stressed-only events (no metric mismatch)."""
 
     @pytest.mark.unit
-    def test_compute_mean_hindrance_exists(self):
-        """_compute_mean_hindrance is a callable in model module."""
-        from src.python.model import _compute_mean_hindrance
+    def test_report_hindrance_appraisal_exists(self):
+        """report_hindrance_appraisal is callable in reporters module."""
+        from src.python.reporters import report_hindrance_appraisal
 
-        assert callable(_compute_mean_hindrance)
+        assert callable(report_hindrance_appraisal)
 
     @pytest.mark.unit
-    def test_compute_mean_challenge_exists(self):
-        """_compute_mean_challenge is a callable in model module."""
-        from src.python.model import _compute_mean_challenge
+    def test_report_challenge_appraisal_exists(self):
+        """report_challenge_appraisal is callable in reporters module."""
+        from src.python.reporters import report_challenge_appraisal
 
-        assert callable(_compute_mean_challenge)
+        assert callable(report_challenge_appraisal)
 
     @pytest.mark.unit
     def test_denominator_consistency(self):
         """All three functions only count stressed events."""
-        from src.python.model import _compute_coping_success, _compute_mean_hindrance, _compute_mean_challenge
+        from src.python.reporters import (
+            report_coping_success,
+            report_hindrance_appraisal,
+            report_challenge_appraisal,
+        )
 
         events = [
             {"is_stressed": False, "hindrance": 0.1, "challenge": 0.5, "coped_successfully": True},
@@ -475,20 +479,23 @@ class TestCopingHindranceDenominator:
         mock = MagicMock()
         mock.last_daily_stress_events = events
 
-        # Only the 2 stressed events should be counted
-        coping = _compute_coping_success(mock)
+        coping = report_coping_success(mock)
         assert coping == 0.5, f"coping_success = {coping}, expected 0.5"
 
-        hindrance = _compute_mean_hindrance(mock)
+        hindrance = report_hindrance_appraisal(mock)
         assert hindrance == pytest.approx(0.7), f"hindrance = {hindrance}, expected 0.7"
 
-        challenge = _compute_mean_challenge(mock)
+        challenge = report_challenge_appraisal(mock)
         assert challenge == pytest.approx(0.15), f"challenge = {challenge}, expected 0.15"
 
     @pytest.mark.unit
     def test_no_stressed_events_returns_zero(self):
         """All three return 0.0 when no stressed events exist."""
-        from src.python.model import _compute_coping_success, _compute_mean_hindrance, _compute_mean_challenge
+        from src.python.reporters import (
+            report_coping_success,
+            report_hindrance_appraisal,
+            report_challenge_appraisal,
+        )
 
         events = [
             {"is_stressed": False, "hindrance": 0.1, "challenge": 0.5, "coped_successfully": True},
@@ -497,9 +504,9 @@ class TestCopingHindranceDenominator:
         mock = MagicMock()
         mock.last_daily_stress_events = events
 
-        assert _compute_coping_success(mock) == 0.0
-        assert _compute_mean_hindrance(mock) == 0.0
-        assert _compute_mean_challenge(mock) == 0.0
+        assert report_coping_success(mock) == 0.0
+        assert report_hindrance_appraisal(mock) == 0.0
+        assert report_challenge_appraisal(mock) == 0.0
 
 
 class TestDailyCopingSupportCorr:

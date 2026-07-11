@@ -13,42 +13,11 @@ from src.python.agent import Person
 from src.python.config import get_config
 from src.python.assumption_config import get_assumptions
 from src.python.network_utils import build_watts_strogatz_network, apply_stress_adaptation
+from src.python.reporters import AGENT_REPORTERS, MODEL_REPORTERS
 
 # NOTE: Do NOT cache config at module level.
 # Tests may call reload_config() between model instantiations,
 # so we fetch fresh config at point of use.
-
-
-def _compute_coping_success(agent) -> float:
-    """Compute coping success rate for actual stress events only.
-
-    Filters out non-stressful events where coped_successfully is always True,
-    which biases the metric positive and corrupts the Coping–Hindrance correlation.
-    """
-    events = getattr(agent, "last_daily_stress_events", [])
-    stress_events = [e for e in events if e.get("is_stressed", False)]
-    if not stress_events:
-        return 0.0
-    successes = sum(1 for e in stress_events if e.get("coped_successfully", False))
-    return successes / len(stress_events)
-
-
-def _compute_mean_hindrance(agent) -> float:
-    """Average hindrance for stressed events only (matches coping_success denominator)."""
-    events = getattr(agent, "last_daily_stress_events", [])
-    stress_events = [e for e in events if e.get("is_stressed", False)]
-    if not stress_events:
-        return 0.0
-    return float(np.mean([e.get("hindrance", 0.0) for e in stress_events]))
-
-
-def _compute_mean_challenge(agent) -> float:
-    """Average challenge for stressed events only (matches coping_success denominator)."""
-    events = getattr(agent, "last_daily_stress_events", [])
-    stress_events = [e for e in events if e.get("is_stressed", False)]
-    if not stress_events:
-        return 0.0
-    return float(np.mean([e.get("challenge", 0.0) for e in stress_events]))
 
 
 # Initialize the model
@@ -146,123 +115,11 @@ class StressModel(mesa.Model):
         """
         Initialize Mesa DataCollector for comprehensive data collection.
 
-        This method replaces manual data collection with Mesa's optimized DataCollector,
-        providing better performance, standardized data access, and enhanced research capabilities.
-
-        Migration from Manual Collection:
-        - Previously: Manual tracking in dictionaries and custom data structures
-        - Now: Mesa DataCollector with automatic collection and DataFrame output
-        - Benefits: Reduced code complexity, better performance, standardized patterns
-
-        Model reporters capture population-level metrics that are computed once per time step.
-        These include averages, distributions, network statistics, and derived indicators
-        essential for mental health research and cost-effectiveness analysis.
+        Uses named reporter functions from ``reporters.py`` instead of inline lambdas.
         """
-        # Define model reporters (population-level metrics)
-        # These lambda functions are called once per time step to compute population statistics
-        # Each reporter returns a single scalar value representing a population characteristic
-        # Core mental health metrics for research and analysis
-        model_reporters = {
-            # Primary outcome measures
-            "avg_pss10": lambda m: m.get_avg_pss10(),  # Population average Perceived Stress Scale-10
-            "avg_resilience": lambda m: m.get_avg_resilience(),  # Population average resilience score
-            "avg_affect": lambda m: m.get_avg_affect(),  # Population average affect (positive/negative)
-            # Coping and stress processing metrics
-            "coping_success_rate": lambda m: m.get_success_rate(),  # Success rate in coping with stress events
-            "avg_resources": lambda m: (
-                np.mean([agent.resources for agent in m.agents]) if m.agents else 0.0
-            ),  # Average resource levels
-            "avg_stress": lambda m: (
-                np.mean([getattr(agent, "current_stress", 0.0) for agent in m.agents]) if m.agents else 0.0
-            ),  # Average current stress
-            # Social network and support metrics
-            "social_support_rate": lambda m: (
-                m._calculate_social_support_rate()
-            ),  # Cumulative rate of social support exchanges
-            "daily_social_support_rate": lambda m: (
-                m._calculate_daily_social_support_rate()
-            ),  # Per-step social support rate
-            "stress_events": lambda m: sum(
-                len(getattr(agent, "last_daily_stress_events", [])) for agent in m.agents
-            ),  # Total stress events per day
-            "network_density": lambda m: m._calculate_network_density(),  # Network connectivity measure
-            # Population health categories (for cost-effectiveness analysis)
-            "stress_prevalence": lambda m: (
-                sum(1 for agent in m.agents if getattr(agent, "stressed", False)) / len(m.agents) if m.agents else 0.0
-            ),  # Proportion with high stress (PSS-10 based)
-            "low_resilience": lambda m: (
-                sum(1 for agent in m.agents if agent.resilience < 0.3) if m.agents else 0
-            ),  # Count with low resilience
-            "high_resilience": lambda m: (
-                sum(1 for agent in m.agents if agent.resilience > 0.7) if m.agents else 0
-            ),  # Count with high resilience
-            # Challenge/Hindrance appraisal metrics (key to theoretical model)
-            "avg_challenge": lambda m: m._get_avg_challenge(),  # Average challenge appraisal across events
-            "avg_hindrance": lambda m: m._get_avg_hindrance(),  # Average hindrance appraisal across events
-            "challenge_hindrance_ratio": lambda m: (
-                m._get_challenge_hindrance_ratio()
-            ),  # Balance between challenge and hindrance
-            "avg_consecutive_hindrances": lambda m: (
-                m._get_avg_consecutive_hindrances()
-            ),  # Average consecutive hindrance events
-            # Daily activity statistics for intervention modeling
-            "total_stress_events": lambda m: sum(
-                len(getattr(agent, "last_daily_stress_events", [])) for agent in m.agents
-            ),  # Total stress events
-            "successful_coping": lambda m: sum(
-                sum(
-                    1
-                    for event in getattr(agent, "last_daily_stress_events", [])
-                    if event.get("coped_successfully", False)
-                )
-                for agent in m.agents
-            ),  # Successful coping instances
-            "social_interactions": lambda m: sum(
-                getattr(agent, "last_daily_interactions", 0) for agent in m.agents
-            ),  # Total social interactions
-            "support_exchanges": lambda m: sum(
-                getattr(agent, "last_daily_support_exchanges", 0) for agent in m.agents
-            ),  # Total support exchanges
-            # Cumulative tracking via DataCollector
-            "total_interactions": lambda m: getattr(m, "total_interactions", 0),  # Cumulative social interactions
-            "social_support_exchanges": lambda m: getattr(
-                m, "social_support_exchanges", 0
-            ),  # Cumulative support exchanges
-            # Daily coping-support coupling diagnostic (Plan 011)
-            "daily_coping_support_corr": lambda m: m._compute_daily_coping_support_corr(),
-        }
-
-        # Define agent reporters (agent-level metrics)
-        # These lambda functions capture individual agent state for longitudinal analysis
-        # Each agent is recorded once per time step, enabling trajectory analysis
-        # Essential for studying individual differences and intervention effects
-        agent_reporters = {
-            # Core individual outcome measures
-            "pss10": lambda a: a.pss10,  # Individual Perceived Stress Scale-10 score
-            "resilience": lambda a: a.resilience,  # Individual resilience capacity
-            "affect": lambda a: a.affect,  # Individual positive/negative affect balance
-            "resources": lambda a: a.resources,  # Individual resource availability
-            # Individual stress processing state
-            "current_stress": lambda a: getattr(a, "current_stress", 0.0),  # Current stress level
-            "stress_controllability": lambda a: getattr(a, "stress_controllability", 0.5),  # Perceived controllability
-            "stress_overload": lambda a: getattr(a, "stress_overload", 0.5),  # Perceived overload
-            # Individual stress event tracking
-            "consecutive_hindrances": lambda a: getattr(a, "consecutive_hindrances", 0),  # Consecutive hindrance events
-            # Derived metrics from daily event aggregation
-            "coping_success": _compute_coping_success,
-            "challenge_appraisal": _compute_mean_challenge,
-            "hindrance_appraisal": _compute_mean_hindrance,
-            "interaction_frequency": lambda a: getattr(a, "last_daily_interactions", 0),  # Daily interaction count
-            # Stressed status (based on adjusted PSS-10, not pure perception)
-            "stressed": lambda a: getattr(a, "stressed", False),  # High-stress status flag
-        }
-
-        # Initialize DataCollector with comprehensive metrics
-        # This single DataCollector instance replaces all manual data collection
-        # Provides optimized storage and standardized access patterns
         self.datacollector = DataCollector(
-            model_reporters=model_reporters,  # Population-level metrics (20+ indicators)
-            agent_reporters=agent_reporters,  # Individual-level metrics (8+ per agent)
+            model_reporters=dict(MODEL_REPORTERS),
+            agent_reporters=dict(AGENT_REPORTERS),
         )
 
         # Maintain daily stats for backward compatibility with existing code
