@@ -34,9 +34,16 @@ from src.python.resource_utils import (
     get_resilience_boost_from_protective_factors,
 )
 
-from src.python.math_utils import sample_poisson, create_rng, tanh_transform, sigmoid_transform
+from src.python.math_utils import sample_poisson, create_rng
 from src.python.config import get_config
 from src.python.assumption_config import get_assumptions
+from src.python.initialization import (
+    initialize_baseline_resilience,
+    initialize_baseline_affect,
+    initialize_resources,
+    initialize_protective_factors,
+    initialize_volatility,
+)
 
 # Phase functions (Plan 008 orchestrator)
 from src.python.phases import (
@@ -461,29 +468,25 @@ class Person(mesa.Agent):
             agent_seed = model_seed
         self._rng = create_rng(agent_seed)
 
-        # Initialize state variables using new transformation pipeline
-        # Use sigmoid_transform for [0,1] bounds (resilience, baseline_resilience, resources)
-        self.baseline_resilience = sigmoid_transform(
-            mean=config["initial_resilience_mean"], std=config["initial_resilience_sd"], rng=self._rng
+        # Initialize state variables using extracted initialization functions
+        self.baseline_resilience = initialize_baseline_resilience(
+            self._rng, mean=config["initial_resilience_mean"], std=config["initial_resilience_sd"]
         )
         self.resilience = self.baseline_resilience
-        self.resources = sigmoid_transform(
-            mean=config["initial_resources_mean"], std=config["initial_resources_sd"], rng=self._rng
+        self.resources = initialize_resources(
+            self._rng, mean=config["initial_resources_mean"], std=config["initial_resources_sd"]
         )
 
-        # Use tanh_transform for [-1,1] bounds (affect, baseline_affect)
-        self.baseline_affect = tanh_transform(
-            mean=config["initial_affect_mean"], std=config["initial_affect_sd"], rng=self._rng
+        self.baseline_affect = initialize_baseline_affect(
+            self._rng, mean=config["initial_affect_mean"], std=config["initial_affect_sd"]
         )
         self.affect = self.baseline_affect
 
         # Initialize protective factors
-        self.protective_factors = {
-            "social_support": 0.5,
-            "family_support": 0.5,
-            "formal_intervention": 0.5,
-            "psychological_capital": 0.5,
-        }
+        from src.python.assumption_config import get_assumptions as _get_assumptions
+
+        default_pf = _get_assumptions().buffering.initial_protective_factor_values
+        self.protective_factors = initialize_protective_factors(value=default_pf)
 
         # Track hindrances as float to preserve data consistency when decaying
         self.consecutive_hindrances = 0.0
@@ -526,8 +529,13 @@ class Person(mesa.Agent):
         # Step 3: Initialize stress level based on the initialized PSS-10 score
         self._initialize_stress_from_pss10()
 
-        # Initialize agent-specific volatility from Beta(1,1) distribution
-        self.volatility = self._rng.beta(1, 1)
+        # Initialize agent-specific volatility from Beta distribution
+        assumptions_buffering = get_assumptions().buffering
+        self.volatility = initialize_volatility(
+            self._rng,
+            alpha=assumptions_buffering.volatility_beta_alpha,
+            beta=assumptions_buffering.volatility_beta_beta,
+        )
 
         # Track stress breach count for network adaptation
         self.stress_breach_count = 0
