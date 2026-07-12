@@ -12,6 +12,7 @@ import mesa
 from src.python.stress_utils import (
     initialize_pss10_from_items,
     compute_stress_from_dimensions,
+    update_stress_dimensions_from_pss10_feedback,
 )
 
 from src.python.affect_utils import (
@@ -239,6 +240,17 @@ def process_pss10_consolidation(
     cfg = get_config()
     pss10_threshold = config.get("pss10_threshold", cfg.get("pss10", "threshold"))
 
+    # ── 0. Update stress dimensions from PSS-10 feedback ──────────
+    pss10_responses = state.get("pss10_responses", {})
+    if pss10_responses:
+        resources = state.get("resources", 0.5)
+        stress_controllability, stress_overload = update_stress_dimensions_from_pss10_feedback(
+            current_controllability=stress_controllability,
+            current_overload=stress_overload,
+            pss10_responses=pss10_responses,
+            current_resources=resources,
+        )
+
     # ── Compute current_stress from dimensions every day (Fix 4) ──
     new_stress_level = compute_stress_from_dimensions(
         stress_controllability=stress_controllability,
@@ -364,7 +376,11 @@ def process_daily_reset(
     current_day = config.get("current_day", 0)
 
     # ── 1. Affect reset toward baseline ───────────────────────────
-    stress_config = StressProcessingConfig()
+    resources = state.get("resources", 0.5)
+    current_stress = state.get("current_stress", 0.0)
+    affect_rate = get_assumptions().stress.affect_homeostatic_rate
+    scaled_rate = scale_homeostatic_rate(affect_rate, resources, current_stress)
+    stress_config = StressProcessingConfig(daily_decay_rate=scaled_rate)
     new_affect = compute_daily_affect_reset(
         current_affect=affect,
         baseline_affect=baseline_affect,
@@ -1156,6 +1172,7 @@ class Person(mesa.Agent):
             "last_daily_stress_events",
             "protective_factors",
             "support_boost",
+            "volatility",
         }
 
         # Clamp bounded keys

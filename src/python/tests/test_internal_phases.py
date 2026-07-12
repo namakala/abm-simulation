@@ -405,6 +405,24 @@ class TestProcessPss10Consolidation:
         r2 = process_pss10_consolidation(typical_state, {}, rng2)
         assert r1["state_delta"] == r2["state_delta"]
 
+    def test_pss10_consolidation_updates_stress_dimensions_from_feedback(self, typical_state, sample_rng):
+        """PSS-10 feedback in consolidation updates stress_controllability/overload."""
+        state = dict(typical_state)
+        state["pss10_responses"] = {i: 3 for i in range(10)}  # high-stress responses
+        state["resources"] = 0.5
+        result = process_pss10_consolidation(state, {}, sample_rng)
+        delta = result["state_delta"]
+        assert "stress_controllability" in delta
+        assert "stress_overload" in delta
+        # With high-stress responses and moderate resources, controllability
+        # should decrease and overload should increase
+        assert delta["stress_controllability"] < state["stress_controllability"], (
+            f"Expected decrease, got {delta['stress_controllability']} >= {state['stress_controllability']}"
+        )
+        assert delta["stress_overload"] > state["stress_overload"], (
+            f"Expected increase, got {delta['stress_overload']} <= {state['stress_overload']}"
+        )
+
 
 # ── process_daily_reset ───────────────────────────────────────────
 

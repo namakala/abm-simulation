@@ -33,7 +33,7 @@ date: 2025-06-04
 | stress_breach_count | int | Total threshold breaches | resilience_activation |
 | daily_interactions | int | Interactions today | interaction |
 | daily_support_exchanges | int | Support exchanges today | interaction |
-| volatility | float | Personality trait (inherited) | (read-only) |
+| volatility | [0, 1] | Personality trait (inherited) | (read-only) |
 
 # Assumption Parameters
 

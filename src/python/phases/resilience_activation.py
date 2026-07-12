@@ -27,7 +27,6 @@ from src.python.resource_utils import (
 from src.python.stress_utils import (
     update_stress_dimensions_from_event,
     generate_pss10_from_stress_dimensions,
-    update_stress_dimensions_from_pss10_feedback,
 )
 from src.python.math_utils import clamp
 from src.python.assumption_config import get_assumptions
@@ -164,14 +163,6 @@ def run_phase(
     new_pss10 = pss10_data["pss10_score"]
     new_stressed = pss10_data["stressed"]
 
-    # ── STEP 4: Update stress dimensions from PSS-10 feedback ───────
-    final_controllability, final_overload = update_stress_dimensions_from_pss10_feedback(
-        current_controllability=updated_controllability,
-        current_overload=updated_overload,
-        pss10_responses=new_pss10_responses,
-        current_resources=current_resources,
-    )
-
     # ── STEP 5: Resource cost and depletion ─────────────────────────
     resource_config = ResourceOptimizationConfig()
     optimized_cost = compute_resilience_optimized_resource_cost(
@@ -233,8 +224,8 @@ def run_phase(
         "affect": new_affect,
         "resilience": new_resilience,
         "current_stress": new_stress,
-        "stress_controllability": final_controllability,
-        "stress_overload": final_overload,
+        "stress_controllability": updated_controllability,
+        "stress_overload": updated_overload,
         "resources": new_resources,
         "protective_factors": new_protective_factors,
         "consecutive_hindrances": new_consecutive_hindrances,

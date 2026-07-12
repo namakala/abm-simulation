@@ -10,6 +10,24 @@ import pytest
 from src.python.math_utils import create_rng
 
 
+class TestInitializeVolatility:
+    """Tests for initialize_volatility distribution properties."""
+
+    def test_volatility_mean_alpha1_beta1(self, sample_rng):
+        """Beta(1,1) -> mean approx 0.5."""
+        from src.python.initialization import initialize_volatility
+
+        values = [initialize_volatility(sample_rng, alpha=1.0, beta=1.0) for _ in range(10000)]
+        assert abs(np.mean(values) - 0.5) < 0.05
+
+    def test_volatility_mean_alpha4_beta1(self, sample_rng):
+        """Beta(4,1) -> mean approx 0.8."""
+        from src.python.initialization import initialize_volatility
+
+        values = [initialize_volatility(sample_rng, alpha=4.0, beta=1.0) for _ in range(10000)]
+        assert abs(np.mean(values) - 0.8) < 0.05
+
+
 class TestInitFunctions:
     """Test extracted initialization functions."""
 
