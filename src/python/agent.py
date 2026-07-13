@@ -563,7 +563,7 @@ class Person(mesa.Agent):
         self._last_phase_outputs: dict = {}
 
         # Track whether network adaptation has been applied
-        self._adapted_network = False
+        self.adapted_network = False
 
     def _initialize_pss10_scores(self):
         """
@@ -1103,6 +1103,8 @@ class Person(mesa.Agent):
             "pss10_bias": self.pss10_bias,
             # Within-day support boost
             "support_boost": self.support_boost,
+            # Stress-driven rewiring flag
+            "adapted_network": self.adapted_network,
         }
         return state
 
@@ -1173,6 +1175,7 @@ class Person(mesa.Agent):
             "protective_factors",
             "support_boost",
             "volatility",
+            "adapted_network",
         }
 
         # Clamp bounded keys

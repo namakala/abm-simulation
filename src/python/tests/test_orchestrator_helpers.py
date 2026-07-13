@@ -292,6 +292,16 @@ class TestWriteBackState:
         agent._write_back_state(state)
         assert agent.stress_breach_count == 5
 
+    def test_writes_adapted_network(self, agent):
+        """adapted_network is written back to self.adapted_network."""
+        state = agent._build_agent_state()
+        state["adapted_network"] = True
+        agent._write_back_state(state)
+        assert agent.adapted_network is True
+        state["adapted_network"] = False
+        agent._write_back_state(state)
+        assert agent.adapted_network is False
+
     def test_ignores_transient_keys(self, agent):
         """Transient keys like challenge, hindrance, is_stressed are NOT written."""
         state = agent._build_agent_state()
@@ -316,3 +326,4 @@ class TestWriteBackState:
         assert state1["resources"] == state2["resources"]
         assert state1["current_stress"] == state2["current_stress"]
         assert state1["pss10"] == state2["pss10"]
+        assert state1["adapted_network"] == state2["adapted_network"]

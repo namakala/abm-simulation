@@ -34,6 +34,7 @@ date: 2025-06-04
 | daily_interactions | int | Interactions today | interaction |
 | daily_support_exchanges | int | Support exchanges today | interaction |
 | volatility | [0, 1] | Personality trait (inherited) | (read-only) |
+| adapted_network | bool | Stress-driven rewiring flag | interaction |
 
 # Assumption Parameters
 

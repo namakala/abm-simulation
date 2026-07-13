@@ -59,6 +59,9 @@ class AgentState(TypedDict, total=False):
     # Personality / fixed traits
     volatility: float
 
+    # Stress-driven rewiring flag
+    adapted_network: bool
+
     # Transient event-processing keys (written by one phase, consumed by another)
     challenge: float  # [0, 1] — stress perception output, consumed by resilience activation
     hindrance: float  # [0, 1] — stress perception output, consumed by resilience activation
