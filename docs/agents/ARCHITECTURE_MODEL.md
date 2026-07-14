@@ -10,7 +10,7 @@ date: 2025-06-04
 |-------|-----------|----------------------|----------------------------|---------------------|
 | stress_perception | event_driven | omega_c, omega_o, bias, gamma, base_threshold, challenge_scale, hindrance_scale | challenge, hindrance, is_stressed, event_controllability, event_overload, stress_controllability, stress_overload, recent_stress_intensity, stress_momentum | transient event fields + stress dimensions |
 | resilience_activation | event_driven | neighbor_affects, base_resource_cost | affect, resilience, current_stress, resources, protective_factors, stress_controllability, stress_overload, consecutive_hindrances, stress_breach_count, pss10, pss10_responses, stressed | core traits + stress + PSS-10 |
-| interaction | event_driven | influence_rate, resilience_influence | affect, resilience, current_stress, resources, protective_factors, daily_interactions, daily_support_exchanges | social metrics |
+| interaction | event_driven | influence_rate, resilience_influence | affect, resilience, current_stress, resources, protective_factors, daily_interactions, daily_support_exchanges, adapted_network | social metrics + network flag |
 | resource_allocation | daily | (none; uses assumptions) | resources, protective_factors | resources + PF |
 | stress_buffering | daily | (none; uses assumptions) | current_stress, protective_factors | stress decay |
 
