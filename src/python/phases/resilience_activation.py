@@ -100,7 +100,7 @@ def run_phase(
     # ── STEP 1: Coping outcome ──────────────────────────────────────
     stress_config = StressProcessingConfig()
     social_support_efficacy = protective_factors.get("social_support", 0.5)
-    support_boost = state.get("support_boost", 0.0)
+    support_boost: float = state.get("support_boost", 0.0)  # type: ignore[return-value]
 
     new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
         current_affect=current_affect,

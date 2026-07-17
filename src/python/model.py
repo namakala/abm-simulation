@@ -454,7 +454,7 @@ class StressModel(mesa.Model):
 
         return model_data
 
-    def export_results(self, filename: str = None) -> str:
+    def export_results(self, filename: str | None = None) -> str:
         """
         Export simulation results to CSV file using DataCollector outputs.
 
@@ -493,7 +493,7 @@ class StressModel(mesa.Model):
 
         return filename
 
-    def export_agent_data(self, filename: str = None) -> str:
+    def export_agent_data(self, filename: str | None = None) -> str:
         """
         Export agent-level time series data to CSV file for individual trajectory analysis.
 

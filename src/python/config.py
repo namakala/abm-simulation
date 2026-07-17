@@ -7,11 +7,13 @@ with python-dotenv for loading and type conversion with proper error handling.
 
 import os
 import logging
-from typing import Optional, Union
+from typing import Optional, Union, TypeVar
 from pathlib import Path
 from dotenv import load_dotenv
 
 from src.python.assumption_config import get_assumptions
+
+T = TypeVar("T", int, float)
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -97,8 +99,13 @@ class Config:
             raise ConfigurationError(f"Invalid value for '{key}': '{value}'. Expected {expected_type.__name__}. {e}")
 
     def _get_env_array(
-        self, key: str, expected_type: type, default_array: list, required: bool = False, expected_length: int = None
-    ) -> list:
+        self,
+        key: str,
+        expected_type: type[T],
+        default_array: list[T],
+        required: bool = False,
+        expected_length: int | None = None,
+    ) -> list[T]:
         """
         Get environment variable as array with type conversion and validation.
 
@@ -803,7 +810,7 @@ class Config:
             },
         }
 
-    def get(self, section: str, key: str = None):
+    def get(self, section: str, key: str | None = None):
         """
         Get configuration value(s).
 
@@ -828,7 +835,7 @@ class Config:
 
         return self._config[section][key]
 
-    def validate(self) -> None:
+    def validate(self) -> None:  # type: ignore[operator]
         """
         Validate configuration parameters for consistency and reasonable ranges.
 
@@ -836,15 +843,15 @@ class Config:
             ConfigurationError: If validation fails
         """
         # Network validation
-        if self.network_watts_k < 2:
+        if self.network_watts_k < 2:  # type: ignore[operator]
             raise ConfigurationError("Network k parameter must be >= 2")
-        if not (0 <= self.network_watts_p <= 1):
+        if not (0 <= self.network_watts_p <= 1):  # type: ignore[operator]
             raise ConfigurationError("Network p parameter must be in [0, 1]")
-        if self.network_adaptation_threshold < 1:
+        if self.network_adaptation_threshold < 1:  # type: ignore[operator]
             raise ConfigurationError("Network adaptation threshold must be >= 1")
-        if not (0 <= self.network_rewire_probability <= 1):
+        if not (0 <= self.network_rewire_probability <= 1):  # type: ignore[operator]
             raise ConfigurationError("Network rewiring probability must be in [0, 1]")
-        if not (0 <= self.network_homophily_strength <= 1):
+        if not (0 <= self.network_homophily_strength <= 1):  # type: ignore[operator]
             raise ConfigurationError("Network homophily strength must be in [0, 1]")
 
         # Agent validation
@@ -855,104 +862,104 @@ class Config:
         if not (-1 <= self.agent_initial_affect_mean <= 1):
             raise ConfigurationError("Agent initial affect mean must be in [-1, 1]")
         if self.agent_initial_affect_sd <= 0:
-            raise ConfigurationError("Agent initial affect SD must be positive")
-        if not (0 <= self.agent_initial_resources_mean <= 1):
+            raise ConfigurationError("Agent initial affect SD must be positive")  # type: ignore[operator]
+        if not (0 <= self.agent_initial_resources_mean <= 1):  # type: ignore[operator]
             raise ConfigurationError("Agent initial resources mean must be in [0, 1]")
-        if self.agent_initial_resources_sd <= 0:
+        if self.agent_initial_resources_sd <= 0:  # type: ignore[operator]
             raise ConfigurationError("Agent initial resources SD must be positive")
-        if not (0 <= self.agent_stress_probability <= 1):
+        if not (0 <= self.agent_stress_probability <= 1):  # type: ignore[operator]
             raise ConfigurationError("Agent stress probability must be in [0, 1]")
 
         # Stress validation
-        for param in [self.stress_controllability_mean, self.stress_overload_mean]:
-            if not (0 <= param <= 1):
+        for param in [self.stress_controllability_mean, self.stress_overload_mean]:  # type: ignore[misc]
+            if not (0 <= param <= 1):  # type: ignore[operator]
                 raise ConfigurationError("Stress event means must be in [0, 1]")
 
         # Stress SD validation
-        for param in [self.stress_controllability_sd, self.stress_overload_sd]:
-            if param <= 0:
+        for param in [self.stress_controllability_sd, self.stress_overload_sd]:  # type: ignore[misc]
+            if param <= 0:  # type: ignore[operator]
                 raise ConfigurationError("Stress event standard deviations must be positive")
 
         # PSS-10 validation
-        if len(self.pss10_item_means) != 10:
+        if len(self.pss10_item_means) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 item means must have exactly 10 values")
 
-        if len(self.pss10_item_sds) != 10:
+        if len(self.pss10_item_sds) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 item standard deviations must have exactly 10 values")
 
-        if len(self.pss10_load_controllability) != 10:
+        if len(self.pss10_load_controllability) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 controllability loadings must have exactly 10 values")
 
-        if len(self.pss10_load_overload) != 10:
+        if len(self.pss10_load_overload) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 overload loadings must have exactly 10 values")
 
-        for i, mean_val in enumerate(self.pss10_item_means):
-            if not (0 <= mean_val <= 4):
+        for i, mean_val in enumerate(self.pss10_item_means):  # type: ignore[misc]
+            if not (0 <= mean_val <= 4):  # type: ignore[operator]
                 raise ConfigurationError(f"PSS-10 item mean at index {i} must be in [0, 4], got {mean_val}")
 
-        for i, sd_val in enumerate(self.pss10_item_sds):
-            if sd_val <= 0:
+        for i, sd_val in enumerate(self.pss10_item_sds):  # type: ignore[misc]
+            if sd_val <= 0:  # type: ignore[operator]
                 raise ConfigurationError(f"PSS-10 item standard deviation at index {i} must be positive, got {sd_val}")
 
-        for i, loading_val in enumerate(self.pss10_load_controllability):
-            if not (0 <= loading_val <= 1):
+        for i, loading_val in enumerate(self.pss10_load_controllability):  # type: ignore[misc]
+            if not (0 <= loading_val <= 1):  # type: ignore[operator]
                 raise ConfigurationError(
                     f"PSS-10 controllability loading at index {i} must be in [0, 1], got {loading_val}"
                 )
 
-        for i, loading_val in enumerate(self.pss10_load_overload):
-            if not (0 <= loading_val <= 1):
+        for i, loading_val in enumerate(self.pss10_load_overload):  # type: ignore[misc]
+            if not (0 <= loading_val <= 1):  # type: ignore[operator]
                 raise ConfigurationError(f"PSS-10 overload loading at index {i} must be in [0, 1], got {loading_val}")
 
-        if not (-1 <= self.pss10_bifactor_correlation <= 1):
+        if not (-1 <= self.pss10_bifactor_correlation <= 1):  # type: ignore[operator]
             raise ConfigurationError(
                 f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}"
             )
 
         # PSS-10 standard deviation validation
-        if self.pss10_controllability_sd <= 0:
+        if self.pss10_controllability_sd <= 0:  # type: ignore[operator]
             raise ConfigurationError(f"PSS-10 controllability SD must be positive, got {self.pss10_controllability_sd}")
-        if self.pss10_overload_sd <= 0:
+        if self.pss10_overload_sd <= 0:  # type: ignore[operator]
             raise ConfigurationError(f"PSS-10 overload SD must be positive, got {self.pss10_overload_sd}")
 
         # PSS-10 bifactor model validation
-        if len(self.pss10_load_controllability) != 10:
+        if len(self.pss10_load_controllability) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 controllability loadings must have exactly 10 values")
 
-        if len(self.pss10_load_overload) != 10:
+        if len(self.pss10_load_overload) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 overload loadings must have exactly 10 values")
 
-        for i, load_val in enumerate(self.pss10_load_controllability):
-            if not (0 <= load_val <= 1):
+        for i, load_val in enumerate(self.pss10_load_controllability):  # type: ignore[misc]
+            if not (0 <= load_val <= 1):  # type: ignore[operator]
                 raise ConfigurationError(
                     f"PSS-10 controllability loading at index {i} must be in [0, 1], got {load_val}"
                 )
 
-        for i, load_val in enumerate(self.pss10_load_overload):
-            if not (0 <= load_val <= 1):
+        for i, load_val in enumerate(self.pss10_load_overload):  # type: ignore[misc]
+            if not (0 <= load_val <= 1):  # type: ignore[operator]
                 raise ConfigurationError(f"PSS-10 overload loading at index {i} must be in [0, 1], got {load_val}")
 
-        if not (-1 <= self.pss10_bifactor_correlation <= 1):
+        if not (-1 <= self.pss10_bifactor_correlation <= 1):  # type: ignore[operator]
             raise ConfigurationError(
                 f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}"
             )
 
         # Threshold validation
-        if not (0 <= self.threshold_base_threshold <= 1):
+        if not (0 <= self.threshold_base_threshold <= 1):  # type: ignore[operator]
             raise ConfigurationError("Base threshold must be in [0, 1]")
-        if not (0 <= self.threshold_stress_threshold <= 1):
+        if not (0 <= self.threshold_stress_threshold <= 1):  # type: ignore[operator]
             raise ConfigurationError("Stress threshold must be in [0, 1]")
-        if not (0 <= self.threshold_affect_threshold <= 1):
+        if not (0 <= self.threshold_affect_threshold <= 1):  # type: ignore[operator]
             raise ConfigurationError("Affect threshold must be in [0, 1]")
 
         # Coping validation
-        if not (0 <= self.coping_base_probability <= 1):
+        if not (0 <= self.coping_base_probability <= 1):  # type: ignore[operator]
             raise ConfigurationError("Coping base probability must be in [0, 1]")
-        if not (0 <= self.coping_social_influence <= 1):
+        if not (0 <= self.coping_social_influence <= 1):  # type: ignore[operator]
             raise ConfigurationError("Coping social influence must be in [0, 1]")
-        if not (0 <= self.coping_challenge_bonus <= 1):
+        if not (0 <= self.coping_challenge_bonus <= 1):  # type: ignore[operator]
             raise ConfigurationError("Coping challenge bonus must be in [0, 1]")
-        if not (0 <= self.coping_hindrance_penalty <= 1):
+        if not (0 <= self.coping_hindrance_penalty <= 1):  # type: ignore[operator]
             raise ConfigurationError("Coping hindrance penalty must be in [0, 1]")
 
         # Dynamics validation
