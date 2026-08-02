@@ -98,6 +98,29 @@ class DailyCycleMetrics(TypedDict):
     final_daily_pss10: int
 
 
+class InitializationMetrics(TypedDict):
+    """Metrics extracted from the initialization block (baseline snapshot)."""
+
+    baseline_resilience: float
+    baseline_affect: float
+    resources: float
+    volatility: float
+    pss10: int
+    stress_controllability: float
+    stress_overload: float
+    protective_factors: Dict[str, float]
+
+
+class InteractionMetrics(TypedDict):
+    """Metrics extracted from the interaction phase (change values)."""
+
+    affect_change: float
+    resilience_change: float
+    resource_change: float
+    support_occurred: bool
+    influence_magnitude: float
+
+
 # ── Extraction Functions ───────────────────────────────────────────
 
 
@@ -357,6 +380,68 @@ def extract_daily_cycle_metrics(
     )
 
 
+def extract_initialization_metrics(state: AgentState) -> InitializationMetrics:
+    """Extract InitializationMetrics from a baseline AgentState snapshot.
+
+    The initialization block has no phase output; the pre-simulation agent
+    state itself is the source of truth.
+
+    Args:
+        state: AgentState as built at simulation start (no dynamics applied).
+
+    Returns:
+        InitializationMetrics dict.
+    """
+    return InitializationMetrics(
+        baseline_resilience=state.get("baseline_resilience", 0.5),
+        baseline_affect=state.get("baseline_affect", 0.0),
+        resources=state.get("resources", 0.5),
+        volatility=state.get("volatility", 0.5),
+        pss10=int(state.get("pss10", 0)),
+        stress_controllability=state.get("stress_controllability", 0.5),
+        stress_overload=state.get("stress_overload", 0.5),
+        protective_factors=dict(state.get("protective_factors", {})),
+    )
+
+
+def extract_interaction_metrics(
+    interaction_output: Optional[PhaseOutput],
+    pre_state: AgentState,
+) -> Optional[InteractionMetrics]:
+    """Extract InteractionMetrics from an interaction PhaseOutput.
+
+    Interaction deltas are change values (additive), so metrics read them
+    directly rather than differencing against pre_state.
+
+    Args:
+        interaction_output: PhaseOutput from process_interaction (self side).
+        pre_state: AgentState before the interaction (used for baseline
+            comparison when deltas are absolute).
+
+    Returns:
+        InteractionMetrics dict, or None if output is None.
+    """
+    if interaction_output is None:
+        return None
+
+    obs = interaction_output["observation"]
+    delta = interaction_output["state_delta"]
+
+    affect_change = delta.get("affect", 0.0)
+    resilience_change = delta.get("resilience", 0.0)
+    resource_change = delta.get("resources", 0.0)
+    support_occurred = bool(obs.get("support_occurred", False))
+    influence_magnitude = abs(affect_change) + abs(resilience_change)
+
+    return InteractionMetrics(
+        affect_change=affect_change,
+        resilience_change=resilience_change,
+        resource_change=resource_change,
+        support_occurred=support_occurred,
+        influence_magnitude=influence_magnitude,
+    )
+
+
 # ── Aggregation Functions ──────────────────────────────────────────
 
 
@@ -493,6 +578,54 @@ def aggregate_daily_cycle(metrics: List[DailyCycleMetrics]) -> Dict[str, Any]:
     result.update({f"stress_decay_{k}": v for k, v in _compute_stats(stress_decays).items()})
     result.update({f"daily_stress_events_{k}": v for k, v in _compute_stats(list(map(float, event_counts))).items()})
     result.update({f"pss10_{k}": v for k, v in _compute_stats(list(map(float, pss10_scores))).items()})
+    return result
+
+
+def aggregate_initialization(metrics: List[InitializationMetrics]) -> Dict[str, Any]:
+    """Aggregate InitializationMetrics across a population.
+
+    Args:
+        metrics: List of InitializationMetrics from multiple agents.
+
+    Returns:
+        Dict with population means for each baseline trait.
+    """
+    if not metrics:
+        return {}
+
+    result: Dict[str, Any] = {}
+    result["resilience_mean"] = float(np.mean([m["baseline_resilience"] for m in metrics]))
+    result["affect_mean"] = float(np.mean([m["baseline_affect"] for m in metrics]))
+    result["resources_mean"] = float(np.mean([m["resources"] for m in metrics]))
+    result["pss10_mean"] = float(np.mean([m["pss10"] for m in metrics]))
+    result["volatility_mean"] = float(np.mean([m["volatility"] for m in metrics]))
+    return result
+
+
+def aggregate_interaction(metrics: List[InteractionMetrics]) -> Dict[str, Any]:
+    """Aggregate InteractionMetrics across a population.
+
+    Args:
+        metrics: List of InteractionMetrics from multiple interactions.
+
+    Returns:
+        Dict with support exchange rate and mean change magnitudes.
+    """
+    if not metrics:
+        return {}
+
+    supports = [m["support_occurred"] for m in metrics]
+    affect_changes = [m["affect_change"] for m in metrics]
+    resilience_changes = [m["resilience_change"] for m in metrics]
+    resource_changes = [m["resource_change"] for m in metrics]
+    influences = [m["influence_magnitude"] for m in metrics]
+
+    result: Dict[str, Any] = {}
+    result["support_exchange_rate"] = float(np.mean(supports))
+    result.update({f"affect_change_{k}": v for k, v in _compute_stats(affect_changes).items()})
+    result.update({f"resilience_change_{k}": v for k, v in _compute_stats(resilience_changes).items()})
+    result.update({f"resource_change_{k}": v for k, v in _compute_stats(resource_changes).items()})
+    result.update({f"influence_magnitude_{k}": v for k, v in _compute_stats(influences).items()})
     return result
 
 

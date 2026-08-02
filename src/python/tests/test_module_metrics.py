@@ -422,3 +422,166 @@ class TestIsolationInputs:
 
         with pytest.raises(ValueError, match="Unknown module"):
             compute_isolation_inputs("nonexistent", {}, {})
+
+
+class TestInitializationMetrics:
+    """Initialization metrics schema and extraction."""
+
+    def test_initialization_metrics_schema(self):
+        """InitializationMetrics has correct fields."""
+        from src.python.demos.module_metrics import InitializationMetrics
+
+        fields = {
+            "baseline_resilience",
+            "baseline_affect",
+            "resources",
+            "volatility",
+            "pss10",
+            "stress_controllability",
+            "stress_overload",
+            "protective_factors",
+        }
+        assert set(InitializationMetrics.__annotations__.keys()) == fields
+
+    def test_extract_initialization_metrics(self):
+        """extract_initialization_metrics returns metrics from a snapshot state."""
+        from src.python.demos.module_metrics import extract_initialization_metrics
+
+        state = AgentState(
+            baseline_resilience=0.6,
+            baseline_affect=0.1,
+            resources=0.5,
+            volatility=0.4,
+            pss10=18,
+            stress_controllability=0.5,
+            stress_overload=0.6,
+            protective_factors={
+                "social_support": 0.5,
+                "family_support": 0.5,
+                "formal_intervention": 0.5,
+                "psychological_capital": 0.5,
+            },
+        )
+        metrics = extract_initialization_metrics(state)
+
+        assert metrics["baseline_resilience"] == 0.6
+        assert metrics["baseline_affect"] == 0.1
+        assert metrics["resources"] == 0.5
+        assert metrics["pss10"] == 18
+        assert isinstance(metrics["protective_factors"], dict)
+
+
+class TestInteractionMetrics:
+    """Interaction metrics schema and extraction."""
+
+    def test_interaction_metrics_schema(self):
+        """InteractionMetrics has correct fields."""
+        from src.python.demos.module_metrics import InteractionMetrics
+
+        fields = {
+            "affect_change",
+            "resilience_change",
+            "resource_change",
+            "support_occurred",
+            "influence_magnitude",
+        }
+        assert set(InteractionMetrics.__annotations__.keys()) == fields
+
+    def test_extract_interaction_metrics(self):
+        """extract_interaction_metrics returns metrics from an interaction PhaseOutput."""
+        from src.python.demos.module_metrics import extract_interaction_metrics
+
+        output = PhaseOutput(
+            state_delta={"affect": 0.03, "resilience": 0.02, "resources": 0.1},
+            observation={"support_occurred": True},
+        )
+        pre_state = AgentState(affect=0.0, resilience=0.5, resources=0.5)
+
+        metrics = extract_interaction_metrics(output, pre_state)
+
+        assert metrics["support_occurred"] is True
+        assert metrics["affect_change"] == 0.03
+        assert metrics["resilience_change"] == 0.02
+        assert metrics["resource_change"] == 0.1
+        assert metrics["influence_magnitude"] == pytest.approx(0.05)
+
+    def test_no_output_returns_none(self):
+        """Returns None when output is None."""
+        from src.python.demos.module_metrics import extract_interaction_metrics
+
+        assert extract_interaction_metrics(None, {}) is None
+
+
+class TestAggregationAdditions:
+    """Aggregation for init and interaction metric families."""
+
+    def test_aggregate_interaction_returns_stats(self):
+        """aggregate_interaction returns support rate and mean deltas."""
+        from src.python.demos.module_metrics import aggregate_interaction, InteractionMetrics
+
+        metrics = [
+            InteractionMetrics(
+                affect_change=0.03,
+                resilience_change=0.02,
+                resource_change=0.1,
+                support_occurred=True,
+                influence_magnitude=0.05,
+            ),
+            InteractionMetrics(
+                affect_change=-0.01,
+                resilience_change=0.0,
+                resource_change=0.0,
+                support_occurred=False,
+                influence_magnitude=0.01,
+            ),
+        ]
+
+        result = aggregate_interaction(metrics)
+
+        assert "support_exchange_rate" in result
+        assert result["support_exchange_rate"] == 0.5
+        assert "affect_change_mean" in result
+        assert result["affect_change_mean"] == pytest.approx(0.01)
+
+    def test_aggregate_initialization_returns_stats(self):
+        """aggregate_initialization returns population means."""
+        from src.python.demos.module_metrics import aggregate_initialization, InitializationMetrics
+
+        metrics = [
+            InitializationMetrics(
+                baseline_resilience=0.6,
+                baseline_affect=0.1,
+                resources=0.5,
+                volatility=0.4,
+                pss10=18,
+                stress_controllability=0.5,
+                stress_overload=0.6,
+                protective_factors={},
+            ),
+            InitializationMetrics(
+                baseline_resilience=0.4,
+                baseline_affect=-0.1,
+                resources=0.7,
+                volatility=0.5,
+                pss10=22,
+                stress_controllability=0.6,
+                stress_overload=0.4,
+                protective_factors={},
+            ),
+        ]
+
+        result = aggregate_initialization(metrics)
+
+        assert result["resilience_mean"] == pytest.approx(0.5)
+        assert result["affect_mean"] == pytest.approx(0.0)
+        assert result["pss10_mean"] == pytest.approx(20.0)
+
+    def test_aggregate_empty_returns_empty(self):
+        """Aggregation on empty list returns empty dict."""
+        from src.python.demos.module_metrics import (
+            aggregate_initialization,
+            aggregate_interaction,
+        )
+
+        assert aggregate_interaction([]) == {}
+        assert aggregate_initialization([]) == {}
