@@ -54,11 +54,26 @@ key_cols <- c(
   "stress_prevalence", "avg_challenge", "avg_hindrance", "coping_success_rate",
   "support_exchange_rate", "avg_regeneration", "avg_buffering_strength"
 )
+label_map <- c(
+  "avg_pss10" = "PSS-10",
+  "avg_stress" = "Current stress",
+  "avg_affect" = "Affect",
+  "avg_resilience" = "Resilience",
+  "avg_resources" = "Resources",
+  "stress_prevalence" = "Stress prevalence",
+  "avg_challenge" = "Challenge appraisal",
+  "avg_hindrance" = "Hindrance appraisal",
+  "coping_success_rate" = "Coping success rate",
+  "support_exchange_rate" = "Support exchange rate",
+  "avg_regeneration" = "Regeneration",
+  "avg_buffering_strength" = "Buffering strength"
+)
 num <- blocks[, key_cols]
 tbl <- t(num)
-chr <- matrix(sprintf("%.3f", tbl), nrow = nrow(tbl))
-chr[is.na(tbl)] <- "n/a"
+chr <- round(tbl, 3)
+chr[is.na(chr)] <- "n/a"
 colnames(chr) <- paste("Stage", blocks$stage)
+rownames(chr) <- unname(label_map[rownames(chr)])
 kable(
   chr,
   format = "latex", booktabs = TRUE,

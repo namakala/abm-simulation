@@ -1,4 +1,5 @@
 % Options for packages loaded elsewhere
+% Options for packages loaded elsewhere
 \PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
@@ -7,21 +8,22 @@
   letterpaper,
   DIV=11,
   numbers=noendperiod]{scrartcl}
-
+\usepackage{xcolor}
 \usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math}
+  \usepackage{unicode-math} % this also loads fontspec
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
 \fi
 \usepackage{lmodern}
-\ifPDFTeX\else  
-    % xetex/luatex font selection
+\ifPDFTeX\else
+  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -39,9 +41,6 @@
 }{% if KOMA class
   \KOMAoptions{parskip=half}}
 \makeatother
-\usepackage{xcolor}
-\setlength{\emergencystretch}{3em} % prevent overfull lines
-\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 % Make \paragraph and \subparagraph free-standing
 \makeatletter
 \ifx\paragraph\undefined\else
@@ -67,8 +66,7 @@
 \makeatother
 
 
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{longtable,booktabs,array}
 \usepackage{calc} % for calculating minipage widths
 % Correct order of tables after \paragraph or \subparagraph
 \usepackage{etoolbox}
@@ -80,17 +78,21 @@
 \makesavenoteenv{longtable}
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
+
+
 % definitions for citeproc citations
 \NewDocumentCommand\citeproctext{}{}
 \NewDocumentCommand\citeproc{mm}{%
@@ -124,6 +126,18 @@
 \newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+
+
+
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+ 
+
 
 \usepackage{longtable}
 \usepackage{amsmath}
@@ -185,14 +199,9 @@
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
 \makeatother
-
-\ifLuaTeX
-  \usepackage{selnolig}  % disable illegal ligatures
-\fi
 \usepackage{bookmark}
-
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same} % disable monospaced font for URLs
+\urlstyle{same}
 \hypersetup{
   pdftitle={An agent-based simulation of psychological resilience},
   pdfauthor={Aly Lamuri},
@@ -207,7 +216,6 @@
 \title{An agent-based simulation of psychological resilience}
 \author{Aly Lamuri}
 \date{}
-
 \begin{document}
 \maketitle
 
@@ -918,7 +926,7 @@ simulate real-world heterogeneity without biasing initial conditions.
 
 \centering{
 
-\includegraphics{figures/base_initial_population.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/base_initial_population.pdf}}
 
 }
 
@@ -957,7 +965,7 @@ mental health equilibrium without excessive variability.
 
 \centering{
 
-\includegraphics{figures/base_final_population.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/base_final_population.pdf}}
 
 }
 
@@ -1044,7 +1052,7 @@ individual interactions that promote mental health outcomes.
 
 \centering{
 
-\includegraphics{figures/base_time_series.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/base_time_series.pdf}}
 
 }
 
@@ -1106,6 +1114,132 @@ stability. The model thus successfully demonstrates that agent-based
 simulations can effectively capture the homeostatic mechanisms of
 psychological resilience. Social network dynamics transform individual
 variability into population-level equilibrium.
+
+\subsection{Cumulative building-block
+build-up}\label{cumulative-building-block-build-up}
+
+To make the contribution of each mechanism explicit, the model is
+assembled block by block. Seven stages run the same seeded population (N
+= 100 agents, 90 days): each stage adds one building block on top of the
+previous ones and reports the metrics that block introduces. Stage 1 is
+initialization only; stages 2--6 add stress perception, resilience
+activation, interaction, resource allocation, and stress buffering in
+turn; stage 7 is the full model, including the remaining daily-cycle
+internals (affect dynamics, PSS-10 consolidation, daily reset) and
+network adaptation, run through the production pipeline
+(\texttt{simulate.py}). Results are computed by
+\texttt{pixi\ run\ cumulative-blocks} and exported to
+\texttt{data/output/}.
+
+\subsubsection{Stage composition}\label{stage-composition}
+
+The seven stages accumulate building blocks; each row lists the blocks
+active at that stage.
+
+\begin{table}
+
+\caption{\label{tab:cum-stage-blocks}Cumulative stage composition: building blocks active per stage}
+\centering
+\begin{tabular}[t]{rl}
+\toprule
+Stage & Blocks active\\
+\midrule
+1 & initialization\\
+2 & initialization,stress\_perception\\
+3 & initialization,stress\_perception,resilience\_activation\\
+4 & initialization,stress\_perception,resilience\_activation,interaction\\
+5 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation\\
+\addlinespace
+6 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation,stress\_buffering\\
+7 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation,stress\_buffering,affect\_dynamics,pss10\_consolidation,daily\_reset,network\_adaptation\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Stage metrics}\label{stage-metrics}
+
+Each block contributes its own metric family: perception adds
+challenge/hindrance appraisal, activation adds coping success,
+interaction adds social support exchange, allocation adds resource
+regeneration, and buffering adds buffering strength and stress
+depletion. Empty cells mark metrics whose block is not yet active. Stage
+7 runs through \texttt{simulate.py}, which does not export the
+allocation and buffering phase metrics, so those cells remain empty.
+
+\begin{table}
+
+\caption{\label{tab:cum-stage-metrics}Cumulative building-block metrics by stage (means over the run)}
+\centering
+\begin{tabular}[t]{llllllll}
+\toprule
+  & Stage 1 & Stage 2 & Stage 3 & Stage 4 & Stage 5 & Stage 6 & Stage 7\\
+\midrule
+PSS-10 & 15.96 & 15.96 & 16.18 & 18.28 & 18.22 & 17.89 & 13.77\\
+Current stress & 0.425 & 0.425 & 0.715 & 0.798 & 0.798 & 0.762 & 0.237\\
+Affect & 0.026 & 0.026 & -0.92 & -0.982 & -0.982 & -0.981 & -0.064\\
+Resilience & 0.459 & 0.459 & 0.297 & 0.068 & 0.068 & 0.208 & 0.447\\
+Resources & 0.493 & 0.493 & 0.116 & 0.115 & 0.315 & 0.311 & 0.338\\
+\addlinespace
+Stress prevalence & 0.03 & 0.03 & 0.03 & 0.09 & 0.1 & 0.11 & 0.01\\
+Challenge appraisal & n/a & 0.499 & 0.502 & 0.498 & 0.498 & 0.498 & 0.499\\
+Hindrance appraisal & n/a & 0.501 & 0.498 & 0.502 & 0.502 & 0.502 & 0.501\\
+Coping success rate & n/a & n/a & 0.457 & 0.349 & 0.35 & 0.407 & 0.742\\
+Support exchange rate & n/a & n/a & n/a & 0.297 & 0.297 & 0.685 & 0.007\\
+\addlinespace
+Regeneration & n/a & n/a & n/a & n/a & 0.366 & 0.366 & n/a\\
+Buffering strength & n/a & n/a & n/a & n/a & n/a & 0.03 & n/a\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Full model (stage 7)}\label{full-model-stage-7}
+
+Stage 7 runs the complete production pipeline. The final-day population
+state summarises the emergent equilibrium of all blocks combined.
+
+\begin{table}
+
+\caption{\label{tab:cum-stage7-final}Full-model population state on the final day (stage 7)}
+\centering
+\begin{tabular}[t]{ll}
+\toprule
+Metric & Final-day value\\
+\midrule
+PSS-10 & 13.770\\
+Resilience & 0.447\\
+Affect & -0.064\\
+Resources & 0.338\\
+Current stress & 0.237\\
+\addlinespace
+Stress prevalence & 0.010\\
+Coping success rate & 0.704\\
+Challenge appraisal & 0.505\\
+Hindrance appraisal & 0.495\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Agent-level heterogeneity persists within this stable population: the
+mean and standard deviation of individual trajectories on the final day,
+computed directly from the full model's exported agent data, show
+substantial within-population dispersion.
+
+\begin{table}
+
+\caption{\label{tab:cum-stage7-agent}Individual heterogeneity within the full model, final day (stage 7)}
+\centering
+\begin{tabular}[t]{llrr}
+\toprule
+  & Variable & Mean & SD\\
+\midrule
+pss10 & PSS-10 & 13.770 & 4.640\\
+resilience & Resilience & 0.447 & 0.205\\
+affect & Affect & -0.064 & 0.275\\
+resources & Resources & 0.338 & 0.033\\
+current\_stress & Current stress & 0.237 & 0.185\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Discussion}\label{discussion}
 
