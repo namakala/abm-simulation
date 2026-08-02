@@ -1,0 +1,120 @@
+## Cumulative building-block build-up
+
+To make the contribution of each mechanism explicit, the model is assembled block by block. Seven stages run the same seeded population (N = 100 agents, 90 days): each stage adds one building block on top of the previous ones and reports the metrics that block introduces. Stage 1 is initialization only; stages 2--6 add stress perception, resilience activation, interaction, resource allocation, and stress buffering in turn; stage 7 is the full model, including the remaining daily-cycle internals (affect dynamics, PSS-10 consolidation, daily reset) and network adaptation, run through the production pipeline (`simulate.py`). Results are computed by `pixi run cumulative-blocks` and exported to `data/output/`.
+
+```{r}
+#| label: cum-setup
+#| echo: false
+#| message: false
+#| warning: false
+library(knitr)
+find_data_dir <- function() {
+  candidates <- c(
+    file.path(getwd(), "data", "output"),
+    file.path(getwd(), "..", "data", "output"),
+    file.path(dirname(getwd()), "..", "data", "output")
+  )
+  for (cand in candidates) {
+    if (file.exists(file.path(cand, "cumulative_stages_metrics.csv"))) {
+      return(normalizePath(cand))
+    }
+  }
+  stop("data/output not found - run `pixi run cumulative-blocks` first")
+}
+data_dir <- find_data_dir()
+```
+
+### Stage composition
+
+The seven stages accumulate building blocks; each row lists the blocks active at that stage.
+
+```{r}
+#| label: cum-stage-blocks
+#| echo: false
+#| results: asis
+blocks <- read.csv(file.path(data_dir, "cumulative_stages_metrics.csv"), check.names = FALSE)
+kable(
+  blocks[, c("stage", "blocks_active")],
+  format = "latex", booktabs = TRUE,
+  col.names = c("Stage", "Blocks active"),
+  caption = "Cumulative stage composition: building blocks active per stage"
+)
+```
+
+### Stage metrics
+
+Each block contributes its own metric family: perception adds challenge/hindrance appraisal, activation adds coping success, interaction adds social support exchange, allocation adds resource regeneration, and buffering adds buffering strength and stress depletion. Empty cells mark metrics whose block is not yet active. Stage 7 runs through `simulate.py`, which does not export the allocation and buffering phase metrics, so those cells remain empty.
+
+```{r}
+#| label: cum-stage-metrics
+#| echo: false
+#| results: asis
+key_cols <- c(
+  "avg_pss10", "avg_stress", "avg_affect", "avg_resilience", "avg_resources",
+  "stress_prevalence", "avg_challenge", "avg_hindrance", "coping_success_rate",
+  "support_exchange_rate", "avg_regeneration", "avg_buffering_strength"
+)
+num <- blocks[, key_cols]
+tbl <- t(num)
+chr <- matrix(sprintf("%.3f", tbl), nrow = nrow(tbl))
+chr[is.na(tbl)] <- "n/a"
+colnames(chr) <- paste("Stage", blocks$stage)
+kable(
+  chr,
+  format = "latex", booktabs = TRUE,
+  caption = "Cumulative building-block metrics by stage (means over the run)"
+)
+```
+
+### Full model (stage 7)
+
+Stage 7 runs the complete production pipeline. The final-day population state summarises the emergent equilibrium of all blocks combined.
+
+```{r}
+#| label: cum-stage7-final
+#| echo: false
+#| results: asis
+m7 <- read.csv(file.path(data_dir, "stage7_model.csv"))
+cols <- c(
+  "avg_pss10", "avg_resilience", "avg_affect", "avg_resources", "avg_stress",
+  "stress_prevalence", "coping_success_rate", "avg_challenge", "avg_hindrance"
+)
+last <- as.numeric(tail(m7, 1)[1, cols])
+snap <- data.frame(
+  metric = c(
+    "PSS-10", "Resilience", "Affect", "Resources", "Current stress",
+    "Stress prevalence", "Coping success rate", "Challenge appraisal", "Hindrance appraisal"
+  ),
+  value = sprintf("%.3f", last)
+)
+kable(
+  snap,
+  format = "latex", booktabs = TRUE,
+  col.names = c("Metric", "Final-day value"),
+  caption = "Full-model population state on the final day (stage 7)"
+)
+```
+
+Agent-level heterogeneity persists within this stable population: the mean and standard deviation of individual trajectories on the final day, computed directly from the full model's exported agent data, show substantial within-population dispersion.
+
+```{r}
+#| label: cum-stage7-agent
+#| echo: false
+#| results: asis
+a7 <- read.csv(file.path(data_dir, "stage7_agent.csv"))
+last_step <- max(a7$Step)
+final_agents <- a7[a7$Step == last_step, ]
+agent_vars <- c("pss10", "resilience", "affect", "resources", "current_stress")
+agent_snap <- data.frame(
+  variable = c("PSS-10", "Resilience", "Affect", "Resources", "Current stress"),
+  mean = sapply(agent_vars, function(v) mean(final_agents[[v]], na.rm = TRUE)),
+  sd = sapply(agent_vars, function(v) sd(final_agents[[v]], na.rm = TRUE))
+)
+agent_snap[, c("mean", "sd")] <- round(agent_snap[, c("mean", "sd")], 3)
+kable(
+  agent_snap,
+  format = "latex", booktabs = TRUE,
+  col.names = c("Variable", "Mean", "SD"),
+  caption = "Individual heterogeneity within the full model, final day (stage 7)"
+)
+```
