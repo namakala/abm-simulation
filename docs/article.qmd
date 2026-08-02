@@ -44,7 +44,15 @@ Anxiety and depression are among the most prevalent psychological disorders in t
 
 # Results
 
-{{< include manuscript/_results.md >}}
+{{< include draft-result/_results-initial-state.qmd >}}
+
+{{< include draft-result/_results-final-state.qmd >}}
+
+{{< include draft-result/_results-homeostasis.qmd >}}
+
+{{< include draft-result/_results-individual-dynamics.qmd >}}
+
+{{< include draft-result/_cumulative-blocks.qmd >}}
 
 # Discussion
 
