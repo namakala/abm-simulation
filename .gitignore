@@ -100,3 +100,6 @@ target/
 **/.archive/**
 !**/.archive/.gitkeep
 matplotlib-*/
+
+# Generated cumulative-block demo outputs
+/data/output/
