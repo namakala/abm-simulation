@@ -1,0 +1,11 @@
+# Introduction
+
+Anxiety and depression are among the most prevalent psychological disorders in the general population, generating substantial socioeconomic consequences [@gbd2022global; @arias2022quantifying]. These conditions impose considerable direct and indirect costs, while curative and rehabilitative approaches often demonstrate limited effectiveness [@mekonen2021estimating]. Strengthening psychological resilience offers a preventive pathway to reduce vulnerability to such disorders [@troy2023psychological]. Public health policy should therefore prioritize preventive strategies that foster resilience. However, designing cost-effective preventive policies requires rigorous assessment methods. Agent-based modeling (ABM) provides a promising approach to simulate psychological resilience and generate evidence to guide interventions aimed at enhancing resilience at the population level.
+
+## Previous ABM Publications
+
+{{< include manuscript/_previous-abm-publication.md >}}
+
+## Current Research
+
+{{< include manuscript/_current-research.md >}}

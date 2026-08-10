@@ -1,0 +1,3 @@
+# Discussion
+
+{{< include manuscript/_discussion.md >}}

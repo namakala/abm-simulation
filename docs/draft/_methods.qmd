@@ -1,0 +1,15 @@
+# Methods
+
+## Modelling Approach
+
+{{< include manuscript/_modelling-approach.md >}}
+
+{{< include manuscript/_parameters.md >}}
+
+## Simulation Mechanism
+
+{{< include manuscript/_simulation-mechanism-manuscript.md >}}
+
+## Data Analysis
+
+{{< include manuscript/_data-analysis.md >}}

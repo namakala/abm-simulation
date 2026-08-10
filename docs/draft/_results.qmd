@@ -1,0 +1,11 @@
+# Results
+
+{{< include draft/_results_initial_state.qmd >}}
+
+{{< include draft/_results_final_state.qmd >}}
+
+{{< include draft/_results_homeostasis.qmd >}}
+
+{{< include draft/_results_individual_dynamics.qmd >}}
+
+{{< include draft/_results_cumulative_block.qmd >}}
