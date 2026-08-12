@@ -28,6 +28,7 @@ parameterize = "bash src/shell/parameterize_env.sh"
 force-parameterize = "bash src/shell/parameterize_env.sh --force"
 install-hooks = "git config core.hooksPath .githooks"
 quarto = "bash src/shell/quarto-render.sh"
+article = "bash src/shell/article-render.sh"
 serve = "quarto preview src/python/demos --port 9000 --no-browser"
 
 [dependencies]

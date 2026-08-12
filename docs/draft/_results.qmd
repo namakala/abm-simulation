@@ -1,11 +1,19 @@
 # Results
 
-{{< include draft/_results_initial_state.qmd >}}
+The results are organised in four steps. We first describe the baseline
+population, then the stability of its population-level dynamics, then
+the individual heterogeneity underlying that stability together with the
+contribution of each model mechanism, and finally the associations that
+emerge at the end state.
 
-{{< include draft/_results_final_state.qmd >}}
+{{< include draft/_results_setup.qmd >}}
+
+{{< include draft/_results_initial_state.qmd >}}
 
 {{< include draft/_results_homeostasis.qmd >}}
 
 {{< include draft/_results_individual_dynamics.qmd >}}
 
 {{< include draft/_results_cumulative_block.qmd >}}
+
+{{< include draft/_results_final_state.qmd >}}

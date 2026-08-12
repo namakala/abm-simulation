@@ -1,0 +1,44 @@
+```{r}
+#| label: results-setup
+#| echo: false
+#| message: false
+#| warning: false
+library(knitr)
+find_data_dir <- function() {
+  candidates <- c(
+    file.path(getwd(), "data", "output"),
+    file.path(getwd(), "..", "data", "output"),
+    file.path(dirname(getwd()), "..", "data", "output")
+  )
+  for (cand in candidates) {
+    if (file.exists(file.path(cand, "stage7_model.csv"))) {
+      return(normalizePath(cand))
+    }
+  }
+  stop("data/output not found - run `pixi run cumulative-blocks` first")
+}
+data_dir <- find_data_dir()
+m <- read.csv(file.path(data_dir, "stage7_model.csv"))
+a <- read.csv(file.path(data_dir, "stage7_agent.csv"))
+init <- read.csv(file.path(data_dir, "stage7_initial.csv"))
+stats <- read.csv(file.path(data_dir, "stage7_results_stats.csv"))
+
+stat_row <- function(level, metric) stats[stats$level == level & stats$metric == metric, ]
+pop <- function(metric) sprintf("%.3f ± %.3f", stat_row("population", metric)$mean, stat_row("population", metric)$sd)
+pop_cv <- function(metric) sprintf("%.1f%%", stat_row("population", metric)$cv)
+pop_range <- function(metric) sprintf("%.2f–%.2f", stat_row("population", metric)$min, stat_row("population", metric)$max)
+agent <- function(metric) sprintf("%.3f ± %.3f", stat_row("agent_step", metric)$mean, stat_row("agent_step", metric)$sd)
+agent_cv <- function(metric) sprintf("%.1f%%", stat_row("agent_step", metric)$cv)
+corr_val <- function(metric) sprintf("%.2f", stat_row("correlation", metric)$mean)
+baseline_max_corr <- function() {
+  vars <- c("pss10", "resilience", "affect", "current_stress")
+  pairs <- combn(vars, 2, simplify = FALSE)
+  rs <- sapply(pairs, function(p) cor(init[[p[1]]], init[[p[2]]]))
+  sprintf("%.2f", max(abs(rs)))
+}
+baseline_corr <- function(x, y) sprintf("%.2f", cor(init[[x]], init[[y]]))
+final_corr <- function(x, y) {
+  f <- a[a$Step == max(a$Step), ]
+  sprintf("%.2f", cor(f[[x]], f[[y]]))
+}
+```

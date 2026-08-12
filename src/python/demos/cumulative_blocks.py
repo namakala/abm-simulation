@@ -575,18 +575,23 @@ def export_results_assets(
     agent_csv: Union[str, Path],
     output_dir: Union[str, Path] = "data/output",
     figures_dir: Union[str, Path] = "docs/figures",
+    initial_csv: Optional[Union[str, Path]] = None,
 ) -> Dict[str, str]:
     """Export article-ready figures and summary stats from stage-7 exports.
 
     Renders the initial-population, final-population, and time-series figures
     and writes stage7_results_stats.csv (tidy long format with levels
-    population, agent_step, final_day, and correlation rows).
+    population, agent_step, final_day, and correlation rows). The initial
+    figure and the initial pss10-stress correlation use the pre-step baseline
+    (simulate.py's {prefix}_initial.csv) when available, falling back to the
+    Step==1 slice of the agent CSV.
 
     Args:
         model_csv: Path to the stage-7 model-level CSV (simulate.py export).
         agent_csv: Path to the stage-7 agent-level CSV (simulate.py export).
         output_dir: Directory for the stats CSV (created if missing).
         figures_dir: Directory for rendered PDF figures (created if missing).
+        initial_csv: Optional path to the pre-step initial agent CSV.
 
     Returns:
         Dict mapping asset names to output paths (empty string when a figure
@@ -603,8 +608,12 @@ def export_results_assets(
     first_step = int(agent_df[step_col].min())
     last_step = int(agent_df[step_col].max())
     rename_map = {"current_stress": "stress"}
+    if initial_csv is not None and Path(initial_csv).exists():
+        initial_df = pd.read_csv(initial_csv)
+    else:
+        initial_df = agent_df[agent_df[step_col] == first_step]
     initial_fig = _render_population_figure(
-        agent_df[agent_df[step_col] == first_step].rename(columns=rename_map),
+        initial_df.rename(columns=rename_map),
         figs,
         FIGURE_FILENAMES["initial_population"],
     )
@@ -624,8 +633,14 @@ def export_results_assets(
     rows += _stats_rows("agent_step", agent_df, AGENT_STAT_COLUMNS)
     rows += _stats_rows("final_day", agent_df[agent_df[step_col] == last_step], AGENT_STAT_COLUMNS)
     if {"pss10", "current_stress"}.issubset(agent_df.columns):
-        for label, step in (("pss10_stress_initial", first_step), ("pss10_stress_final", last_step)):
-            slice_df = agent_df[agent_df[step_col] == step]
+        initial_corr_df = initial_df if {"pss10", "current_stress"}.issubset(initial_df.columns) else None
+        corr_slices = [
+            ("pss10_stress_initial", initial_corr_df),
+            ("pss10_stress_final", agent_df[agent_df[step_col] == last_step]),
+        ]
+        for label, slice_df in corr_slices:
+            if slice_df is None or len(slice_df) == 0:
+                continue
             r = float(slice_df["pss10"].corr(slice_df["current_stress"]))
             rows.append(
                 {
@@ -693,7 +708,8 @@ def run_cumulative_demo(
     }
     (out / "cumulative_blocks.json").write_text(json.dumps(metadata, indent=2))
     if model_csv is not None and agent_csv is not None:
-        export_results_assets(model_csv, agent_csv, str(out), figures_dir)
+        initial_csv = agent_csv.with_name(agent_csv.name.replace("_agent.csv", "_initial.csv"))
+        export_results_assets(model_csv, agent_csv, str(out), figures_dir, initial_csv)
     return out
 
 

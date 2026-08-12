@@ -144,6 +144,34 @@ class TestExportResultsAssets:
         pop = pop[pop["level"] == "population"].set_index("metric")
         assert math.isnan(pop.loc["avg_affect", "cv"])
 
+    def test_initial_csv_used_when_provided(self, tmp_path):
+        """A pre-step initial CSV overrides the Step==1 slice for baseline assets."""
+        model_csv = tmp_path / "m.csv"
+        agent_csv = tmp_path / "a.csv"
+        _make_model_df().to_csv(model_csv, index=False)
+        _make_agent_df().to_csv(agent_csv, index=False)
+        initial = pd.DataFrame(
+            {
+                "Step": [0, 0, 0, 0],
+                "AgentID": [1, 2, 3, 4],
+                "pss10": [10.0, 20.0, 30.0, 40.0],
+                "resilience": [0.5] * 4,
+                "affect": [0.0] * 4,
+                "resources": [1.0] * 4,
+                "current_stress": [0.40, 0.10, 0.30, 0.20],  # anti-correlated with pss10
+                "stress_controllability": [0.5] * 4,
+                "stress_overload": [0.1] * 4,
+                "consecutive_hindrances": [0.0] * 4,
+            }
+        )
+        initial_csv = tmp_path / "a_initial.csv"
+        initial.to_csv(initial_csv, index=False)
+        export_results_assets(model_csv, agent_csv, str(tmp_path / "out"), str(tmp_path / "figs"), initial_csv)
+        df = pd.read_csv(tmp_path / "out" / "stage7_results_stats.csv")
+        corr = df[df["level"] == "correlation"].set_index("metric")
+        expected = np.corrcoef(initial["pss10"], initial["current_stress"])[0, 1]
+        assert corr.loc["pss10_stress_initial", "mean"] == pytest.approx(expected)
+
     def test_minimal_columns_are_tolerated(self, tmp_path):
         """Missing columns are skipped, not fatal; correlations need both columns."""
         model_csv = tmp_path / "m.csv"
