@@ -1,3 +1,6 @@
 *
 !*ignore
 !*pdf
+# simulate.py renders its own per-run figures during the cumulative demo;
+# the article uses the full_model_* assets exported by export_results_assets.
+stage7_*.pdf

@@ -47,6 +47,10 @@ from src.python.phases import (
     run_stress_perception,
 )
 from src.python.phases.interaction import process_interaction as phase_process_interaction
+from src.python.visualization_utils import (
+    create_time_series_visualization,
+    create_visualization_report,
+)
 
 DEFAULT_AGENTS = 100
 DEFAULT_DAYS = 90
@@ -124,6 +128,36 @@ METRIC_COLUMNS = [
     "avg_buffering_strength",
     "avg_stress_depletion",
 ]
+
+# Stage-7 export columns summarized into stage7_results_stats.csv.
+MODEL_STAT_COLUMNS = [
+    "avg_pss10",
+    "avg_stress",
+    "avg_affect",
+    "avg_resilience",
+    "avg_resources",
+    "coping_success_rate",
+    "avg_challenge",
+    "avg_hindrance",
+    "avg_consecutive_hindrances",
+]
+AGENT_STAT_COLUMNS = [
+    "pss10",
+    "resilience",
+    "affect",
+    "resources",
+    "current_stress",
+    "stress_controllability",
+    "stress_overload",
+    "consecutive_hindrances",
+]
+
+# Figure filenames written by export_results_assets.
+FIGURE_FILENAMES = {
+    "initial_population": "full_model_initial_population.pdf",
+    "final_population": "full_model_final_population.pdf",
+    "time_series": "full_model_time_series.pdf",
+}
 
 _METRIC_BUCKETS = ("initialization", "perception", "activation", "interaction", "allocation", "buffering")
 
@@ -486,11 +520,142 @@ def compute_stage7_row(model_csv: Path, agents: int, days: int, stage: Dict[str,
     return row
 
 
+def _summarize(series: pd.Series) -> Dict[str, float]:
+    """Return mean, sample sd, CV (%), and min/max for a numeric series.
+
+    Args:
+        series: Numeric pandas Series.
+
+    Returns:
+        Dict with keys mean, sd, cv, min, max. CV is NaN when mean is zero.
+    """
+    mean = float(series.mean())
+    sd = float(series.std(ddof=1))
+    cv = float(sd / abs(mean) * 100.0) if mean != 0 else float("nan")
+    return {"mean": mean, "sd": sd, "cv": cv, "min": float(series.min()), "max": float(series.max())}
+
+
+def _stats_rows(level: str, df: pd.DataFrame, columns: List[str]) -> List[Dict[str, Any]]:
+    """Build tidy stats rows for the columns present in df.
+
+    Args:
+        level: Stats level label (population, agent_step, final_day).
+        df: Dataframe to summarize.
+        columns: Candidate metric columns; missing ones are skipped.
+
+    Returns:
+        List of row dicts with level, metric, mean, sd, cv, min, max.
+    """
+    rows = []
+    for col in columns:
+        if col in df.columns:
+            rows.append({"level": level, "metric": col, **_summarize(df[col])})
+    return rows
+
+
+def _render_population_figure(df: pd.DataFrame, figures_dir: Path, filename: str) -> Optional[str]:
+    """Render a population-state PDF when all required columns are present.
+
+    Args:
+        df: Agent-slice dataframe (current_stress renamed to stress).
+        figures_dir: Directory for the PDF.
+        filename: Output filename.
+
+    Returns:
+        Path to the generated PDF, or None if required columns are missing.
+    """
+    required = ["resilience", "affect", "stress", "pss10"]
+    if not set(required).issubset(df.columns):
+        return None
+    return create_visualization_report(df, str(figures_dir), filename)
+
+
+def export_results_assets(
+    model_csv: Union[str, Path],
+    agent_csv: Union[str, Path],
+    output_dir: Union[str, Path] = "data/output",
+    figures_dir: Union[str, Path] = "docs/figures",
+) -> Dict[str, str]:
+    """Export article-ready figures and summary stats from stage-7 exports.
+
+    Renders the initial-population, final-population, and time-series figures
+    and writes stage7_results_stats.csv (tidy long format with levels
+    population, agent_step, final_day, and correlation rows).
+
+    Args:
+        model_csv: Path to the stage-7 model-level CSV (simulate.py export).
+        agent_csv: Path to the stage-7 agent-level CSV (simulate.py export).
+        output_dir: Directory for the stats CSV (created if missing).
+        figures_dir: Directory for rendered PDF figures (created if missing).
+
+    Returns:
+        Dict mapping asset names to output paths (empty string when a figure
+        could not be rendered because its required columns were absent).
+    """
+    model_df = pd.read_csv(model_csv)
+    agent_df = pd.read_csv(agent_csv)
+    out = Path(output_dir)
+    figs = Path(figures_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    figs.mkdir(parents=True, exist_ok=True)
+
+    step_col = "Step"
+    first_step = int(agent_df[step_col].min())
+    last_step = int(agent_df[step_col].max())
+    rename_map = {"current_stress": "stress"}
+    initial_fig = _render_population_figure(
+        agent_df[agent_df[step_col] == first_step].rename(columns=rename_map),
+        figs,
+        FIGURE_FILENAMES["initial_population"],
+    )
+    final_fig = _render_population_figure(
+        agent_df[agent_df[step_col] == last_step].rename(columns=rename_map),
+        figs,
+        FIGURE_FILENAMES["final_population"],
+    )
+    ts_required = ["avg_pss10", "avg_stress", "avg_resilience", "avg_affect"]
+    ts_fig = (
+        create_time_series_visualization(model_df, str(figs), FIGURE_FILENAMES["time_series"])
+        if set(ts_required).issubset(model_df.columns)
+        else None
+    )
+
+    rows = _stats_rows("population", model_df, MODEL_STAT_COLUMNS)
+    rows += _stats_rows("agent_step", agent_df, AGENT_STAT_COLUMNS)
+    rows += _stats_rows("final_day", agent_df[agent_df[step_col] == last_step], AGENT_STAT_COLUMNS)
+    if {"pss10", "current_stress"}.issubset(agent_df.columns):
+        for label, step in (("pss10_stress_initial", first_step), ("pss10_stress_final", last_step)):
+            slice_df = agent_df[agent_df[step_col] == step]
+            r = float(slice_df["pss10"].corr(slice_df["current_stress"]))
+            rows.append(
+                {
+                    "level": "correlation",
+                    "metric": label,
+                    "mean": r,
+                    "sd": float("nan"),
+                    "cv": float("nan"),
+                    "min": float("nan"),
+                    "max": float("nan"),
+                }
+            )
+
+    stats_csv = out / "stage7_results_stats.csv"
+    pd.DataFrame(rows, columns=["level", "metric", "mean", "sd", "cv", "min", "max"]).to_csv(stats_csv, index=False)
+
+    return {
+        "initial_population": str(initial_fig) if initial_fig else "",
+        "final_population": str(final_fig) if final_fig else "",
+        "time_series": str(ts_fig) if ts_fig else "",
+        "stats_csv": str(stats_csv),
+    }
+
+
 def run_cumulative_demo(
     agents: int = DEFAULT_AGENTS,
     days: int = DEFAULT_DAYS,
     seed: int = DEFAULT_SEED,
     output_dir: str = "data/output",
+    figures_dir: str = "docs/figures",
 ) -> Path:
     """Run all 7 stages and export results to output_dir.
 
@@ -499,6 +664,7 @@ def run_cumulative_demo(
         days: Simulation length in days.
         seed: RNG seed shared across stages.
         output_dir: Output directory (created if missing).
+        figures_dir: Directory for stage-7 figures and stats (created if missing).
 
     Returns:
         Path of the output directory.
@@ -506,10 +672,12 @@ def run_cumulative_demo(
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, Any]] = []
+    model_csv: Optional[Path] = None
+    agent_csv: Optional[Path] = None
 
     for stage in STAGES:
         if stage["id"] == 7:
-            model_csv, _agent_csv = run_stage7(out, agents, days, seed)
+            model_csv, agent_csv = run_stage7(out, agents, days, seed)
             rows.append(compute_stage7_row(model_csv, agents, days, stage))
         else:
             run = run_stage(stage["id"], agents, days, seed)
@@ -524,6 +692,8 @@ def run_cumulative_demo(
         "stages": [{"id": s["id"], "name": s["name"], "blocks_active": s["blocks_active"]} for s in STAGES],
     }
     (out / "cumulative_blocks.json").write_text(json.dumps(metadata, indent=2))
+    if model_csv is not None and agent_csv is not None:
+        export_results_assets(model_csv, agent_csv, str(out), figures_dir)
     return out
 
 
@@ -536,8 +706,9 @@ def main(argv: Optional[list] = None) -> int:
     parser.add_argument("--days", type=int, default=DEFAULT_DAYS, help="simulation length in days")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="RNG seed shared across stages")
     parser.add_argument("--output-dir", default="data/output", help="output directory")
+    parser.add_argument("--figures-dir", default="docs/figures", help="figure and stats directory")
     args = parser.parse_args(argv)
-    out = run_cumulative_demo(args.agents, args.days, args.seed, args.output_dir)
+    out = run_cumulative_demo(args.agents, args.days, args.seed, args.output_dir, args.figures_dir)
     print(f"Cumulative block demo written to {out}")
     return 0
 

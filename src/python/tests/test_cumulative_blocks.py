@@ -174,7 +174,7 @@ class TestRunCumulativeDemo:
     """End-to-end runner writes all expected outputs."""
 
     def test_writes_all_outputs(self, tmp_path, monkeypatch):
-        """run_cumulative_demo writes metrics CSV, per-stage summaries, JSON."""
+        """run_cumulative_demo writes metrics CSV, per-stage summaries, JSON, and figures."""
         out = tmp_path
         # Fake stage 7 outputs (subprocess is mocked)
         pd.DataFrame(
@@ -194,14 +194,28 @@ class TestRunCumulativeDemo:
                 "daily_social_support_rate": [0.3, 0.31],
             }
         ).to_csv(out / "stage7_model.csv", index=False)
-        (out / "stage7_agent.csv").write_text("AgentID,Step,pss10\n")
+        pd.DataFrame(
+            {
+                "Step": [1, 1, 1, 2, 2, 2],
+                "AgentID": [1, 2, 3, 1, 2, 3],
+                "pss10": [10.0, 20.0, 30.0, 11.0, 21.0, 31.0],
+                "resilience": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                "affect": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                "resources": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                "current_stress": [0.1, 0.1, 0.1, 0.2, 0.2, 0.2],
+                "stress_controllability": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+                "stress_overload": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+                "consecutive_hindrances": [1.0, 1.0, 1.0, 2.0, 2.0, 2.0],
+            }
+        ).to_csv(out / "stage7_agent.csv", index=False)
 
         monkeypatch.setattr(
             "src.python.demos.cumulative_blocks.subprocess.run",
             lambda *a, **k: None,
         )
 
-        result = run_cumulative_demo(agents=8, days=3, seed=42, output_dir=str(out))
+        figs = tmp_path / "figures"
+        result = run_cumulative_demo(agents=8, days=3, seed=42, output_dir=str(out), figures_dir=str(figs))
 
         assert result == out
         metrics_csv = out / "cumulative_stages_metrics.csv"
@@ -215,3 +229,11 @@ class TestRunCumulativeDemo:
         meta = json.loads((out / "cumulative_blocks.json").read_text())
         assert meta["seed"] == 42
         assert len(meta["stages"]) == 7
+        # Stage-7 article assets
+        assert (out / "stage7_results_stats.csv").exists()
+        for name in (
+            "full_model_initial_population.pdf",
+            "full_model_final_population.pdf",
+            "full_model_time_series.pdf",
+        ):
+            assert (figs / name).exists()
