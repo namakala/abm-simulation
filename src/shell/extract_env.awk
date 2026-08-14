@@ -110,6 +110,10 @@ in_call == 1 {
 {
     s = $0
 
+    # Skip Python function definitions (e.g. `def _env_float(key: str, ...):`)
+    # so the signature is not misparsed as a config call.
+    if (match(s, /^[ 	]*def[ 	]+/)) next
+
     # Pattern 1 & 2: self._get_env_value / self._get_env_array
     if (match(s, /\.[ \t]*_get_env_(value|array)\(/)) {
         rest = substr(s, RSTART + RLENGTH - 1)  # rest from '('

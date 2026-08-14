@@ -30,7 +30,7 @@ jobs:
       - name: Run fast tests
         env:
           DOTENV_FILE: .env.example
-        run: pixi run test
+        run: pixi run test-cov
 
   test-config:
     runs-on: ubuntu-latest

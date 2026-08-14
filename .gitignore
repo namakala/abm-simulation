@@ -16,6 +16,7 @@ src/python/demos/_site/
 .env.production
 .env.*
 !.env.example
+!.env.empty
 
 # Python
 __pycache__/
@@ -97,6 +98,7 @@ vendor/
 target/
 *.pyc
 *.env*
+!.env.empty
 **/.archive/**
 !**/.archive/.gitkeep
 matplotlib-*/

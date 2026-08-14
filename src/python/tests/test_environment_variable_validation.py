@@ -11,6 +11,48 @@ from src.python.affect_utils import InteractionConfig, ProtectiveFactors, Resour
 from src.python.stress_utils import AppraisalWeights, ThresholdParams
 
 
+class TestEnvIsolation:
+    """complete_env_isolation must not leak a stale local .env into tests."""
+
+    @pytest.mark.config
+    def test_env_isolation_blocks_stale_dotenv(self, tmp_path, monkeypatch):
+        """Env isolation must not read a stale .env when DOTENV_FILE is unset.
+
+        Regression: complete_env_isolation clears os.environ (including
+        DOTENV_FILE), then reload_config() falls back to reading the real
+        `.env`. A stale local `.env` with ASSUMPTION_BUFFERING_A_COEFFICIENT=-0.015
+        leaked into get_assumptions(), failing the env-consistency test on
+        developer machines (CI has no .env, so it only failed locally).
+
+        This mirrors the fixture's SETUP steps: clear env, set explicit
+        defaults, then reload config + assumptions.
+        """
+        import os
+
+        from src.python.assumption_config import reload_assumptions, get_assumptions
+        from src.python.config import reload_config
+
+        # Hostile local .env with a stale value that diverges from code default
+        (tmp_path / ".env").write_text("ASSUMPTION_BUFFERING_A_COEFFICIENT=-0.015\n")
+        monkeypatch.chdir(tmp_path)
+
+        # Mirror complete_env_isolation SETUP
+        current_env = dict(os.environ)
+        os.environ.clear()
+        os.environ["DOTENV_FILE"] = ".env.empty"  # pin: never read the real .env
+        os.environ["APPRAISAL_GAMMA"] = "3.0"
+        os.environ["ASSUMPTION_STRESS_DECAY_RATE"] = "0.08"
+        os.environ["ASSUMPTION_PF_ALLOCATION_FRACTION"] = "0.05"
+        try:
+            reload_config()
+            reload_assumptions()
+            # Stale .env must NOT leak: value must be the code default -0.008
+            assert get_assumptions().resource.buffering_a_coefficient == -0.008
+        finally:
+            os.environ.clear()
+            os.environ.update(current_env)
+
+
 class TestDataclassEnvironmentVariableUsage:
     """Test dataclass integration with environment variables."""
 

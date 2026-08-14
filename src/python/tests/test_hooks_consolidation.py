@@ -58,3 +58,43 @@ def test_prettify_not_in_ci_workflow():
     """CI workflow must not reference prettify task."""
     workflow = (PROJECT_ROOT / ".github" / "workflows" / "coverage-test.yml").read_text()
     assert "prettify" not in workflow, "CI workflow must not call prettify"
+
+
+def test_fast_tests_job_excludes_slow():
+    """The 'Fast Tests (not slow)' job must use test-cov, not plain `test`.
+
+    Regression: test-pr.yml ran `pixi run test`, which does not exclude slow
+    tests (pytest.ini addopts only adds `-m "not config"`). The job name claims
+    to skip slow tests but actually ran them, diverging from pre-push/pre-commit
+    hooks and the coverage job, which all use `pixi run test-cov`.
+    """
+    workflow = (PROJECT_ROOT / ".github" / "workflows" / "test-pr.yml").read_text()
+    fast_block = workflow.split("name: Fast Tests (not slow)")[1]
+    fast_step = fast_block.split("run:")[1].splitlines()[0].strip()
+    assert "pixi run test-cov" in fast_step, f"Fast Tests job must run test-cov, got: {fast_step}"
+
+
+def test_correlation_validation_tests_marked_slow():
+    """Correlation validation tests must be marked slow.
+
+    Regression: test_correlation_validation.py runs 20 full-simulation tests
+    (~23 min) but had no `slow` marker, so it executed in every fast suite run
+    (CI fast jobs, pre-push, pre-commit), inflating runtime to ~40 min.
+    """
+    test_file = PROJECT_ROOT / "src" / "python" / "tests" / "test_correlation_validation.py"
+    src = test_file.read_text()
+    assert "pytestmark" in src, "module must declare pytestmark"
+    assert "mark.slow" in src, "pytestmark must include the slow marker"
+
+
+def test_pixi_test_task_excludes_slow():
+    """The `test` task must exclude slow tests.
+
+    Regression: `pixi run test` was plain `pytest src/python/tests`, which only
+    inherited `-m "not config"` from pytest.ini addopts — so slow tests (incl.
+    the 23-min correlation file) still ran, making the fast suite ~40 min.
+    """
+    config = read_pixi_toml()
+    tasks = config.get("tasks", config.get("task", {}))
+    test_cmd = tasks.get("test", "")
+    assert "not slow" in test_cmd, f"test task must exclude slow tests, got: {test_cmd}"

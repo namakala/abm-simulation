@@ -285,6 +285,11 @@ def complete_env_isolation():
     current_env = dict(os.environ)
     os.environ.clear()
 
+    # Pin DOTENV_FILE to the repo's empty env file so reload_config() never
+    # falls back to a developer's local .env (which may carry stale values
+    # that diverge from code defaults and leak into get_assumptions()).
+    os.environ["DOTENV_FILE"] = ".env.empty"
+
     # Set explicit defaults for Fix 3/4 to prevent env-var pollution
     os.environ["APPRAISAL_GAMMA"] = "3.0"
     os.environ["ASSUMPTION_STRESS_DECAY_RATE"] = "0.08"

@@ -53,6 +53,10 @@ sys.path.append(".")
 
 from src.python.model import StressModel
 
+# Each test runs multiple full simulations (N=200, T=100, 3+ seeds). The suite
+# takes ~23 min and must not run in fast CI jobs or git hooks.
+pytestmark = pytest.mark.slow
+
 
 class TestTheoreticalCorrelationsAgentLevel:
     """Test theoretical correlations at the agent level."""

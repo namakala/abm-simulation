@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [tasks]
 simulate = "python simulate.py"
-test = "python -m pytest src/python/tests"
+test = "python -m pytest src/python/tests -m 'not slow and not config'"
 test-cov = "python -m pytest src/python/tests --cov=src/python --cov-report=html --cov-fail-under=85 -m 'not slow and not config'"
 test-unit = "python -m pytest src/python/tests -m unit"
 test-integration = "python -m pytest src/python/tests -m integration"

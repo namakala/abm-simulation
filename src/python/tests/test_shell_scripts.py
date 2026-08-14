@@ -104,6 +104,21 @@ class TestExtractEnvAwk:
         output = _run_awk(SHELL_DIR / "extract_env.awk", str(f))
         assert output.strip() == ""
 
+    def test_skip_function_definition_signature(self, tmp_path):
+        """The `def _env_float(...)` signature must not be emitted as KEY=default.
+
+        Regression: extract_env.awk matched `_env_float(` inside the function
+        definition `def _env_float(key: str, default: float) -> float:` and
+        emitted the junk line `key: str=default: float` into .env.example.
+        """
+        snippet = "def _env_float(key: str, default: float) -> float:\n    return 0.0\n"
+        f = tmp_path / "assumption_def.py"
+        f.write_text(snippet)
+
+        output = _run_awk(SHELL_DIR / "extract_env.awk", str(f))
+        assert "key: str" not in output
+        assert output.strip() == ""
+
 
 # ── parameterize_env.sh ────────────────────────────────────────────
 
