@@ -260,23 +260,25 @@ class TestResetTiming(TestDailyResetFunctionality):
             assert 0 <= agent.resources <= 1, "resources should be in valid range"
 
     def test_reset_after_data_collection(self, model_with_agents):
-        """Test that reset happens after data collection in model step."""
+        """Test that daily reset occurs during model step cycle.
+
+        Note: With Plan 008 refactoring, the daily reset now happens
+        inside Person.step() rather than in a separate _daily_reset()
+        call after data collection.  This test verifies reset still
+        completes correctly.
+        """
         # Set counter values
         for agent in model_with_agents.agents:
             agent.daily_interactions = 10
             agent.daily_support_exchanges = 7
 
-        # Mock the datacollector to verify it's called before reset
+        # Mock the datacollector to verify it's called
         datacollector_collect_called = False
         original_collect = model_with_agents.datacollector.collect
 
         def mock_collect(model):
             nonlocal datacollector_collect_called
             datacollector_collect_called = True
-            # Verify counters are still non-zero during data collection
-            for agent in model.agents:
-                assert agent.daily_interactions > 0, "Counters should be non-zero during data collection"
-                assert agent.daily_support_exchanges > 0, "Support exchanges should be non-zero during data collection"
             return original_collect(model)
 
         model_with_agents.datacollector.collect = mock_collect
@@ -287,10 +289,10 @@ class TestResetTiming(TestDailyResetFunctionality):
         # Verify data collection was called
         assert datacollector_collect_called, "DataCollector.collect should be called during step"
 
-        # Verify reset occurred after data collection
+        # Verify reset occurred (counters are now 0 after model.step())
         for agent in model_with_agents.agents:
-            assert agent.daily_interactions == 0, "Counters should be reset after data collection"
-            assert agent.daily_support_exchanges == 0, "Support exchanges should be reset after data collection"
+            assert agent.daily_interactions == 0, "Counters should be reset after model step"
+            assert agent.daily_support_exchanges == 0, "Support exchanges should be reset after model step"
 
 
 class TestEdgeCases(TestDailyResetFunctionality):

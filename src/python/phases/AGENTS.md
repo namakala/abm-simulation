@@ -60,7 +60,7 @@ over time.
 
 ## Calling Contexts
 
-- **Event-driven**: invoked inside `Person.stressful_event()` or `Person.interact()`.
+- **Event-driven**: invoked inside `Person.step()` or `Person.interact()`.
   The phase receives the current agent state and returns a delta to apply.
 - **Daily**: invoked at end of `Person.step()` or as a batch over all agents
   in `StressModel.step()`.  Handles resource regeneration and stress decay.

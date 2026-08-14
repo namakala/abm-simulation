@@ -1,0 +1,46 @@
+name: Test PR
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-typecheck:
+    runs-on: ubuntu-latest
+    name: Lint & Typecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0
+        with:
+          activate-environment: true
+      - name: Run lint and typecheck
+        env:
+          DOTENV_FILE: .env.example
+        run: pixi run lint && pixi run type-check
+
+  test-fast:
+    runs-on: ubuntu-latest
+    name: Fast Tests (not slow)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0
+        with:
+          activate-environment: true
+      - name: Run fast tests
+        env:
+          DOTENV_FILE: .env.example
+        run: pixi run test-cov
+
+  test-config:
+    runs-on: ubuntu-latest
+    name: Config Tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0
+        with:
+          activate-environment: true
+      - name: Run config tests
+        env:
+          DOTENV_FILE: .env.example
+        run: pixi run test-config

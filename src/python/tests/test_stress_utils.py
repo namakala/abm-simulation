@@ -18,6 +18,8 @@ from src.python.stress_utils import (
     create_pss10_mapping,
     map_agent_stress_to_pss10,
     compute_pss10_score,
+    compute_stress_from_dimensions,
+    generate_pss10_item_response,
     interpret_pss10_score,
     PSS10Item,
     sigmoid,
@@ -90,15 +92,15 @@ class TestStressAppraisal:
         event_max_challenge = StressEvent(1.0, 0.0)
         challenge, hindrance = apply_weights(event_max_challenge)
 
-        assert challenge > 0.99  # Should be very close to 1.0
-        assert hindrance < 0.01  # Should be very close to 0.0
+        assert challenge > 0.90  # Very high challenge (gamma=3: 0.953)
+        assert hindrance < 0.10  # Very low hindrance
 
         # Case 2: Maximum hindrance scenario
         event_max_hindrance = StressEvent(0.0, 1.0)
         challenge, hindrance = apply_weights(event_max_hindrance)
 
-        assert challenge < 0.01  # Should be very close to 0.0
-        assert hindrance > 0.99  # Should be very close to 1.0
+        assert challenge < 0.10  # Very low challenge
+        assert hindrance > 0.90  # Very high hindrance (gamma=3: 0.953)
 
     def test_sigmoid_function(self):
         """Test the sigmoid function used in challenge/hindrance mapping."""
@@ -382,3 +384,120 @@ class TestPSS10Mapping:
         assert interpretation in ["Low stress", "Moderate stress", "High stress"]
         assert len(responses) == 10
         assert all(0 <= response <= 4 for response in responses.values())
+
+
+class TestPSS10ConfigDefaults:
+    """Test PSS-10 config defaults produce distribution near target."""
+
+    _LIU_MEANS = [1.43, 1.38, 1.51, 1.31, 1.50, 1.40, 1.43, 1.60, 1.14, 1.31]
+    _LIU_SDS = [0.89, 0.89, 0.93, 0.92, 0.80, 0.78, 0.78, 0.88, 0.91, 0.93]
+
+    def test_scaled_item_means_sum_to_14(self):
+        """Test that scaled item means sum to approximately 14."""
+        rng = np.random.default_rng(42)
+        from src.python.stress_utils import initialize_pss10_from_items
+
+        config = {
+            "item_means": self._LIU_MEANS,
+            "item_sds": self._LIU_SDS,
+            "threshold": 27,
+            "pss10_noise_sd": 3.5,
+            "pss10_skew_a": 3.0,
+        }
+        scores = []
+        for _ in range(500):
+            data = initialize_pss10_from_items(rng=rng, config=config)
+            scores.append(data["pss10_score"])
+
+        mean_score = float(np.mean(scores))
+        assert 12.0 <= mean_score <= 18.0, f"PSS-10 mean {mean_score:.2f} outside [12, 18]"
+
+    def test_scaled_item_sd_near_target(self):
+        """Test that PSS-10 SD is near [6, 8] with default params."""
+        rng = np.random.default_rng(42)
+        from src.python.stress_utils import initialize_pss10_from_items
+
+        config = {
+            "item_means": self._LIU_MEANS,
+            "item_sds": self._LIU_SDS,
+            "threshold": 27,
+            "pss10_noise_sd": 3.5,
+            "pss10_skew_a": 3.0,
+        }
+        scores = []
+        for _ in range(500):
+            data = initialize_pss10_from_items(rng=rng, config=config)
+            scores.append(data["pss10_score"])
+
+        std_score = float(np.std(scores))
+        assert 4.0 <= std_score <= 10.0, f"PSS-10 std {std_score:.2f} outside [4, 10]"
+
+
+class TestPSS10Skewnorm:
+    """Test PSS-10 item generation accepts skew parameter (API compat)."""
+
+    def test_generate_pss10_item_response_accepts_skew_param(self):
+        """Test that generate_pss10_item_response accepts pss10_skew_a parameter."""
+        rng = np.random.default_rng(42)
+
+        response = generate_pss10_item_response(
+            item_mean=2.0,
+            item_sd=0.9,
+            controllability_loading=0.0,
+            overload_loading=0.0,
+            controllability_score=0.5,
+            overload_score=0.5,
+            pss10_scale=3.5,
+            pss10_noise_sd=2.0,
+            pss10_skew_a=3.0,
+            rng=rng,
+        )
+        assert 0 <= response <= 4, f"Response {response} out of range [0,4]"
+
+    def test_generate_pss10_item_response_skew_produces_valid_range(self):
+        """Test that skew > 0 still produces valid responses in [0,4]."""
+        rng = np.random.default_rng(42)
+
+        responses = []
+        for _ in range(200):
+            resp = generate_pss10_item_response(
+                item_mean=2.0,
+                item_sd=0.9,
+                controllability_loading=0.0,
+                overload_loading=0.0,
+                controllability_score=0.5,
+                overload_score=0.5,
+                pss10_scale=3.5,
+                pss10_noise_sd=2.0,
+                pss10_skew_a=3.0,
+                rng=rng,
+            )
+            assert 0 <= resp <= 4, f"Response {resp} out of range [0,4]"
+            responses.append(resp)
+
+        mean_resp = float(np.mean(responses))
+        assert 0.0 <= mean_resp <= 4.0, f"Mean response {mean_resp:.2f} outside [0,4]"
+
+
+class TestStressFromPSS10:
+    """Test compute_stress_from_dimensions with dampening."""
+
+    def test_dampening_default_is_unchanged(self):
+        """dampening=1.0 with default modulation (resources=0.5 buffers)."""
+        stress = compute_stress_from_dimensions(0.3, 0.7)
+        # With stress_resource_coupling=0.10, resources=0.5: buffer=0.05
+        # modulated_c=0.35, modulated_o=0.65
+        # stress = (0.65 + 1.0 - 0.35) / 2.0 = 0.65
+        assert stress == pytest.approx(0.65)
+
+    def test_dampening_reduces_stress_level(self):
+        """dampening=0.5 halves the modulated stress level."""
+        stress = compute_stress_from_dimensions(0.3, 0.7, dampening=0.5)
+        assert stress == pytest.approx(0.325)
+
+    def test_dampening_clamps_to_01(self):
+        """Result is always clamped to [0, 1]."""
+        stress = compute_stress_from_dimensions(0.0, 1.0, dampening=2.0)
+        assert stress == 1.0
+        stress = compute_stress_from_dimensions(1.0, 0.0, dampening=0.0)
+        assert stress == 0.0

@@ -1,0 +1,74 @@
+---
+title: "Agent-Level Correlation Analysis"
+format: html
+---
+
+## What This Code Does
+
+This demo runs a full simulation (30 agents, 100 days) and extracts agent-level data from the final epoch. It computes a Pearson correlation matrix across key agent variables: PSS-10, resilience, affect, resources, current stress, stress controllability, and stress overload.
+
+The goal is to reveal how these variables co-vary at the individual agent level after the simulation has stabilised.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+demos_dir = pathlib.Path(os.getcwd())
+project_root = demos_dir.parents[2]
+sys.path.insert(0, str(project_root))
+
+from src.python.model import StressModel
+```
+
+## Simulation
+
+```{python}
+#| label: simulate
+days, agents, seed = 100, 30, 42
+print(f"Running simulation with {agents} agents for {days} days (seed={seed})...")
+model = StressModel(N=agents, max_days=days, seed=seed)
+while model.running:
+    model.step()
+
+agent_data = model.get_agent_time_series_data()
+final_step = agent_data["Step"].max()
+final_epoch = agent_data[agent_data["Step"] == final_step].copy()
+print(f"Simulation done. Final epoch data: {final_epoch.shape}")
+```
+
+## Correlation Matrix
+
+```{python}
+#| label: corr
+vars_of_interest = ["pss10", "resilience", "affect", "resources", "current_stress", "stress_controllability", "stress_overload"]
+available = [v for v in vars_of_interest if v in final_epoch.columns]
+print(f"Analyzing: {available}")
+
+corr = final_epoch[available].corr(method="pearson")
+print(corr.to_string(float_format="%.4f"))
+```
+
+## Interpretation
+
+```{python}
+#| label: interpret
+for i, v1 in enumerate(available):
+    for j, v2 in enumerate(available):
+        if i < j:
+            r = corr.loc[v1, v2]
+            strength = "Strong" if abs(r) > 0.7 else "Moderate" if abs(r) > 0.3 else "Weak"
+            direction = "positive" if r > 0 else "negative"
+            print(f"{v1} ↔ {v2}: {strength} {direction} (r={r:.4f})")
+```
+
+## Why This Matters for the Simulation
+
+Agent-level correlations reveal the internal consistency of the model. For instance, if resilience and PSS-10 show a strong negative correlation, the model correctly captures the protective role of resilience against perceived stress. These diagnostics validate that agent-level mechanisms produce theoretically expected covariance patterns.

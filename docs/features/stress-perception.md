@@ -159,7 +159,7 @@ Agents maintain comprehensive PSS-10 state for tracking perceived stress and ena
 
 **Validated Correlation Ranges:**
 - PSS-10 ↔ Current Stress: $r \in [0.2, 0.9]$ (positive correlation)
-- PSS-10 ↔ Resilience: $r \in [-1.0, 0.5]$ (negative to weak correlation)
+- PSS-10 ↔ Resilience: $r pprox -0.57$ [Thomas & Zolkoski 2020]
 - PSS-10 ↔ Affect: $r \in [-0.3, 0.3]$ (weak correlation)
 - PSS-10 ↔ Resources: $r \in [-0.5, 0.5]$ (variable correlation)
 

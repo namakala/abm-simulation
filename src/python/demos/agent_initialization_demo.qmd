@@ -1,0 +1,107 @@
+---
+title: "Agent Initialization — Realistic Variation"
+format: html
+---
+
+## What This Code Does
+
+This demo creates a cohort of agents using the model's `Person` class and analyses their initial attribute distributions. It validates that agents exhibit realistic variation (not all identical), values are properly clamped to valid ranges, and different configuration settings produce expected distribution shapes.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+demos_dir = pathlib.Path(os.getcwd())
+project_root = demos_dir.parents[2]
+sys.path.insert(0, str(project_root))
+
+from src.python.agent import Person
+```
+
+## Helper Classes
+
+```{python}
+#| label: mock
+class MockGrid:
+    def get_neighbors(self, pos, include_center=False):
+        return []
+
+class MockModel:
+    def __init__(self, seed=None):
+        self.seed = seed
+        self.grid = MockGrid()
+        self.agents = []
+        self.rng = np.random.default_rng(seed)
+    def register_agent(self, agent):
+        self.agents.append(agent)
+```
+
+## Generate Agents
+
+```{python}
+#| label: generate
+config = {
+    "initial_resilience_mean": 0.6, "initial_resilience_sd": 0.15,
+    "initial_affect_mean": 0.1, "initial_affect_sd": 0.25,
+    "initial_resources_mean": 0.7, "initial_resources_sd": 0.12,
+    "stress_probability": 0.4, "coping_success_rate": 0.5, "subevents_per_day": 3,
+}
+
+agents = []
+for i in range(100):
+    model = MockModel(seed=1000 + i)
+    agent = Person(model, config)
+    agents.append(agent)
+print(f"Generated {len(agents)} agents")
+```
+
+## Distribution Analysis
+
+```{python}
+#| label: distributions
+resilience = [a.resilience for a in agents]
+affect = [a.affect for a in agents]
+resources = [a.resources for a in agents]
+pss10 = [a.pss10 for a in agents]
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+axes[0, 0].hist(resilience, bins=20, alpha=0.7, color="#3498db")
+axes[0, 0].set_title(f"Resilience (mean={np.mean(resilience):.3f})")
+axes[0, 1].hist(affect, bins=20, alpha=0.7, color="#e74c3c")
+axes[0, 1].set_title(f"Affect (mean={np.mean(affect):.3f})")
+axes[1, 0].hist(resources, bins=20, alpha=0.7, color="#2ecc71")
+axes[1, 0].set_title(f"Resources (mean={np.mean(resources):.3f})")
+axes[1, 1].hist(pss10, bins=20, alpha=0.7, color="#f39c12")
+axes[1, 1].set_title(f"PSS-10 (mean={np.mean(pss10):.3f})")
+plt.tight_layout()
+plt.show()
+```
+
+## Bounds and Variation Checks
+
+```{python}
+#| label: bounds
+all_res_ok = all(0 <= a.resilience <= 1 for a in agents)
+all_aff_ok = all(-1 <= a.affect <= 1 for a in agents)
+all_resrc_ok = all(0 <= a.resources <= 1 for a in agents)
+print(f"Resilience [0,1]: {all_res_ok}")
+print(f"Affect [-1,1]: {all_aff_ok}")
+print(f"Resources [0,1]: {all_resrc_ok}")
+
+unique_res = len(set(np.round(resilience, 4)))
+unique_aff = len(set(np.round(affect, 4)))
+print(f"Unique resilience values: {unique_res} / {len(agents)}")
+print(f"Unique affect values: {unique_aff} / {len(agents)}")
+```
+
+## Why This Matters for the Simulation
+
+Agent initialization is the foundation of every simulation run. Realistic variation at start ensures emergent population dynamics are meaningful rather than artefacts of identical starting conditions. Bounds enforcement guarantees that all downstream phases receive valid inputs, preventing numerical drift or NaN propagation.

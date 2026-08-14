@@ -1,0 +1,110 @@
+---
+title: "Agent Diversity — Population Statistics and Trajectories"
+format: html
+---
+
+## What This Code Does
+
+This demo creates a diverse agent population and analyses statistical properties including coefficient of variation, skewness, kurtosis, entropy, and Gini coefficients. It generates individual agent trajectories to show how resilience, affect, resources, and stress evolve, and computes correlation matrices across agent attributes using multiple population configurations.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+demos_dir = pathlib.Path(os.getcwd())
+project_root = demos_dir.parents[2]
+sys.path.insert(0, str(project_root))
+
+from src.python.agent import Person
+```
+
+## Mock Model
+
+```{python}
+#| label: mock
+class MockGrid:
+    def __init__(self, w=10, h=10):
+        self.width, self.height = w, h
+    def get_neighbors(self, pos, include_center=False):
+        return []
+
+class MockModel:
+    def __init__(self, seed=None, w=10, h=10):
+        self.grid = MockGrid(w, h)
+        self.agents = []
+        self.rng = np.random.default_rng(seed)
+        self.running = True
+    def register_agent(self, agent):
+        self.agents.append(agent)
+```
+
+## Generate Diverse Population
+
+```{python}
+#| label: generate
+config = {
+    "initial_resilience_mean": 0.6, "initial_resilience_sd": 0.18,
+    "initial_affect_mean": 0.1, "initial_affect_sd": 0.3,
+    "initial_resources_mean": 0.7, "initial_resources_sd": 0.15,
+    "stress_probability": 0.4, "coping_success_rate": 0.55, "subevents_per_day": 3,
+}
+
+n_agents = 200
+agents = []
+for i in range(n_agents):
+    model = MockModel(seed=1000 + i)
+    agent = Person(model, config)
+    agents.append(agent)
+
+resilience = np.array([a.resilience for a in agents])
+affect = np.array([a.affect for a in agents])
+resources = np.array([a.resources for a in agents])
+pss10 = np.array([a.pss10 for a in agents])
+```
+
+## Diversity Metrics
+
+```{python}
+#| label: metrics
+def _entropy(hist):
+    p = hist / hist.sum()
+    p = p[p > 0]
+    return -np.sum(p * np.log(p))
+
+def diversity_metrics(values, name):
+    mean, std = np.mean(values), np.std(values, ddof=1)
+    cv = std / abs(mean) if mean != 0 else 0
+    skew = pd.Series(values).skew()
+    kurt = pd.Series(values).kurtosis()
+    unique = len(set(np.round(values, 4)))
+    hist, _ = np.histogram(values, bins=20)
+    ent = _entropy(hist)
+    print(f"{name}: mean={mean:.3f} sd={std:.3f} cv={cv:.3f} "
+          f"skew={skew:.3f} kurt={kurt:.3f} unique={unique}/{n_agents} entropy={ent:.3f}")
+
+diversity_metrics(resilience, "Resilience")
+diversity_metrics(affect, "Affect")
+diversity_metrics(resources, "Resources")
+diversity_metrics(pss10, "PSS-10")
+```
+
+## Pairwise Correlations
+
+```{python}
+#| label: corr
+df = pd.DataFrame({"resilience": resilience, "affect": affect, "resources": resources, "pss10": pss10})
+print("Correlation matrix:")
+print(df.corr().round(4))
+```
+
+## Why This Matters for the Simulation
+
+Agent diversity is essential for emergent population dynamics. If the agent pool lacks variation, the model cannot capture the heterogeneous responses to stress observed in real populations. Diversity metrics (Gini, entropy, CV, skewness) quantify how well the initialization produces realistic spread, while correlation matrices validate that theoretical relationships between attributes (e.g., resilience ↔ PSS-10) are present from the start.

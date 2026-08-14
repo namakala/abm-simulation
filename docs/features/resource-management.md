@@ -292,10 +292,10 @@ The resource management system includes validated correlations with other agent 
 **Validated Correlation Ranges:**
 - Resources ↔ Current Stress: $r \in [-0.8, 0.1]$ (negative to weak correlation)
 - Resources ↔ Affect: $r \in [-0.2, 0.4]$ (weak correlation)
-- Resources ↔ Resilience: $r \in [-1.0, 1.0]$ (any correlation)
+- Resources ↔ Resilience: $r \in [0.20, 0.63]$ (positive correlation)
 - Resources ↔ PSS-10: $r \in [-0.5, 0.5]$ (variable correlation)
 
-**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) validates these correlation ranges and statistical significance.
+**Implementation**: [`parameter_sweep_correlations.qmd`](../../src/python/demos/parameter_sweep_correlations.qmd) and [`population_correlation_analysis.qmd`](../../src/python/demos/population_correlation_analysis.qmd) validate these correlation ranges and statistical significance.
 
 ### Theoretical Alignment
 

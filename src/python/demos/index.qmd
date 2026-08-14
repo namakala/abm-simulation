@@ -1,0 +1,71 @@
+---
+title: ABM Simulation Demos
+---
+
+## 1. Core Mechanisms — Stress Perception & Appraisal
+
+### [Stress Perception](stress_perception.html)
+Challenge/hindrance appraisal, controllability/overload weights, threshold classification.
+
+### [Resilience Activation](resilience_activation.html)
+Coping outcome dynamics, challenge/hindrance balance, neighbor affect modulation.
+
+## 2. Resource Dynamics & Coping
+
+### [Resource Allocation](resource_allocation.html)
+PF regeneration, softmax allocation, efficacy trajectories under four parameter scenarios.
+
+### [Stress Buffering](stress_buffering.html)
+Baron & Kenny mediation of stress through resources, a/b/c' path coefficients.
+
+## 3. Social Interaction
+
+### [Social Interaction](interaction.html)
+Affect convergence, resource exchange, support detection, negativity bias, five state-machine scenarios.
+
+## 4. Analysis & Diagnostics
+
+### [Agent Correlation Analysis](agent_correlation_analysis.html)
+Correlation matrix of agent-level variables across simulation epochs.
+
+### [Population Correlation Analysis](population_correlation_analysis.html)
+Population-level correlation patterns and stability checks.
+
+### [Parameter Sweep Correlations](parameter_sweep_correlations.html)
+Latin Hypercube sweep to validate correlation stability across parameter space.
+
+## 5. Population & Diversity
+
+### [Population Analysis](population_analysis.html)
+Population variation, distribution statistics, clustering patterns.
+
+### [Agent Initialization](agent_initialization_demo.html)
+Realistic agent variation at initialization, distribution checks, demographic attributes.
+
+### [Agent Diversity](agent_diversity_demo.html)
+Comprehensive diversity stats, trajectory analysis, attribute correlations, network effects.
+
+## 6. Full Simulation & Module Integration
+
+### [Module Isolation Dashboard](module_isolation.html)
+Controlled-input response surfaces for all 5 modules (perception, activation, allocation, buffering, daily cycle) — one page, unified format.
+
+### [Individual Simulation Trace](simulation_individual.html)
+Single-agent 30-day trace with per-event and per-day metrics organized by module. Shows how each module contributes to the agent's trajectory.
+
+### [Population Simulation Ensemble](simulation_population.html)
+50-agent × 30-day ensemble with population aggregates organized by module. Emergent patterns, distributions, network effects.
+
+## 7. Legacy Demos (Referenced but Superceded)
+
+### [Stress Processing Mechanism](stress_processing_mechanism.html)
+Complete stress pipeline: appraisal, coping, resource impact, decay dynamics.
+
+### [Stress Pipeline Debug](stress_pipeline_debug_demo.html)
+Full stress pipeline with PSS-10 correlation debugging, event tracking, diagnostics.
+
+### [Track Daily Stress](track_daily_stress.html)
+Per-agent daily stress tracking, event logs, across-simulation trends.
+
+### [Data Analysis (EDA)](analyze.html)
+Quick exploratory data analysis on model.csv and agent.csv output files.

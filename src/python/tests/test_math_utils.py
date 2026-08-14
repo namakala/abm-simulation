@@ -603,8 +603,9 @@ class TestTransformationFunctions:
         rng = create_rng(42)
 
         result = sigmoid_transform(mean=1.0, std=0.0, rng=rng)
-        # Deterministic output based on mean, no random variance
-        expected = sigmoid(1.0 / 3.0)
+        # Deterministic output based on mean, no random variance.
+        # Steepness is fixed at 6.0, independent of appraisal gamma.
+        expected = sigmoid(1.0 / 3.0, gamma=6.0)
         assert abs(result - expected) < 1e-10
 
         # Mean=0 should give sigmoid(0) = 0.5
@@ -613,8 +614,23 @@ class TestTransformationFunctions:
 
         # Mean=-1 should give sigmoid(-1/3)
         result_neg = sigmoid_transform(mean=-1.0, std=0.0, rng=rng)
-        expected_neg = sigmoid(-1.0 / 3.0)
+        expected_neg = sigmoid(-1.0 / 3.0, gamma=6.0)
         assert abs(result_neg - expected_neg) < 1e-10
+
+    def test_sigmoid_transform_uses_fixed_steepness(self):
+        """Sigmoid steepness is fixed at 6.0, independent of appraisal gamma."""
+        rng_default = create_rng(42)
+        rng_g6 = create_rng(42)
+        rng_g3 = create_rng(42)
+
+        default = sigmoid_transform(mean=0.5, std=0.2, rng=rng_default)
+        with_g6 = sigmoid_transform(mean=0.5, std=0.2, rng=rng_g6, gamma=6.0)
+        with_g3 = sigmoid_transform(mean=0.5, std=0.2, rng=rng_g3, gamma=3.0)
+
+        # Default steepness must equal the explicit gamma=6.0 output
+        assert default == pytest.approx(with_g6)
+        # And must differ from the appraisal gamma (3.0) output
+        assert default != pytest.approx(with_g3)
 
     def test_sigmoid_transform_extreme_parameters(self):
         """Test sigmoid transformation with extreme parameter values."""
@@ -772,9 +788,10 @@ class TestTransformationFunctions:
         result_tanh = tanh_transform(mean=1.0, std=0.0, rng=rng)
         result_sigmoid = sigmoid_transform(mean=1.0, std=0.0, rng=rng)
 
-        # Deterministic output based on mean, no random variance
+        # Deterministic output based on mean, no random variance.
+        # Sigmoid steepness is fixed at 6.0, independent of appraisal gamma.
         expected_tanh = np.tanh(1.0 / 3.0)
-        expected_sigmoid = sigmoid(1.0 / 3.0)
+        expected_sigmoid = sigmoid(1.0 / 3.0, gamma=6.0)
         assert abs(result_tanh - expected_tanh) < 1e-10
         assert abs(result_sigmoid - expected_sigmoid) < 1e-10
 

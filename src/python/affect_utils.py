@@ -14,6 +14,7 @@ from typing import List, Optional, Dict
 from dataclasses import dataclass, field
 
 from src.python.config import get_config
+from src.python.assumption_config import get_assumptions
 from src.python.math_utils import clamp
 from src.python.resource_utils import ResourceOptimizationConfig
 from src.python.stress_utils import compute_event_difficulty
@@ -62,8 +63,11 @@ class AffectDynamicsConfig:
     event_appraisal_rate: float = field(
         default_factory=lambda: get_config().get("affect_dynamics", "event_appraisal_rate")
     )
-    homeostatic_rate: float = field(default_factory=lambda: get_config().get("affect_dynamics", "homeostatic_rate"))
+    homeostatic_rate: float = field(default_factory=lambda: get_assumptions().stress.affect_homeostatic_rate)
     influencing_neighbors: int = field(default_factory=lambda: get_config().get("influence", "influencing_neighbors"))
+    stress_erosion_rate: float = field(
+        default_factory=lambda: get_config().get("pss10", "stress_erosion_rate")
+    )  # Mechanism coefficient: max stress erodes affect by up to 0.15
 
 
 @dataclass
@@ -80,6 +84,7 @@ class ResilienceDynamicsConfig:
         default_factory=lambda: get_config().get("resilience_dynamics", "overload_threshold")
     )
     influencing_hindrance: int = field(default_factory=lambda: get_config().get("influence", "influencing_hindrance"))
+    homeostatic_rate: float = field(default_factory=lambda: get_assumptions().stress.resilience_homeostatic_rate)
 
 
 def compute_social_influence(
@@ -233,11 +238,10 @@ def compute_stress_impact_on_affect(
         Affect change
     """
     if config is None:
-        # Get fresh config instance to avoid global config issues
-        cfg = get_config()
+        a = get_assumptions()
         config = {
-            "coping_improvement": cfg.get("agent", "coping_success_rate") * 0.2,  # Scale based on success rate
-            "coping_deterioration": cfg.get("agent", "coping_success_rate") * 0.4,  # Scale based on success rate
+            "coping_improvement": a.coping.affect_improvement_scale,  # 0.2
+            "coping_deterioration": a.coping.affect_deterioration_scale,  # 0.4
             "no_stress_effect": 0.0,  # No change if not stressed
         }
 
@@ -288,11 +292,10 @@ def compute_stress_impact_on_resilience(
         Resilience change
     """
     if config is None:
-        # Get fresh config instance to avoid global config issues
-        cfg = get_config()
+        a = get_assumptions()
         config = {
-            "coping_improvement": cfg.get("agent", "coping_success_rate") * 0.1,  # Scale based on success rate
-            "coping_deterioration": cfg.get("agent", "coping_success_rate") * 0.2,  # Scale based on success rate
+            "coping_improvement": a.coping.resilience_improvement_scale,  # 0.1
+            "coping_deterioration": a.coping.resilience_deterioration_scale,  # 0.2
             "no_stress_effect": 0.0,  # No change if not stressed
         }
 
@@ -418,10 +421,10 @@ class StressProcessingConfig:
     social_influence_factor: float = field(default_factory=lambda: get_config().get("coping", "social_influence"))
     challenge_bonus: float = field(default_factory=lambda: get_config().get("coping", "challenge_bonus"))
     hindrance_penalty: float = field(default_factory=lambda: get_config().get("coping", "hindrance_penalty"))
-    daily_decay_rate: float = field(default_factory=lambda: get_config().get("affect_dynamics", "homeostatic_rate"))
-    stress_decay_rate: float = field(
-        default_factory=lambda: get_config().get("resilience_dynamics", "homeostatic_rate")
-    )
+    daily_decay_rate: float = field(default_factory=lambda: get_assumptions().stress.affect_homeostatic_rate)
+    # Fix: was mapped to resilience_homeostatic_rate (0.35) — too aggressive.
+    # Now correctly uses the dedicated stress_decay_rate (0.10).
+    stress_decay_rate: float = field(default_factory=lambda: get_assumptions().stress.stress_decay_rate)
 
 
 def compute_coping_probability(
@@ -429,6 +432,8 @@ def compute_coping_probability(
     hindrance: float,
     neighbor_affects: List[float],
     current_resilience: float = 0.5,
+    social_support_efficacy: float = 0.5,
+    support_boost: float = 0.0,
     config: Optional[StressProcessingConfig] = None,
 ) -> float:
     """
@@ -437,12 +442,16 @@ def compute_coping_probability(
     Challenge increases coping probability, hindrance decreases it.
     Positive neighbor affects increase probability, negative decrease it.
     Higher resilience increases coping probability.
+    Higher social support efficacy increases coping probability.
+    Higher support_boost (within-day from recent support exchange) increases it.
 
     Args:
         challenge: Challenge component from event appraisal (0-1)
         hindrance: Hindrance component from event appraisal (0-1)
         neighbor_affects: List of neighbor affect values
         current_resilience: Agent's current resilience level (0-1)
+        social_support_efficacy: Agent's social_support protective factor (0-1)
+        support_boost: Within-day boost from recent support exchange (0-1)
         config: Stress processing configuration
 
     Returns:
@@ -450,6 +459,8 @@ def compute_coping_probability(
     """
     if config is None:
         config = StressProcessingConfig()
+
+    a = get_assumptions()
 
     # Base probability from configuration
     base_prob = config.base_coping_probability
@@ -465,10 +476,23 @@ def compute_coping_probability(
         social_effect = config.social_influence_factor * avg_neighbor_affect
 
     # Resilience boosts coping ability
-    resilience_effect = 0.4 * current_resilience
+    resilience_effect = a.coping.resilience_coping_factor * current_resilience
+
+    # Social support efficacy directly boosts coping (Plan 011)
+    social_support_effect = a.coping.social_support_factor * social_support_efficacy
+
+    # Within-day support boost from recent interaction (Plan 011)
+    support_boost_effect = a.coping.support_boost_factor * support_boost
 
     # Combine all effects
-    total_effect = challenge_effect + hindrance_effect + social_effect + resilience_effect
+    total_effect = (
+        challenge_effect
+        + hindrance_effect
+        + social_effect
+        + resilience_effect
+        + social_support_effect
+        + support_boost_effect
+    )
 
     # Apply effects to base probability
     coping_prob = base_prob + total_effect
@@ -478,10 +502,18 @@ def compute_coping_probability(
 
 
 def compute_challenge_hindrance_resilience_effect(
-    challenge: float, hindrance: float, coped_successfully: bool, config: Optional[StressProcessingConfig] = None
+    challenge: float,
+    hindrance: float,
+    coped_successfully: bool,
+    config: Optional[StressProcessingConfig] = None,
+    current_resilience: float = 0.5,
 ) -> float:
     """
     Compute resilience change based on challenge/hindrance and coping outcome.
+
+    Applies ceiling damping: the raw delta is scaled by ``(1 - R)`` so that
+    resilience growth slows as R approaches 1.0, preventing ceiling saturation
+    (Fix 1).
 
     When coping fails:
     - Hindrance greatly reduces resilience (-0.3 to -0.5)
@@ -496,6 +528,8 @@ def compute_challenge_hindrance_resilience_effect(
         hindrance: Hindrance component from event appraisal (0-1)
         coped_successfully: Whether coping was successful
         config: Stress processing configuration
+        current_resilience: Current resilience level (0-1). Used for ceiling
+            damping. Higher R → smaller delta. Default 0.5 for backward compat.
 
     Returns:
         Resilience change
@@ -503,16 +537,24 @@ def compute_challenge_hindrance_resilience_effect(
     if config is None:
         config = StressProcessingConfig()
 
+    a = get_assumptions()
+
     if coped_successfully:
         # Success case: hindrance slightly helps, challenge greatly helps
-        hindrance_effect = 0.1 * hindrance  # Small positive effect
-        challenge_effect = 0.3 * challenge  # Large positive effect
+        hindrance_effect = a.coping.hindrance_success_resilience * hindrance  # 0.1
+        challenge_effect = a.coping.challenge_success_resilience * challenge  # 0.3
     else:
         # Failure case: hindrance greatly hurts, challenge slightly hurts
-        hindrance_effect = -0.4 * hindrance  # Large negative effect
-        challenge_effect = -0.1 * challenge  # Small negative effect
+        hindrance_effect = a.coping.hindrance_failure_resilience * hindrance  # -0.4
+        challenge_effect = a.coping.challenge_failure_resilience * challenge  # -0.1
 
     total_effect = hindrance_effect + challenge_effect
+
+    # Ceiling damping: diminishing returns as resilience approaches 1.0
+    # Linear taper (1 - R) gives zero gain at R=1.0 (Fix 1)
+    ceiling_damping = 1.0 - current_resilience
+    total_effect *= ceiling_damping
+
     return total_effect
 
 
@@ -560,8 +602,12 @@ def compute_stress_decay(current_stress: float, config: Optional[StressProcessin
     if config is None:
         config = StressProcessingConfig()
 
-    # Exponential decay toward zero
+    # Exponential decay toward baseline stress floor
+    # Floor prevents asymptote to absolute zero — stress fluctuates
+    # around a small non-zero level, preserving multi-day event traces.
+    STRESS_FLOOR = 0.03
     decayed_stress = current_stress * (1.0 - config.stress_decay_rate)
+    decayed_stress = max(STRESS_FLOOR, decayed_stress)
 
     # Clamp to valid range
     return clamp(decayed_stress, 0.0, 1.0)
@@ -875,6 +921,8 @@ def determine_coping_outcome_and_psychological_impact(
     neighbor_affects: List[float],
     rng: Optional[np.random.Generator] = None,
     config: Optional[StressProcessingConfig] = None,
+    social_support_efficacy: float = 0.5,
+    support_boost: float = 0.0,
 ) -> tuple[float, float, float, bool]:
     """
     Process stress event using new mechanism with challenge/hindrance effects.
@@ -888,6 +936,8 @@ def determine_coping_outcome_and_psychological_impact(
         neighbor_affects: List of neighbor affect values
         rng: Random number generator for reproducible testing
         config: Stress processing configuration
+        social_support_efficacy: Agent's social_support PF efficacy (0-1)
+        support_boost: Within-day boost from recent support exchange (0-1)
 
     Returns:
         Tuple of (new_affect, new_resilience, new_stress, coped_successfully)
@@ -896,7 +946,15 @@ def determine_coping_outcome_and_psychological_impact(
         config = StressProcessingConfig()
 
     # Compute coping probability based on challenge/hindrance, social influence, and resilience
-    coping_prob = compute_coping_probability(challenge, hindrance, neighbor_affects, current_resilience, config)
+    coping_prob = compute_coping_probability(
+        challenge,
+        hindrance,
+        neighbor_affects,
+        current_resilience,
+        social_support_efficacy=social_support_efficacy,
+        support_boost=support_boost,
+        config=config,
+    )
 
     # Determine if coping was successful
     if rng is None:
@@ -904,29 +962,33 @@ def determine_coping_outcome_and_psychological_impact(
     coped_successfully = rng.random() < coping_prob
 
     # Compute resilience effect based on challenge/hindrance and coping outcome
-    resilience_effect = compute_challenge_hindrance_resilience_effect(challenge, hindrance, coped_successfully, config)
+    resilience_effect = compute_challenge_hindrance_resilience_effect(
+        challenge, hindrance, coped_successfully, config, current_resilience=current_resilience
+    )
 
     # Update resilience
     new_resilience = current_resilience + resilience_effect
     new_resilience = clamp(new_resilience, 0.0, 1.0)
 
-    # Update stress based on coping outcome
+    a = get_assumptions()
+
+    # Update stress based on coping outcome (Plan 007)
     if coped_successfully:
         # Successful coping reduces stress
-        stress_reduction = 0.2 * (1.0 + challenge)  # Challenge helps reduce stress more
+        stress_reduction = a.coping.success_stress_reduction * (1.0 + challenge)  # 0.2
         new_stress = current_stress - stress_reduction
     else:
         # Failed coping increases stress
-        stress_increase = 0.3 * (1.0 + hindrance)  # Hindrance increases stress more
+        stress_increase = a.coping.failure_stress_increase * (1.0 + hindrance)  # 0.3
         new_stress = current_stress + stress_increase
 
     new_stress = clamp(new_stress, 0.0, 1.0)
 
-    # Update affect based on stress outcome
+    # Update affect based on stress outcome (Plan 007)
     if coped_successfully:
-        affect_change = 0.1 * challenge  # Challenge provides positive affect boost
+        affect_change = a.coping.success_affect_change * challenge  # 0.1
     else:
-        affect_change = -0.2 * hindrance  # Hindrance provides negative affect impact
+        affect_change = a.coping.failure_affect_change * hindrance  # -0.2
 
     new_affect = current_affect + affect_change
     new_affect = clamp(new_affect, -1.0, 1.0)
@@ -1057,7 +1119,13 @@ def compute_homeostatic_adjustment(
         ValueError: If value_type is not 'affect' or 'resilience'
     """
     if homeostatic_rate is None:
-        homeostatic_rate = get_config().get("affect_dynamics", "homeostatic_rate")
+        from src.python.assumption_config import get_assumptions
+
+        assumptions = get_assumptions()
+        if value_type == "affect":
+            homeostatic_rate = assumptions.stress.affect_homeostatic_rate
+        else:
+            homeostatic_rate = assumptions.stress.resilience_homeostatic_rate
 
     # Validate value_type
     if value_type not in ["affect", "resilience"]:
@@ -1111,8 +1179,9 @@ def compute_cumulative_overload(
     # Overload effect increases with more consecutive hindrances
     overload_intensity = min(consecutive_hindrances / config.influencing_hindrance, 2.0)
 
-    # Overload reduces resilience significantly
-    return -0.2 * overload_intensity
+    # Overload reduces resilience (assumption-parameterised, Plan 007)
+    a = get_assumptions()
+    return -a.coping.resilience_deterioration_scale * overload_intensity  # -0.2
 
 
 def update_affect_dynamics(
@@ -1122,9 +1191,13 @@ def update_affect_dynamics(
     challenge: float = 0.0,
     hindrance: float = 0.0,
     affect_config: Optional[AffectDynamicsConfig] = None,
+    current_stress: float = 0.0,
+    resources: float = 0.5,
+    current_resilience: float = 0.5,
 ) -> float:
     """
-    Update agent's affect based on peer influence, event appraisal, and homeostasis.
+    Update agent's affect based on peer influence, event appraisal, homeostasis,
+    stress erosion (Fix 3), and resource boost (Fix 2).
 
     Args:
         current_affect: Agent's current affect
@@ -1133,6 +1206,9 @@ def update_affect_dynamics(
         challenge: Challenge component from recent events
         hindrance: Hindrance component from recent events
         affect_config: Affect dynamics configuration
+        current_stress: Current accumulated stress level (0-1), erodes affect
+        resources: Current resource level (0-1), provides small affect boost
+        current_resilience: Current resilience (0-1), creates resource↔affect interaction
 
     Returns:
         New affect value
@@ -1145,8 +1221,23 @@ def update_affect_dynamics(
     appraisal_effect = compute_event_appraisal_effect(challenge, hindrance, current_affect, affect_config)
     homeostasis_effect = compute_homeostasis_effect(current_affect, baseline_affect, affect_config)
 
+    # Stress erosion effect on affect (Fix 3 + Fix 2) — amplified by assumption multiplier
+    a = get_assumptions()
+    stress_erosion = -affect_config.stress_erosion_rate * current_stress * a.stress.stress_affect_erosion_multiplier
+
+    # Resource-affect interaction with resilience (Fix 2)
+    # Creates stronger resource→affect link for agents with extreme resilience:
+    #   low resilience + low resources → strong negative affect effect
+    #   high resilience + high resources → strong positive affect effect
+    # The base coupling (0.02) is unchanged; resilience deviation amplifies it.
+    # WP2: Narrowed interaction range from [0.0, 2.0] to [0.5, 1.5].
+    # The previous range created positive feedback: low res→low affect→low resources.
+    resilience_dev = current_resilience - 0.5  # [-0.5, 0.5]
+    interaction_factor = 1.0 + resilience_dev * 0.5  # [0.75, 1.25]
+    resource_boost = a.stress.resource_affect_coupling * (resources - 0.5) * interaction_factor
+
     # Combine all effects
-    total_effect = peer_effect + appraisal_effect + homeostasis_effect
+    total_effect = peer_effect + appraisal_effect + homeostasis_effect + stress_erosion + resource_boost
 
     # Apply the change
     new_affect = current_affect + total_effect

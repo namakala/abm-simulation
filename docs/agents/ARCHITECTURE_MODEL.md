@@ -1,38 +1,58 @@
 ---
 title: Model Architecture — Detailed Design
-description: Agent structure, event processing pipeline, PSS-10 integration, network adaptation
+description: Agent state variables, phase pipeline decomposition, assumption parameter reference
 date: 2025-06-04
 ---
 
-# Agent State
+# Phase Pipeline Decomposition
 
-Each agent maintains:
-- **Resources** $R \in [0,1]$ — finite psychological capacity
-- **Distress** $D \in [0,1]$ — current stress level
-- **Affect** $A \in [-1,1]$ — emotional valence (negative/positive)
-- **Resilience** $\mathfrak{R} \in [0,1]$ — capacity to recover
-- **Stress threshold** $\eta_{\text{stress}}$ — sensitivity to events
-- **Protective factors** — social support, family support, formal intervention, psych capital (each $[0,1]$)
+| Phase | Frequency | Inputs (from config) | Outputs (state_delta keys) | State Vars Modified |
+|-------|-----------|----------------------|----------------------------|---------------------|
+| stress_perception | event_driven | omega_c, omega_o, bias, gamma, base_threshold, challenge_scale, hindrance_scale | challenge, hindrance, is_stressed, event_controllability, event_overload, stress_controllability, stress_overload, recent_stress_intensity, stress_momentum | transient event fields + stress dimensions |
+| resilience_activation | event_driven | neighbor_affects, base_resource_cost | affect, resilience, current_stress, resources, protective_factors, stress_controllability, stress_overload, consecutive_hindrances, stress_breach_count, pss10, pss10_responses, stressed | core traits + stress + PSS-10 |
+| interaction | event_driven | influence_rate, resilience_influence | affect, resilience, current_stress, resources, protective_factors, daily_interactions, daily_support_exchanges, adapted_network | social metrics + network flag |
+| resource_allocation | daily | (none; uses assumptions) | resources, protective_factors | resources + PF |
+| stress_buffering | daily | (none; uses assumptions) | current_stress, protective_factors | stress decay |
 
-# Event Processing Pipeline
+# State Variable Table
 
-1. **Generate event.** Poisson process yields event with controllability $c$, overload $o$, magnitude $s$.
-2. **Appraise event.** Weight $z = \omega_c c - \omega_o o + b$, sigmoid to challenge/hindrance.
-3. **Compute load.** $L = s \cdot (1 + \delta(\zeta - \chi))$.
-4. **Evaluate threshold.** If $L > \eta_{\text{eff}}$ → agent is stressed.
-5. **Coping check.** Probability based on resilience, affect, and social support.
-6. **Update state.** Distress, affect, resources updated based on outcome.
+| Key | Range | Description | Modified By |
+|-----|-------|-------------|-------------|
+| baseline_resilience / resilience | [0, 1] | Core coping capacity | resilience_activation |
+| baseline_affect / affect | [-1, 1] | Emotional valence | resilience_activation, interaction |
+| resources | [0, 1] | Finite psychological capacity | resilience_activation, resource_allocation |
+| protective_factors | dict[0,1]^4 | Social support, family, formal, psych capital | resilience_activation, resource_allocation, stress_buffering |
+| current_stress | [0, 1] | Current distress level | resilience_activation, stress_buffering |
+| stress_controllability | [0, 1] | Perceived control over stress | stress_perception, resilience_activation |
+| stress_overload | [0, 1] | Perceived demands exceeding capacity | stress_perception, resilience_activation |
+| recent_stress_intensity | float | Decaying intensity accumulator | stress_perception |
+| stress_momentum | float | Stress change momentum | stress_perception |
+| pss10 | 0-40 | PSS-10 total score | resilience_activation |
+| pss10_responses | dict | 10 item responses (0-4 each) | resilience_activation |
+| consecutive_hindrances | int | Consecutive hindrance event count | resilience_activation |
+| stress_breach_count | int | Total threshold breaches | resilience_activation |
+| daily_interactions | int | Interactions today | interaction |
+| daily_support_exchanges | int | Support exchanges today | interaction |
+| volatility | [0, 1] | Personality trait (inherited) | (read-only) |
+| adapted_network | bool | Stress-driven rewiring flag | interaction |
 
-# Social Network
+# Assumption Parameters
 
-Watts-Strogatz small-world with configurable $k$ (mean degree) and $p$ (rewiring). Agents interact with neighbors for social support and affect contagion. Network adapts: nodes rewire when stress threshold repeatedly breached.
+All tunable parameters live in `src/python/assumption_config.py` with ASSUMPTION_* env overrides.
 
-# PSS-10 Integration
-
-Bifactor model with general stress factor and 2 specific factors (controllability, overload). Generates 3 composite scores per agent from 10 item responses. Used for threshold evaluation and empirical validation.
-
-# Resource Allocation
-
-Agent allocates resources to protective factors via softmax. Each factor has efficacy $\alpha$ and replenishment $\rho$. Decision stochasticity controlled by temperature $\beta$.
+| Parameter | Default | Description | Used By |
+|-----------|---------|-------------|---------|
+| ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR | 0.30 | Weight of social support in coping | resilience_activation |
+| ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR | 0.15 | Additional support from interactions | resilience_activation |
+| ASSUMPTION_RESILIENCE_COPING_FACTOR | 0.20 | Resilience contribution to coping | resilience_activation |
+| ASSUMPTION_RESOURCE_PENALTY | 0.05 | Failed coping resource cost | resilience_activation |
+| ASSUMPTION_FAILED_COPING_COST_PENALTY | 0.10 | Failed coping affect penalty | resilience_activation |
+| ASSUMPTION_AFFECT_DETERIORATION_SCALE | 0.30 | Hindrance affect deterioration | resilience_activation |
+| ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER | 0.50 | Daily affect regeneration rate | stress_buffering |
+| ASSUMPTION_RESILIENCE_IMPROVEMENT_SCALE | 0.10 | Successful coping resilience gain | resilience_activation |
+| ASSUMPTION_PF_ALLOCATION_FRACTION | 0.05 | Daily PF allocation budget | resource_allocation |
+| ASSUMPTION_CONTROLLABILITY_HOMEOSTASIS_RATE | 0.02 | Controllability drift toward 0.5 | stress_perception |
+| ASSUMPTION_OVERLOAD_HOMEOSTASIS_RATE | 0.02 | Overload drift toward 0.5 | stress_perception |
+| ASSUMPTION_STRESS_DECAY_RATE | 0.08 | Daily stress decay rate | stress_buffering |
 
 See `@docs/ADR/008-model-architecture.md` for rationale.

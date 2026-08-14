@@ -4,9 +4,12 @@ Pytest configuration and shared fixtures for ABM simulation tests.
 
 import logging
 import os
-import pytest
+
 import numpy as np
 import networkx as nx
+import pytest
+
+from src.python.assumption_config import reload_assumptions
 from src.python.config import get_config, reload_config, config
 from src.python.math_utils import create_rng
 from src.python.stress_utils import generate_stress_event
@@ -14,6 +17,38 @@ from src.python.agent import Person
 from src.python.affect_utils import ProtectiveFactors, InteractionConfig, ResourceParams
 from src.python.stress_utils import ThresholdParams, AppraisalWeights
 from src.python.phases.interfaces import AgentState
+
+# Initialize assumption config cache at import time
+reload_assumptions()
+
+# Env vars that can leak between tests (from _apply_overrides, Config() in temp dirs, etc.)
+_LEAKING_ENV_KEYS = [
+    "ASSUMPTION_RESOURCE_PENALTY",
+    "ASSUMPTION_FAILED_COPING_COST_PENALTY",
+    "ASSUMPTION_AFFECT_DETERIORATION_SCALE",
+    "ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER",
+    "ASSUMPTION_RESILIENCE_IMPROVEMENT_SCALE",
+    "ASSUMPTION_COPING_SOCIAL_SUPPORT_FACTOR",
+    "ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR",
+    "ASSUMPTION_RESILIENCE_COPING_FACTOR",
+    "ASSUMPTION_CONTROLLABILITY_HOMEOSTASIS_RATE",
+    "ASSUMPTION_OVERLOAD_HOMEOSTASIS_RATE",
+    "PSS10_RESILIENCE_COUPLING",
+    "PSS10_BIAS_SD",
+    "PSS10_STRESS_DAMPENING",
+    "PSS10_NOISE_SD",
+    "PSS10_ITEM_MEAN",
+    "PSS10_ITEM_SD",
+    "PSS10_SCALE",
+    "PSS10_BIFACTOR_COR",
+    "PSS10_LOAD_CONTROLLABILITY",
+    "PSS10_SKEW_A",
+    "PSS10_THRESHOLD",
+    "PSS10_CONTROLLABILITY_SD",
+    "PSS10_OVERLOAD_SD",
+    "PSS10_ESTIMATION_BASE",
+    "STRESS_DELTA",
+]
 
 # ── Phase-specific fixtures ──────────────────────────────────────
 
@@ -240,21 +275,132 @@ def setup_test_logging():
 # Start with a clean env vars for each run
 @pytest.fixture(autouse=True)
 def complete_env_isolation():
-    """Complete environment isolation for each test."""
+    """Complete environment isolation for each test.
 
-    # SETUP: Save current environment and reset to clean state
+    Clears env at setup so each test starts with config defaults.
+    Saves env before clearing and restores after.
+    """
+
+    # SETUP: Clear environment for proper isolation
     current_env = dict(os.environ)
-
-    # Clear all environment variables and restore to pristine state
     os.environ.clear()
 
-    # Reset global config cache objects
-    config.config = None
+    # Pin DOTENV_FILE to the repo's empty env file so reload_config() never
+    # falls back to a developer's local .env (which may carry stale values
+    # that diverge from code defaults and leak into get_assumptions()).
+    os.environ["DOTENV_FILE"] = ".env.empty"
 
-    # Run the test
+    # Set explicit defaults for Fix 3/4 to prevent env-var pollution
+    os.environ["APPRAISAL_GAMMA"] = "3.0"
+    os.environ["ASSUMPTION_STRESS_DECAY_RATE"] = "0.08"
+    os.environ["ASSUMPTION_PF_ALLOCATION_FRACTION"] = "0.05"
+
+    from src.python.config import reload_config as _reload_config
+
+    _reload_config()
+    reload_assumptions()
+
     yield
 
     # TEARDOWN: Restore environment to pre-test state
     os.environ.clear()
     os.environ.update(current_env)
-    config.config = None
+    _reload_config()
+    reload_assumptions()
+    # Reload phase modules that cache assumption constants at import time
+    import importlib
+    import src.python.phases.resilience_activation as _ra
+
+    importlib.reload(_ra)
+
+
+def run_stress_cycle(agent):
+    """Run one stress perception + (if stressed) resilience activation cycle.
+
+    Replaces the deleted Person.stressful_event() for test use.
+    Generates an event, appraises it, and handles both stressed/non-stressed paths.
+
+    Returns (challenge, hindrance) tuple.
+    """
+    from src.python.config import get_config
+    from src.python.stress_utils import (
+        generate_stress_event,
+        process_stress_event,
+        AppraisalWeights,
+        ThresholdParams,
+        update_stress_dimensions_from_event,
+    )
+    from src.python.affect_utils import get_neighbor_affects
+    from src.python.phases.resilience_activation import run_phase as run_resilience_activation
+
+    cfg = get_config()
+    event = generate_stress_event(rng=agent._rng)
+    weights = AppraisalWeights(
+        omega_c=cfg.get("appraisal", "omega_c"),
+        omega_o=cfg.get("appraisal", "omega_o"),
+        bias=cfg.get("appraisal", "bias"),
+        gamma=cfg.get("appraisal", "gamma"),
+    )
+    threshold_params = ThresholdParams(
+        base_threshold=cfg.get("threshold", "base_threshold"),
+        challenge_scale=cfg.get("threshold", "challenge_scale"),
+        hindrance_scale=cfg.get("threshold", "hindrance_scale"),
+    )
+    is_stressed, challenge, hindrance = process_stress_event(event, threshold_params, weights, rng=agent._rng)
+    state = agent._build_agent_state()
+    state.update(
+        {
+            "challenge": challenge,
+            "hindrance": hindrance,
+            "is_stressed": is_stressed,
+            "event_controllability": event.controllability,
+            "event_overload": event.overload,
+        }
+    )
+    if not is_stressed:
+        (
+            state["stress_controllability"],
+            state["stress_overload"],
+            state["recent_stress_intensity"],
+            state["stress_momentum"],
+        ) = update_stress_dimensions_from_event(
+            current_controllability=state["stress_controllability"],
+            current_overload=state["stress_overload"],
+            challenge=challenge,
+            hindrance=hindrance,
+            coped_successfully=True,
+            is_stressful=False,
+            volatility=state["volatility"],
+            recent_stress_intensity=state["recent_stress_intensity"],
+            stress_momentum=state["stress_momentum"],
+        )
+        agent._write_back_state(state)
+        return challenge, hindrance
+    neighbor_affects = get_neighbor_affects(agent, agent.model)
+    activation_result = run_resilience_activation(
+        state,
+        {
+            "neighbor_affects": neighbor_affects,
+            "base_resource_cost": cfg.get("agent", "resource_cost"),
+        },
+        agent._rng,
+    )
+    state = agent._apply_delta(state, activation_result["state_delta"])
+    pss10 = state.get("pss10", 0)
+    if pss10 > 0:
+        scores = list(state.get("daily_pss10_scores", []))
+        scores.append(pss10)
+        state["daily_pss10_scores"] = scores
+    agent._write_back_state(state)
+    agent.daily_stress_events.append(
+        {
+            "challenge": challenge,
+            "hindrance": hindrance,
+            "is_stressed": is_stressed,
+            "stress_level": state.get("current_stress", 0.0),
+            "coped_successfully": activation_result["observation"].get("coped_successfully", False),
+            "event_controllability": event.controllability,
+            "event_overload": event.overload,
+        }
+    )
+    return challenge, hindrance

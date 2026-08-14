@@ -136,6 +136,49 @@ class TestCopingProbabilityTheory:
         )
         assert high_res >= low_res, f"Higher resilience should increase coping prob, got {high_res} < {low_res}"
 
+    def test_social_support_efficacy_increases_coping_prob(self):
+        """Higher social_support_efficacy -> higher coping probability."""
+        config = StressProcessingConfig()
+        low_ss = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.2,
+            config=config,
+        )
+        high_ss = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.8,
+            config=config,
+        )
+        assert high_ss > low_ss, f"Higher social_support should increase coping prob, got {high_ss} <= {low_ss}"
+
+    def test_social_support_effect_default_efficacy(self):
+        """Default social_support_efficacy=0.5 still adds a positive effect."""
+        config = StressProcessingConfig()
+        prob_default = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            config=config,
+        )
+        prob_zero = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.0,
+            config=config,
+        )
+        assert prob_default > prob_zero, (
+            f"Default efficacy should add positive effect, got {prob_default} <= {prob_zero}"
+        )
+
     def test_coping_prob_in_unit_range(self):
         """Coping probability is always in [0, 1]."""
         config = StressProcessingConfig()
@@ -379,8 +422,9 @@ class TestAsymmetry:
     def test_overload_effect_formula(self):
         """DeltaR_o = -0.4 * min(h_c / eta, 1.0) for failed coping on hindrance."""
         hi_value = 0.7
+        # Pass current_resilience=0.0 to isolate formula test from ceiling damping
         total_effect = compute_challenge_hindrance_resilience_effect(
-            challenge=0.0, hindrance=hi_value, coped_successfully=False
+            challenge=0.0, hindrance=hi_value, coped_successfully=False, current_resilience=0.0
         )
         expected_overload = -0.4 * hi_value
         assert abs(total_effect - expected_overload) < 1e-10, (
@@ -390,8 +434,9 @@ class TestAsymmetry:
     def test_overload_capped_at_one(self):
         """Overload effect uses min(h_c / eta, 1.0) - test with extreme hindrance."""
         hi_value = 1.0
+        # Pass current_resilience=0.0 to isolate formula test from ceiling damping
         effect = compute_challenge_hindrance_resilience_effect(
-            challenge=0.0, hindrance=hi_value, coped_successfully=False
+            challenge=0.0, hindrance=hi_value, coped_successfully=False, current_resilience=0.0
         )
         assert effect == -0.4, f"Max overload effect should be -0.4, got {effect}"
 
@@ -809,11 +854,57 @@ class TestObservationContent:
         assert "delta_affect" in obs
 
     def test_observation_contains_resource_details(self):
-        """Observation includes resource cost/reward/penalty info."""
+        """Observation includes resource cost info (Fix 1: reward/penalty removed)."""
         result = run_phase(copy.deepcopy(BASE_STATE), SUCCESS_CONFIG, np.random.default_rng(42))
         obs = result["observation"]
-        if obs["coped_successfully"]:
-            assert "resource_reward" in obs
-            assert "resource_cost" in obs
-        else:
-            assert "resource_penalty" in obs
+        assert "resource_cost" in obs
+        assert "coped_successfully" in obs
+
+
+class TestSupportBoostCopingProbability:
+    """support_boost parameter in compute_coping_probability."""
+
+    def test_support_boost_increases_coping_prob(self):
+        """Higher support_boost -> higher coping probability."""
+        config = StressProcessingConfig()
+        low_boost = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.5,
+            support_boost=0.0,
+            config=config,
+        )
+        high_boost = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.5,
+            support_boost=0.5,
+            config=config,
+        )
+        assert high_boost > low_boost
+
+    def test_support_boost_default_zero(self):
+        """Default support_boost=0.0 adds no extra effect."""
+        config = StressProcessingConfig()
+        default_prob = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.5,
+            config=config,
+        )
+        zero_boost_prob = compute_coping_probability(
+            challenge=0.5,
+            hindrance=0.5,
+            neighbor_affects=[0.0],
+            current_resilience=0.5,
+            social_support_efficacy=0.5,
+            support_boost=0.0,
+            config=config,
+        )
+        assert abs(default_prob - zero_boost_prob) < 1e-10

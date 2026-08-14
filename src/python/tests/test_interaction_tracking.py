@@ -22,6 +22,7 @@ import numpy as np
 from unittest.mock import Mock, patch
 from src.python.agent import Person
 from src.python.model import StressModel
+from src.python.phases.interfaces import PhaseOutput
 
 
 class MockModel:
@@ -315,10 +316,12 @@ class TestSupportExchangeDetection:
 
         model.grid.get_neighbors.return_value = [agent2]
 
-        # Mock interaction processing to return minor changes
-        with patch("src.python.agent.process_interaction") as mock_interact:
-            # Return changes below 0.05 threshold
-            mock_interact.return_value = (0.02, 0.0, 0.51, 0.5)  # Small changes
+        # Mock phase_process_interaction to return minor changes (below 0.05 threshold)
+        with patch("src.python.agent.phase_process_interaction") as mock_interact:
+            mock_interact.return_value = (
+                PhaseOutput(state_delta={"affect": 0.02, "resilience": 0.01}, observation={"support_occurred": False}),
+                PhaseOutput(state_delta={"affect": 0.0, "resilience": 0.0}, observation={"support_occurred": False}),
+            )
 
             initial_support_exchanges = agent1.daily_support_exchanges
 
@@ -611,7 +614,7 @@ class TestEdgeCases:
             # Mock step to only do interactions (no stress events)
             with (
                 patch("src.python.agent.sample_poisson", return_value=1),
-                patch.object(agent, "stressful_event") as mock_stress,
+                patch("src.python.tests.conftest.run_stress_cycle") as mock_stress,
             ):
                 mock_stress.return_value = (0.0, 0.0)  # No stress
                 agent.step()
@@ -904,7 +907,7 @@ class TestConfigurationIntegration:
                 agent.daily_support_exchanges = 0
 
                 # Mock stress events to focus on interactions
-                with patch.object(agent, "stressful_event") as mock_stress:
+                with patch("src.python.tests.conftest.run_stress_cycle") as mock_stress:
                     mock_stress.return_value = (0.0, 0.0)
 
                     agent.step()
@@ -955,7 +958,7 @@ class TestConfigurationIntegration:
 
         with patch("src.python.agent.sample_poisson", return_value=5):
             # Mock stress events
-            with patch.object(agent, "stressful_event") as mock_stress:
+            with patch("src.python.tests.conftest.run_stress_cycle") as mock_stress:
                 mock_stress.return_value = (0.3, 0.2)
 
                 agent.step()

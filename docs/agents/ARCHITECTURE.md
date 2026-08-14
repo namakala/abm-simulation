@@ -36,6 +36,30 @@ ABM simulating workplace mental health promotion programs. Agents experience str
 
 Client / Runner → Model (Mesa scheduler) → Agent step (event gen → appraisal → threshold eval → resource allocation → network update) → DataCollector → DataFrame → Statistical Analysis → Output (figures, tables, manuscripts).
 
+# Phase Pipeline (Two-Context)
+
+Each simulation subevent routes through event-driven or daily phases.
+
+```
+Subevent ──► Stress Perception ──► (if stressed) Resilience Activation
+           └─► Interaction ───────────────────────────────────────────
+Daily ─────► Resource Allocation ──► Stress Buffering ──► Daily Reset
+```
+
+## Phase Frequency
+
+| Phase | Frequency | State Keys Modified |
+|-------|-----------|---------------------|
+| stress_perception | event_driven | challenge, hindrance, is_stressed, event_*, stress_controllability, stress_overload, recent_stress_intensity, stress_momentum |
+| resilience_activation | event_driven | affect, resilience, current_stress, resources, protective_factors, pss10, stressed, consecutive_hindrances, stress_breach_count, stress_controllability, stress_overload |
+| interaction | event_driven | affect, resilience, current_stress, resources, protective_factors, daily_interactions, daily_support_exchanges |
+| resource_allocation | daily | resources, protective_factors |
+| stress_buffering | daily | current_stress, protective_factors |
+
+## Delegation Flow
+
+Every phase follows: `_build_agent_state` → `run_phase` → `_apply_delta` → `_write_back_state`
+
 # Key Decisions
 
 | Decision | ADR | Summary |

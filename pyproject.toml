@@ -7,3 +7,74 @@ per-file-ignores = {"src/python/tests/*" = ["F811", "F821"], "src/python/demos/*
 [tool.black]
 line-length = 120
 
+[tool.mypy]
+python_version = "3.12"
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_unused_ignores = false
+warn_redundant_casts = false
+implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = "mesa.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mesa.space"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "networkx"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pandas"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "scipy.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "seaborn"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "psutil"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "src.python.config"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.python.visualization_utils"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.python.tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.python.demos.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.python.analysis_utils"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.python.math_utils"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.python.stress_utils"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.python.affect_utils"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.python.phases.resilience_activation"
+ignore_errors = true

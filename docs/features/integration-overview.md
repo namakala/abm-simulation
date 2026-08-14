@@ -266,7 +266,7 @@ All mechanisms use the same configuration system, ensuring consistency across al
 - **Intervention Efficacy**: Match mental health intervention research
 - **Correlation Patterns**: Theoretical relationships maintained across configurations
 
-**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) provides comprehensive correlation validation, [`parameter_sweep_correlations.py`](../../src/python/demos/parameter_sweep_correlations.py) performs parameter sweep validation.
+**Implementation**: [`parameter_sweep_correlations.qmd`](../../src/python/demos/parameter_sweep_correlations.qmd) and [`population_correlation_analysis.qmd`](../../src/python/demos/population_correlation_analysis.qmd) provide comprehensive correlation validation and parameter sweep validation.
 
 ## Research Pipeline Integration
 

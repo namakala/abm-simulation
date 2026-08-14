@@ -1,0 +1,8 @@
+{
+  "filesystem": {
+    "denyWrite": [".githooks/*", ".env", ".pi/*"]
+  },
+  "bash": {
+    "commandWhitelist": ["pixi", "mypy"]
+  }
+}

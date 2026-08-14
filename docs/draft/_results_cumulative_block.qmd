@@ -1,0 +1,87 @@
+## Mechanism contribution: cumulative building-block build-up
+
+To make the contribution of each mechanism explicit, the model is assembled block by block. Seven stages run the same seeded population (N = 100 agents, 90 days): each stage adds one building block on top of the previous ones and reports the metrics that block introduces. Stage 1 is initialization only; stages 2--6 add stress perception, resilience activation, interaction, resource allocation, and stress buffering in turn; stage 7 is the full model, including the remaining daily-cycle internals (affect dynamics, PSS-10 consolidation, daily reset) and network adaptation, run through the production pipeline (`simulate.py`). Results are computed by `pixi run cumulative-blocks` and exported to `data/output/`.
+
+```{r}
+#| label: cum-setup
+#| echo: false
+#| message: false
+#| warning: false
+library(knitr)
+find_data_dir <- function() {
+  candidates <- c(
+    file.path(getwd(), "data", "output"),
+    file.path(getwd(), "..", "data", "output"),
+    file.path(dirname(getwd()), "..", "data", "output")
+  )
+  for (cand in candidates) {
+    if (file.exists(file.path(cand, "cumulative_stages_metrics.csv"))) {
+      return(normalizePath(cand))
+    }
+  }
+  stop("data/output not found - run `pixi run cumulative-blocks` first")
+}
+data_dir <- find_data_dir()
+```
+
+### Stage composition
+
+The seven stages accumulate building blocks; each row lists the blocks active at that stage.
+
+```{r}
+#| label: cum-stage-blocks
+#| echo: false
+#| results: asis
+blocks <- read.csv(file.path(data_dir, "cumulative_stages_metrics.csv"), check.names = FALSE)
+kable(
+  blocks[, c("stage", "blocks_active")],
+  format = "latex", booktabs = TRUE,
+  col.names = c("Stage", "Blocks active"),
+  caption = "Cumulative stage composition: building blocks active per stage"
+)
+```
+
+### Stage metrics
+
+Each block contributes its own metric family: perception adds challenge/hindrance appraisal, activation adds coping success, interaction adds social support exchange, allocation adds resource regeneration, and buffering adds buffering strength and stress depletion. Empty cells mark metrics whose block is not yet active. Stage 7 runs through `simulate.py`, which does not export the allocation and buffering phase metrics, so those cells remain empty.
+
+```{r}
+#| label: cum-stage-metrics
+#| echo: false
+#| results: asis
+key_cols <- c(
+  "avg_pss10", "avg_stress", "avg_affect", "avg_resilience", "avg_resources",
+  "stress_prevalence", "avg_challenge", "avg_hindrance", "coping_success_rate",
+  "support_exchange_rate", "avg_regeneration", "avg_buffering_strength"
+)
+label_map <- c(
+  "avg_pss10" = "PSS-10",
+  "avg_stress" = "Current stress",
+  "avg_affect" = "Affect",
+  "avg_resilience" = "Resilience",
+  "avg_resources" = "Resources",
+  "stress_prevalence" = "Stress prevalence",
+  "avg_challenge" = "Challenge appraisal",
+  "avg_hindrance" = "Hindrance appraisal",
+  "coping_success_rate" = "Coping success rate",
+  "support_exchange_rate" = "Support exchange rate",
+  "avg_regeneration" = "Regeneration",
+  "avg_buffering_strength" = "Buffering strength"
+)
+num <- blocks[, key_cols]
+tbl <- t(num)
+chr <- round(tbl, 3)
+chr[is.na(chr)] <- "n/a"
+colnames(chr) <- paste("Stage", blocks$stage)
+rownames(chr) <- unname(label_map[rownames(chr)])
+kable(
+  chr,
+  format = "latex", booktabs = TRUE,
+  caption = "Cumulative building-block metrics by stage (means over the run)"
+)
+```
+
+The build-up shows how each mechanism shifts the population metrics.
+Stage 7 -- the complete model -- is the configuration reported in the
+model-level and agent-level tables above; its final-day population state
+and agent heterogeneity are examined in the next section.

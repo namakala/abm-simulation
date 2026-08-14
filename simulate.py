@@ -213,6 +213,29 @@ def run_simulation(
        initial_viz_path = create_visualization_report(initial_data, output_fig_dir, f"{prefix}_initial_population.pdf")
        logger.info(f"Initial visualization saved to: {initial_viz_path}")
 
+       # Export the pre-step baseline so downstream analysis can use the true
+       # initial state (the agent CSV starts at Step 1, after the first day).
+       initial_export = pd.DataFrame(
+           [
+               {
+                   "Step": 0,
+                   "AgentID": i + 1,
+                   "pss10": agent.pss10,
+                   "resilience": agent.resilience,
+                   "affect": agent.affect,
+                   "resources": agent.resources,
+                   "current_stress": agent.current_stress,
+                   "stress_controllability": agent.stress_controllability,
+                   "stress_overload": agent.stress_overload,
+                   "consecutive_hindrances": agent.consecutive_hindrances,
+               }
+               for i, agent in enumerate(model.agents)
+           ]
+       )
+       initial_csv_path = f"{output_data_dir}/{prefix}_initial.csv"
+       initial_export.to_csv(initial_csv_path, index=False)
+       logger.info(f"Initial agent state saved to: {initial_csv_path}")
+
        logger.info("Starting simulation...")
 
        # Run simulation loop

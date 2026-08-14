@@ -1,0 +1,136 @@
+---
+title: "Resource Allocation — PF Regeneration and Softmax Dynamics"
+format: html
+---
+
+## What This Code Does
+
+This demo examines the resource allocation phase under four parameter scenarios. Each scenario runs 30 daily iterations and observes resource regeneration, softmax allocation weights, and PF (protective factor) efficacy trajectories.
+
+The theory predicts: regeneration is inversely proportional to current resources (`R' = base_regeneration × (1 − R) × affect_mult × resilience_mult`); high softmax temperature produces near-uniform allocation, low temperature produces winner-take-most; PF efficacy gains follow diminishing returns as efficacy approaches 1.0.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from numpy.random import Generator, PCG64
+
+demos_dir = pathlib.Path(os.getcwd())
+project_root = demos_dir.parents[2]
+sys.path.insert(0, str(project_root))
+
+from src.python.phases.resource_allocation import run_phase
+
+_FACTORS = ["social_support", "family_support", "formal_intervention", "psychological_capital"]
+```
+
+## Step 1: Four Scenarios
+
+Each scenario tests a different regime of resource level and softmax temperature.
+
+```{python}
+#| label: scenarios
+N_DAYS = 30
+BASE_REGENERATION = 0.1
+IMPROVEMENT_RATE = 0.1
+
+scenarios = {
+    "High R + default T": {"resources": 0.8, "temperature": 1.0, "efficacies": {f: 0.5 for f in _FACTORS}},
+    "Low R + default T":  {"resources": 0.2, "temperature": 1.0, "efficacies": {f: 0.5 for f in _FACTORS}},
+    "High R + high T":    {"resources": 0.8, "temperature": 5.0, "efficacies": {f: 0.5 for f in _FACTORS}},
+    "Varied starting PF": {"resources": 0.5, "temperature": 1.0, "efficacies": {"social_support": 0.9,
+                           "family_support": 0.3, "formal_intervention": 0.5, "psychological_capital": 0.2}},
+}
+
+all_records = []
+trajectories = {}
+
+for scenario_name, params in scenarios.items():
+    state = {
+        "resources": params["resources"], "affect": 0.0, "resilience": 0.5,
+        "protective_factors": dict(params["efficacies"]),
+    }
+    config = {"base_regeneration": BASE_REGENERATION,
+              "softmax_temperature": params["temperature"],
+              "protective_improvement_rate": IMPROVEMENT_RATE}
+    efficacies_traj = {f: [] for f in _FACTORS}
+    rng = Generator(PCG64(42))
+
+    for day in range(N_DAYS):
+        out = run_phase(state, config, rng)
+        obs = out["observation"]
+        for f in _FACTORS:
+            state["protective_factors"][f] = obs["efficacies_after"][f]
+        state["resources"] = out["state_delta"].get("resources", state["resources"])
+        state["affect"] *= 0.95
+        all_records.append({
+            "scenario": scenario_name, "day": day,
+            "regeneration_amount": obs["regeneration_amount"],
+            "allocation_weights": obs["allocation_weights"],
+            "resources_after": state["resources"],
+            **{f"pf_{f}": obs["efficacies_after"][f] for f in _FACTORS},
+            **{f"weight_{f}": obs["allocation_weights"].get(f, 0) for f in _FACTORS},
+        })
+        for f in _FACTORS:
+            efficacies_traj[f].append(obs["efficacies_after"][f])
+    trajectories[scenario_name] = efficacies_traj
+
+df = pd.DataFrame(all_records)
+print(f"Generated {len(df)} records across {len(scenarios)} scenarios")
+```
+
+## Step 2: Per-Scenario Correlogram
+
+```{python}
+#| label: fig-correlogram
+corr_vars = ["regeneration_amount", "resources_after", "pf_social_support",
+             "pf_family_support", "pf_formal_intervention", "pf_psychological_capital"]
+
+for scenario_name in scenarios:
+    sub = df[df["scenario"] == scenario_name][corr_vars]
+    g = sns.PairGrid(sub, diag_sharey=False)
+    g.map_upper(sns.scatterplot, s=10, alpha=0.5)
+    g.map_lower(sns.scatterplot, s=10, alpha=0.5)
+    g.map_diag(sns.kdeplot, fill=True)
+    g.fig.suptitle(f"Scenario: {scenario_name}", y=1.02, fontsize=12)
+    plt.show()
+```
+
+## Step 3: PF Efficacy Trajectories
+
+```{python}
+#| label: fig-timeseries
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+colors = ["#3498db", "#e74c3c", "#2ecc71", "#f39c12"]
+
+for idx, (scenario_name, traj) in enumerate(trajectories.items()):
+    ax = axes[idx // 2, idx % 2]
+    days = np.arange(N_DAYS)
+    for fi, f in enumerate(_FACTORS):
+        ax.plot(days, traj[f], label=f, color=colors[fi], linewidth=1.5)
+    ax.set_title(scenario_name, fontsize=10)
+    ax.set_xlabel("Day"); ax.set_ylabel("PF Efficacy")
+    ax.legend(fontsize=7); ax.set_ylim(0, 1.05)
+
+plt.suptitle("PF Efficacy Trajectories Across Scenarios", fontsize=13)
+plt.tight_layout()
+plt.show()
+```
+
+## What We See
+
+- **Regeneration** is higher when resources are low (diminishing returns). Low-R scenarios show larger regeneration spikes.
+- **Softmax temperature**: T=5 produces near-uniform allocation; T=1 concentrates resources on high-efficacy factors (rich-get-richer).
+- **Varied starting PF**: the social_support factor (initially 0.9) receives the largest allocation share, reinforcing its lead.
+- **Diminishing returns**: PF efficacy growth slows as each factor approaches 1.0, consistent with `Δe_f ∝ (1 − e_f)`.
+
+## Why This Matters for the Simulation
+
+Resource allocation determines how agents invest their protective factors over time. The softmax temperature parameter directly controls the trade-off between exploration (uniform allocation) and exploitation (focus on strengths). The regeneration dynamics ensure that depleted resources recover, preventing agents from getting permanently stuck in low-resource states. This phase is critical for long-run simulation stability.

@@ -7,9 +7,13 @@ with python-dotenv for loading and type conversion with proper error handling.
 
 import os
 import logging
-from typing import Optional, Union
+from typing import Optional, Union, TypeVar
 from pathlib import Path
 from dotenv import load_dotenv
+
+from src.python.assumption_config import get_assumptions
+
+T = TypeVar("T", int, float)
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -44,14 +48,14 @@ class Config:
         """Load environment variables from .env file if it exists."""
         env_path = Path(env_file)
 
-        if env_path.exists():
+        if env_path.exists() and env_path.is_file():
             try:
                 # Load environment variables from file
                 load_dotenv(env_path)
                 logger.info(f"Loaded environment from {env_path.absolute()}")
             except ImportError:
                 logger.warning("python-dotenv not installed, using system environment variables")
-        else:
+        elif not env_path.exists():
             logger.warning(f"Environment file {env_path.absolute()} not found, using system environment variables")
 
     def _get_env_value(
@@ -95,8 +99,13 @@ class Config:
             raise ConfigurationError(f"Invalid value for '{key}': '{value}'. Expected {expected_type.__name__}. {e}")
 
     def _get_env_array(
-        self, key: str, expected_type: type, default_array: list, required: bool = False, expected_length: int = None
-    ) -> list:
+        self,
+        key: str,
+        expected_type: type[T],
+        default_array: list[T],
+        required: bool = False,
+        expected_length: int | None = None,
+    ) -> list[T]:
         """
         Get environment variable as array with type conversion and validation.
 
@@ -203,7 +212,7 @@ class Config:
         self.agent_stress_probability = self._get_env_value("AGENT_STRESS_PROBABILITY", float, 0.2)
         self.agent_coping_success_rate = self._get_env_value("AGENT_COPING_SUCCESS_RATE", float, 0.5)
         self.agent_subevents_per_day = self._get_env_value("AGENT_SUBEVENTS_PER_DAY", int, 3)
-        self.agent_resource_cost = self._get_env_value("AGENT_RESOURCE_COST", float, 0.05)
+        self.agent_resource_cost = self._get_env_value("AGENT_RESOURCE_COST", float, 0.03)
 
         # Additional agent attributes for backward compatibility
         self.agent_initial_resilience = self.agent_initial_resilience_mean
@@ -226,7 +235,7 @@ class Config:
         self.appraisal_omega_c = self._get_env_value("APPRAISAL_OMEGA_C", float, 1.0)
         self.appraisal_omega_o = self._get_env_value("APPRAISAL_OMEGA_O", float, 1.0)
         self.appraisal_bias = self._get_env_value("APPRAISAL_BIAS", float, 0.0)
-        self.appraisal_gamma = self._get_env_value("APPRAISAL_GAMMA", float, 6.0)
+        self.appraisal_gamma = self._get_env_value("APPRAISAL_GAMMA", float, 3.0)
 
         self.threshold_base_threshold = self._get_env_value("THRESHOLD_BASE_THRESHOLD", float, 0.5)
         self.threshold_challenge_scale = self._get_env_value("THRESHOLD_CHALLENGE_SCALE", float, 0.15)
@@ -236,16 +245,22 @@ class Config:
 
         self.stress_alpha_challenge = self._get_env_value("STRESS_ALPHA_CHALLENGE", float, 0.8)
         self.stress_alpha_hindrance = self._get_env_value("STRESS_ALPHA_HINDRANCE", float, 1.2)
-        self.stress_delta = self._get_env_value("STRESS_DELTA", float, 0.2)
+        self.stress_delta = self._get_env_value("STRESS_DELTA", float, 0.4)
 
         # ==============================================
         # PSS-10 SCORE GENERATION PARAMETERS
         # ==============================================
         self.pss10_item_means = self._get_env_array(
-            "PSS10_ITEM_MEAN", float, [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5], expected_length=10
+            "PSS10_ITEM_MEAN",
+            float,
+            [1.43, 1.38, 1.51, 1.31, 1.50, 1.40, 1.43, 1.60, 1.14, 1.31],
+            expected_length=10,
         )
         self.pss10_item_sds = self._get_env_array(
-            "PSS10_ITEM_SD", float, [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8], expected_length=10
+            "PSS10_ITEM_SD",
+            float,
+            [0.89, 0.89, 0.93, 0.92, 0.80, 0.78, 0.78, 0.88, 0.91, 0.93],
+            expected_length=10,
         )
 
         # PSS-10 bifactor model parameters
@@ -263,6 +278,31 @@ class Config:
 
         # PSS-10 threshold for stress classification
         self.pss10_threshold = self._get_env_value("PSS10_THRESHOLD", int, 27)
+
+        # PSS-10 bifactor model scaling parameters (phase 2)
+        self.pss10_scale = self._get_env_value("PSS10_SCALE", float, 6.0)
+        self.pss10_noise_sd = self._get_env_value("PSS10_NOISE_SD", float, 2.0)
+        self.pss10_skew_a = self._get_env_value("PSS10_SKEW_A", float, 3.0)
+        self.pss10_bias_sd = self._get_env_value("PSS10_BIAS_SD", float, 1.0)
+        self.pss10_resilience_coupling = self._get_env_value("PSS10_RESILIENCE_COUPLING", float, 3.5)
+        self.pss10_stress_dampening = self._get_env_value("PSS10_STRESS_DAMPENING", float, 1.0)
+        # WP5: Increased from 0.20 to 0.25 to strengthen PSS-10↔affect correlation.
+        # WP5: Reduced from 0.30 to 0.27 to weaken overshoot in seed 42 (r=-0.31 vs [-0.30,-0.18]).
+        # 0.27 balances seed 42 (still a touch strong) against seed 456 (needs stronger).
+        self.pss10_affect_coupling = self._get_env_value("PSS10_AFFECT_COUPLING", float, 0.25)
+        # Fix A: Mood-congruent appraisal at consolidation. Negative affect amplifies
+        # perceived stress. Added after PSS-10 became pure perception (resource_adjust
+        # removed). Follows daily_resilience_penalty pattern.
+        self.pss10_affect_adjustment = self._get_env_value("PSS10_AFFECT_ADJUSTMENT", float, 3.0)
+        # Fix 4: Reduced from 0.05 to 0.03 to compensate for PSS-10→resource sign fix.
+        self.pss10_resource_coupling = self._get_env_value("PSS10_RESOURCE_COUPLING", float, 0.03)
+        self.pss10_resilience_coupling_item = self._get_env_value("PSS10_RESILIENCE_COUPLING_ITEM", float, 0.20)
+        self.stress_affect_coupling = self._get_env_value("STRESS_AFFECT_COUPLING", float, 0.15)
+        # WP3: Reduced from 0.30 to 0.15 to decouple stress↔resources.
+        # Previous value created r=-0.37 vs target [-0.25, -0.10].
+        self.stress_resource_coupling = self._get_env_value("STRESS_RESOURCE_COUPLING", float, 0.10)
+        self.stress_resilience_coupling = self._get_env_value("STRESS_RESILIENCE_COUPLING", float, 0.60)
+        self.stress_erosion_rate = self._get_env_value("STRESS_EROSION_RATE", float, 0.15)
 
         # New coping probability mechanism parameters
         self.coping_base_probability = self._get_env_value("COPING_BASE_PROBABILITY", float, 0.5)
@@ -282,8 +322,9 @@ class Config:
         # ==============================================
         self.affect_peer_influence_rate = self._get_env_value("AFFECT_PEER_INFLUENCE_RATE", float, 0.1)
         self.affect_event_appraisal_rate = self._get_env_value("AFFECT_EVENT_APPRAISAL_RATE", float, 0.15)
-        self.affect_homeostatic_rate = self._get_env_value("AFFECT_HOMEOSTATIC_RATE", float, 0.5)
-        self.resilience_homeostatic_rate = self._get_env_value("RESILIENCE_HOMEOSTATIC_RATE", float, 0.5)
+        # Homeostatic rates migrated to ASSUMPTION_AFFECT_HOMEOSTATIC_RATE / ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE
+        self.affect_homeostatic_rate = None
+        self.resilience_homeostatic_rate = None
 
         self.resilience_coping_success_rate = self._get_env_value("RESILIENCE_COPING_SUCCESS_RATE", float, 0.1)
         self.resilience_social_support_rate = self._get_env_value("RESILIENCE_SOCIAL_SUPPORT_RATE", float, 0.08)
@@ -306,7 +347,7 @@ class Config:
         self.protective_formal_intervention = self._get_env_value("PROTECTIVE_FORMAL_INTERVENTION", float, 0.5)
         self.protective_psychological_capital = self._get_env_value("PROTECTIVE_PSYCHOLOGICAL_CAPITAL", float, 0.5)
 
-        self.resource_base_regeneration = self._get_env_value("RESOURCE_BASE_REGENERATION", float, 0.25)
+        self.resource_base_regeneration = self._get_env_value("RESOURCE_BASE_REGENERATION", float, 0.50)
         self.resource_allocation_cost = self._get_env_value("RESOURCE_ALLOCATION_COST", float, 0.15)
         self.resource_cost_exponent = self._get_env_value("RESOURCE_COST_EXPONENT", float, 1.5)
 
@@ -322,6 +363,227 @@ class Config:
         # MATHEMATICAL UTILITY PARAMETERS
         # ==============================================
         self.utility_softmax_temperature = self._get_env_value("UTILITY_SOFTMAX_TEMPERATURE", float, 1.0)
+
+        # ==============================================
+        # ASSUMPTION PARAMETERIZATION (Plan 007)
+        # ==============================================
+        assumptions = get_assumptions()
+
+        # Coping
+        self.assumption_resource_reward = self._get_env_value(
+            "ASSUMPTION_RESOURCE_REWARD", float, assumptions.coping.resource_reward
+        )
+        self.assumption_resource_penalty = self._get_env_value(
+            "ASSUMPTION_RESOURCE_PENALTY", float, assumptions.coping.resource_penalty
+        )
+        self.assumption_pf_allocation_fraction = self._get_env_value(
+            "ASSUMPTION_PF_ALLOCATION_FRACTION", float, assumptions.coping.pf_allocation_fraction
+        )
+        self.assumption_affect_improvement_scale = self._get_env_value(
+            "ASSUMPTION_AFFECT_IMPROVEMENT_SCALE", float, assumptions.coping.affect_improvement_scale
+        )
+        self.assumption_affect_deterioration_scale = self._get_env_value(
+            "ASSUMPTION_AFFECT_DETERIORATION_SCALE", float, assumptions.coping.affect_deterioration_scale
+        )
+        self.assumption_resilience_improvement_scale = self._get_env_value(
+            "ASSUMPTION_RESILIENCE_IMPROVEMENT_SCALE", float, assumptions.coping.resilience_improvement_scale
+        )
+        self.assumption_resilience_deterioration_scale = self._get_env_value(
+            "ASSUMPTION_RESILIENCE_DETERIORATION_SCALE", float, assumptions.coping.resilience_deterioration_scale
+        )
+        self.assumption_challenge_success_resilience = self._get_env_value(
+            "ASSUMPTION_CHALLENGE_SUCCESS_RESILIENCE", float, assumptions.coping.challenge_success_resilience
+        )
+        self.assumption_challenge_failure_resilience = self._get_env_value(
+            "ASSUMPTION_CHALLENGE_FAILURE_RESILIENCE", float, assumptions.coping.challenge_failure_resilience
+        )
+        self.assumption_hindrance_success_resilience = self._get_env_value(
+            "ASSUMPTION_HINDRANCE_SUCCESS_RESILIENCE", float, assumptions.coping.hindrance_success_resilience
+        )
+        self.assumption_hindrance_failure_resilience = self._get_env_value(
+            "ASSUMPTION_HINDRANCE_FAILURE_RESILIENCE", float, assumptions.coping.hindrance_failure_resilience
+        )
+        self.assumption_success_stress_reduction = self._get_env_value(
+            "ASSUMPTION_SUCCESS_STRESS_REDUCTION", float, assumptions.coping.success_stress_reduction
+        )
+        self.assumption_failure_stress_increase = self._get_env_value(
+            "ASSUMPTION_FAILURE_STRESS_INCREASE", float, assumptions.coping.failure_stress_increase
+        )
+        self.assumption_success_affect_change = self._get_env_value(
+            "ASSUMPTION_SUCCESS_AFFECT_CHANGE", float, assumptions.coping.success_affect_change
+        )
+        self.assumption_failure_affect_change = self._get_env_value(
+            "ASSUMPTION_FAILURE_AFFECT_CHANGE", float, assumptions.coping.failure_affect_change
+        )
+
+        # Stress
+        self.assumption_controllability_challenge_weight = self._get_env_value(
+            "ASSUMPTION_CONTROLLABILITY_CHALLENGE_WEIGHT", float, assumptions.stress.controllability_challenge_weight
+        )
+        self.assumption_controllability_hindrance_weight = self._get_env_value(
+            "ASSUMPTION_CONTROLLABILITY_HINDRANCE_WEIGHT", float, assumptions.stress.controllability_hindrance_weight
+        )
+        self.assumption_overload_challenge_weight = self._get_env_value(
+            "ASSUMPTION_OVERLOAD_CHALLENGE_WEIGHT", float, assumptions.stress.overload_challenge_weight
+        )
+        self.assumption_overload_hindrance_weight = self._get_env_value(
+            "ASSUMPTION_OVERLOAD_HINDRANCE_WEIGHT", float, assumptions.stress.overload_hindrance_weight
+        )
+        self.assumption_baseline_controllability = self._get_env_value(
+            "ASSUMPTION_BASELINE_CONTROLLABILITY", float, assumptions.stress.baseline_controllability
+        )
+        self.assumption_baseline_overload = self._get_env_value(
+            "ASSUMPTION_BASELINE_OVERLOAD", float, assumptions.stress.baseline_overload
+        )
+        self.assumption_controllability_homeostasis_rate = self._get_env_value(
+            "ASSUMPTION_CONTROLLABILITY_HOMEOSTASIS_RATE", float, assumptions.stress.controllability_homeostasis_rate
+        )
+        self.assumption_overload_homeostasis_rate = self._get_env_value(
+            "ASSUMPTION_OVERLOAD_HOMEOSTASIS_RATE", float, assumptions.stress.overload_homeostasis_rate
+        )
+        self.assumption_event_intensity_challenge_weight = self._get_env_value(
+            "ASSUMPTION_EVENT_INTENSITY_CHALLENGE_WEIGHT", float, assumptions.stress.event_intensity_challenge_weight
+        )
+        self.assumption_event_intensity_hindrance_weight = self._get_env_value(
+            "ASSUMPTION_EVENT_INTENSITY_HINDRANCE_WEIGHT", float, assumptions.stress.event_intensity_hindrance_weight
+        )
+        self.assumption_failed_coping_intensity_multiplier = self._get_env_value(
+            "ASSUMPTION_FAILED_COPING_INTENSITY_MULTIPLIER",
+            float,
+            assumptions.stress.failed_coping_intensity_multiplier,
+        )
+        self.assumption_stress_intensity_decay_rate = self._get_env_value(
+            "ASSUMPTION_STRESS_INTENSITY_DECAY_RATE", float, assumptions.stress.stress_intensity_decay_rate
+        )
+        self.assumption_new_intensity_weight = self._get_env_value(
+            "ASSUMPTION_NEW_INTENSITY_WEIGHT", float, assumptions.stress.new_intensity_weight
+        )
+        self.assumption_momentum_increase_rate = self._get_env_value(
+            "ASSUMPTION_MOMENTUM_INCREASE_RATE", float, assumptions.stress.momentum_increase_rate
+        )
+        self.assumption_momentum_decrease_rate = self._get_env_value(
+            "ASSUMPTION_MOMENTUM_DECREASE_RATE", float, assumptions.stress.momentum_decrease_rate
+        )
+        self.assumption_momentum_zero_threshold = self._get_env_value(
+            "ASSUMPTION_MOMENTUM_ZERO_THRESHOLD", float, assumptions.stress.momentum_zero_threshold
+        )
+        self.assumption_momentum_decay_factor = self._get_env_value(
+            "ASSUMPTION_MOMENTUM_DECAY_FACTOR", float, assumptions.stress.momentum_decay_factor
+        )
+        self.assumption_pss10_estimation_base = self._get_env_value(
+            "ASSUMPTION_PSS10_ESTIMATION_BASE", int, int(assumptions.stress.pss10_estimation_base)
+        )
+        self.assumption_pss10_controllability_max_effect = self._get_env_value(
+            "ASSUMPTION_PSS10_CONTROLLABILITY_MAX_EFFECT", int, int(assumptions.stress.pss10_controllability_max_effect)
+        )
+        self.assumption_pss10_overload_max_effect = self._get_env_value(
+            "ASSUMPTION_PSS10_OVERLOAD_MAX_EFFECT", int, int(assumptions.stress.pss10_overload_max_effect)
+        )
+        self.assumption_pss10_estimation_variance = self._get_env_value(
+            "ASSUMPTION_PSS10_ESTIMATION_VARIANCE", int, int(assumptions.stress.pss10_estimation_variance)
+        )
+
+        # Resource
+        self.assumption_resilience_efficiency_factor = self._get_env_value(
+            "ASSUMPTION_RESILIENCE_EFFICIENCY_FACTOR", float, assumptions.resource.resilience_efficiency_factor
+        )
+        self.assumption_min_resource_threshold = self._get_env_value(
+            "ASSUMPTION_MIN_RESOURCE_THRESHOLD", float, assumptions.resource.min_resource_threshold
+        )
+        self.assumption_coping_difficulty_scale = self._get_env_value(
+            "ASSUMPTION_COPING_DIFFICULTY_SCALE", float, assumptions.resource.coping_difficulty_scale
+        )
+        self.assumption_min_cost_floor = self._get_env_value(
+            "ASSUMPTION_MIN_COST_FLOOR", float, assumptions.resource.min_cost_floor
+        )
+        self.assumption_failed_coping_cost_penalty = self._get_env_value(
+            "ASSUMPTION_FAILED_COPING_COST_PENALTY", float, assumptions.resource.failed_coping_cost_penalty
+        )
+        self.assumption_max_efficiency_gain = self._get_env_value(
+            "ASSUMPTION_MAX_EFFICIENCY_GAIN", float, assumptions.resource.max_efficiency_gain
+        )
+        self.assumption_social_resilience_boost_factor = self._get_env_value(
+            "ASSUMPTION_SOCIAL_RESILIENCE_BOOST_FACTOR", float, assumptions.resource.social_resilience_boost_factor
+        )
+        self.assumption_support_exchange_benefit_weight = self._get_env_value(
+            "ASSUMPTION_SUPPORT_EXCHANGE_BENEFIT_WEIGHT", float, assumptions.resource.support_exchange_benefit_weight
+        )
+        self.assumption_challenge_resilience_bonus_factor = self._get_env_value(
+            "ASSUMPTION_CHALLENGE_RESILIENCE_BONUS_FACTOR",
+            float,
+            assumptions.resource.challenge_resilience_bonus_factor,
+        )
+        self.assumption_hindrance_resilience_bonus_factor = self._get_env_value(
+            "ASSUMPTION_HINDRANCE_RESILIENCE_BONUS_FACTOR",
+            float,
+            assumptions.resource.hindrance_resilience_bonus_factor,
+        )
+        self.assumption_overload_allocation_penalty_rate = self._get_env_value(
+            "ASSUMPTION_OVERLOAD_ALLOCATION_PENALTY_RATE", float, assumptions.resource.overload_allocation_penalty_rate
+        )
+        self.assumption_stress_improvement_effectiveness = self._get_env_value(
+            "ASSUMPTION_STRESS_IMPROVEMENT_EFFECTIVENESS", float, assumptions.resource.stress_improvement_effectiveness
+        )
+        self.assumption_social_resource_boost_factor = self._get_env_value(
+            "ASSUMPTION_SOCIAL_RESOURCE_BOOST_FACTOR", float, assumptions.resource.social_resource_boost_factor
+        )
+        self.assumption_preservable_allocation_fraction = self._get_env_value(
+            "ASSUMPTION_PRESERVABLE_ALLOCATION_FRACTION", float, assumptions.resource.preservable_allocation_fraction
+        )
+        self.assumption_social_support_allocation_boost = self._get_env_value(
+            "ASSUMPTION_SOCIAL_SUPPORT_ALLOCATION_BOOST", float, assumptions.resource.social_support_allocation_boost
+        )
+        self.assumption_affect_regeneration_multiplier = self._get_env_value(
+            "ASSUMPTION_AFFECT_REGENERATION_MULTIPLIER", float, assumptions.resource.affect_regeneration_multiplier
+        )
+        self.assumption_resilience_regeneration_multiplier = self._get_env_value(
+            "ASSUMPTION_RESILIENCE_REGENERATION_MULTIPLIER",
+            float,
+            assumptions.resource.resilience_regeneration_multiplier,
+        )
+        self.assumption_efficiency_return_factor = self._get_env_value(
+            "ASSUMPTION_EFFICIENCY_RETURN_FACTOR", float, assumptions.resource.efficiency_return_factor
+        )
+        self.assumption_buffering_boost_rate = self._get_env_value(
+            "ASSUMPTION_BUFFERING_BOOST_RATE", float, assumptions.resource.buffering_boost_rate
+        )
+        self.assumption_buffering_a_coefficient = self._get_env_value(
+            "ASSUMPTION_BUFFERING_A_COEFFICIENT", float, assumptions.resource.buffering_a_coefficient
+        )
+        self.assumption_buffering_b_coefficient = self._get_env_value(
+            "ASSUMPTION_BUFFERING_B_COEFFICIENT", float, assumptions.resource.buffering_b_coefficient
+        )
+        self.assumption_buffering_c_prime_coefficient = self._get_env_value(
+            "ASSUMPTION_BUFFERING_C_PRIME_COEFFICIENT", float, assumptions.resource.buffering_c_prime_coefficient
+        )
+
+        # Social
+        self.assumption_support_exchange_threshold = self._get_env_value(
+            "ASSUMPTION_SUPPORT_EXCHANGE_THRESHOLD", float, assumptions.social.support_exchange_threshold
+        )
+        self.assumption_social_support_probability = self._get_env_value(
+            "ASSUMPTION_SOCIAL_SUPPORT_PROBABILITY", float, assumptions.social.social_support_probability
+        )
+        self.assumption_social_support_exchange_boost = self._get_env_value(
+            "ASSUMPTION_SOCIAL_SUPPORT_EXCHANGE_BOOST", float, assumptions.social.social_support_exchange_boost
+        )
+
+        # Buffering
+        self.assumption_resilience_low_threshold = self._get_env_value(
+            "ASSUMPTION_RESILIENCE_LOW_THRESHOLD", float, assumptions.buffering.resilience_low_threshold
+        )
+        self.assumption_resilience_high_threshold = self._get_env_value(
+            "ASSUMPTION_RESILIENCE_HIGH_THRESHOLD", float, assumptions.buffering.resilience_high_threshold
+        )
+        self.assumption_volatility_beta_alpha = self._get_env_value(
+            "ASSUMPTION_VOLATILITY_BETA_ALPHA", float, assumptions.buffering.volatility_beta_alpha
+        )
+        self.assumption_volatility_beta_beta = self._get_env_value(
+            "ASSUMPTION_VOLATILITY_BETA_BETA", float, assumptions.buffering.volatility_beta_beta
+        )
+        self.assumption_initial_protective_factor_values = self._get_env_value(
+            "ASSUMPTION_INITIAL_PROTECTIVE_FACTOR_VALUES", float, assumptions.buffering.initial_protective_factor_values
+        )
 
         # ==============================================
         # OUTPUT AND LOGGING CONFIGURATION
@@ -408,6 +670,20 @@ class Config:
                 "threshold": self.pss10_threshold,
                 "sensitivity": self._get_env_value("PSS10_SENSITIVITY", float, 0.5),
                 "momentum_weight": self._get_env_value("PSS10_MOMENTUM_WEIGHT", float, 0.3),
+                "pss10_scale": self.pss10_scale,
+                "pss10_noise_sd": self.pss10_noise_sd,
+                "pss10_skew_a": self.pss10_skew_a,
+                "pss10_bias_sd": self.pss10_bias_sd,
+                "pss10_resilience_coupling": self.pss10_resilience_coupling,
+                "pss10_stress_dampening": self.pss10_stress_dampening,
+                "pss10_affect_coupling": self.pss10_affect_coupling,
+                "pss10_affect_adjustment": self.pss10_affect_adjustment,
+                "pss10_resource_coupling": self.pss10_resource_coupling,
+                "pss10_resilience_coupling_item": self.pss10_resilience_coupling_item,
+                "stress_affect_coupling": self.stress_affect_coupling,
+                "stress_resource_coupling": self.stress_resource_coupling,
+                "stress_resilience_coupling": self.stress_resilience_coupling,
+                "stress_erosion_rate": self.stress_erosion_rate,
             },
             "interaction": {
                 "influence_rate": self.interaction_influence_rate,
@@ -417,13 +693,13 @@ class Config:
             "affect_dynamics": {
                 "peer_influence_rate": self.affect_peer_influence_rate,
                 "event_appraisal_rate": self.affect_event_appraisal_rate,
-                "homeostatic_rate": self.affect_homeostatic_rate,
+                "homeostatic_rate": get_assumptions().stress.affect_homeostatic_rate,
             },
             "resilience_dynamics": {
                 "coping_success_rate": self.resilience_coping_success_rate,
                 "social_support_rate": self.resilience_social_support_rate,
                 "overload_threshold": self.resilience_overload_threshold,
-                "homeostatic_rate": self.resilience_homeostatic_rate,
+                "homeostatic_rate": get_assumptions().stress.resilience_homeostatic_rate,
                 "boost_rate": self.resilience_boost_rate,
             },
             "influence": {
@@ -455,6 +731,74 @@ class Config:
             "utility": {
                 "softmax_temperature": self.utility_softmax_temperature,
             },
+            "assumptions": {
+                "resource_reward": self.assumption_resource_reward,
+                "resource_penalty": self.assumption_resource_penalty,
+                "pf_allocation_fraction": self.assumption_pf_allocation_fraction,
+                "affect_improvement_scale": self.assumption_affect_improvement_scale,
+                "affect_deterioration_scale": self.assumption_affect_deterioration_scale,
+                "resilience_improvement_scale": self.assumption_resilience_improvement_scale,
+                "resilience_deterioration_scale": self.assumption_resilience_deterioration_scale,
+                "challenge_success_resilience": self.assumption_challenge_success_resilience,
+                "challenge_failure_resilience": self.assumption_challenge_failure_resilience,
+                "hindrance_success_resilience": self.assumption_hindrance_success_resilience,
+                "hindrance_failure_resilience": self.assumption_hindrance_failure_resilience,
+                "success_stress_reduction": self.assumption_success_stress_reduction,
+                "failure_stress_increase": self.assumption_failure_stress_increase,
+                "success_affect_change": self.assumption_success_affect_change,
+                "failure_affect_change": self.assumption_failure_affect_change,
+                "controllability_challenge_weight": self.assumption_controllability_challenge_weight,
+                "controllability_hindrance_weight": self.assumption_controllability_hindrance_weight,
+                "overload_challenge_weight": self.assumption_overload_challenge_weight,
+                "overload_hindrance_weight": self.assumption_overload_hindrance_weight,
+                "baseline_controllability": self.assumption_baseline_controllability,
+                "baseline_overload": self.assumption_baseline_overload,
+                "controllability_homeostasis_rate": self.assumption_controllability_homeostasis_rate,
+                "overload_homeostasis_rate": self.assumption_overload_homeostasis_rate,
+                "event_intensity_challenge_weight": self.assumption_event_intensity_challenge_weight,
+                "event_intensity_hindrance_weight": self.assumption_event_intensity_hindrance_weight,
+                "failed_coping_intensity_multiplier": self.assumption_failed_coping_intensity_multiplier,
+                "stress_intensity_decay_rate": self.assumption_stress_intensity_decay_rate,
+                "new_intensity_weight": self.assumption_new_intensity_weight,
+                "momentum_increase_rate": self.assumption_momentum_increase_rate,
+                "momentum_decrease_rate": self.assumption_momentum_decrease_rate,
+                "momentum_zero_threshold": self.assumption_momentum_zero_threshold,
+                "momentum_decay_factor": self.assumption_momentum_decay_factor,
+                "pss10_estimation_base": self.assumption_pss10_estimation_base,
+                "pss10_controllability_max_effect": self.assumption_pss10_controllability_max_effect,
+                "pss10_overload_max_effect": self.assumption_pss10_overload_max_effect,
+                "pss10_estimation_variance": self.assumption_pss10_estimation_variance,
+                "resilience_efficiency_factor": self.assumption_resilience_efficiency_factor,
+                "min_resource_threshold": self.assumption_min_resource_threshold,
+                "coping_difficulty_scale": self.assumption_coping_difficulty_scale,
+                "min_cost_floor": self.assumption_min_cost_floor,
+                "failed_coping_cost_penalty": self.assumption_failed_coping_cost_penalty,
+                "max_efficiency_gain": self.assumption_max_efficiency_gain,
+                "social_resilience_boost_factor": self.assumption_social_resilience_boost_factor,
+                "support_exchange_benefit_weight": self.assumption_support_exchange_benefit_weight,
+                "challenge_resilience_bonus_factor": self.assumption_challenge_resilience_bonus_factor,
+                "hindrance_resilience_bonus_factor": self.assumption_hindrance_resilience_bonus_factor,
+                "overload_allocation_penalty_rate": self.assumption_overload_allocation_penalty_rate,
+                "stress_improvement_effectiveness": self.assumption_stress_improvement_effectiveness,
+                "social_resource_boost_factor": self.assumption_social_resource_boost_factor,
+                "preservable_allocation_fraction": self.assumption_preservable_allocation_fraction,
+                "social_support_allocation_boost": self.assumption_social_support_allocation_boost,
+                "affect_regeneration_multiplier": self.assumption_affect_regeneration_multiplier,
+                "resilience_regeneration_multiplier": self.assumption_resilience_regeneration_multiplier,
+                "efficiency_return_factor": self.assumption_efficiency_return_factor,
+                "buffering_boost_rate": self.assumption_buffering_boost_rate,
+                "buffering_a_coefficient": self.assumption_buffering_a_coefficient,
+                "buffering_b_coefficient": self.assumption_buffering_b_coefficient,
+                "buffering_c_prime_coefficient": self.assumption_buffering_c_prime_coefficient,
+                "support_exchange_threshold": self.assumption_support_exchange_threshold,
+                "social_support_probability": self.assumption_social_support_probability,
+                "social_support_exchange_boost": self.assumption_social_support_exchange_boost,
+                "resilience_low_threshold": self.assumption_resilience_low_threshold,
+                "resilience_high_threshold": self.assumption_resilience_high_threshold,
+                "volatility_beta_alpha": self.assumption_volatility_beta_alpha,
+                "volatility_beta_beta": self.assumption_volatility_beta_beta,
+                "initial_protective_factor_values": self.assumption_initial_protective_factor_values,
+            },
             "output": {
                 "log_level": self.log_level,
                 "results_dir": self.output_results_dir,
@@ -466,7 +810,7 @@ class Config:
             },
         }
 
-    def get(self, section: str, key: str = None):
+    def get(self, section: str, key: str | None = None):
         """
         Get configuration value(s).
 
@@ -491,7 +835,7 @@ class Config:
 
         return self._config[section][key]
 
-    def validate(self) -> None:
+    def validate(self) -> None:  # type: ignore[operator]
         """
         Validate configuration parameters for consistency and reasonable ranges.
 
@@ -499,15 +843,15 @@ class Config:
             ConfigurationError: If validation fails
         """
         # Network validation
-        if self.network_watts_k < 2:
+        if self.network_watts_k < 2:  # type: ignore[operator]
             raise ConfigurationError("Network k parameter must be >= 2")
-        if not (0 <= self.network_watts_p <= 1):
+        if not (0 <= self.network_watts_p <= 1):  # type: ignore[operator]
             raise ConfigurationError("Network p parameter must be in [0, 1]")
-        if self.network_adaptation_threshold < 1:
+        if self.network_adaptation_threshold < 1:  # type: ignore[operator]
             raise ConfigurationError("Network adaptation threshold must be >= 1")
-        if not (0 <= self.network_rewire_probability <= 1):
+        if not (0 <= self.network_rewire_probability <= 1):  # type: ignore[operator]
             raise ConfigurationError("Network rewiring probability must be in [0, 1]")
-        if not (0 <= self.network_homophily_strength <= 1):
+        if not (0 <= self.network_homophily_strength <= 1):  # type: ignore[operator]
             raise ConfigurationError("Network homophily strength must be in [0, 1]")
 
         # Agent validation
@@ -518,104 +862,104 @@ class Config:
         if not (-1 <= self.agent_initial_affect_mean <= 1):
             raise ConfigurationError("Agent initial affect mean must be in [-1, 1]")
         if self.agent_initial_affect_sd <= 0:
-            raise ConfigurationError("Agent initial affect SD must be positive")
-        if not (0 <= self.agent_initial_resources_mean <= 1):
+            raise ConfigurationError("Agent initial affect SD must be positive")  # type: ignore[operator]
+        if not (0 <= self.agent_initial_resources_mean <= 1):  # type: ignore[operator]
             raise ConfigurationError("Agent initial resources mean must be in [0, 1]")
-        if self.agent_initial_resources_sd <= 0:
+        if self.agent_initial_resources_sd <= 0:  # type: ignore[operator]
             raise ConfigurationError("Agent initial resources SD must be positive")
-        if not (0 <= self.agent_stress_probability <= 1):
+        if not (0 <= self.agent_stress_probability <= 1):  # type: ignore[operator]
             raise ConfigurationError("Agent stress probability must be in [0, 1]")
 
         # Stress validation
-        for param in [self.stress_controllability_mean, self.stress_overload_mean]:
-            if not (0 <= param <= 1):
+        for param in [self.stress_controllability_mean, self.stress_overload_mean]:  # type: ignore[misc]
+            if not (0 <= param <= 1):  # type: ignore[operator]
                 raise ConfigurationError("Stress event means must be in [0, 1]")
 
         # Stress SD validation
-        for param in [self.stress_controllability_sd, self.stress_overload_sd]:
-            if param <= 0:
+        for param in [self.stress_controllability_sd, self.stress_overload_sd]:  # type: ignore[misc]
+            if param <= 0:  # type: ignore[operator]
                 raise ConfigurationError("Stress event standard deviations must be positive")
 
         # PSS-10 validation
-        if len(self.pss10_item_means) != 10:
+        if len(self.pss10_item_means) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 item means must have exactly 10 values")
 
-        if len(self.pss10_item_sds) != 10:
+        if len(self.pss10_item_sds) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 item standard deviations must have exactly 10 values")
 
-        if len(self.pss10_load_controllability) != 10:
+        if len(self.pss10_load_controllability) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 controllability loadings must have exactly 10 values")
 
-        if len(self.pss10_load_overload) != 10:
+        if len(self.pss10_load_overload) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 overload loadings must have exactly 10 values")
 
-        for i, mean_val in enumerate(self.pss10_item_means):
-            if not (0 <= mean_val <= 4):
+        for i, mean_val in enumerate(self.pss10_item_means):  # type: ignore[misc]
+            if not (0 <= mean_val <= 4):  # type: ignore[operator]
                 raise ConfigurationError(f"PSS-10 item mean at index {i} must be in [0, 4], got {mean_val}")
 
-        for i, sd_val in enumerate(self.pss10_item_sds):
-            if sd_val <= 0:
+        for i, sd_val in enumerate(self.pss10_item_sds):  # type: ignore[misc]
+            if sd_val <= 0:  # type: ignore[operator]
                 raise ConfigurationError(f"PSS-10 item standard deviation at index {i} must be positive, got {sd_val}")
 
-        for i, loading_val in enumerate(self.pss10_load_controllability):
-            if not (0 <= loading_val <= 1):
+        for i, loading_val in enumerate(self.pss10_load_controllability):  # type: ignore[misc]
+            if not (0 <= loading_val <= 1):  # type: ignore[operator]
                 raise ConfigurationError(
                     f"PSS-10 controllability loading at index {i} must be in [0, 1], got {loading_val}"
                 )
 
-        for i, loading_val in enumerate(self.pss10_load_overload):
-            if not (0 <= loading_val <= 1):
+        for i, loading_val in enumerate(self.pss10_load_overload):  # type: ignore[misc]
+            if not (0 <= loading_val <= 1):  # type: ignore[operator]
                 raise ConfigurationError(f"PSS-10 overload loading at index {i} must be in [0, 1], got {loading_val}")
 
-        if not (-1 <= self.pss10_bifactor_correlation <= 1):
+        if not (-1 <= self.pss10_bifactor_correlation <= 1):  # type: ignore[operator]
             raise ConfigurationError(
                 f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}"
             )
 
         # PSS-10 standard deviation validation
-        if self.pss10_controllability_sd <= 0:
+        if self.pss10_controllability_sd <= 0:  # type: ignore[operator]
             raise ConfigurationError(f"PSS-10 controllability SD must be positive, got {self.pss10_controllability_sd}")
-        if self.pss10_overload_sd <= 0:
+        if self.pss10_overload_sd <= 0:  # type: ignore[operator]
             raise ConfigurationError(f"PSS-10 overload SD must be positive, got {self.pss10_overload_sd}")
 
         # PSS-10 bifactor model validation
-        if len(self.pss10_load_controllability) != 10:
+        if len(self.pss10_load_controllability) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 controllability loadings must have exactly 10 values")
 
-        if len(self.pss10_load_overload) != 10:
+        if len(self.pss10_load_overload) != 10:  # type: ignore[arg-type]
             raise ConfigurationError("PSS-10 overload loadings must have exactly 10 values")
 
-        for i, load_val in enumerate(self.pss10_load_controllability):
-            if not (0 <= load_val <= 1):
+        for i, load_val in enumerate(self.pss10_load_controllability):  # type: ignore[misc]
+            if not (0 <= load_val <= 1):  # type: ignore[operator]
                 raise ConfigurationError(
                     f"PSS-10 controllability loading at index {i} must be in [0, 1], got {load_val}"
                 )
 
-        for i, load_val in enumerate(self.pss10_load_overload):
-            if not (0 <= load_val <= 1):
+        for i, load_val in enumerate(self.pss10_load_overload):  # type: ignore[misc]
+            if not (0 <= load_val <= 1):  # type: ignore[operator]
                 raise ConfigurationError(f"PSS-10 overload loading at index {i} must be in [0, 1], got {load_val}")
 
-        if not (-1 <= self.pss10_bifactor_correlation <= 1):
+        if not (-1 <= self.pss10_bifactor_correlation <= 1):  # type: ignore[operator]
             raise ConfigurationError(
                 f"PSS-10 bifactor correlation must be in [-1, 1], got {self.pss10_bifactor_correlation}"
             )
 
         # Threshold validation
-        if not (0 <= self.threshold_base_threshold <= 1):
+        if not (0 <= self.threshold_base_threshold <= 1):  # type: ignore[operator]
             raise ConfigurationError("Base threshold must be in [0, 1]")
-        if not (0 <= self.threshold_stress_threshold <= 1):
+        if not (0 <= self.threshold_stress_threshold <= 1):  # type: ignore[operator]
             raise ConfigurationError("Stress threshold must be in [0, 1]")
-        if not (0 <= self.threshold_affect_threshold <= 1):
+        if not (0 <= self.threshold_affect_threshold <= 1):  # type: ignore[operator]
             raise ConfigurationError("Affect threshold must be in [0, 1]")
 
         # Coping validation
-        if not (0 <= self.coping_base_probability <= 1):
+        if not (0 <= self.coping_base_probability <= 1):  # type: ignore[operator]
             raise ConfigurationError("Coping base probability must be in [0, 1]")
-        if not (0 <= self.coping_social_influence <= 1):
+        if not (0 <= self.coping_social_influence <= 1):  # type: ignore[operator]
             raise ConfigurationError("Coping social influence must be in [0, 1]")
-        if not (0 <= self.coping_challenge_bonus <= 1):
+        if not (0 <= self.coping_challenge_bonus <= 1):  # type: ignore[operator]
             raise ConfigurationError("Coping challenge bonus must be in [0, 1]")
-        if not (0 <= self.coping_hindrance_penalty <= 1):
+        if not (0 <= self.coping_hindrance_penalty <= 1):  # type: ignore[operator]
             raise ConfigurationError("Coping hindrance penalty must be in [0, 1]")
 
         # Dynamics validation
@@ -703,6 +1047,10 @@ def reload_config(env_file: Optional[str] = None) -> Config:
     global config
     config = Config(env_file)
     config.validate()
+    # Also reset assumption cache so phase modules pick up new env vars
+    from src.python.assumption_config import reload_assumptions as _ra
+
+    _ra()
     return config
 
 

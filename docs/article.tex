@@ -1,4 +1,5 @@
 % Options for packages loaded elsewhere
+% Options for packages loaded elsewhere
 \PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 \PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
@@ -7,21 +8,22 @@
   letterpaper,
   DIV=11,
   numbers=noendperiod]{scrartcl}
-
+\usepackage{xcolor}
 \usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 \usepackage{iftex}
 \ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
 \else % if luatex or xetex
-  \usepackage{unicode-math}
+  \usepackage{unicode-math} % this also loads fontspec
   \defaultfontfeatures{Scale=MatchLowercase}
   \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
 \fi
 \usepackage{lmodern}
-\ifPDFTeX\else  
-    % xetex/luatex font selection
+\ifPDFTeX\else
+  % xetex/luatex font selection
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -39,9 +41,6 @@
 }{% if KOMA class
   \KOMAoptions{parskip=half}}
 \makeatother
-\usepackage{xcolor}
-\setlength{\emergencystretch}{3em} % prevent overfull lines
-\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 % Make \paragraph and \subparagraph free-standing
 \makeatletter
 \ifx\paragraph\undefined\else
@@ -67,8 +66,7 @@
 \makeatother
 
 
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{longtable,booktabs,array}
 \usepackage{calc} % for calculating minipage widths
 % Correct order of tables after \paragraph or \subparagraph
 \usepackage{etoolbox}
@@ -80,17 +78,21 @@
 \makesavenoteenv{longtable}
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
+
+
 % definitions for citeproc citations
 \NewDocumentCommand\citeproctext{}{}
 \NewDocumentCommand\citeproc{mm}{%
@@ -124,6 +126,18 @@
 \newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+
+
+
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+ 
+
 
 \usepackage{longtable}
 \usepackage{amsmath}
@@ -185,14 +199,9 @@
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
 \makeatother
-
-\ifLuaTeX
-  \usepackage{selnolig}  % disable illegal ligatures
-\fi
 \usepackage{bookmark}
-
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same} % disable monospaced font for URLs
+\urlstyle{same}
 \hypersetup{
   pdftitle={An agent-based simulation of psychological resilience},
   pdfauthor={Aly Lamuri},
@@ -207,7 +216,6 @@
 \title{An agent-based simulation of psychological resilience}
 \author{Aly Lamuri}
 \date{}
-
 \begin{document}
 \maketitle
 
@@ -901,150 +909,69 @@ agent-based modeling for understanding psychological resilience.
 
 \section{Results}\label{results}
 
+The results are organised in four steps. We first describe the baseline
+population, then the stability of its population-level dynamics, then
+the individual heterogeneity underlying that stability together with the
+contribution of each model mechanism, and finally the associations that
+emerge at the end state.
+
+\subsection{Baseline: initial population
+state}\label{baseline-initial-population-state}
+
 Figure~\ref{fig-initial-population} presents a cross-sectional snapshot
-of agent psychological states at epoch 0, derived from randomly
-generated baseline data with minimal theoretical associations except for
-PSS-10 scores and stress levels. This figure underscores the absence of
-predetermined relationships in the initialization phase, highlighting
-the random nature of agent attributes that establish a neutral starting
-point for subsequent dynamics. The initial stress level has an
-artificially strong correlation to PSS-10 because it was generated from
-PSS-10. The rationale is to ground the initial stress level to an
-empirical values reflected in PSS-10. By illustrating uncorrelated
-variables, it emphasizes the model's reliance on stochastic processes to
-simulate real-world heterogeneity without biasing initial conditions.
+of agent psychological states before the first simulation day. Baseline
+resilience, affect, and resources are sampled independently, and the
+PSS-10 score is derived from its item responses, so the population
+starts from a neutral point: no pairwise association exceeds 0.20 in
+magnitude, and the PSS-10--stress correlation is only 0.03. This absence
+of predetermined relationships is intentional: any associations observed
+at the end state must therefore emerge from the model's dynamics rather
+than from biased initial conditions.
 
 \begin{figure}
 
 \centering{
 
-\includegraphics{figures/base_initial_population.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/full_model_initial_population.pdf}}
 
 }
 
 \caption{\label{fig-initial-population}Cross-sectional visualization of
-agent psychological states at epoch 0, highlighting randomly generated
-baseline distributions with minimal associations except between PSS-10
-and stress levels}
+agent psychological states at baseline, highlighting uncorrelated
+randomly generated distributions}
 
 \end{figure}%
 
-Figure~\ref{fig-final-population} captures cross-sectional agent states
-at the simulation's conclusion, revealing theoretically grounded
-associations among psychological variables. Resilience exhibits a weak
-positive correlation with affect, a weak-to-moderate negative
-correlation with stress, and a weak negative correlation with PSS-10. In
-contrast, stress shows a moderate positive correlation with PSS-10,
-accompanied by increasing dispersion in stress levels at higher PSS-10
-scores, reflecting realistic overdispersion in psychometric instruments.
-This visualization demonstrates model convergence toward expected
-relationships, validating the simulation's capacity to generate
-plausible homeostatic mechanism of psychological dynamics.
-
-Figure~\ref{fig-time-series} depicts longitudinal trajectories of all
-agents across simulation epochs, showcasing stable temporal variation
-indicative of effective homeostatic mechanisms. Drawing from
-comprehensive agent-state data over time, this figure reveals
-equilibrium maintenance through consistent fluctuations, with
-implications for understanding behavioral stability and dynamic
-resilience in response to stressors. It directly addresses the
-hypothesis by evidencing stable population metrics within constant
-ranges, affirming that agent-based simulations can model homeostatic
-resilience via social network dynamics, where interactions sustain
-mental health equilibrium without excessive variability.
-
-\begin{figure}
-
-\centering{
-
-\includegraphics{figures/base_final_population.pdf}
-
-}
-
-\caption{\label{fig-final-population}The emerging associations of agent
-psychological states captured at simulation completion}
-
-\end{figure}%
+\subsection{Homeostatic stability of population
+dynamics}\label{homeostatic-stability-of-population-dynamics}
 
 Under homogeneous initial conditions simulating a general population,
-the model exhibited stable homeostatic mechanisms with population-level
-metrics confined to narrow ranges, directly supporting the research
-question on agent-based modeling of psychological resilience through
-social network dynamics. Model-level analysis reveals remarkable
-stability in aggregate measures. Mean perceived stress (PSS-10 = 24.804
-± 0.308, range: 21.93--25.65) demonstrates low variability indicative of
-effective homeostatic regulation. Resilience (0.523 ± 0.008, range:
-0.48--0.54) shows uniform coping capacity across the population. Affect
-(−0.024 ± 0.003, range: −0.03 to −0.01) exhibits controlled mood
-variation near neutral. This population-level stability occurs despite
-substantial individual-level heterogeneity. Agent-level variability in
-stress shows a coefficient of variation of 31.8\%. Resilience
-demonstrates a coefficient of variation of 55.3\%. Affect exhibits a
-coefficient of variation of 1421\%. Elevated resource levels (0.702 ±
-0.005) indicate effective resource management through social network
-dynamics. Moderate stress (0.484 ± 0.007) relative to baselines suggests
-effective stress mitigation. These outcomes directly affirm the
-hypothesis that agent interactions determine mental health outcomes
-within a stable homeostatic state. The findings simultaneously address
-the research question by demonstrating that complex social interactions
-can maintain population equilibrium despite individual variability.
+the model exhibits stable homeostatic mechanisms: population-level
+metrics remain confined to narrow ranges across all 90 simulation days.
+Mean perceived stress (PSS-10 = 13.533 ± 0.760, CV 5.6\%, range
+12.34--16.56) demonstrates low variability indicative of effective
+homeostatic regulation. Resilience (0.439 ± 0.015, CV 3.4\%) shows
+uniform coping capacity across the population, and affect (-0.060 ±
+0.016, CV 27.3\%) exhibits controlled mood variation near neutral.
+Elevated resource levels (0.338 ± 0.005) indicate effective resource
+management through social network dynamics, and moderate stress (0.241 ±
+0.055) relative to baselines suggests effective stress mitigation.
 
-\begin{table}
-
-\caption{\label{tbl-model-level}Model-level population statistics demonstrating homeostatic stability}
-
-\centering{
-
-\centering
-
-
-\begin{tabular}{llp{5.5cm}}
-\toprule
-\textbf{Variable} & \textbf{Mean $\pm$ SD} & \textbf{Interpretation} \\
-\midrule
-PSS-10 across agents & 24.804 $\pm$ 0.308 & Stable stress perception with moderate elevation \\
-Resilience level & 0.523 $\pm$ 0.008 & Uniform coping capacity across population \\
-Affect (valence) & $-0.024 \pm 0.003$ & Controlled mood variation near neutral \\
-Coping success rate & 0.448 $\pm$ 0.012 & Reliable coping outcomes maintaining homeostasis \\
-Psychological resources & 0.702 $\pm$ 0.005 & Stable resource levels supporting resilience \\
-Current stress level & 0.484 $\pm$ 0.007 & Variable patterns within bounded ranges \\
-Challenge appraisal & 0.500 $\pm$ 0.007 & Balanced appraisal pattern \\
-Hindrance appraisal & 0.500 $\pm$ 0.007 & Balanced appraisal pattern \\
-Challenge--hindrance diff. & $-0.000 \pm 0.014$ & Centered near zero, indicating equilibrium \\
-Hindrance sequence length & 1.862 $\pm$ 0.066 & Occasional stress streaks but stable overall \\
-Coping events per agent & 684.201 $\pm$ 25.642 & Uniform behavioral patterns \\
-Social exchanges per agent & 1522.693 $\pm$ 38.794 & Consistent network engagement \\
-Support transactions & 395.853 $\pm$ 22.364 & Consistent mutual aid \\
-\bottomrule
-\end{tabular}
-
-}
-
-\end{table}%
-
-Table~\ref{tbl-model-level} substantiates a homeostatic system sustained
-by social network dynamics and agent interactions. The aggregate metrics
-demonstrate stability across all psychological variables, with
-coefficients of variation ranging from 1.1\% (resource levels) to 5.7\%
-(current stress), indicating tight population-level regulation. These
-constrained variabilities evidence steady-state dynamics wherein
-supportive networks bolster resource preservation and stress
-alleviation, supporting the hypothesis of population metrics within
-constant ranges. Balanced challenge-hindrance appraisals (0.500 ± 0.007
-each, with difference centered at -0.000 ± 0.014) imply neutral
-cognitive processing and effective appraisal mechanisms. Uniform social
-exchanges (1522.693 ± 38.794 per agent) denote robust network-based
-mutual aid that maintains collective stability. Support transactions
-(395.853 ± 22.364) further validate the mutual aid system. The
-consistent coping success rate (0.448 ± 0.012) across all agents
-validates the model's capacity to simulate emergent equilibrium from
-individual interactions that promote mental health outcomes.
+Figure~\ref{fig-time-series} depicts the longitudinal trajectories of
+all agents across simulation epochs, showcasing stable temporal
+variation indicative of effective homeostatic mechanisms. Drawing from
+comprehensive agent-state data over time, this figure reveals
+equilibrium maintenance through consistent fluctuations: population
+metrics remain within constant ranges, affirming that agent-based
+simulations can model homeostatic resilience via social network
+dynamics, where interactions sustain mental health equilibrium without
+excessive variability.
 
 \begin{figure}
 
 \centering{
 
-\includegraphics{figures/base_time_series.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/full_model_time_series.pdf}}
 
 }
 
@@ -1056,25 +983,67 @@ simulation epochs}
 
 \begin{table}
 
-\caption{\label{tbl-agent-level}Agent-level temporal dynamics demonstrating individual heterogeneity within population stability}
+\caption{\label{tbl-model-level}Model-level population statistics
+demonstrating homeostatic stability}
 
 \centering{
 
-\centering
-
-
-\begin{tabular}{llp{5.5cm}}
+\begin{tabular}{llll}
 \toprule
-\textbf{Variable} & \textbf{Mean $\pm$ SD} & \textbf{Interpretation} \\
+  & Variable & Mean ± SD & Interpretation\\
 \midrule
-PSS-10 per agent-step & 24.804 $\pm$ 7.900 & Variable stress levels with realistic range \\
-Resilience level & 0.523 $\pm$ 0.289 & Diverse adaptive capacities \\
-Emotional state & $-0.024 \pm$ 0.341 & Variable patterns around neutral \\
-Psychological resources & 0.702 $\pm$ 0.089 & Fluctuating resource capacity \\
-Stress intensity & 0.484 $\pm$ 0.200 & Variable patterns within bounds \\
-Controllability perception & 0.477 $\pm$ 0.131 & Diverse agency experiences \\
-Overload perception & 0.612 $\pm$ 0.144 & Diverse capacity challenges \\
-Hindrance streak length & 0.932 $\pm$ 1.320 & Variable patterns observed \\
+avg\_pss10 & PSS-10 across agents & 13.533 ± 0.760 & Stable stress perception with moderate elevation\\
+avg\_resilience & Resilience level & 0.439 ± 0.015 & Uniform coping capacity across the population\\
+avg\_affect & Affect (valence) & -0.060 ± 0.016 & Controlled mood variation near neutral\\
+coping\_success\_rate & Coping success rate & 0.742 ± 0.045 & Reliable coping outcomes maintaining homeostasis\\
+avg\_resources & Psychological resources & 0.338 ± 0.005 & Stable resource levels supporting resilience\\
+\addlinespace
+avg\_stress & Current stress level & 0.241 ± 0.055 & Variable patterns within bounded ranges\\
+avg\_challenge & Challenge appraisal & 0.499 ± 0.015 & Balanced appraisal pattern\\
+avg\_hindrance & Hindrance appraisal & 0.501 ± 0.015 & Balanced appraisal pattern\\
+avg\_consecutive\_hindrances & Hindrance sequence length & 4.263 ± 0.765 & Occasional stress streaks but stable overall\\
+ & Challenge–hindrance diff. & -0.003 ± 0.030 & Centered near zero, indicating equilibrium\\
+\bottomrule
+\end{tabular}
+
+}
+
+\end{table}%
+
+Table~\ref{tbl-model-level} substantiates a homeostatic system sustained
+by social network dynamics and agent interactions. Coefficients of
+variation range from 1.4\% (resource levels) to 27.3\% (affect),
+indicating tight population-level regulation. Balanced
+challenge--hindrance appraisals (challenge 0.499 ± 0.015, hindrance
+0.501 ± 0.015) imply neutral cognitive processing and effective
+appraisal mechanisms, and the consistent coping success rate (0.742 ±
+0.045) across all agents validates the model's capacity to simulate
+emergent equilibrium from individual interactions that promote mental
+health outcomes.
+
+\subsection{Individual heterogeneity within population
+stability}\label{individual-heterogeneity-within-population-stability}
+
+\begin{table}
+
+\caption{\label{tbl-agent-level}Agent-level temporal dynamics
+demonstrating individual heterogeneity within population stability}
+
+\centering{
+
+\begin{tabular}{llll}
+\toprule
+  & Variable & Mean ± SD & Interpretation\\
+\midrule
+pss10 & PSS-10 per agent-step & 13.533 ± 4.709 & Variable stress levels with realistic range\\
+resilience & Resilience level & 0.439 ± 0.198 & Diverse adaptive capacities\\
+affect & Emotional state & -0.060 ± 0.282 & Variable patterns around neutral\\
+resources & Psychological resources & 0.338 ± 0.031 & Fluctuating resource capacity\\
+current\_stress & Stress intensity & 0.241 ± 0.196 & Variable patterns within bounds\\
+\addlinespace
+stress\_controllability & Controllability perception & 0.839 ± 0.166 & Diverse agency experiences\\
+stress\_overload & Overload perception & 0.139 ± 0.143 & Diverse capacity challenges\\
+consecutive\_hindrances & Hindrance streak length & 3.466 ± 3.839 & Variable patterns observed\\
 \bottomrule
 \end{tabular}
 
@@ -1083,29 +1052,133 @@ Hindrance streak length & 0.932 $\pm$ 1.320 & Variable patterns observed \\
 \end{table}%
 
 Table~\ref{tbl-agent-level} reveals substantial dynamic variability
-within the stable population framework, directly supporting the research
-question on homeostatic resilience modeling through social network
-dynamics. The contrast between population-level stability (coefficient
-of variation \textless{} 6\%) and individual-level heterogeneity
-(coefficient of variation 31.8-1421\%) exemplifies the dual nature of
-the modeled system. Individual agents experience significant
-fluctuations in stress (0.00--40.00), resilience (0.00--1.00), and
-affect (−1.00--1.00). These variations are constrained by social
-interactions that maintain population equilibrium. The comprehensive
-range of controllability (0.477 ± 0.131) captures the cognitive
-appraisal diversity that drives individual adaptation strategies.
-Overload perceptions (0.612 ± 0.144) further demonstrate diverse
-capacity challenges. The bounded hindrance streaks (maximum 17.65)
-demonstrate the system's capacity to prevent pathological cascades
-through network support. These observations directly validate the
-hypothesis that agent interactions shape outcomes within a homeostatic
-state. The model portrays a complex adaptive system where individual
-diversities reflect realistic psychological heterogeneity. Individual
-diversities are harmonized through social dynamics to achieve collective
-stability. The model thus successfully demonstrates that agent-based
-simulations can effectively capture the homeostatic mechanisms of
-psychological resilience. Social network dynamics transform individual
-variability into population-level equilibrium.
+within the stable population framework. The contrast between
+population-level stability (CVs from 1.4\% to 27.3\%) and
+individual-level heterogeneity (CVs from 34.8\% to 470.6\%) exemplifies
+the dual nature of the modeled system. Individual agents experience
+significant fluctuations in stress (0.241 ± 0.196, CV 81.4\%),
+resilience (0.439 ± 0.198, CV 45.2\%), and affect (-0.060 ± 0.282; its
+large CV reflects a mean near zero rather than extreme dispersion).
+These variations are constrained by social interactions that maintain
+population equilibrium. Agents perceive their stressors as largely
+controllable (0.839 ± 0.166) and rarely overwhelming (0.139 ± 0.143),
+capturing the cognitive appraisal diversity that drives individual
+adaptation strategies. Hindrance streaks remain bounded (3.466 ± 3.839,
+maximum 30.2), demonstrating the system's capacity to prevent
+pathological cascades through network support. Individual diversities
+are harmonized through social dynamics to achieve collective stability:
+social network dynamics transform individual variability into
+population-level equilibrium.
+
+\subsection{Mechanism contribution: cumulative building-block
+build-up}\label{mechanism-contribution-cumulative-building-block-build-up}
+
+To make the contribution of each mechanism explicit, the model is
+assembled block by block. Seven stages run the same seeded population (N
+= 100 agents, 90 days): each stage adds one building block on top of the
+previous ones and reports the metrics that block introduces. Stage 1 is
+initialization only; stages 2--6 add stress perception, resilience
+activation, interaction, resource allocation, and stress buffering in
+turn; stage 7 is the full model, including the remaining daily-cycle
+internals (affect dynamics, PSS-10 consolidation, daily reset) and
+network adaptation, run through the production pipeline
+(\texttt{simulate.py}). Results are computed by
+\texttt{pixi\ run\ cumulative-blocks} and exported to
+\texttt{data/output/}.
+
+\subsubsection{Stage composition}\label{stage-composition}
+
+The seven stages accumulate building blocks; each row lists the blocks
+active at that stage.
+
+\begin{table}
+
+\caption{\label{tab:cum-stage-blocks}Cumulative stage composition: building blocks active per stage}
+\centering
+\begin{tabular}[t]{rl}
+\toprule
+Stage & Blocks active\\
+\midrule
+1 & initialization\\
+2 & initialization,stress\_perception\\
+3 & initialization,stress\_perception,resilience\_activation\\
+4 & initialization,stress\_perception,resilience\_activation,interaction\\
+5 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation\\
+\addlinespace
+6 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation,stress\_buffering\\
+7 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation,stress\_buffering,affect\_dynamics,pss10\_consolidation,daily\_reset,network\_adaptation\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Stage metrics}\label{stage-metrics}
+
+Each block contributes its own metric family: perception adds
+challenge/hindrance appraisal, activation adds coping success,
+interaction adds social support exchange, allocation adds resource
+regeneration, and buffering adds buffering strength and stress
+depletion. Empty cells mark metrics whose block is not yet active. Stage
+7 runs through \texttt{simulate.py}, which does not export the
+allocation and buffering phase metrics, so those cells remain empty.
+
+\begin{table}
+
+\caption{\label{tab:cum-stage-metrics}Cumulative building-block metrics by stage (means over the run)}
+\centering
+\begin{tabular}[t]{llllllll}
+\toprule
+  & Stage 1 & Stage 2 & Stage 3 & Stage 4 & Stage 5 & Stage 6 & Stage 7\\
+\midrule
+PSS-10 & 15.96 & 15.96 & 16.18 & 18.28 & 18.22 & 17.89 & 13.77\\
+Current stress & 0.425 & 0.425 & 0.715 & 0.798 & 0.798 & 0.762 & 0.237\\
+Affect & 0.026 & 0.026 & -0.92 & -0.982 & -0.982 & -0.981 & -0.064\\
+Resilience & 0.459 & 0.459 & 0.297 & 0.068 & 0.068 & 0.208 & 0.447\\
+Resources & 0.493 & 0.493 & 0.116 & 0.115 & 0.315 & 0.311 & 0.338\\
+\addlinespace
+Stress prevalence & 0.03 & 0.03 & 0.03 & 0.09 & 0.1 & 0.11 & 0.01\\
+Challenge appraisal & n/a & 0.499 & 0.502 & 0.498 & 0.498 & 0.498 & 0.499\\
+Hindrance appraisal & n/a & 0.501 & 0.498 & 0.502 & 0.502 & 0.502 & 0.501\\
+Coping success rate & n/a & n/a & 0.457 & 0.349 & 0.35 & 0.407 & 0.742\\
+Support exchange rate & n/a & n/a & n/a & 0.297 & 0.297 & 0.685 & 0.007\\
+\addlinespace
+Regeneration & n/a & n/a & n/a & n/a & 0.366 & 0.366 & n/a\\
+Buffering strength & n/a & n/a & n/a & n/a & n/a & 0.03 & n/a\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The build-up shows how each mechanism shifts the population metrics.
+Stage 7 -- the complete model -- is the configuration reported in the
+model-level and agent-level tables above; its final-day population state
+and agent heterogeneity are examined in the next section.
+
+\subsection{Emergent associations at the end
+state}\label{emergent-associations-at-the-end-state}
+
+Figure~\ref{fig-final-population} captures cross-sectional agent states
+at the simulation's conclusion, revealing theoretically grounded
+associations among psychological variables. Resilience exhibits a weak
+positive correlation with affect (0.26), a moderate negative correlation
+with stress (-0.42), and a moderate negative correlation with PSS-10
+(-0.47). In contrast, stress shows a moderate positive correlation with
+PSS-10 (0.50), up from an essentially zero baseline association (0.03),
+accompanied by increasing dispersion in stress levels at higher PSS-10
+scores. This visualization demonstrates model convergence toward
+expected relationships, validating the simulation's capacity to generate
+plausible homeostatic mechanisms of psychological dynamics.
+
+\begin{figure}
+
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{figures/full_model_final_population.pdf}}
+
+}
+
+\caption{\label{fig-final-population}The emerging associations of agent
+psychological states captured at simulation completion}
+
+\end{figure}%
 
 \section{Discussion}\label{discussion}
 

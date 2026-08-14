@@ -1,0 +1,106 @@
+---
+title: "Resilience Activation — Coping Outcome Dynamics"
+format: html
+---
+
+## What This Code Does
+
+This demo varies challenge and hindrance inputs across [0, 1] at three neighbour affect levels (−0.5, 0.0, +0.5) to show how coping probability, resilience effects, and resource costs respond to the challenge/hindrance balance.
+
+The theory predicts: coping probability increases with the challenge/hindrance ratio; neighbour affect modulates this curve (positive neighbours raise odds, negative neighbours lower them); successful coping reduces stress and boosts affect; failure does the reverse.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from numpy.random import Generator, PCG64
+
+demos_dir = pathlib.Path(os.getcwd())
+project_root = demos_dir.parents[2]
+sys.path.insert(0, str(project_root))
+
+from src.python.phases.resilience_activation import run_phase
+```
+
+## Step 1: Sweep Challenge, Hindrance, and Neighbour Affect
+
+This 3D sweep (30×30×3 = 2,700 runs) explores the full parameter space of the resilience activation phase. Each run records coping probability, success/failure outcome, resilience effect, delta stress, delta affect, and resource cost.
+
+```{python}
+#| label: sweep
+NEIGHBOR_LEVELS = [-0.5, 0.0, 0.5]
+N_CH, N_HI = 30, 30
+
+base_state = {
+    "affect": 0.0, "resilience": 0.5, "current_stress": 0.3,
+    "baseline_resilience": 0.5, "stress_controllability": 0.5,
+    "stress_overload": 0.5, "volatility": 0.5, "recent_stress_intensity": 0.1,
+    "stress_momentum": 0.0, "resources": 0.5,
+    "protective_factors": {"social_support": 0.5, "family_support": 0.5,
+                           "formal_intervention": 0.5, "psychological_capital": 0.5},
+    "consecutive_hindrances": 0.0, "stress_breach_count": 0, "support_boost": 0.0,
+}
+base_config = {"base_resource_cost": 0.1}
+records = []
+
+for neighbor_affects in NEIGHBOR_LEVELS:
+    for challenge in np.linspace(0, 1, N_CH):
+        for hindrance in np.linspace(0, 1, N_HI):
+            rng = Generator(PCG64(42))
+            state = dict(base_state)
+            state["challenge"], state["hindrance"] = challenge, hindrance
+            config = dict(base_config)
+            config["neighbor_affects"] = [neighbor_affects]
+            out = run_phase(state, config, rng)
+            obs = out["observation"]
+            records.append({
+                "challenge": challenge, "hindrance": hindrance,
+                "neighbor_affect": neighbor_affects,
+                "coping_probability": obs["coping_probability"],
+                "coped_successfully": int(obs["coped_successfully"]),
+                "resilience_effect": obs["resilience_effect"],
+                "delta_stress": obs["delta_stress"],
+                "delta_affect": obs["delta_affect"],
+                "resource_cost": obs["resource_cost"],
+            })
+
+df = pd.DataFrame(records)
+print(f"Generated {len(df)} data points")
+```
+
+## Step 2: Correlogram — Coping Outcome Patterns
+
+The 8×8 PairGrid below is coloured by coping outcome (green = success, red = failure).
+
+```{python}
+#| label: fig-correlogram
+vars_ = ["challenge", "hindrance", "neighbor_affect", "coping_probability",
+         "resilience_effect", "delta_stress", "delta_affect", "resource_cost"]
+
+g = sns.PairGrid(df, vars=vars_, hue="coped_successfully",
+                 palette={0: "#e74c3c", 1: "#2ecc71"}, diag_sharey=False)
+g.map_upper(sns.scatterplot, s=4, alpha=0.3)
+g.map_lower(sns.scatterplot, s=4, alpha=0.3)
+g.map_diag(sns.kdeplot, fill=True)
+g.add_legend(title="Coped", bbox_to_anchor=(1.05, 0.5), loc="center left")
+plt.suptitle("Resilience Activation — Coping Outcome Correlogram", y=1.02, fontsize=13)
+plt.show()
+```
+
+## What We See
+
+- **Coping probability** rises with the challenge/hindrance ratio. Pure challenge gives near-certain coping; pure hindrance gives near-zero coping.
+- **Neighbour affect** shifts the curve: supportive networks (positive affect) improve coping odds; toxic networks (negative affect) reduce them.
+- **Delta stress and affect**: successful coping (green) reduces stress and improves affect; failed coping (red) does the reverse.
+- **Resilience effect** is proportional to the challenge/hindrance gap, moderated by success.
+
+## Why This Matters for the Simulation
+
+Resilience activation is where cognitive appraisal translates into a coping outcome. This phase determines whether stress events escalate or resolve, directly feeding into the resource allocation and buffering phases. The neighbour affect modulation implements the social contagion mechanism: an agent embedded in a supportive network copes better than an isolated or negatively surrounded one.

@@ -22,14 +22,16 @@ from typing import Any, Dict
 from numpy.random import Generator
 
 from src.python.phases.interfaces import AgentState, PhaseOutput, PhaseFrequency
+from src.python.assumption_config import get_assumptions
 
 PHASE_FREQUENCY: PhaseFrequency = "daily"
 
-# Hardcoded constants (Plan 007 externalises these)
-_DEFAULT_BOOST_RATE = 0.1
-_DEFAULT_A_COEFFICIENT = -0.3  # stress -> resources
-_DEFAULT_B_COEFFICIENT = 0.5  # resources -> buffering
-_DEFAULT_C_PRIME_COEFFICIENT = -0.2  # stress -> buffering | resources
+# Assumption-parameterized constants (Plan 007)
+_assumptions = get_assumptions()
+_DEFAULT_BOOST_RATE = _assumptions.resource.buffering_boost_rate
+_DEFAULT_A_COEFFICIENT = _assumptions.resource.buffering_a_coefficient  # stress -> resources
+_DEFAULT_B_COEFFICIENT = _assumptions.resource.buffering_b_coefficient  # resources -> buffering
+_DEFAULT_C_PRIME_COEFFICIENT = _assumptions.resource.buffering_c_prime_coefficient  # stress -> buffering | resources
 _DEFAULT_SOCIAL_STRESS_PATH = -0.2
 _DEFAULT_SOCIAL_BUFFERING_PATH = 0.4
 
@@ -61,7 +63,7 @@ def run_phase(
             ``current_stress``, ``resources``.
         config: Phase configuration. Expected keys:
             ``boost_rate`` (float, default 0.1),
-            ``a_coefficient`` (float, default -0.3),
+            ``a_coefficient`` (float, default -0.008),
             ``b_coefficient`` (float, default 0.5),
             ``c_prime_coefficient`` (float, default -0.2),
             ``social_stress_path`` (float, default -0.2),
@@ -73,7 +75,8 @@ def run_phase(
         - state_delta: ``resilience`` (boosted toward baseline),
           ``resources`` (depleted by stress via a-path).
         - observation: ``pf_boost``, ``buffering_strength``,
-          ``a_coefficient``, ``b_coefficient``, ``c_prime_coefficient``,
+          ``a_coefficient``, ``a_overload``, ``b_coefficient``,
+          ``c_prime_coefficient``,
           ``indirect_effect``, ``social_support_mediation``.
     """
     # ── Unpack state ────────────────────────────────────────────────
@@ -106,7 +109,11 @@ def run_phase(
 
     # ── Mechanism 2: Resource mediation of stress buffering ─────────
     # a-path: stress -> resources (negative coefficient → depletion)
-    resource_depletion = a_coefficient * current_stress
+    # Weak overload modulation adds consistent cross-seed signal without
+    # dominating the PSS-10↔resources shared-cause correlation.
+    stress_overload = state.get("stress_overload", 0.5)
+    effective_stress = current_stress * (1.0 + 0.2 * stress_overload)  # [1.0, 1.2]
+    resource_depletion = a_coefficient * effective_stress
     new_resources = max(0.0, min(1.0, resources + resource_depletion))
 
     # b-path + c'-path: buffering from resources and residual stress effect

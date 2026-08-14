@@ -137,9 +137,14 @@ class TestDataCollectorAgentLevel:
         mock_agent.stress_controllability = 0.5
         mock_agent.stress_overload = 0.5
         mock_agent.consecutive_hindrances = 0
+        mock_agent.support_boost = 0.0
+        mock_agent.stress_breach_count = 0  # Prevent network adaptation error
         mock_agent.daily_stress_events = []  # Add this to prevent len() errors
         mock_agent.daily_interactions = 0  # Add this to prevent sum() errors
         mock_agent.daily_support_exchanges = 0  # Add this to prevent sum() errors
+        mock_agent.last_daily_interactions = 0  # Add this to prevent sum() errors
+        mock_agent.last_daily_support_exchanges = 0  # Add this to prevent sum() errors
+        mock_agent.last_daily_stress_events = []  # Add this to prevent len() errors
 
         # Replace one agent with mock
         original_agent = list(model.agents)[0]
@@ -399,12 +404,6 @@ class TestDataCollectorConsistency:
 
 class TestDataCollectorEdgeCases:
     """Test edge cases for DataCollector system."""
-
-    def test_empty_agent_set(self):
-        """Test data collection with empty agent set."""
-        # Skip this test for now as NetworkX doesn't support N=0
-        # In a real scenario, this would need special handling
-        pytest.skip("NetworkX doesn't support empty graphs")
 
     def test_single_step_run(self):
         """Test data collection with single-step runs."""
@@ -682,6 +681,93 @@ class TestDataCollectorErrorHandling:
         model.datacollector.model_reporters = original_reporters
 
 
+class TestDataCollectorReportersPlan012:
+    """Tests for reporters extraction (Plan 012 Step 3)."""
+
+    def test_all_reporters_return_correct_types_and_ranges(self):
+        """Test that model and agent reporters produce valid values."""
+        model = StressModel(N=5, max_days=3, seed=42)
+        for _ in range(3):
+            model.step()
+
+        model_data = model.datacollector.get_model_vars_dataframe()
+        agent_data = model.datacollector.get_agent_vars_dataframe()
+
+        # Model-level reporters exist
+        expected_model_cols = [
+            "avg_pss10",
+            "avg_resilience",
+            "avg_affect",
+            "coping_success_rate",
+            "avg_resources",
+            "avg_stress",
+            "social_support_rate",
+            "stress_events",
+            "network_density",
+            "stress_prevalence",
+            "low_resilience",
+            "high_resilience",
+            "avg_challenge",
+            "avg_hindrance",
+            "challenge_hindrance_ratio",
+            "avg_consecutive_hindrances",
+            "total_stress_events",
+            "successful_coping",
+            "social_interactions",
+            "support_exchanges",
+            "total_interactions",
+            "social_support_exchanges",
+            "daily_coping_support_corr",
+        ]
+        for col in expected_model_cols:
+            assert col in model_data.columns, f"Missing model reporter: {col}"
+
+        # Check type/range sanity
+        latest = model_data.iloc[-1]
+        assert isinstance(latest["avg_pss10"], float)
+        assert 0.0 <= latest["avg_resilience"] <= 1.0
+        assert 0.0 <= latest["network_density"] <= 1.0
+
+        # Agent-level reporters exist
+        expected_agent_cols = [
+            "pss10",
+            "resilience",
+            "affect",
+            "resources",
+            "current_stress",
+            "stress_controllability",
+            "stress_overload",
+            "consecutive_hindrances",
+            "coping_success",
+            "challenge_appraisal",
+            "hindrance_appraisal",
+            "interaction_frequency",
+            "stressed",
+            "support_boost",
+        ]
+        agent_cols = agent_data.columns
+        for col in expected_agent_cols:
+            assert col in agent_cols, f"Missing agent reporter: {col}"
+
+        ag = agent_data.reset_index()
+        assert ag["resilience"].between(0, 1).all()
+        assert ag["pss10"].between(0, 40).all()
+        assert ag["affect"].between(-1, 1).all()
+
+    def test_reproducibility_same_seed_same_data(self):
+        """Test that same seed produces identical DataCollector output."""
+        model_a = StressModel(N=5, max_days=3, seed=42)
+        for _ in range(3):
+            model_a.step()
+
+        model_b = StressModel(N=5, max_days=3, seed=42)
+        for _ in range(3):
+            model_b.step()
+
+        data_a = model_a.datacollector.get_model_vars_dataframe()
+        data_b = model_b.datacollector.get_model_vars_dataframe()
+        pd.testing.assert_frame_equal(data_a, data_b)
+
+
 if __name__ == "__main__":
-    # Run tests if called directly
     pytest.main([__file__, "-v"])

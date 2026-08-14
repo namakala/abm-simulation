@@ -1,0 +1,267 @@
+---
+title: "Individual Simulation Trace — Module-by-Module Metrics"
+format: html
+---
+
+## What This Code Does
+
+This demo runs **1 agent for 30 days** using the real `StressModel`. After each daily step, it extracts per-phase metrics via `_last_phase_outputs` and organizes them into the 5 modules: stress perception, resilience activation, resource allocation, stress buffering, and daily cycle integration.
+
+The theory predicts: challenge/hindrance balance drives stress classification, coping success depends on the C/H ratio modulated by neighbors, resources regenerate with diminishing returns, stress is buffered by available resources, and daily reset pulls affect toward baseline.
+
+## Setup
+
+```{python}
+#| label: setup
+import os
+import sys
+import pathlib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from numpy.random import Generator, PCG64
+
+demos_dir = pathlib.Path(os.getcwd())
+project_root = demos_dir.parents[2]
+sys.path.insert(0, str(project_root))
+
+from src.python.model import StressModel
+from src.python.demos.module_metrics import (
+    extract_perception_metrics,
+    extract_activation_metrics,
+    extract_allocation_metrics,
+    extract_buffering_metrics,
+    extract_daily_cycle_metrics,
+)
+
+_FACTORS = ["social_support", "family_support", "formal_intervention", "psychological_capital"]
+```
+
+## Run Loop
+
+Single agent, 30 days. For each day, collect all phase outputs via `_last_phase_outputs` and extract metrics for each module.
+
+```{python}
+#| label: run
+model = StressModel(N=1, max_days=30, seed=42)
+agent = list(model.agents)[0]
+
+records = []
+
+for day in range(model.max_days):
+    # Capture pre-state for daily cycle baseline
+    pre_state = agent._build_agent_state()
+
+    # Execute one day
+    model.step()
+
+    # Read instrumented phase outputs
+    last = agent._last_phase_outputs
+
+    # ── Module 1: Perception (per stress event) ──
+    for event in agent.last_daily_stress_events:
+        # Re-extract perception from the last perception output
+        perception_out = last.get("stress_perception")
+        if perception_out is not None:
+            p_metrics = extract_perception_metrics(perception_out, pre_state)
+        else:
+            p_metrics = None
+
+        # ── Module 2: Activation (if stressed) ──
+        activation_out = last.get("resilience_activation")
+        a_metrics = extract_activation_metrics(activation_out, pre_state)
+
+    # ── Module 3: Allocation ──
+    alloc_out = last.get("resource_allocation")
+    alloc_metrics = extract_allocation_metrics(alloc_out, pre_state)
+
+    # ── Module 4: Buffering ──
+    buff_out = last.get("stress_buffering")
+    buff_metrics = extract_buffering_metrics(buff_out, pre_state)
+
+    # ── Module 5: Daily cycle ──
+    post_state = agent._build_agent_state()
+    reset_out = last.get("daily_reset")
+    affect_out = last.get("affect_dynamics")
+    pss10_out = last.get("pss10_consolidation")
+    daily_metrics = extract_daily_cycle_metrics(pre_state, post_state, reset_out, affect_out, pss10_out)
+
+    n_events = len(getattr(agent, "last_daily_stress_events", []))
+
+    records.append({
+        "day": day,
+        "affect": agent.affect,
+        "resilience": agent.resilience,
+        "resources": agent.resources,
+        "current_stress": agent.current_stress,
+        "pss10": agent.pss10,
+        "n_events": n_events,
+        "n_interactions": getattr(agent, "last_daily_interactions", 0),
+        "n_support": getattr(agent, "last_daily_support_exchanges", 0),
+        # Allocation metrics
+        "regeneration_amount": alloc_metrics["regeneration_amount"] if alloc_metrics else 0,
+        "total_allocated": alloc_metrics["total_allocated"] if alloc_metrics else 0,
+        # Buffering metrics
+        "buffering_strength": buff_metrics["buffering_strength"] if buff_metrics else 0,
+        "stress_depletion": buff_metrics["stress_depletion"] if buff_metrics else 0,
+        # Daily cycle metrics
+        "affect_reset_magnitude": daily_metrics["affect_reset_magnitude"] if daily_metrics else 0,
+        "stress_decay_amount": daily_metrics["stress_decay_amount"] if daily_metrics else 0,
+        # Activation (last event if any)
+        "coped_successfully": a_metrics["coped_successfully"] if a_metrics else None,
+        # Perception (last event if any)
+        "last_challenge": p_metrics["challenge"] if p_metrics else 0,
+        "last_hindrance": p_metrics["hindrance"] if p_metrics else 0,
+    })
+
+df_trace = pd.DataFrame(records)
+print(f"Recorded {len(df_trace)} days of agent trace")
+```
+
+## Module 1 — Stress Perception: Per-Event Breakdown
+
+Shows challenge and hindrance for the last event each day.
+
+```{python}
+#| label: fig-perception
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+axes[0].scatter(df_trace["last_challenge"], df_trace["last_hindrance"],
+                c=df_trace["day"], cmap="viridis", alpha=0.7)
+axes[0].set_xlabel("Challenge (last event)"); axes[0].set_ylabel("Hindrance (last event)")
+axes[0].set_title("Challenge vs Hindrance by Day")
+axes[0].plot([0, 1], [0, 1], "k--", alpha=0.3)
+
+axes[1].hist(df_trace["last_challenge"], alpha=0.6, label="challenge", bins=15)
+axes[1].hist(df_trace["last_hindrance"], alpha=0.6, label="hindrance", bins=15)
+axes[1].set_xlabel("Appraisal"); axes[1].set_ylabel("Frequency")
+axes[1].set_title("Challenge/Hindrance Distribution")
+axes[1].legend()
+
+plt.tight_layout(); plt.show()
+```
+
+## Module 2 — Resilience Activation: Coping Outcome
+
+```{python}
+#| label: fig-activation
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+coped = df_trace[df_trace["coped_successfully"] == True]
+not_coped = df_trace[df_trace["coped_successfully"] == False]
+
+axes[0].bar(["Coped", "Not Coped"],
+            [len(coped), len(not_coped)],
+            color=["#2ecc71", "#e74c3c"])
+axes[0].set_title("Coping Outcome Count")
+
+if len(coped) > 0 and len(not_coped) > 0:
+    axes[1].scatter(coped.index, coped["resources"], color="#2ecc71", alpha=0.6, label="coped")
+    axes[1].scatter(not_coped.index, not_coped["resources"], color="#e74c3c", alpha=0.6, label="not coped")
+axes[1].set_xlabel("Day"); axes[1].set_ylabel("Resources")
+axes[1].set_title("Resources by Coping Outcome")
+axes[1].legend()
+
+plt.tight_layout(); plt.show()
+```
+
+## Module 3 — Resource Allocation: PF and Resource Trajectory
+
+```{python}
+#| label: fig-allocation
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+axes[0].plot(df_trace["day"], df_trace["resources"], "b-", linewidth=2)
+axes[0].set_xlabel("Day"); axes[0].set_ylabel("Resources")
+axes[0].set_title("Resources Over Time")
+axes[0].set_ylim(0, 1)
+
+axes[1].scatter(df_trace["resources"], df_trace["regeneration_amount"],
+                c=df_trace["day"], cmap="viridis", alpha=0.7)
+axes[1].set_xlabel("Resources"); axes[1].set_ylabel("Regeneration Amount")
+axes[1].set_title("Regeneration vs Resource Level")
+
+plt.tight_layout(); plt.show()
+```
+
+## Module 4 — Stress Buffering: Buffering vs Stress Depletion
+
+```{python}
+#| label: fig-buffering
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+axes[0].scatter(df_trace["buffering_strength"], df_trace["stress_depletion"],
+                c=df_trace["day"], cmap="RdYlBu_r", alpha=0.7)
+axes[0].axhline(0, color="grey", linestyle="--", alpha=0.5)
+axes[0].set_xlabel("Buffering Strength"); axes[0].set_ylabel("Stress Depletion (resources Δ)")
+axes[0].set_title("Buffering vs Depletion")
+
+axes[1].plot(df_trace["day"], df_trace["current_stress"], "r-", linewidth=2, label="stress")
+axes[1].plot(df_trace["day"], df_trace["buffering_strength"], "g-", linewidth=2, label="buffering")
+axes[1].set_xlabel("Day"); axes[1].set_ylabel("Value")
+axes[1].set_title("Stress & Buffering Over Time")
+axes[1].legend()
+
+plt.tight_layout(); plt.show()
+```
+
+## Module 5 — Daily Cycle Integration: Reset & Decay
+
+```{python}
+#| label: fig-daily-cycle
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+axes[0].bar(df_trace["day"], df_trace["affect_reset_magnitude"], color="steelblue")
+axes[0].set_xlabel("Day"); axes[0].set_ylabel("Reset Magnitude")
+axes[0].set_title("Affect Reset Toward Baseline")
+
+axes[1].plot(df_trace["day"], df_trace["affect"], "b-", linewidth=2, label="affect")
+axes[1].plot(df_trace["day"], df_trace["current_stress"], "r-", linewidth=2, label="stress")
+axes[1].set_xlabel("Day"); axes[1].set_ylabel("Value")
+axes[1].set_title("Affect & Stress Over Time")
+axes[1].legend()
+
+plt.tight_layout(); plt.show()
+```
+
+## Combined State Trajectory
+
+Multi-panel view showing all key state variables over the 30-day trace.
+
+```{python}
+#| label: fig-combined
+fig, axes = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
+
+axes[0].plot(df_trace["day"], df_trace["affect"], "b-", linewidth=2)
+axes[0].set_ylabel("Affect [-1, 1]"); axes[0].axhline(0, color="grey", linestyle="--", alpha=0.3)
+
+axes[1].plot(df_trace["day"], df_trace["resilience"], "g-", linewidth=2, label="resilience")
+axes[1].plot(df_trace["day"], df_trace["resources"], "orange", linewidth=2, label="resources")
+axes[1].set_ylabel("[0, 1]"); axes[1].legend()
+
+axes[2].plot(df_trace["day"], df_trace["current_stress"], "r-", linewidth=2, label="stress")
+axes[2].plot(df_trace["day"], df_trace["pss10"] / 40, "purple", linewidth=2, label="PSS-10/40")
+axes[2].set_xlabel("Day"); axes[2].set_ylabel("[0, 1]"); axes[2].legend()
+
+for ax in axes:
+    # Mark days with events
+    event_days = df_trace[df_trace["n_events"] > 0]["day"]
+    for d in event_days:
+        ax.axvline(d, color="red", alpha=0.08)
+
+plt.suptitle("Single Agent 30-Day State Trajectory", fontsize=13)
+plt.tight_layout(); plt.show()
+```
+
+## What We See
+
+- **Perception** drives challenge/hindrance balance: days with hindrance-dominant events precede stress accumulation.
+- **Activation** determines coping outcome: successful coping preserves resources; failed coping depletes them.
+- **Allocation** tracks resource regeneration: low-resource days show higher regeneration (diminishing returns).
+- **Buffering** reduces stress impact proportionally to available resources.
+- **Daily cycle** resets affect toward baseline and decays stress, preventing indefinite accumulation.
+
+## Why This Matters
+
+This trace shows how all 5 modules compose in a single agent over time. The module-by-module breakdown isolates each mechanism's contribution, making it easy to spot anomalies (e.g., reset magnitude too small → stress accumulates across days).

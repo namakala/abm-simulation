@@ -1,0 +1,57 @@
+## Individual heterogeneity within population stability
+
+```{r}
+#| label: tbl-agent-level
+#| echo: false
+#| tbl-cap: "Agent-level temporal dynamics demonstrating individual heterogeneity within population stability"
+agent_vars <- c(
+  "pss10" = "PSS-10 per agent-step",
+  "resilience" = "Resilience level",
+  "affect" = "Emotional state",
+  "resources" = "Psychological resources",
+  "current_stress" = "Stress intensity",
+  "stress_controllability" = "Controllability perception",
+  "stress_overload" = "Overload perception",
+  "consecutive_hindrances" = "Hindrance streak length"
+)
+agent_interpretations <- c(
+  "Variable stress levels with realistic range",
+  "Diverse adaptive capacities",
+  "Variable patterns around neutral",
+  "Fluctuating resource capacity",
+  "Variable patterns within bounds",
+  "Diverse agency experiences",
+  "Diverse capacity challenges",
+  "Variable patterns observed"
+)
+agent_sd <- sapply(names(agent_vars), function(col) sprintf("%.3f ± %.3f", mean(a[[col]]), sd(a[[col]])))
+tbl2 <- data.frame(
+  Variable = unname(agent_vars),
+  `Mean ± SD` = agent_sd,
+  Interpretation = agent_interpretations,
+  check.names = FALSE
+)
+kable(tbl2, format = "latex", booktabs = TRUE)
+```
+
+@tbl-agent-level reveals substantial dynamic variability within the
+stable population framework. The contrast between population-level
+stability (CVs from `r pop_cv("avg_resources")` to `r pop_cv("avg_affect")`) and
+individual-level heterogeneity (CVs from `r agent_cv("pss10")` to
+`r agent_cv("affect")`) exemplifies the dual nature of the modeled system.
+Individual agents experience significant fluctuations in stress
+(`r agent("current_stress")`, CV `r agent_cv("current_stress")`), resilience
+(`r agent("resilience")`, CV `r agent_cv("resilience")`), and affect
+(`r agent("affect")`; its large CV reflects a mean near zero rather than
+extreme dispersion). These variations are constrained by social
+interactions that maintain population equilibrium. Agents perceive their
+stressors as largely controllable (`r agent("stress_controllability")`) and
+rarely overwhelming (`r agent("stress_overload")`), capturing the
+cognitive appraisal diversity that drives individual adaptation
+strategies. Hindrance streaks remain bounded
+(`r agent("consecutive_hindrances")`, maximum
+`r sprintf("%.1f", max(a$consecutive_hindrances))`), demonstrating the
+system's capacity to prevent pathological cascades through network
+support. Individual diversities are harmonized through social dynamics
+to achieve collective stability: social network dynamics transform
+individual variability into population-level equilibrium.

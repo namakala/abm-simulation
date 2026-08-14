@@ -27,17 +27,16 @@ from src.python.resource_utils import (
 from src.python.stress_utils import (
     update_stress_dimensions_from_event,
     generate_pss10_from_stress_dimensions,
-    update_stress_dimensions_from_pss10_feedback,
-    validate_theoretical_correlations,
 )
 from src.python.math_utils import clamp
+from src.python.assumption_config import get_assumptions
 
 PHASE_FREQUENCY: PhaseFrequency = "event_driven"
 
-# Hardcoded constants (Plan 007 will externalise these)
-_RESOURCE_REWARD_MULTIPLIER = 0.75
-_RESOURCE_PENALTY_MULTIPLIER = 0.10
-_PF_ALLOCATION_FRACTION = 0.30
+# Assumption-parameterized constants (Plan 007)
+# Loaded from ASSUMPTION_* env vars; falls back to spec defaults.
+_assumptions = get_assumptions()
+_PF_ALLOCATION_FRACTION = _assumptions.coping.pf_allocation_fraction
 
 
 def run_phase(
@@ -100,6 +99,9 @@ def run_phase(
 
     # ── STEP 1: Coping outcome ──────────────────────────────────────
     stress_config = StressProcessingConfig()
+    social_support_efficacy = protective_factors.get("social_support", 0.5)
+    support_boost: float = state.get("support_boost", 0.0)  # type: ignore[return-value]
+
     new_affect, new_resilience, new_stress, coped_successfully = determine_coping_outcome_and_psychological_impact(
         current_affect=current_affect,
         current_resilience=current_resilience,
@@ -109,6 +111,8 @@ def run_phase(
         neighbor_affects=neighbor_affects,
         rng=rng,
         config=stress_config,
+        social_support_efficacy=social_support_efficacy,
+        support_boost=support_boost,
     )
 
     # Compute values needed for observation
@@ -117,10 +121,15 @@ def run_phase(
         hindrance=hindrance,
         neighbor_affects=neighbor_affects,
         current_resilience=current_resilience,
+        social_support_efficacy=social_support_efficacy,
+        support_boost=support_boost,
         config=stress_config,
     )
     resilience_effect = compute_challenge_hindrance_resilience_effect(
-        challenge=challenge, hindrance=hindrance, coped_successfully=coped_successfully
+        challenge=challenge,
+        hindrance=hindrance,
+        coped_successfully=coped_successfully,
+        current_resilience=current_resilience,
     )
 
     # ── STEP 2: Update stress dimensions from event ─────────────────
@@ -135,6 +144,7 @@ def run_phase(
             volatility=volatility,
             recent_stress_intensity=recent_stress_intensity,
             stress_momentum=stress_momentum,
+            resilience=current_resilience,
         )
     )
 
@@ -146,33 +156,14 @@ def run_phase(
         stress_momentum=updated_momentum,
         affect=new_affect,
         resources=current_resources,
+        resilience=new_resilience,
         rng=rng,
     )
     new_pss10_responses = pss10_data["pss10_responses"]
     new_pss10 = pss10_data["pss10_score"]
     new_stressed = pss10_data["stressed"]
 
-    # ── STEP 4: Update stress dimensions from PSS-10 feedback ───────
-    final_controllability, final_overload = update_stress_dimensions_from_pss10_feedback(
-        current_controllability=updated_controllability,
-        current_overload=updated_overload,
-        pss10_responses=new_pss10_responses,
-        current_resources=current_resources,
-    )
-
-    # ── STEP 5: Validate theoretical correlations ───────────────────
-    validate_theoretical_correlations(
-        challenge=challenge,
-        hindrance=hindrance,
-        coped_successfully=coped_successfully,
-        stress_controllability=final_controllability,
-        stress_overload=final_overload,
-        pss10_score=new_pss10,
-        current_stress=new_stress,
-        pss10_responses=new_pss10_responses,
-    )
-
-    # ── STEP 6: Resource cost and depletion ─────────────────────────
+    # ── STEP 5: Resource cost and depletion ─────────────────────────
     resource_config = ResourceOptimizationConfig()
     optimized_cost = compute_resilience_optimized_resource_cost(
         base_cost=base_resource_cost,
@@ -196,14 +187,20 @@ def run_phase(
     # ── STEP 8: Increment stress breach count ───────────────────────
     new_stress_breach_count = state.get("stress_breach_count", 0) + 1
 
-    # ── STEP 9: Resource reward / penalty + PF allocation ───────────
+    # ── STEP 9: PF allocation + resource reward (Fix 4) ──────────
+    # Successful coping yields a small resource reward, compensating for
+    # the PF allocation cost. This restores the face-valid relationship
+    # where successful copers end with more resources than failed copers,
+    # without recreating the stress↔resources correlation.
     new_protective_factors = dict(protective_factors)
     resource_reward: float | None = None
     resource_penalty: float | None = None
 
     if coped_successfully:
-        resource_reward = base_resource_cost * _RESOURCE_REWARD_MULTIPLIER
-        new_resources = clamp(new_resources + resource_reward, 0.0, 1.0)
+        # Resource reward for mastering a challenge (Fix 4)
+        reward = 0.03  # flat reward, independent of challenge magnitude
+        new_resources = clamp(new_resources + reward, 0.0, 1.0)
+        resource_reward = reward
 
         allocations = allocate_protective_factors(
             available_resources=new_resources * _PF_ALLOCATION_FRACTION,
@@ -221,17 +218,14 @@ def run_phase(
 
         total_allocated = sum(allocations.values())
         new_resources = clamp(new_resources - total_allocated, 0.0, 1.0)
-    else:
-        resource_penalty = base_resource_cost * _RESOURCE_PENALTY_MULTIPLIER
-        new_resources = clamp(new_resources - resource_penalty, 0.0, 1.0)
 
     # ── Build state_delta ───────────────────────────────────────────
     state_delta: Dict[str, Any] = {
         "affect": new_affect,
         "resilience": new_resilience,
         "current_stress": new_stress,
-        "stress_controllability": final_controllability,
-        "stress_overload": final_overload,
+        "stress_controllability": updated_controllability,
+        "stress_overload": updated_overload,
         "resources": new_resources,
         "protective_factors": new_protective_factors,
         "consecutive_hindrances": new_consecutive_hindrances,

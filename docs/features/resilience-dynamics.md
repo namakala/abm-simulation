@@ -271,11 +271,11 @@ Where:
 The resilience dynamics system includes validated correlations with other agent variables:
 
 **Validated Correlation Ranges:**
-- Resilience ↔ Affect: $r \in [-0.5, 0.5]$ (variable correlation)
-- Resilience ↔ Resources: $r \in [-1.0, 1.0]$ (any correlation)
-- Resilience ↔ PSS-10: $r \in [-1.0, 0.5]$ (negative to weak correlation)
+- Resilience ↔ Affect: $r \in [0.30, 0.70]$ (positive correlation)
+- Resilience ↔ Resources: $r \in [0.20, 0.63]$ (positive correlation)
+- Resilience ↔ PSS-10: $r pprox -0.57$ [Thomas & Zolkoski 2020]
 
-**Implementation**: [`test_correlation_validation.py`](../../src/python/tests/test_correlation_validation.py) validates these correlation ranges and statistical significance.
+**Implementation**: [`parameter_sweep_correlations.qmd`](../../src/python/demos/parameter_sweep_correlations.qmd) and [`population_correlation_analysis.qmd`](../../src/python/demos/population_correlation_analysis.qmd) validate these correlation ranges and statistical significance.
 
 ### Calibration Targets
 

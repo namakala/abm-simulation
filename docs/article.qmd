@@ -14,48 +14,17 @@ metadata-files:
   - _knitr-bib.yml
 ---
 
-# Introduction
+{{< include draft/_introduction.qmd >}}
 
-Anxiety and depression are among the most prevalent psychological disorders in the general population, generating substantial socioeconomic consequences [@gbd2022global; @arias2022quantifying]. These conditions impose considerable direct and indirect costs, while curative and rehabilitative approaches often demonstrate limited effectiveness [@mekonen2021estimating]. Strengthening psychological resilience offers a preventive pathway to reduce vulnerability to such disorders [@troy2023psychological]. Public health policy should therefore prioritize preventive strategies that foster resilience. However, designing cost-effective preventive policies requires rigorous assessment methods. Agent-based modeling (ABM) provides a promising approach to simulate psychological resilience and generate evidence to guide interventions aimed at enhancing resilience at the population level.
+{{< include draft/_methods.qmd >}}
 
-## Previous ABM Publications
+{{< include draft/_results.qmd >}}
 
-{{< include manuscript/_previous-abm-publication.md >}}
+{{< include draft/_discussion.qmd >}}
 
-## Current Research
-
-{{< include manuscript/_current-research.md >}}
-
-# Methods
-
-## Modelling Approach
-
-{{< include manuscript/_modelling-approach.md >}}
-
-{{< include manuscript/_parameters.md >}}
-
-## Simulation Mechanism
-
-{{< include manuscript/_simulation-mechanism-manuscript.md >}}
-
-## Data Analysis
-
-{{< include manuscript/_data-analysis.md >}}
-
-# Results
-
-{{< include manuscript/_results.md >}}
-
-# Discussion
-
-{{< include manuscript/_discussion.md >}}
-
-# Conclusion
-
-This study demonstrates that agent-based simulations can model homeostatic mechanisms of psychological resilience through social network dynamics and interactive agent behaviors. The mathematical framework reproduced empirically validated associations among psychological variables while maintaining population-level stability through individual heterogeneity. The bimodal affect-stress distribution emerges naturally from network rewiring and homophily mechanisms, providing insight into collective mental health patterns. The integration of stress perception modeling with comprehensive assessment tools provides new capabilities for evaluating mental health intervention effectiveness at population scales. The simulation framework enables systematic exploration of how individual characteristics, social connections, and environmental factors combine to determine collective mental health outcomes.
+{{< include draft/_conclusion.qmd >}}
 
 # References {-}
 
 \multicols{2}
 \footnotesize
-

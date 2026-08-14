@@ -13,6 +13,7 @@ sys.path.append(".")
 
 from src.python.agent import Person
 from src.python.config import get_config
+from src.python.tests.conftest import run_stress_cycle
 
 
 def test_integrated_stress_dynamics():
@@ -70,7 +71,7 @@ def test_integrated_stress_dynamics():
         initial_resources = agent.resources
 
         # Process a stress event
-        challenge, hindrance = agent.stressful_event()
+        challenge, hindrance = run_stress_cycle(agent)
 
         print(f"  Event: Challenge={challenge:.2f}, Hindrance={hindrance:.2f}")
         print(f"  Controllability: {initial_controllability:.2f} → {agent.stress_controllability:.2f}")
@@ -137,7 +138,7 @@ def test_integrated_stress_dynamics():
         initial_intensity = test_agent.recent_stress_intensity
 
         # Process a stress event
-        test_agent.stressful_event()
+        run_stress_cycle(test_agent)
 
         pss10_history.append(test_agent.pss10)
         stress_intensity_history.append(test_agent.recent_stress_intensity)

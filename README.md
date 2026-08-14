@@ -66,11 +66,14 @@ pixi run simulate -- --days 100 --agents 500 --seed 42
 
 ### 5. Run Tests
 ```bash
-# Run all tests
+# Run fast tests (excludes slow integration/calibration)
 pixi run test
 
 # Run with coverage report
 pixi run test-cov
+
+# Run slow integration + calibration tests
+pixi run test-slow
 
 # Run specific test file
 pixi run test -- -v src/python/tests/test_agent_integration.py

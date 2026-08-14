@@ -5,6 +5,10 @@
 *outputs*
 test*csv
 
+# Quarto demos
+src/python/demos/*.html
+src/python/demos/_site/
+
 # Environment variables and configuration
 .env
 .env.local
@@ -12,6 +16,7 @@ test*csv
 .env.production
 .env.*
 !.env.example
+!.env.empty
 
 # Python
 __pycache__/
@@ -93,6 +98,10 @@ vendor/
 target/
 *.pyc
 *.env*
+!.env.empty
 **/.archive/**
 !**/.archive/.gitkeep
 matplotlib-*/
+
+# Generated cumulative-block demo outputs
+/data/output/

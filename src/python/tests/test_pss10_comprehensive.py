@@ -15,7 +15,22 @@ import os
 import tempfile
 from pathlib import Path
 
+
 from src.python.config import Config
+
+
+_PSS10_ENV_KEYS = ("PSS10_ITEM_MEAN", "PSS10_ITEM_SD")
+
+
+def _clear_pss10_env() -> None:
+    """Remove PSS10 array env vars so a temp .env file is authoritative.
+
+    load_dotenv uses override=False, so any pre-set os.environ value
+    (e.g. from a stray repo .env loaded by reload_config) would win over
+    the temp file. Clear these keys first.
+    """
+    for key in _PSS10_ENV_KEYS:
+        os.environ.pop(key, None)
 
 
 def test_bracket_notation_parsing():
@@ -30,6 +45,8 @@ PSS10_ITEM_SD=[1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8]
         env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
+        # Clear leaked env vars so the temp .env file is authoritative
+        _clear_pss10_env()
         # Test configuration loading
         config = Config(str(env_file))
 
@@ -55,6 +72,8 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
         env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
+        # Clear leaked env vars so the temp .env file is authoritative
+        _clear_pss10_env()
         # Test configuration loading
         config = Config(str(env_file))
 
@@ -80,6 +99,8 @@ PSS10_ITEM_SD=1.1 0.9 1.2 1.0 1.1 0.8 1.0 0.9 1.3 0.8
         env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
+        # Clear leaked env vars so the temp .env file is authoritative
+        _clear_pss10_env()
         # Test configuration loading
         config = Config(str(env_file))
 
@@ -105,6 +126,8 @@ PSS10_ITEM_SD= [1.1,  0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8 ]
         env_file = Path(temp_dir) / ".env"
         env_file.write_text(env_content)
 
+        # Clear leaked env vars so the temp .env file is authoritative
+        _clear_pss10_env()
         # Test configuration loading
         config = Config(str(env_file))
 
@@ -131,8 +154,8 @@ def test_default_values():
             config = Config()
 
             # Verify default values match user's specified arrays
-            expected_means = [2.1, 1.8, 2.3, 1.9, 2.2, 1.7, 2.0, 1.6, 2.4, 1.5]
-            expected_sds = [1.1, 0.9, 1.2, 1.0, 1.1, 0.8, 1.0, 0.9, 1.3, 0.8]
+            expected_means = [1.43, 1.38, 1.51, 1.31, 1.50, 1.40, 1.43, 1.60, 1.14, 1.31]
+            expected_sds = [0.89, 0.89, 0.93, 0.92, 0.80, 0.78, 0.78, 0.88, 0.91, 0.93]
 
             assert config.pss10_item_means == expected_means
             assert config.pss10_item_sds == expected_sds

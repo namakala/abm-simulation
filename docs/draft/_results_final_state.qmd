@@ -1,0 +1,18 @@
+## Emergent associations at the end state
+
+@fig-final-population captures cross-sectional agent states at the
+simulation's conclusion, revealing theoretically grounded associations
+among psychological variables. Resilience exhibits a weak positive
+correlation with affect (`r final_corr("resilience", "affect")`), a moderate
+negative correlation with stress (`r final_corr("resilience", "current_stress")`),
+and a moderate negative correlation with PSS-10
+(`r final_corr("resilience", "pss10")`). In contrast, stress shows a moderate
+positive correlation with PSS-10 (`r corr_val("pss10_stress_final")`), up
+from an essentially zero baseline association
+(`r corr_val("pss10_stress_initial")`), accompanied by increasing dispersion
+in stress levels at higher PSS-10 scores. This visualization
+demonstrates model convergence toward expected relationships, validating
+the simulation's capacity to generate plausible homeostatic mechanisms
+of psychological dynamics.
+
+![The emerging associations of agent psychological states captured at simulation completion](figures/full_model_final_population.pdf){#fig-final-population}
