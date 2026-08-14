@@ -12,6 +12,11 @@ import numpy as np
 from src.python.math_utils import sigmoid_transform, tanh_transform
 from src.python.stress_utils import compute_stress_from_dimensions, initialize_pss10_from_items
 
+# Fixed sigmoid steepness for initial population sampling.
+# Deliberately independent of the appraisal gamma config: population diversity
+# must not shift when APPRAISAL_GAMMA is tuned.
+INITIALIZATION_SIGMOID_GAMMA = 6.0
+
 
 def initialize_baseline_resilience(
     rng: np.random.Generator,
@@ -28,7 +33,7 @@ def initialize_baseline_resilience(
     Returns:
         Resilience value clamped to [0, 1].
     """
-    return sigmoid_transform(mean=mean, std=std, rng=rng)
+    return sigmoid_transform(mean=mean, std=std, rng=rng, gamma=INITIALIZATION_SIGMOID_GAMMA)
 
 
 def initialize_baseline_affect(
@@ -64,7 +69,7 @@ def initialize_resources(
     Returns:
         Resource value clamped to [0, 1].
     """
-    return sigmoid_transform(mean=mean, std=std, rng=rng)
+    return sigmoid_transform(mean=mean, std=std, rng=rng, gamma=INITIALIZATION_SIGMOID_GAMMA)
 
 
 def initialize_protective_factors(value: float = 0.5) -> Dict[str, float]:

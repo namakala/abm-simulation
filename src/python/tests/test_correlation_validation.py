@@ -120,7 +120,9 @@ class TestTheoreticalCorrelationsAgentLevel:
             # After threshold baseline fix (L=0.5 instead of 1.0), correlations
             # are weaker because stress loads are no longer artifactually inflated.
             # Empirical literature range remains −0.55 to −0.40.
-            ok = -0.45 < correlation < -0.20 and p_value < 0.05
+            # Window widened to the empirical range after decoupling init
+            # steepness from appraisal gamma (init spread restored to gamma=6.0).
+            ok = -0.55 < correlation < -0.20 and p_value < 0.05
             if ok:
                 passed_seeds += 1
                 seed_details.append(f"seed={seed}: PASS (r={correlation:.4f}, p={p_value:.4f})")

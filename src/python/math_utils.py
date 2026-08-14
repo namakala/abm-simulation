@@ -370,7 +370,12 @@ def tanh_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.random.
     return result
 
 
-def sigmoid_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.random.Generator] = None) -> float:
+def sigmoid_transform(
+    mean: float = 0.0,
+    std: float = 1.0,
+    rng: Optional[np.random.Generator] = None,
+    gamma: float = 6.0,
+) -> float:
     """
     Transform normal distribution sample to [0,1] bounds using sigmoid.
 
@@ -380,10 +385,15 @@ def sigmoid_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.rand
     3. Normalize by dividing by 3 to confine to approximately [-1,1]
     4. Apply sigmoid() for [0,1] bounds
 
+    The steepness is a fixed default (6.0), deliberately independent of
+    ``config.get("appraisal", "gamma")`` — initial population diversity must
+    not change when the appraisal gamma is tuned.
+
     Args:
         mean: Normal distribution mean parameter for output centering
         std: Normal distribution standard deviation parameter for spread
         rng: Random number generator
+        gamma: Sigmoid steepness parameter (default 6.0)
 
     Returns:
         Transformed value in [0,1]
@@ -393,7 +403,7 @@ def sigmoid_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.rand
 
     # Handle zero standard deviation case
     if std == 0:
-        return sigmoid(mean / 3.0)  # Deterministic based on mean
+        return sigmoid(mean / 3.0, gamma=gamma)  # Deterministic based on mean
 
     # Sample from standard normal distribution
     z = rng.normal(0, 1)
@@ -403,7 +413,7 @@ def sigmoid_transform(mean: float = 0.0, std: float = 1.0, rng: Optional[np.rand
     normalized = raw / 3.0  # Divide by 3 to confine to ~[-1,1]
 
     # Apply sigmoid transformation for [0,1] bounds
-    result = sigmoid(normalized)
+    result = sigmoid(normalized, gamma=gamma)
 
     return result
 
