@@ -8,8 +8,8 @@ format:
     include-in-header:
       file: _header.tex
     output-file: agent-based-model-psychological-resilience.pdf
-    citeproc: false
-    natbib: true
+    cite-method: natbib
+    natbiboptions: "round,authoryear"
 
 metadata-files:
   - _author.yml
