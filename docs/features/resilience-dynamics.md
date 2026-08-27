@@ -112,7 +112,7 @@ Where:
 
 **Coping Probability Equation:**
 
-$$p_{\mathrm{coping}} = p_b + \theta_{\text{cope,}\chi} \cdot \chi - \theta_{\text{cope,}\zeta} \cdot \zeta + \delta_{\text{cope,soc}} \cdot \frac{1}{k} \sum_{j=1}^k A_j$$
+$$p_{\mathrm{coping}} = p_b + \theta_{\text{cope,}\chi} \cdot \chi - \theta_{\text{cope,}\zeta} \cdot \zeta + \delta_{\text{cope,soc}} \cdot \frac{1}{k} \sum_{j=1}^k A_j + \gamma_{rc} \cdot \mathfrak{R}_t + \gamma_{ss} \cdot e_{\mathrm{soc}} + \gamma_{sb} \cdot \mathrm{boost}$$
 
 **Coping Success Determination:**
 
@@ -129,9 +129,14 @@ Where:
 - $\chi \in [0,1]$ is challenge component
 - $\zeta \in [0,1]$ is hindrance component
 - $A_j \in [-1,1]$ is neighbor $j$'s affect
-- $U$ is uniform random variable
+- $\gamma_{rc} = 0.10$ is resilience coping factor (ASSUMPTION\_RESILIENCE\_COPING\_FACTOR)
+- $\gamma_{ss} = 0.20$ is social support coping factor (ASSUMPTION\_COPING\_SOCIAL\_SUPPORT\_FACTOR)
+- $\gamma_{sb} = 0.30$ is within-day support boost factor (ASSUMPTION\_COPING\_SUPPORT\_BOOST\_FACTOR)
+- $e_{\mathrm{soc}} \in [0,1]$ is social support efficacy
+- $\mathrm{boost} \in [0,1]$ is within-day support exchange boost
+- $U$ is uniform random variable; $p_{\mathrm{coping}}$ clamped to $[0,1]$
 
-**Implementation**: [`compute_coping_probability()`](../../src/python/affect_utils.py#L424-L468) in `affect_utils.py`
+**Implementation**: [`compute_coping_probability()`](../../src/python/affect_utils.py#L430-L500) in `affect_utils.py`
 
 ### Challenge-Hindrance Effects
 

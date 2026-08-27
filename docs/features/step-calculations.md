@@ -224,7 +224,16 @@ When hindrance events accumulate beyond a threshold, they create an overload eff
 Resources naturally regenerate toward maximum capacity, with positive affect enhancing the regeneration process. Successful coping consumes resources, representing the energy invested in stress management.
 
 **Resource Regeneration Function**:
-Resources regenerate linearly toward maximum capacity, representing natural recovery and rest processes.
+Resources regenerate linearly toward maximum capacity, representing natural recovery and rest processes:
+
+$$R' = \lambda_R \cdot (1 - R_t)$$
+
+Where:
+- $R'$ is the regeneration amount
+- $\lambda_R \in [0,1]$ is the base regeneration rate (default 0.50)
+- $R_t \in [0,1]$ is current resources
+
+**Implementation**: [`compute_resource_regeneration()`](../../src/python/affect_utils.py#L368-L387) in `affect_utils.py`
 
 ### Step 7: Protective Factor Management
 
@@ -313,7 +322,11 @@ The stress assessment integration occurs at the end of each simulation step and 
 6. **History Tracking**: Store assessment trajectory for analysis and validation
 
 **Assessment Dimension Score Generation**:
-Dimension scores are generated using correlated distributions that reflect the empirical structure of stress responses.
+Dimension scores are generated using correlated distributions that reflect the empirical structure of stress responses, with dimension SDs regularized by a factor of 4 ($\sigma_c/4$, $\sigma_o/4$):
+
+$$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} \mu_c \\ \mu_o \end{bmatrix}, \begin{bmatrix} \sigma_c^2/16 & \rho_\Psi \sigma_c \sigma_o/16 \\ \rho_\Psi \sigma_c \sigma_o/16 & \sigma_o^2/16 \end{bmatrix}\right)$$
+
+**Implementation**: [`generate_pss10_dimension_scores()`](../../src/python/stress_utils.py#L410-L477) in `stress_utils.py`
 
 **Example Dimension Score Generation**:
 For an individual with moderate stress levels, the system generates slightly correlated dimension scores that reflect realistic stress response patterns.

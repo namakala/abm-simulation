@@ -40,8 +40,8 @@ $$\mathfrak{R}_{\text{0}} = \sigma\left(\frac{X - \mu_{\mathfrak{R}, \text{0}}}{
 Where:
 - $X \sim \mathcal{N}(\mu_{\mathfrak{R}, \text{0}}, \sigma_{\mathfrak{R}, \text{0}}^2)$ is a normal random variable
 - $\sigma(x) = \frac{1}{1+e^{-x}}$ is the sigmoid function
-- $\mu_{\mathfrak{R}, \text{0}} = 0.5$ (default mean)
-- $\sigma_{\mathfrak{R}, \text{0}} = 0.2$ (default standard deviation)
+- $\mu_{\mathfrak{R}, \text{0}} = 0.0$ (default latent mean; sigmoid(N(0,1)) centres near 0.5)
+- $\sigma_{\mathfrak{R}, \text{0}} = 1.0$ (default latent standard deviation; fixed sigmoid steepness 6)
 
 **Implementation**: [`sigmoid_transform()`](../../src/python/math_utils.py#L417-L456) in `math_utils.py`
 
@@ -55,7 +55,7 @@ Where:
 - $X \sim \mathcal{N}(\mu_{A, \text{0}}, \sigma_{A, \text{0}}^2)$ is a normal random variable
 - $\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$ is the hyperbolic tangent function
 - $\mu_{A, \text{0}} = 0.0$ (default mean)
-- $\sigma_{A, \text{0}} = 0.5$ (default standard deviation)
+- $\sigma_{A, \text{0}} = 1.0$ (default standard deviation)
 
 **Implementation**: [`tanh_transform()`](../../src/python/math_utils.py#L375-L414) in `math_utils.py`
 
@@ -67,8 +67,8 @@ $$R = \sigma\left(\frac{X - \mu_{R, \text{0}}}{\sigma_{R, \text{0}}}\right)$$
 
 Where:
 - $X \sim \mathcal{N}(\mu_{R, \text{0}}, \sigma_{R, \text{0}}^2)$
-- $\mu_{R, \text{0}} = 0.6$ (default mean)
-- $\sigma_{R, \text{0}} = 0.2$ (default standard deviation)
+- $\mu_{R, \text{0}} = 0.0$ (default latent mean; sigmoid(N(0,1)) centres near 0.5)
+- $\sigma_{R, \text{0}} = 1.0$ (default latent standard deviation)
 
 ### Step 6: Protective Factors Initialization
 
@@ -86,8 +86,8 @@ For:
 
 PSS-10 state is initialized through a comprehensive process:
 
-1. **Dimension Score Generation**:
-   $$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} \mu_c \\ \mu_o \end{bmatrix}, \begin{bmatrix} \sigma_c^2 & \rho_\Psi \sigma_c \sigma_o \\ \rho_\Psi \sigma_c \sigma_o & \sigma_o^2 \end{bmatrix}\right)$$
+1. **Dimension Score Generation** (regularized SDs, see `generate_pss10_dimension_scores`):
+   $$c_\Psi, o_\Psi \sim \mathcal{N}\left(\begin{bmatrix} \mu_c \\ \mu_o \end{bmatrix}, \begin{bmatrix} \sigma_c^2/16 & \rho_\Psi \sigma_c \sigma_o/16 \\ \rho_\Psi \sigma_c \sigma_o/16 & \sigma_o^2/16 \end{bmatrix}\right)$$
 
 2. **Item Response Generation**:
    $$\Psi_i = \mathrm{clamp}\left(\mathrm{round}\left(\mu_{\Psi,i} + (\lambda_{c,\Psi,i}(1-c_\Psi) + \lambda_{o,\Psi,i} o_\Psi - 0.5) \cdot 0.5 + \epsilon\right), 0, 4\right)$$

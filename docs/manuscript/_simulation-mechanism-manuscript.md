@@ -9,7 +9,7 @@ A_{\text{0}} &= \tanh\left(\frac{X - \mu_{A,\text{0}}}{\sigma_{A,\text{0}}}\righ
 \end{align*}
 \label{eq-baseline-transformations}
 
-where $X \sim \mathcal{N}(\mu, \sigma^2)$ is a normal random variable, $\sigma(x) = \frac{1}{1+e^{-x}}$ is the sigmoid function, and $\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$ is the hyperbolic tangent function.
+where $X \sim \mathcal{N}(\mu, \sigma^2)$ is a normal random variable, $\sigma(x) = \frac{1}{1+e^{-x}}$ is the sigmoid function (with steepness fixed at 6 for initialisation sampling, $\sigma_6$), and $\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$ is the hyperbolic tangent function.
 
 Core state variables included resilience ($\mathfrak{R} \in [0,1]$), affect ($A \in [-1,1]$), resources ($R \in [0,1]$), and current stress ($S \in [0,1]$). The model integrated comprehensive Perceived Stress Scale-10 (PSS-10) functionality using a bifactor model with dimension score generation and validated theoretical correlations:
 
@@ -23,13 +23,13 @@ c_\Psi \\ o_\Psi
 \mu_c \\ \mu_o
 \end{pmatrix},
 \begin{pmatrix}
-\sigma_c^2 & \rho_\Psi \sigma_c \sigma_o \\
-\rho_\Psi \sigma_c \sigma_o & \sigma_o^2
+\sigma_c^2/16 & \rho_\Psi \sigma_c \sigma_o/16 \\
+\rho_\Psi \sigma_c \sigma_o/16 & \sigma_o^2/16
 \end{pmatrix}
 \right)
 $$ {#eq-pss10-dimension-score}
 
-Where $c_\Psi, o_\Psi \in [0,1]$ are PSS-10 dimension scores, $\rho_\Psi \in [-1,1]$ is the bifactor correlation, and $\mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})$ denotes the multivariate normal distribution.
+Where $c_\Psi, o_\Psi \in [0,1]$ are PSS-10 dimension scores, $\rho_\Psi \in [-1,1]$ is the bifactor correlation, $\sigma_c, \sigma_o$ are dimension standard deviations regularized by a factor of 4 to $\sigma_c/4, \sigma_o/4$, and $\mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})$ denotes the multivariate normal distribution.
 
 ### Stress Event Processing and Coping
 
@@ -40,11 +40,11 @@ z &= \omega_c \cdot c - \omega_o \cdot o + b \\
 \chi &= \sigma(\gamma \cdot z) \\
 \zeta &= 1 - \chi \\
 \eta_{\mathrm{eff}} &= \eta_{\text{0}} + \eta_{\chi} \cdot \chi - \eta_{\zeta} \cdot \zeta \\
-p_{\mathrm{coping}} &= p_b + \theta_{\text{cope,}\chi} \cdot \chi - \theta_{\text{cope,}\zeta} \cdot \zeta + \delta_{\text{cope,soc}} \cdot \frac{1}{k} \sum_{j=1}^k A_j
+p_{\mathrm{coping}} &= p_b + \theta_{\text{cope,}\chi} \cdot \chi - \theta_{\text{cope,}\zeta} \cdot \zeta + \delta_{\text{cope,soc}} \cdot \frac{1}{k} \sum_{j=1}^k A_j + \gamma_{rc} \cdot \mathfrak{R}_t + \gamma_{ss} \cdot e_{\mathrm{soc}} + \gamma_{sb} \cdot \mathrm{boost} \\
 \label{eq-stress-processing}
 \end{align}
 
-where $c, o \in [0,1]$ are event attributes, $\omega_c, \omega_o \in \mathbb{R}$ are appraisal weights, $b \in \mathbb{R}$ is bias, $\gamma > 0$ controls sigmoid steepness, $\eta_{\text{0}}, \eta_{\chi}, \eta_{\zeta} \in [0,1]$ are threshold parameters, $p_b \in [0,1]$ is base coping probability, $\theta_{\text{cope,}\chi}, \theta_{\text{cope,}\zeta} > 0$ are coping modifiers, $\delta_{\text{cope,soc}} \in [0,1]$ is social influence, $k$ is number of neighbors, and $A_j \in [-1,1]$ are neighbor affect values.
+where $c, o \in [0,1]$ are event attributes, $\omega_c, \omega_o \in \mathbb{R}$ are appraisal weights, $b \in \mathbb{R}$ is bias, $\gamma > 0$ controls sigmoid steepness, $\eta_{\text{0}}, \eta_{\chi}, \eta_{\zeta} \in [0,1]$ are threshold parameters, $p_b \in [0,1]$ is base coping probability, $\theta_{\text{cope,}\chi}, \theta_{\text{cope,}\zeta} > 0$ are coping modifiers, $\delta_{\text{cope,soc}} \in [0,1]$ is social influence, $k$ is number of neighbors, $A_j \in [-1,1]$ are neighbor affect values, $\gamma_{rc}$ is the resilience coping factor (0.10), $\gamma_{ss}$ is the social support coping factor (0.20), $\gamma_{sb}$ is the within-day support boost factor (0.30), $e_{\mathrm{soc}} \in [0,1]$ is social support efficacy, and $\mathrm{boost} \in [0,1]$ is the within-day support exchange boost. Coping probability is clamped to $[0,1]$.
 
 Dynamic threshold evaluation adjusted stress response based on event characteristics, and coping success determination integrated challenge/hindrance effects with social influence through probability calculation.
 
@@ -63,7 +63,7 @@ $$
 \end{cases}
 $$ {#eq-mutual-influence}
 
-Where $\Delta A_i$ is affect change for agent $i$, $\alpha_p \in [0,1]$ is peer influence rate, and $A_i, A_j \in [-1,1]$ are affect values.
+Where $\Delta A_i$ is affect change for agent $i$, $\alpha_p \in [0,1]$ is peer influence rate, and $A_i, A_j \in [-1,1]$ are affect values. The negativity weighting (1.5 for negative differences) reflects the stronger emotional contagion of negative affect.
 
 #### Network Adaptation Mechanism
 
@@ -78,18 +78,18 @@ $$ {#eq-adaptation-trigger}
 
 Where $c_{\text{breach}} \in \mathbb{N}$ is stress breach count and $\eta_{\text{adapt}} \in \mathbb{N}$ is adaptation threshold. $c_{\text{breach}}$ is a mechanism to record chronic stress pattern, reflecting the count of perceived stress exceeding $\eta_{\mathrm{eff}}$.
 
-Connection preferences were determined by similarity and support effectiveness:
+Connection preferences were determined by weighted similarity across stress, affect, and resilience homophily dimensions with configurable weights:
 
 $$
-s_{ij} = 1 - \frac{|A_i - A_j| + |\mathfrak{R}_i - \mathfrak{R}_j|}{2}
+s_{ij} = \frac{w_{\mathrm{stress}}(1 - |S_i - S_j|) + w_{\mathrm{affect}}(1 - |A_i - A_j|) + w_{\mathrm{resilience}}(1 - |\mathfrak{R}_i - \mathfrak{R}_j|)}{w_{\mathrm{stress}} + w_{\mathrm{affect}} + w_{\mathrm{resilience}}}
 $$ {#eq-connection-similarity}
 
-Where $s_{ij} \in [0,1]$ is similarity between agents $i,j$, $A_i, A_j \in [-1,1]$ are affect values, and $\mathfrak{R}_i, \mathfrak{R}_j \in [0,1]$ are resilience values.
+Where $s_{ij} \in [0,1]$ is similarity between agents $i,j$, $S_i, S_j \in [0,1]$ are stress values, $A_i, A_j \in [-1,1]$ are affect values, $\mathfrak{R}_i, \mathfrak{R}_j \in [0,1]$ are resilience values, and $w_{\mathrm{stress}}, w_{\mathrm{affect}}, w_{\mathrm{resilience}}$ are homophily weights (default 1.0 each).
 
-Connection retention probability balanced homophily with support effectiveness:
+Connection retention probability used a sigmoid function where higher similarity with the current neighbor and higher support effectiveness make retention less likely (the agent is more willing to rewire toward even more similar peers):
 
 $$
-p_{\text{keep}} = s_{ij} \cdot \delta_{\text{homophily}} + e_s \cdot (1 - \delta_{\text{homophily}})
+p_{\text{keep}} = \frac{1}{1 + \exp\big(3 \delta_{\text{homophily}} (s_{ij} - (0.5 + 0.3(1 - e_s)))\big)}
 $$ {#eq-retention-probability}
 
 where $p_{\text{keep}} \in [0,1]$ is probability of keeping connection, $\delta_{\text{homophily}} \in [0,1]$ is homophily strength, and $e_s \in [0,1]$ is support effectiveness.
@@ -126,18 +126,18 @@ n_s &\sim \max(\mathcal{P}(\lambda_s), 1) \\
 \label{eq-daily-integration}
 \end{align}
 
-where $n_s \in \mathbb{N}$ is number of subevents; $\mathcal{P}(\lambda_s)$ is Poisson distribution with rate $\lambda_s$; $\bar{\chi}_d, \bar{\zeta}_d \in [0,1]$ are daily averages; and $n_e$ is number of stress events.
+where $n_s \in \mathbb{N}$ is number of subevents; $\mathcal{P}(\lambda_s)$ is Poisson distribution with rate $\lambda_s$; $\bar{\chi}_d, \bar{\zeta}_d \in [0,1]$ are daily averages; and $n_e$ is number of stress events. $n_s \sim \max(\mathcal{P}(\lambda_s), 1)$ ensures at least one daily subevent.
 
 Daily integration normalized challenge/hindrance values by event count, providing inputs for dynamics application. Dynamics updates applied integrated affect and resilience dynamics:
 
 \begin{align}
-A_{t+1} &= A_t + \Delta A_p + \Delta A_e + \Delta A_h \\
-\mathfrak{R}_{t+1} &= \mathfrak{R}_t + \Delta \mathfrak{R}_{\chi\zeta} + \Delta \mathfrak{R}_p + \Delta \mathfrak{R}_o + \Delta \mathfrak{R}_s + \lambda_{\text{resilience}} \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t) \\
-S_{t+1} &= S_t \cdot (1 - \delta_{\text{stress}})
+A_{t+1} &= A_t + \Delta A_p + \Delta A_e + \Delta A_h + \Delta A_{\mathrm{ero}} + \Delta A_{\mathrm{res}} \\
+\mathfrak{R}_{t+1} &= \mathfrak{R}_t + \Delta \mathfrak{R}_{\chi\zeta} + \Delta \mathfrak{R}_p + \Delta \mathfrak{R}_o + \Delta \mathfrak{R}_s + \Delta \mathfrak{R}_{\mathrm{int}} + \lambda_{\text{resilience}}^{s} \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t) \\
+S_{t+1} &= \max\big(0.03,\; S_t \cdot (1 - \delta_{\text{stress}})\big)
 \label{eq-dynamics-updates}
 \end{align}
 
-where $A_t, \mathfrak{R}_t, S_t \in [0,1]$ are current values; $\Delta A_p, \Delta A_e, \Delta A_h$ are affect changes; $\Delta \mathfrak{R}_{\chi\zeta}, \Delta \mathfrak{R}_p, \Delta \mathfrak{R}_o, \Delta \mathfrak{R}_s$ are resilience changes; $\lambda_{\text{resilience}} \in [0,1]$ is homeostatic rate; $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience; and $\delta_{\text{stress}} \in [0,1]$ is stress decay rate.
+where $A_t, \mathfrak{R}_t, S_t \in [0,1]$ are current values; $\Delta A_p, \Delta A_e, \Delta A_h, \Delta A_{\mathrm{ero}}, \Delta A_{\mathrm{res}}$ are affect changes (see Equation \ref{eq-affect-dynamics}); $\Delta \mathfrak{R}_{\chi\zeta}, \Delta \mathfrak{R}_p, \Delta \mathfrak{R}_o, \Delta \mathfrak{R}_s, \Delta \mathfrak{R}_{\mathrm{int}}$ are resilience changes; $\lambda_{\text{resilience}}^{s} \in [0,1]$ is the resource- and stress-scaled homeostatic rate; $\mathfrak{R}_{\text{0}} \in [0,1]$ is baseline resilience; and $\delta_{\text{stress}} \in [0,1]$ is stress decay rate applied with a floor at 0.03. The scaled homeostatic rate is $\lambda_x^s = \min\big(2\lambda_x,\; \lambda_x (1 - 0.7R_t)(1 + 0.5S_t)\big)$ for rate $\lambda_x$.
 
 Homeostatic adjustment applied natural pull toward baseline equilibrium for affect and resilience, while stress decay followed exponential reduction. Daily reset procedures cleared tracking variables and stored summaries for analysis.
 
@@ -146,15 +146,17 @@ Homeostatic adjustment applied natural pull toward baseline equilibrium for affe
 Integrated affect dynamics combined peer influence, event appraisal effects, and homeostasis through the following mathematical framework:
 
 \begin{align}
-\Delta A_p &= \frac{1}{k} \sum_{j=1}^{k} \alpha_p \cdot (A_j - A_t) \cdot \mathbb{1}_{j \leq k_{\text{influence}}} \\
+\Delta A_p &= \frac{1}{k} \sum_{j=1}^{k} \alpha_p \cdot (A_j - A_t), \quad k = \min(n_{\mathrm{nb}}, k_{\text{influence}}) \\
 \Delta A_e &= \alpha_e \cdot \bar{\chi}_d \cdot (1 - A_t) - \alpha_e \cdot \bar{\zeta}_d \cdot \max(0.1, A_t + 1) \\
-\Delta A_h &= \lambda_{\text{affect}} \cdot (A_{\text{0}} - A_t)
+\Delta A_h &= \lambda_{\text{affect}} \cdot (A_{\text{0}} - A_t) \\
+\Delta A_{\mathrm{ero}} &= -\lambda_{\mathrm{ero}} \cdot S_t \cdot m_{\mathrm{ero}} \\
+\Delta A_{\mathrm{res}} &= \beta_{ra} \cdot (R_t - 0.5) \cdot \big(1 + (\mathfrak{R}_t - 0.5) \cdot 0.5\big)
 \label{eq-affect-dynamics}
 \end{align}
 
-where $\Delta A_p, \Delta A_e, \Delta A_h$ are affect change components; $k$ is number of neighbors; $k_{\text{influence}}$ is number of influencing neighbors; $\alpha_p, \alpha_e \in [0,1]$ are influence rates; $\bar{\chi}_d, \bar{\zeta}_d \in [0,1]$ are daily averages; $A_t, A_j \in [-1,1]$ are affect values; $\lambda_{\text{affect}} \in [0,1]$ is homeostatic rate; $A_{\text{0}} \in [-1,1]$ is baseline affect; and $\mathbb{1}$ is indicator function.
+where $\Delta A_p, \Delta A_e, \Delta A_h, \Delta A_{\mathrm{ero}}, \Delta A_{\mathrm{res}}$ are affect change components; $k$ is number of neighbors; $n_{\mathrm{nb}}$ is neighbor count; $k_{\text{influence}}$ is number of influencing neighbors; $\alpha_p, \alpha_e \in [0,1]$ are influence rates; $\bar{\chi}_d, \bar{\zeta}_d \in [0,1]$ are daily averages; $A_t, A_j \in [-1,1]$ are affect values; $\lambda_{\text{affect}} \in [0,1]$ is homeostatic rate; $A_{\text{0}} \in [-1,1]$ is baseline affect; $\lambda_{\mathrm{ero}}$ is stress erosion rate ($\text{STRESS\_EROSION\_RATE}$); $m_{\mathrm{ero}}$ is the erosion multiplier (ASSUMPTION\_STRESS\_AFFECT\_EROSION\_MULTIPLIER); $\beta_{ra}$ is the resource--affect coupling (ASSUMPTION\_RESOURCE\_AFFECT\_COUPLING); and $S_t, R_t, \mathfrak{R}_t$ are current stress, resources, and resilience. The peer influence indicator selects the first $k_{\text{influence}}$ neighbors.
 
-Resilience dynamics integrated challenge-hindrance effects, protective factor boosts, overload effects, and social support contributions:
+Resilience dynamics integrated challenge-hindrance effects, protective factor boosts, overload effects, and social support contributions, with the challenge-hindrance effect subject to ceiling damping toward 1:
 
 $$
 \Delta \mathfrak{R}_p = \sum_{f \in F} e_f \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t) \cdot \theta_{\text{boost}}
@@ -162,19 +164,19 @@ $$ {#eq-resilience-boosts}
 
 where $\Delta \mathfrak{R}_p$ is resilience boost from protective factors; $F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}$ is set of protective factors; $e_f \in [0,1]$ is efficacy of factor $f$; $\mathfrak{R}_{\text{0}}, \mathfrak{R}_t \in [0,1]$ are baseline and current resilience; and $\theta_{\text{boost}} > 0$ is boost rate parameter.
 
-Challenge-hindrance effects varied based on coping outcomes: successful coping yields positive resilience changes while failed coping produces negative impacts.
+Challenge-hindrance effects varied based on coping outcomes: successful coping yields positive resilience changes while failed coping produces negative impacts, both scaled by the ceiling factor $(1 - \mathfrak{R}_t)$:
 
 ### Resource Management System
 
-Resources represented finite psychological and physical capacity for coping and protective factor maintenance. Resource regeneration followed affect-modulated recovery, while consumption occurred during coping attempts. Protective factor allocation utilized softmax decision framework for bounded rational resource distribution across social support, family support, formal intervention, and psychological capital:
+Resources represented finite psychological and physical capacity for coping and protective factor maintenance. Resource regeneration was computed as a linear function of the resource deficit, while consumption occurred during coping attempts and resource allocation used a softmax decision framework for bounded rational distribution across social support, family support, formal intervention, and psychological capital:
 
 \begin{align}
-R' &= \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A)) \\
+R' &= \lambda_R \cdot (1 - R) \\
 w_f &= \frac{\exp(e_f / \beta_{\text{softmax}})}{\sum_{k \in F} \exp(e_k / \beta_{\text{softmax}})}
 \label{eq-resource-dynamics}
 \end{align}
 
-where $R' > 0$ is resource regeneration; $\lambda_R \in [0,1]$ is regeneration rate; $R_{\max} = 1$ is maximum resources; $R \in [0,1]$ is current resources; $\beta_a > 0$ is affect influence parameter; $A \in [-1,1]$ is current affect; $w_f \in [0,1]$ is allocation weight for factor $f$; $e_f \in [0,1]$ is efficacy of factor $f$; $\beta_{\text{softmax}} > 0$ is softmax temperature; and $F$ is set of protective factors.
+where $R' > 0$ is resource regeneration; $\lambda_R \in [0,1]$ is regeneration rate; $R \in [0,1]$ is current resources; $w_f \in [0,1]$ is allocation weight for factor $f$; $e_f \in [0,1]$ is efficacy of factor $f$; $\beta_{\text{softmax}} > 0$ is softmax temperature; and $F$ is set of protective factors. The cost of allocating amount $a$ follows the convex function $c_a = \kappa_{\mathrm{alloc}} \cdot a^{\gamma_c}$.
 
 ### Model-Level Simulation Orchestration
 
