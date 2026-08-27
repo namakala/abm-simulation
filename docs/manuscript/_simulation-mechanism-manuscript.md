@@ -178,7 +178,7 @@ where $R' > 0$ is resource regeneration; $\lambda_R \in [0,1]$ is regeneration r
 
 ### Model-Level Simulation Orchestration
 
-The simulation employed Mesa's agent-based modeling framework with dual-class architecture separating agent behaviors from model orchestration. Network structure utilized Watts-Strogatz small-world topology providing realistic social connection patterns with local clustering and short path lengths. The network was initialized with a mean degree of $WS_k$ and rewiring probability of $WS_p$.
+The simulation employed Mesa's agent-based modeling framework with dual-class architecture separating agent behaviors from model orchestration. Network structure utilized Watts-Strogatz small-world topology, which generates graphs with high clustering coefficients and short characteristic path lengths. This topology is as observed in real social networks, where friends of friends are likely connected while information spreads rapidly across the population [@watts1998]. Small-world properties emerge when the rewiring probability $p$ satisfies $0.01 < p < 0.1$. Social simulation studies commonly use $p = 0.1$--$0.3$ to maintain clustered structure while enabling realistic path lengths [@watts1998]. The network was initialized with mean degree $WS\_k$ and rewiring probability $WS\_p$.
 
 Model-level coordination managed population statistics, network adaptation tracking, and cumulative social support monitoring. The orchestration ensured proper temporal sequencing and data collection while maintaining computational efficiency for large-scale simulations.
 
