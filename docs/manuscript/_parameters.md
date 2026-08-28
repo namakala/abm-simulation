@@ -133,16 +133,6 @@ $\xi_{\mathrm{mom}}$ & PSS-10 momentum weight & 0.3 & Assumed & Assumes 0.3 auto
 $\nu_c$ & Controllability update rate & 0.05 & Assumed & Assumes a per-event learning rate of 0.05 updating the controllability dimension. \\
 $\nu_o$ & Overload update rate & 0.05 & Assumed & Assumes a per-event learning rate of 0.05 updating the overload dimension. \\
 \midrule
-\multicolumn{5}{c}{\textbf{Output Configuration}} \\
-\midrule
-$L_{\mathrm{level}}$ & Logging level & INFO & Assumed & Technical configuration; controls verbosity only. \\
-$D_{\mathrm{results}}$ & Results output directory & data/processed & Assumed & Technical configuration for output writing. \\
-$D_{\mathrm{raw}}$ & Raw output directory & data/raw & Assumed & Technical configuration for output writing. \\
-$D_{\mathrm{logs}}$ & Logs output directory & logs & Assumed & Technical configuration for output writing. \\
-$F_{\mathrm{ts}}$ & Save time series flag & True & Assumed & Technical configuration; data collection switch. \\
-$F_{\mathrm{net}}$ & Save network snapshots flag & True & Assumed & Technical configuration; data collection switch. \\
-$F_{\mathrm{sum}}$ & Save summary statistics flag & True & Assumed & Technical configuration; data collection switch. \\
-\midrule
 \multicolumn{5}{c}{\textbf{Assumption Constants: Coping}} \\
 \midrule
 $A_{\mathrm{cope}}$ & Coping outcome constants (15) & 0.10; 0.20; 0.05; 0.2; 0.4; 0.15; 0.2; 0.3; $-0.1$; 0.1; $-0.4$; 0.2; 0.3; 0.2; $-0.4$ & Assumed & Assumes model-internal tuning of resource rewards/penalties, protective-factor allocation fraction, affect/resilience change scales, and challenge/hindrance coping outcomes; applied as fixed increments to state variables after each coping result. \\

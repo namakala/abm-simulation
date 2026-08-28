@@ -499,16 +499,6 @@ $\xi_{\mathrm{mom}}$ & PSS-10 momentum weight & 0.3 & Assumed & Assumes 0.3 auto
 $\nu_c$ & Controllability update rate & 0.05 & Assumed & Assumes a per-event learning rate of 0.05 updating the controllability dimension. \\
 $\nu_o$ & Overload update rate & 0.05 & Assumed & Assumes a per-event learning rate of 0.05 updating the overload dimension. \\
 \midrule
-\multicolumn{5}{c}{\textbf{Output Configuration}} \\
-\midrule
-$L_{\mathrm{level}}$ & Logging level & INFO & Assumed & Technical configuration; controls verbosity only. \\
-$D_{\mathrm{results}}$ & Results output directory & data/processed & Assumed & Technical configuration for output writing. \\
-$D_{\mathrm{raw}}$ & Raw output directory & data/raw & Assumed & Technical configuration for output writing. \\
-$D_{\mathrm{logs}}$ & Logs output directory & logs & Assumed & Technical configuration for output writing. \\
-$F_{\mathrm{ts}}$ & Save time series flag & True & Assumed & Technical configuration; data collection switch. \\
-$F_{\mathrm{net}}$ & Save network snapshots flag & True & Assumed & Technical configuration; data collection switch. \\
-$F_{\mathrm{sum}}$ & Save summary statistics flag & True & Assumed & Technical configuration; data collection switch. \\
-\midrule
 \multicolumn{5}{c}{\textbf{Assumption Constants: Coping}} \\
 \midrule
 $A_{\mathrm{cope}}$ & Coping outcome constants (15) & 0.10; 0.20; 0.05; 0.2; 0.4; 0.15; 0.2; 0.3; $-0.1$; 0.1; $-0.4$; 0.2; 0.3; 0.2; $-0.4$ & Assumed & Assumes model-internal tuning of resource rewards/penalties, protective-factor allocation fraction, affect/resilience change scales, and challenge/hindrance coping outcomes; applied as fixed increments to state variables after each coping result. \\
@@ -849,14 +839,11 @@ influence rates; \(\bar{\chi}_d, \bar{\zeta}_d \in [0,1]\) are daily
 averages; \(A_t, A_j \in [-1,1]\) are affect values;
 \(\lambda_{\text{affect}} \in [0,1]\) is homeostatic rate;
 \(A_{\text{0}} \in [-1,1]\) is baseline affect;
-\(\lambda_{\mathrm{ero}}\) is stress erosion rate
-(\(\text{STRESS\_EROSION\_RATE}\)); \(m_{\mathrm{ero}}\) is the erosion
-multiplier (ASSUMPTION\_STRESS\_AFFECT\_EROSION\_MULTIPLIER);
-\(\beta_{ra}\) is the resource--affect coupling
-(ASSUMPTION\_RESOURCE\_AFFECT\_COUPLING); and
-\(S_t, R_t, \mathfrak{R}_t\) are current stress, resources, and
-resilience. The peer influence indicator selects the first
-\(k_{\text{influence}}\) neighbors.
+\(\lambda_{\mathrm{ero}}\) is stress erosion rate; \(m_{\mathrm{ero}}\)
+is the erosion multiplier; \(\beta_{ra}\) is the resource--affect
+coupling; and \(S_t, R_t, \mathfrak{R}_t\) are current stress,
+resources, and resilience. The peer influence indicator selects the
+first \(k_{\text{influence}}\) neighbors.
 
 Resilience dynamics integrated challenge-hindrance effects, protective
 factor boosts, overload effects, and social support contributions, with
@@ -917,7 +904,7 @@ Small-world properties emerge when the rewiring probability \(p\)
 satisfies \(0.01 < p < 0.1\). Social simulation studies commonly use
 \(p = 0.1\)--\(0.3\) to maintain clustered structure while enabling
 realistic path lengths \citep{watts1998}. The network was initialized
-with mean degree \(WS\_k\) and rewiring probability \(WS\_p\).
+with mean degree \(WS_k\) and rewiring probability \(WS_p\).
 
 Model-level coordination managed population statistics, network
 adaptation tracking, and cumulative social support monitoring. The
@@ -1230,9 +1217,9 @@ Buffering strength & n/a & n/a & n/a & n/a & n/a & 0.03 & n/a\\
 \end{table}
 
 The build-up shows how each mechanism shifts the population metrics.
-Stage 7 -- the complete model -- is the configuration reported in the
-model-level and agent-level tables above; its final-day population state
-and agent heterogeneity are examined in the next section.
+Stage 7 is the configuration reported in the model-level and agent-level
+tables above; its final-day population state and agent heterogeneity are
+examined in the next section.
 
 \subsection{Emergent associations at the end
 state}\label{emergent-associations-at-the-end-state}

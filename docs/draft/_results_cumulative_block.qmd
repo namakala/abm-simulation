@@ -81,7 +81,7 @@ kable(
 )
 ```
 
-The build-up shows how each mechanism shifts the population metrics.
-Stage 7 -- the complete model -- is the configuration reported in the
-model-level and agent-level tables above; its final-day population state
-and agent heterogeneity are examined in the next section.
+The build-up shows how each mechanism shifts the population metrics. Stage 7
+is the configuration reported in the model-level and agent-level tables above;
+its final-day population state and agent heterogeneity are examined in the next
+section.
