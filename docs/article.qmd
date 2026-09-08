@@ -26,6 +26,10 @@ metadata-files:
 
 {{< include draft/_conclusion.qmd >}}
 
+# Funding
+
+This work was supported by The Indonesia Endowment Funds for Education (LPDP) in the form of a PhD scholarship to AL with Grant Agreement Number 0007457/PHA/D/2/lpdp2022 (28 August 2026).
+
 # References {-}
 
 \multicols{2}
