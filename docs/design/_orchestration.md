@@ -1,63 +1,111 @@
-## Network Topology
+# Two-Loop Orchestration
 
-Social network uses Watts-Strogatz small-world topology with high clustering
-and short characteristic path lengths. Network adaptation rewires edges based
-on stress breach counts and homophily similarity.
+### Purpose
 
-**Algorithm:**
+Explain how `Person.step()` orchestrates phases across two temporal scales
+within a single simulation day: event-driven responses and daily homeostatic
+consolidation.
 
-```
-FUNCTION build_watts_strogatz_network(N, k, p, rng):
-    k ← min(k, N - 1)
-    RETURN watts_strogatz_graph(N, k, p, seed=rng)
+- **Frequency:** daily (orchestrator)
+- **Inputs:** AgentState at day start
+- **Outputs:** AgentState at day end
 
-FUNCTION apply_stress_adaptation(G, agents, config, rng):
-    FOR each node with breach_count ≥ threshold:
-        worst_neighbor ← most dissimilar neighbor
-        retention_prob ← sigmoid(similarity, support_effectiveness, homophily)
-        IF rng.random() > retention_prob:
-            candidate ← find most similar non-neighbor
-            rewire edge: node -- worst_neighbor → node -- candidate
-    RETURN (modified_graph, rewired_count)
-```
-
-Reference: [src/python/network_utils.py:L16-L245](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/network_utils.py#L16-L245)
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `N` | Number of agents | 20 |
-| `k` | Mean degree (must be even, < N) | 4 |
-| `p` | Rewiring probability | 0.1 |
-
-Returns: `nx.Graph` for `build_watts_strogatz_network`; `Tuple[nx.Graph, int]`
-for `apply_stress_adaptation`.
-
-## Data Collection
-
-Mesa's `DataCollector` captures model-level and agent-level metrics using
-named reporter functions. Model reporters track population averages; agent
-reporters track individual trajectories.
-
-**Reporters:**
+### Algorithm
 
 ```
-AGENT_REPORTERS = {
-    pss10, resilience, affect, resources, current_stress,
-    stress_controllability, stress_overload, consecutive_hindrances,
-    coping_success, challenge_appraisal, hindrance_appraisal,
-    interaction_frequency, stressed, support_boost
-}
+FUNCTION Person.step():
+    // Step 0: Reset phase output instrumentation
+    self._last_phase_outputs ← {}
 
-MODEL_REPORTERS = {
-    avg_pss10, avg_resilience, avg_affect, coping_success_rate,
-    avg_resources, avg_stress, social_support_rate, network_density,
-    stress_prevalence, low_resilience, high_resilience,
-    avg_challenge, avg_hindrance, challenge_hindrance_ratio, ...
-}
+    // Step 1: Build agent state
+    state ← self._build_agent_state()
+
+    // Step 2: Get shared config values
+    neighbor_affects ← get_neighbor_affects(self, self.model)
+    cfg ← get_config()
+
+    // Step 3: Subevent loop (event-driven phases)
+    n_subevents ← sample_poisson(lam=cfg.agent.subevents_per_day, min_value=1)
+    actions ← random sequence of ["stress", "interact"] of length n_subevents
+    shuffle(actions)
+
+    daily_challenge_total ← 0.0
+    daily_hindrance_total ← 0.0
+    stress_event_count ← 0
+
+    FOR EACH action IN actions:
+        // Decay support_boost at each subevent (10% per subevent)
+        state["support_boost"] ← state["support_boost"] × 0.9
+
+        IF action == "stress":
+            // Stress perception phase
+            perception_result ← run_stress_perception(state, config, rng)
+            state ← _apply_delta(state, perception_result.state_delta)
+
+            // Accumulate daily totals
+            daily_challenge_total += perception_result.state_delta.challenge
+            daily_hindrance_total += perception_result.state_delta.hindrance
+            stress_event_count += 1
+
+            // Resilience activation phase (only if stressed)
+            IF state["is_stressed"]:
+                activation_result ← run_resilience_activation(state, config, rng)
+                state ← _apply_delta(state, activation_result.state_delta)
+
+                // Accumulate PSS-10 score
+                state["daily_pss10_scores"].append(state["pss10"])
+
+            // Track stress event for model-level reporting
+            state["daily_stress_events"].append({...})
+
+        ELSE IF action == "interact":
+            // Interaction phase
+            partner ← random neighbor
+            partner_state ← partner._build_agent_state()
+            self_output, partner_output ← process_interaction(state, partner_state, config, rng)
+
+            // Apply delta values (interaction returns changes, not absolutes)
+            state ← apply_interaction_delta(state, self_output)
+            partner._write_back_state(apply_interaction_delta(partner_state, partner_output))
+
+            state["daily_interactions"] += 1
+            IF self_output.observation.support_occurred:
+                state["daily_support_exchanges"] += 1
+                state["support_boost"] ← min(1.0, state["support_boost"] + 0.10)
+
+    // Normalize daily challenge/hindrance
+    IF stress_event_count > 0:
+        daily_challenge_total /= stress_event_count
+        daily_hindrance_total /= stress_event_count
+
+    // Step 4: Daily consolidation loop
+    affect_result ← process_affect_dynamics(state, config, rng)
+    state ← _apply_delta(state, affect_result.state_delta)
+
+    resource_result ← run_resource_allocation(state, config, rng)
+    state ← _apply_delta(state, resource_result.state_delta)
+
+    buffering_result ← run_stress_buffering(state, config, rng)
+    state ← _apply_delta(state, buffering_result.state_delta)
+
+    pss10_result ← process_pss10_consolidation(state, config, rng)
+    state ← _apply_delta(state, pss10_result.state_delta)
+
+    reset_result ← process_daily_reset(state, config, rng)
+    state ← _apply_delta(state, reset_result.state_delta)
+
+    // Step 5: Write back state
+    self._write_back_state(state)
 ```
 
-Reference: [src/python/reporters.py:L289-L333](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/reporters.py#L289-L333)
+### Parameters
 
-DataCollector initialisation:
+| Name | Description | Default | Source |
+|------|-------------|---------|--------|
+| `subevents_per_day` | Poisson rate (λ) for daily subevents | 3 | config |
+| `action_distribution` | Probability of stress vs interact | 0.5 each | config |
+| `support_boost_decay` | Per-subevent decay of support boost | 0.9 | assumption |
+| `support_boost_increment` | Per-support-exchange boost increment | 0.10 | assumption |
+| `interaction_boost_rate` | Per-interaction resilience boost | 0.005 | assumption |
 
-Reference: [src/python/model.py:L114-L133](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/model.py#L114-L133)
+Reference: [src/python/agent.py:L601-L850](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py#L601-L850)

@@ -1,0 +1,39 @@
+### Agent Initialization
+
+Each agent was initialized with baseline values representing natural equilibrium points using mathematical transformations ensuring proper statistical distributions. Resilience baselines utilized sigmoid transformation and affect baselines employed hyperbolic tangent transformation (Equation \@ref(eq-baseline-transformations)):
+
+\begin{align*}
+\mathfrak{R}_{\text{0}} &= \sigma\left(\frac{X - \mu_{\mathfrak{R},\text{0}}}{\sigma_{\mathfrak{R},\text{0}}}\right) \\
+A_{\text{0}} &= \tanh\left(\frac{X - \mu_{A,\text{0}}}{\sigma_{A,\text{0}}}\right)
+\end{align*}
+\label{eq-baseline-transformations}
+
+Core state variables included resilience ($\mathfrak{R} \in [0,1]$), affect ($A \in [-1,1]$), resources ($R \in [0,1]$), and current stress ($S \in [0,1]$). The model integrated Perceived Stress Scale-10 (PSS-10) functionality using a bifactor model with dimension score generation and validated theoretical correlations (Equation \@ref(eq-pss10-dimension-score)).
+
+### Phase Implementations
+
+Each phase implements a pure function with the signature `(state, config, rng) → PhaseOutput`, where `state` is the agent state dictionary, `config` contains phase-specific parameters, and `rng` is a seeded random number generator. Phase outputs consist of `state_delta` (updates to apply) and `observation` (metrics for logging). Detailed algorithms and parameter tables for each phase are provided in Supplementary Material S4.
+
+**Stress Perception** (event-driven) transforms raw stress events into appraised challenge/hindrance scores using a weighted appraisal function and determines whether the event exceeds the agent's adaptive threshold (Equation \@ref(eq-stress-processing)).
+
+**Resilience Activation** (event-driven) determines coping outcome through probability calculation incorporating social influence, resilience level, and protective factor efficacy. Successful coping yields positive affect and resilience changes; failed coping produces negative impacts.
+
+**Social Interaction** (event-driven) processes dyadic exchanges between neighboring agents. Affect convergence incorporates negativity bias (negative influence 1.5x stronger), and resource exchange follows a state machine based on mutual stress states.
+
+**Resource Allocation** (daily) regenerates resources linearly in deficit and distributes to protective factors via softmax allocation bounded by resource availability.
+
+**Stress Buffering** (daily) applies protective-factor resilience boost and resource-mediated stress buffering using a mediation framework.
+
+**Affect Dynamics** (daily) applies peer influence, event appraisal effects, protective factor boosts, and homeostatic adjustment toward baseline affect and resilience.
+
+**PSS-10 Consolidation** (daily) averages daily PSS-10 scores, applies exponential smoothing across days, and updates stressed classification based on clinical thresholds.
+
+**Daily Reset** (daily) clears tracking counters, applies affect reset toward baseline, and decays stress and consecutive hindrances.
+
+### Social Network Structure
+
+Network structure utilized Watts-Strogatz small-world topology, which generates graphs with high clustering coefficients and short characteristic path lengths [@watts1998]. Network adaptation rewires edges when agents experience chronic stress, with connection preferences determined by weighted similarity across stress, affect, and resilience homophily dimensions.
+
+### Data Collection
+
+The simulation implemented Mesa's `DataCollector` for standardized data collection. Model-level reporters captured population metrics including average PSS-10 scores, resilience levels, affect states, stress prevalence, and social network characteristics. Agent-level reporters tracked individual trajectories for comprehensive analysis.

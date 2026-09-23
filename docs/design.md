@@ -1,42 +1,43 @@
 ---
-title: Design and Architecture of the Agent-Based Simulation Approach
-subtitle: Simulation Strategy Document
+title: >
+  Supplementary Material: Implementation Details of the
+  Agent-Based Psychological Resilience Simulation
 author: Aly Lamuri
+format:
+  pdf:
+    number-sections: true
+    include-in-header:
+      text: |
+        \renewcommand{\thesection}{S\arabic{section}}
+        \renewcommand{\thesubsection}{S\arabic{section}.\arabic{subsection}}
 ---
 
-# Agent Initialization
+{{< include design/_protocol.md >}}
 
-Each agent is initialised with baseline values representing natural equilibrium
-points using mathematical transformations ensuring proper statistical distributions.
-
-{{< include design/_init-baseline.md >}}
-
-{{< include design/_init-state.md >}}
-
-# Daily Simulation Loop
-
-The orchestrator is `Person.step()` which builds agent state, runs both loops,
-and writes back state.
-
-Reference: [src/python/agent.py:L601-L850](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py#L601-L850)
-
-The number of subevents per day is drawn from a Poisson distribution
-($\lambda = 3$), ensuring at least one daily subevent. Each subevent is
-randomly assigned as either a stress event or a social interaction.
-
-```
-n_subevents ← max(Poisson(λ), 1)
-actions ← random sequence of ["stress", "interact"] of length n_subevents
-```
-
-{{< include design/_subevent-loop.md >}}
-
-{{< include design/_daily-consolidation.md >}}
-
-# Model Orchestration
-
-The simulation uses Mesa's agent-based modelling framework with dual-class
-architecture separating agent behaviours (`Person`) from model orchestration
-(`StressModel`).
+{{< include design/_schema.md >}}
 
 {{< include design/_orchestration.md >}}
+
+# Phase Implementations
+
+{{< include design/_stress-perception.md >}}
+
+{{< include design/_resilience-activation.md >}}
+
+{{< include design/_interaction.md >}}
+
+{{< include design/_resource-allocation.md >}}
+
+{{< include design/_stress-buffering.md >}}
+
+{{< include design/_affect-dynamics.md >}}
+
+{{< include design/_pss10-consolidation.md >}}
+
+{{< include design/_daily-reset.md >}}
+
+{{< include design/_cumulative-rationale.md >}}
+
+{{< include design/_network.md >}}
+
+{{< include design/_data-collection.md >}}

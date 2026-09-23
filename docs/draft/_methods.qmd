@@ -4,11 +4,17 @@
 
 {{< include manuscript/_modelling-approach.md >}}
 
+## Theoretical Foundation and Simulation Architecture
+
+{{< include manuscript/_simulation-architecture.md >}}
+
+## Model Parameters
+
 {{< include manuscript/_parameters.md >}}
 
 ## Simulation Mechanism
 
-{{< include manuscript/_simulation-mechanism-manuscript.md >}}
+{{< include manuscript/_simulation-mechanism-simplified.qmd >}}
 
 ## Data Analysis
 
