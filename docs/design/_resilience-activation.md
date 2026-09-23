@@ -86,7 +86,7 @@ FUNCTION run_resilience_activation(state, config, rng):
 ### Parameters
 
 ```{=latex}
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule

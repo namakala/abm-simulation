@@ -253,7 +253,7 @@ phases; phases read from and write to this schema via
 
 \textbf{Core state:}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}p{2cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{1cm}p{1.5cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Range} & \textbf{Description} \\
 \midrule
@@ -267,7 +267,7 @@ phases; phases read from and write to this schema via
 
 \textbf{Protective factors:}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{2.5cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Description} \\
 \midrule
@@ -277,7 +277,7 @@ phases; phases read from and write to this schema via
 
 \textbf{Stress tracking:}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{1.2cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Description} \\
 \midrule
@@ -291,7 +291,7 @@ phases; phases read from and write to this schema via
 
 \textbf{PSS-10 state:}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{2cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Description} \\
 \midrule
@@ -307,7 +307,7 @@ phases; phases read from and write to this schema via
 
 \textbf{Transient keys} (written by one phase, consumed by next):
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}XX}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{1cm}p{3cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Producer} & \textbf{Consumer} \\
 \midrule
@@ -421,7 +421,7 @@ FUNCTION step(agent, config, rng):
 
 \subsection{Parameters}\label{parameters}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -508,7 +508,7 @@ FUNCTION run_stress_perception(state, config, rng):
 
 \subsubsection{Parameters}\label{parameters-1}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -623,7 +623,7 @@ FUNCTION run_resilience_activation(state, config, rng):
 
 \subsubsection{Parameters}\label{parameters-2}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -697,7 +697,7 @@ FUNCTION interact(self_state, partner_state, config, rng):
 
 \subsubsection{Parameters}\label{parameters-3}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -769,7 +769,7 @@ FUNCTION run_resource_allocation(state, config, rng):
 
 \subsubsection{Parameters}\label{parameters-4}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -832,7 +832,7 @@ FUNCTION run_stress_buffering(state, config, rng):
 
 \subsubsection{Parameters}\label{parameters-5}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -913,7 +913,7 @@ FUNCTION run_affect_dynamics(state, config, rng):
 
 \subsubsection{Parameters}\label{parameters-6}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -995,7 +995,7 @@ FUNCTION run_pss10_consolidation(state, config, rng):
 
 \subsubsection{Parameters}\label{parameters-7}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -1071,7 +1071,7 @@ FUNCTION run_daily_reset(state, config, rng):
 
 \subsubsection{Parameters}\label{parameters-8}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule
@@ -1208,7 +1208,7 @@ FUNCTION adapt_network(G, agents, config, rng):
 
 \subsection{Parameters}\label{parameters-9}
 
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}Xp{2cm}}
 \toprule
 \textbf{Name} & \textbf{Description} & \textbf{Default} \\
 \midrule

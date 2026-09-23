@@ -14,7 +14,7 @@ phases read from and write to this schema via `state_delta`.
 **Core state:**
 
 ```{=latex}
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}p{2cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{1cm}p{1.5cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Range} & \textbf{Description} \\
 \midrule
@@ -30,7 +30,7 @@ phases read from and write to this schema via `state_delta`.
 **Protective factors:**
 
 ```{=latex}
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{2.5cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Description} \\
 \midrule
@@ -42,7 +42,7 @@ phases read from and write to this schema via `state_delta`.
 **Stress tracking:**
 
 ```{=latex}
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{1.2cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Description} \\
 \midrule
@@ -58,7 +58,7 @@ phases read from and write to this schema via `state_delta`.
 **PSS-10 state:**
 
 ```{=latex}
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{2cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Description} \\
 \midrule
@@ -76,7 +76,7 @@ phases read from and write to this schema via `state_delta`.
 **Transient keys** (written by one phase, consumed by next):
 
 ```{=latex}
-\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}XX}
+\begin{tabularx}{\textwidth}{p{4.5cm}p{1cm}p{3cm}X}
 \toprule
 \textbf{Field} & \textbf{Type} & \textbf{Producer} & \textbf{Consumer} \\
 \midrule
