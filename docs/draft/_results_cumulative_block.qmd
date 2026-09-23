@@ -55,7 +55,7 @@ at a stage are reported as n/a.
 #| results: asis
 key_cols <- c("avg_pss10", "avg_stress", "avg_affect", "avg_resilience", "avg_resources", "stress_prevalence", "coping_success_rate")
 label_map <- c("avg_pss10" = "PSS-10", "avg_stress" = "Stress", "avg_affect" = "Affect", "avg_resilience" = "Resilience", "avg_resources" = "Resources", "stress_prevalence" = "Stress prevalence", "coping_success_rate" = "Coping success")
-block_added <- c("1" = "initialization", "2" = "stress perception", "3" = "resilience activation", "4" = "interaction", "5" = "resource allocation", "6" = "stress buffering", "7" = "affect dynamics, PSS-10 consolidation, daily reset, network adaptation")
+block_added <- c("1" = "Initialization", "2" = "+ Stress perception", "3" = "+ Resilience activation", "4" = "+ Interaction", "5" = "+ Resource allocation", "6" = "+ Stress buffering", "7" = "+ Full model")
 nm <- blocks[, key_cols]
 nm[] <- lapply(nm, function(x) {
   v <- format(round(x, 3), nsmall = 3, trim = TRUE)

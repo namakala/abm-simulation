@@ -15,62 +15,65 @@ Lazarus primary appraisal.
 
 ```
 FUNCTION run_stress_perception(state, config, rng):
-    // 1. Generate stress event
+    // Generate and appraise stress event
     event ← generate_stress_event(rng)
-
-    // 2. Build appraisal weights
-    weights ← AppraisalWeights(omega_c, omega_o, bias, gamma)
-
-    // 3. Compute challenge / hindrance
+    weights ← {omega_c, omega_o, bias, gamma}
     challenge, hindrance ← apply_weights(event, weights)
 
-    // 4. Compute appraised stress load
-    appraised_stress ← compute_appraised_stress(event, challenge, hindrance, delta)
+    // Compute stress load
+    stress_load ← appraised_stress(event, challenge,
+        hindrance, config.delta)
 
-    // 5. Evaluate stress threshold
-    threshold_params ← ThresholdParams(base_threshold, challenge_scale, hindrance_scale)
-    is_stressed ← evaluate_stress_threshold(appraised_stress, challenge, hindrance, threshold_params)
+    // Evaluate threshold
+    threshold ← config.base_threshold
+        + config.challenge_scale × challenge
+        + config.hindrance_scale × hindrance
+    is_stressed ← stress_load ≥ threshold
 
-    // 6. Update stress dimensions
-    updated_controllability, updated_overload, new_intensity, new_momentum ←
-        update_stress_dimensions_from_event(
-            current_controllability, current_overload,
-            challenge, hindrance, coped_successfully=True,
-            is_stressful=is_stressed, volatility,
-            recent_stress_intensity, stress_momentum, resilience
-        )
+    // Update stress dimensions
+    c, o, inten, mom ← update_dimensions(
+        state.controllability, state.overload,
+        challenge, hindrance, is_stressed,
+        config.volatility, state.stress_intensity,
+        state.stress_momentum, state.resilience
+    )
 
-    // 7. Build PhaseOutput
-    state_delta ← {
+    // Build output
+    delta ← {
         challenge, hindrance, is_stressed,
         event_controllability: event.controllability,
         event_overload: event.overload,
-        stress_controllability: updated_controllability,
-        stress_overload: updated_overload,
-        recent_stress_intensity: new_intensity,
-        stress_momentum: new_momentum
+        stress_controllability: c,
+        stress_overload: o,
+        stress_intensity: inten,
+        stress_momentum: mom
     }
-
-    observation ← {
-        event_controllability, event_overload,
-        challenge, hindrance, appraised_stress,
-        effective_threshold, is_stressed
+    obs ← {
+        event_controllability: event.controllability,
+        event_overload: event.overload,
+        challenge, hindrance, stress_load,
+        threshold, is_stressed
     }
-
-    RETURN PhaseOutput(state_delta, observation)
+    RETURN {delta, obs}
 ```
 
 ### Parameters
 
-| Name | Description | Default | Source |
-|------|-------------|---------|--------|
-| `omega_c` | Controllability weight in appraisal | 1.0 | config |
-| `omega_o` | Overload weight in appraisal | 1.0 | config |
-| `bias` | Appraisal bias term | 0.0 | config |
-| `gamma` | Sigmoid steepness in appraisal | 6.0 | config |
-| `delta` | Polarity effect strength | 0.2 | config |
-| `base_threshold` | Base stress threshold | 0.5 | config |
-| `challenge_scale` | Challenge threshold scale | 0.15 | config |
-| `hindrance_scale` | Hindrance threshold scale | 0.25 | config |
+```{=latex}
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{omega\_c}{Controllability weight in appraisal}{1.0}
+\trow{omega\_o}{Overload weight in appraisal}{1.0}
+\trow{bias}{Appraisal bias term}{0.0}
+\trow{gamma}{Sigmoid steepness in appraisal}{6.0}
+\trow{delta}{Polarity effect strength}{0.2}
+\trow{base\_threshold}{Base stress threshold}{0.5}
+\trow{challenge\_scale}{Challenge threshold scale}{0.15}
+\trow{hindrance\_scale}{Hindrance threshold scale}{0.25}
+\bottomrule
+\end{tabularx}
+```
 
 Reference: [src/python/phases/stress_perception.py:L28-L130](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/stress_perception.py#L28-L130)

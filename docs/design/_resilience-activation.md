@@ -17,90 +17,84 @@ protective factor allocation.
 
 ```
 FUNCTION run_resilience_activation(state, config, rng):
-    // Step 1: Coping outcome
-    new_affect, new_resilience, new_stress, coped ←
-        determine_coping_outcome_and_psychological_impact(
-            current_affect, current_resilience, current_stress,
-            challenge, hindrance, neighbor_affects, rng,
-            config, social_support_efficacy, support_boost
-        )
-
-    // Step 2: Update stress dimensions from event
-    updated_controllability, updated_overload, updated_intensity, updated_momentum ←
-        update_stress_dimensions_from_event(
-            current_controllability, current_overload,
-            challenge, hindrance, coped, is_stressful=True,
-            volatility, recent_stress_intensity, stress_momentum, resilience
-        )
-
-    // Step 3: Generate PSS-10 from updated dimensions
-    pss10_data ← generate_pss10_from_stress_dimensions(
-        updated_controllability, updated_overload,
-        updated_intensity, updated_momentum,
-        new_affect, current_resources, new_resilience, rng
+    // Determine coping outcome
+    a, r, s, coped ← coping_outcome(
+        state.affect, state.resilience,
+        state.stress, state.challenge,
+        state.hindrance, state.neighbors,
+        config, rng
     )
 
-    // Step 4: Resource cost and depletion
-    optimized_cost ← compute_resilience_optimized_resource_cost(
-        base_cost, new_resilience, challenge, hindrance, config
+    // Update stress dimensions
+    c, o, inten, mom ← update_dimensions(
+        state.controllability, state.overload,
+        state.challenge, state.hindrance,
+        coped, config.volatility,
+        state.stress_intensity,
+        state.stress_momentum, state.resilience
     )
-    new_resources ← compute_resource_depletion_with_resilience(
-        current_resources, optimized_cost, new_resilience, coped, is_stressed=True, config
-    )
 
-    // Step 5: Track consecutive hindrances
-    new_consecutive_hindrances ← consecutive_hindrances + 1.0 IF hindrance > challenge ELSE 0.0
+    // Generate PSS-10
+    pss10 ← generate_pss10(c, o, inten, mom,
+        a, state.resources, r, rng)
 
-    // Step 6: Increment stress breach count
-    new_stress_breach_count ← stress_breach_count + 1
+    // Resource cost and depletion
+    cost ← resource_cost(config.base_cost,
+        r, state.challenge, state.hindrance)
+    res ← depletion(state.resources, cost, r,
+        coped, config)
 
-    // Step 7: PF allocation + resource reward (if coped)
-    new_protective_factors ← dict(protective_factors)
+    // Track consecutive hindrances
+    hindrances ← state.consecutive_hindrances
+    IF state.hindrance > state.challenge:
+        hindrances ← hindrances + 1
+    ELSE:
+        hindrances ← 0
+
+    // PF allocation if coped
+    pf ← copy(state.protective_factors)
     IF coped:
-        reward ← 0.03
-        new_resources ← clamp(new_resources + reward, 0.0, 1.0)
-        allocations ← allocate_protective_factors(
-            new_resources × pf_allocation_fraction,
-            new_resilience, baseline_resilience, protective_factors, rng
+        res ← clamp(res + 0.03, 0, 1)
+        alloc ← allocate_pf(
+            res × config.pf_alloc_fraction,
+            r, state.baseline_resilience, pf, rng
         )
-        new_protective_factors ← update_protective_factors_with_allocation(
-            protective_factors, allocations, new_resilience
-        )
-        new_resources ← clamp(new_resources - sum(allocations.values()), 0.0, 1.0)
+        pf ← update_pf(pf, alloc, r)
+        res ← clamp(res - sum(alloc), 0, 1)
 
-    // Build PhaseOutput
-    state_delta ← {
-        affect: new_affect, resilience: new_resilience,
-        current_stress: new_stress,
-        stress_controllability: updated_controllability,
-        stress_overload: updated_overload,
-        resources: new_resources,
-        protective_factors: new_protective_factors,
-        consecutive_hindrances: new_consecutive_hindrances,
-        stress_breach_count: new_stress_breach_count,
-        pss10: pss10_data.pss10_score,
-        pss10_responses: pss10_data.pss10_responses,
-        stressed: pss10_data.stressed
+    // Build output
+    delta ← {
+        affect: a, resilience: r,
+        stress: s,
+        controllability: c, overload: o,
+        resources: res, protective_factors: pf,
+        consecutive_hindrances: hindrances,
+        stress_breach_count: state.breach_count + 1,
+        pss10: pss10.score,
+        pss10_responses: pss10.responses,
+        stressed: pss10.stressed
     }
-
-    observation ← {
-        coped_successfully: coped,
-        coping_probability, resilience_effect,
-        delta_stress: new_stress - current_stress,
-        delta_affect: new_affect - current_affect,
-        resource_cost: optimized_cost,
-        resource_reward: 0.03 IF coped ELSE None
+    obs ← {
+        coped, coping_probability,
+        resilience_effect, resource_cost: cost,
+        delta_stress: s - state.stress,
+        delta_affect: a - state.affect
     }
-
-    RETURN PhaseOutput(state_delta, observation)
+    RETURN {delta, obs}
 ```
 
 ### Parameters
 
-| Name | Description | Default | Source |
-|------|-------------|---------|--------|
-| `base_resource_cost` | Cost per coping attempt | 0.1 | config |
-| `pf_allocation_fraction` | Resources allocated to PF on success | 0.15 | assumption |
-| `resource_reward` | Flat reward for successful coping | 0.03 | assumption |
+```{=latex}
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{base\_resource\_cost}{Cost per coping attempt}{0.1}
+\trow{pf\_allocation\_fraction}{Resources allocated to PF on success}{0.15}
+\trow{resource\_reward}{Flat reward for successful coping}{0.03}
+\bottomrule
+\end{tabularx}
+```
 
 Reference: [src/python/phases/resilience_activation.py:L42-L252](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/resilience_activation.py#L42-L252)

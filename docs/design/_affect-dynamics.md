@@ -14,47 +14,58 @@ resilience optimisation. Runs once per day after the subevent loop.
 ### Algorithm
 
 ```
-FUNCTION process_affect_dynamics(state, config, rng):
-    // 1. Affect dynamics (homeostasis + peer influence + event appraisal)
-    new_affect ← update_affect_dynamics(
-        current_affect, baseline_affect, neighbor_affects,
-        daily_challenge, daily_hindrance,
-        current_stress, resources
-    )
+FUNCTION run_affect_dynamics(state, config, rng):
+    // Affect: homeostasis + peers + appraisal
+    new_a ← update_affect(state.affect,
+        state.baseline_affect, state.neighbors,
+        state.challenge, state.hindrance,
+        state.stress, state.resources)
 
-    // 2. Resilience dynamics + PF boost
-    new_resilience ← update_resilience_dynamics(
-        current_resilience, consecutive_hindrances
-    )
-    protective_boost ← get_resilience_boost(protective_factors, baseline, current)
-    new_resilience ← min(1, new_resilience + protective_boost)
+    // Resilience dynamics + PF boost
+    new_r ← update_resilience(state.resilience,
+        state.consecutive_hindrances)
+    pf_boost ← get_pf_boost(state.protective_factors,
+        state.baseline, new_r)
+    new_r ← min(1, new_r + pf_boost)
 
-    // 3. Social resilience optimisation
-    new_resilience ← integrate_social_resilience_optimization(
-        new_resilience, daily_interactions, daily_support_exchanges,
-        resources, baseline_resilience, protective_factors, rng
-    )
+    // Social resilience optimisation
+    new_r ← social_resilience(new_r,
+        state.interactions, state.support_exchanges,
+        state.resources, state.baseline_resilience,
+        state.protective_factors, rng)
 
-    // 4. Interaction-frequency boost
-    new_resilience += daily_interactions × 0.005
+    // Interaction-frequency boost
+    new_r ← new_r + state.interactions × 0.005
 
-    // 5. Consecutive hindrance decay
-    new_consecutive_hindrances ← max(0, hindrances - decay_rate)
+    // Hindrance decay
+    new_h ← max(0,
+        state.consecutive_hindrances - config.decay)
 
-    // 6. Homeostatic adjustment
-    new_affect ← compute_homeostatic_adjustment(baseline, new_affect, rate)
-    new_resilience ← compute_homeostatic_adjustment(baseline, new_resilience, rate)
+    // Homeostatic adjustment
+    new_a ← homeostatic(state.baseline_affect,
+        new_a, config.affect_rate)
+    new_r ← homeostatic(state.baseline_resilience,
+        new_r, config.resilience_rate)
 
-    RETURN PhaseOutput(state_delta, observation)
+    RETURN {delta: {affect: new_a,
+        resilience: new_r,
+        consecutive_hindrances: new_h},
+        obs: {}}
 ```
 
 ### Parameters
 
-| Name | Description | Default | Source |
-|------|-------------|---------|--------|
-| `affect_homeostatic_rate` | Affect return rate | 0.5 | assumption |
-| `resilience_homeostatic_rate` | Resilience return rate | 0.5 | assumption |
-| `interaction_boost_rate` | Per-interaction resilience boost | 0.005 | assumption |
-| `hindrance_decay_rate` | Daily hindrance decay | 0.05 | assumption |
+```{=latex}
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{affect\_homeostatic\_rate}{Affect return rate}{0.5}
+\trow{resilience\_homeostatic\_rate}{Resilience return rate}{0.5}
+\trow{interaction\_boost\_rate}{Per-interaction resilience boost}{0.005}
+\trow{hindrance\_decay\_rate}{Daily hindrance decay}{0.05}
+\bottomrule
+\end{tabularx}
+```
 
 Reference: [src/python/agent.py:L67-L210](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py#L67-L210)

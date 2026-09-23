@@ -17,35 +17,47 @@ and psychological capital.
 
 ```
 FUNCTION run_resource_allocation(state, config, rng):
-    // 1. Resource regeneration
-    affect_mult ← 1 + 0.5 × max(0, affect)
-    resil_mult ← 1 + 0.3 × resilience
-    regeneration ← base_rate × (1 - resources) × affect_mult × resil_mult
+    // Resource regeneration
+    a_mult ← 1 + 0.5 × max(0, state.affect)
+    r_mult ← 1 + 0.3 × state.resilience
+    regen ← config.base_rate × (1 - state.resources)
+        × a_mult × r_mult
 
-    // 2. Softmax allocation across protective factors
-    available ← resources + regeneration
-    spendable ← available × (1 - preservable_fraction)
-    weights ← softmax(efficacies / temperature)
-    allocations ← spendable × weights
+    // Softmax allocation
+    available ← state.resources + regen
+    spendable ← available × (1 - config.preserve_frac)
+    weights ← softmax(state.efficacies / config.temp)
+    alloc ← spendable × weights
 
-    // 3. PF efficacy updates (diminishing returns)
+    // Update efficacies (diminishing returns)
     FOR each factor f:
-        Δe_f ← allocations[f] × rate × (1 - e_f) × efficiency_gain
-        e_f ← min(1, e_f + Δe_f)
+        de ← alloc[f] × config.rate
+            × (1 - state.efficacies[f])
+        state.efficacies[f] ← min(1,
+            state.efficacies[f] + de)
 
-    // 4. Remaining resources
-    new_resources ← preserved + (spendable - total_allocated)
+    // Remaining resources
+    new_res ← config.preserve_frac × available
+        + (spendable - total(alloc))
 
-    RETURN PhaseOutput(state_delta: {resources, protective_factors}, observation)
+    RETURN {delta: {resources: new_res,
+        protective_factors: state.efficacies},
+        obs: {regen, alloc}}
 ```
 
 ### Parameters
 
-| Name | Description | Default | Source |
-|------|-------------|---------|--------|
-| `base_regeneration` | Daily regeneration rate | 0.5 | config |
-| `preservable_fraction` | Fraction of resources preserved | 0.2 | config |
-| `softmax_temperature` | Allocation temperature | 1.0 | config |
-| `protective_improvement_rate` | PF efficacy update rate | 0.5 | config |
+```{=latex}
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{base\_regeneration}{Daily regeneration rate}{0.5}
+\trow{preservable\_fraction}{Fraction of resources preserved}{0.2}
+\trow{softmax\_temperature}{Allocation temperature}{1.0}
+\trow{protective\_improvement\_rate}{PF efficacy update rate}{0.5}
+\bottomrule
+\end{tabularx}
+```
 
 Reference: [src/python/phases/resource_allocation.py:L141-L219](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/resource_allocation.py#L141-L219)

@@ -5,11 +5,20 @@ title: >
 author: Aly Lamuri
 format:
   pdf:
+    keep-tex: true
     number-sections: true
+    code-overflow: wrap
     include-in-header:
       text: |
         \renewcommand{\thesection}{S\arabic{section}}
         \renewcommand{\thesubsection}{S\arabic{section}.\arabic{subsection}}
+        \usepackage{tabularx}
+        \newcommand{\trow}[3]{%
+          \texttt{\allowbreak #1} & #2 & #3 \\
+        }
+        \newcommand{\trowfour}[4]{%
+          \texttt{\allowbreak #1} & #2 & #3 & #4 \\
+        }
 ---
 
 {{< include design/_protocol.md >}}

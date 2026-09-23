@@ -1,0 +1,1297 @@
+% Options for packages loaded elsewhere
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+
+
+
+
+
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+ 
+
+
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thesubsection}{S\arabic{section}.\arabic{subsection}}
+\usepackage{tabularx}
+\newcommand{\trow}[3]{%
+  \texttt{\allowbreak #1} & #2 & #3 \\
+}
+\newcommand{\trowfour}[4]{%
+  \texttt{\allowbreak #1} & #2 & #3 & #4 \\
+}
+\KOMAoption{captions}{tableheading}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Supplementary Material: Implementation Details of the Agent-Based Psychological Resilience Simulation},
+  pdfauthor={Aly Lamuri},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\title{Supplementary Material: Implementation Details of the Agent-Based
+Psychological Resilience Simulation}
+\author{Aly Lamuri}
+\date{}
+\begin{document}
+\maketitle
+
+
+\section{Phase Function Protocol}\label{phase-function-protocol}
+
+\subsection{Purpose}\label{purpose}
+
+Define the type contract that all phase functions must satisfy, enabling
+modular composition and independent testing.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} N/A (interface definition)
+\item
+  \textbf{Inputs:} N/A (type definitions)
+\item
+  \textbf{Outputs:} N/A (type definitions)
+\end{itemize}
+
+\subsection{Definitions}\label{definitions}
+
+\textbf{PhaseFunction Protocol:}
+
+\begin{verbatim}
+FUNCTION phase(state, config, rng) → PhaseOutput
+\end{verbatim}
+
+Every phase function accepts (state, config, rng) and returns
+PhaseOutput. This uniform signature enables sequential composition.
+
+\textbf{PhaseOutput:}
+
+\begin{verbatim}
+PhaseOutput = {
+    state_delta: {key: value}   // updates to apply to agent state
+    observation: {key: value}   // logging data, no state effect
+}
+\end{verbatim}
+
+state\_delta contains updates to apply via apply\_delta(). observation
+contains metrics that do not affect simulation state.
+
+\textbf{PhaseFrequency:}
+
+\begin{verbatim}
+PhaseFrequency = event_driven | daily
+\end{verbatim}
+
+event\_driven: runs per stress event or interaction (multiple times/day)
+daily: runs once per day during consolidation loop
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/interfaces.py\#L1-L85}{src/python/phases/interfaces.py:L1-L85}
+
+\section{AgentState Schema}\label{agentstate-schema}
+
+\subsection{Purpose}\label{purpose-1}
+
+Single source of truth for all mutable agent variables. Passed between
+phases; phases read from and write to this schema via
+\texttt{state\_delta}.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} N/A (data structure)
+\item
+  \textbf{Inputs:} N/A
+\item
+  \textbf{Outputs:} N/A
+\end{itemize}
+
+\subsection{Field Definitions}\label{field-definitions}
+
+\textbf{Core state:}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}p{2cm}X}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Range} & \textbf{Description} \\
+\midrule
+\trowfour{baseline\_resilience}{float}{[0, 1]}{Initial resilience (fixed)}
+\trowfour{resilience}{float}{[0, 1]}{Current resilience}
+\trowfour{baseline\_affect}{float}{[-1, 1]}{Initial affect (fixed)}
+\trowfour{affect}{float}{[-1, 1]}{Current affect}
+\trowfour{resources}{float}{[0, 1]}{Psychological/physical resources}
+\bottomrule
+\end{tabularx}
+
+\textbf{Protective factors:}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\trow{protective\_factors}{Dict[str, float]}{social\_support, family\_support, formal\_intervention, psychological\_capital}
+\bottomrule
+\end{tabularx}
+
+\textbf{Stress tracking:}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\trow{current\_stress}{float}{Current stress level [0, 1]}
+\trow{recent\_stress\_intensity}{float}{Tracks recent stress for PSS-10 response}
+\trow{stress\_momentum}{float}{Rate of stress change for predictive updates}
+\trow{consecutive\_hindrances}{float}{Hindrance streak length}
+\trow{stress\_breach\_count}{int}{Count of stress threshold breaches}
+\bottomrule
+\end{tabularx}
+
+\textbf{PSS-10 state:}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\trow{pss10\_responses}{Dict}{Individual PSS-10 item responses}
+\trow{stress\_controllability}{float}{Controllability dimension [0, 1]}
+\trow{stress\_overload}{float}{Overload dimension [0, 1]}
+\trow{pss10}{int}{Total PSS-10 score (0-40)}
+\trow{pss10\_smoothed}{float}{Float smoothed value, carried across days}
+\trow{stressed}{bool}{Stress classification based on threshold}
+\trow{daily\_pss10\_scores}{List[int]}{Scores collected during current day}
+\bottomrule
+\end{tabularx}
+
+\textbf{Transient keys} (written by one phase, consumed by next):
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}XX}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Producer} & \textbf{Consumer} \\
+\midrule
+\trowfour{challenge}{float}{Stress Perception}{Resilience Activation}
+\trowfour{hindrance}{float}{Stress Perception}{Resilience Activation}
+\trowfour{is\_stressed}{bool}{Stress Perception}{Orchestrator branching}
+\trowfour{event\_controllability}{float}{Stress Perception}{Resilience Activation}
+\trowfour{event\_overload}{float}{Stress Perception}{Resilience Activation}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/interfaces.py\#L18-L75}{src/python/phases/interfaces.py:L18-L75}
+
+\section{Two-Loop Orchestration}\label{two-loop-orchestration}
+
+\subsection{Purpose}\label{purpose-2}
+
+Explain how \texttt{Person.step()} orchestrates phases across two
+temporal scales within a single simulation day: event-driven responses
+and daily homeostatic consolidation.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} daily (orchestrator)
+\item
+  \textbf{Inputs:} AgentState at day start
+\item
+  \textbf{Outputs:} AgentState at day end
+\end{itemize}
+
+\subsection{Algorithm}\label{algorithm}
+
+\begin{verbatim}
+FUNCTION step(agent, config, rng):
+    // Reset phase outputs
+    agent.last_phase_outputs ← {}
+
+    // Build state from agent attributes
+    state ← build_state(agent)
+    neighbors ← get_neighbor_affects(agent)
+
+    // Subevent loop
+    n ← sample_poisson(config.subevents_per_day)
+    actions ← random_sequence("stress", "interact", n)
+    shuffle(actions)
+
+    challenge_total ← 0
+    hindrance_total ← 0
+    stress_count ← 0
+
+    FOR EACH action IN actions:
+        // Decay support boost
+        state.support_boost ← state.support_boost × 0.9
+
+        IF action = "stress":
+            // Appraise stress event
+            result ← run_stress_perception(state, config, rng)
+            state ← apply_delta(state, result.delta)
+            challenge_total ← challenge_total + result.delta.challenge
+            hindrance_total ← hindrance_total + result.delta.hindrance
+            stress_count ← stress_count + 1
+
+            // Activate resilience if stressed
+            IF state.is_stressed:
+                r2 ← run_resilience_activation(
+                    state, config, rng)
+                state ← apply_delta(state, r2.delta)
+                scores ← state.pss10_scores
+                state.pss10_scores ← scores ∪ {state.pss10}
+
+            // Record stress event
+            state.stress_events ← state.stress_events ∪ {event}
+
+        ELSE IF action = "interact":
+            // Dyadic interaction
+            partner ← random_neighbor(agent)
+            pstate ← build_state(partner)
+            out1, out2 ← interact(state, pstate, config, rng)
+            state ← apply_delta(state, out1.delta)
+            apply_delta(partner, out2.delta)
+            write_back(partner)
+
+            state.interactions ← state.interactions + 1
+            IF out1.obs.support_occurred:
+                state.support_exchanges ← state.support_exchanges + 1
+                sb ← state.support_boost + 0.1
+                state.support_boost ← min(1, sb)
+
+    // Normalize daily totals
+    IF stress_count > 0:
+        challenge_total ← challenge_total ÷ stress_count
+        hindrance_total ← hindrance_total ÷ stress_count
+
+    // Daily consolidation
+    state ← apply_delta(state,
+        affect_dynamics(state, config, rng).delta)
+    state ← apply_delta(state,
+        resource_allocation(state, config, rng).delta)
+    state ← apply_delta(state,
+        stress_buffering(state, config, rng).delta)
+    state ← apply_delta(state,
+        pss10_consolidation(state, config, rng).delta)
+    state ← apply_delta(state,
+        daily_reset(state, config, rng).delta)
+
+    // Write back
+    write_back(agent, state)
+\end{verbatim}
+
+\subsection{Parameters}\label{parameters}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{subevents\_per\_day}{Poisson rate (\(\lambda\)) for daily subevents}{3}
+\trow{action\_distribution}{Probability of stress vs interact}{0.5 each}
+\trow{support\_boost\_decay}{Per-subevent decay of support boost}{0.9}
+\trow{support\_boost\_increment}{Per-support-exchange boost increment}{0.10}
+\trow{interaction\_boost\_rate}{Per-interaction resilience boost}{0.005}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py\#L601-L850}{src/python/agent.py:L601-L850}
+
+\section{Phase Implementations}\label{phase-implementations}
+
+\subsection{Stress Perception}\label{stress-perception}
+
+\subsubsection{Purpose}\label{purpose-3}
+
+Transform raw stress events into appraised challenge/hindrance scores
+and determine whether the event exceeds the agent's adaptive threshold.
+Implements Lazarus primary appraisal.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} event\_driven
+\item
+  \textbf{Inputs:} stress\_controllability, stress\_overload,
+  volatility, recent\_stress\_intensity, stress\_momentum
+\item
+  \textbf{Outputs:} state\_delta: challenge, hindrance, is\_stressed,
+  event attrs, updated dimensions
+\item
+  \textbf{Observation:} event attrs, appraisal values, threshold values
+\end{itemize}
+
+\subsubsection{Algorithm}\label{algorithm-1}
+
+\begin{verbatim}
+FUNCTION run_stress_perception(state, config, rng):
+    // Generate and appraise stress event
+    event ← generate_stress_event(rng)
+    weights ← {omega_c, omega_o, bias, gamma}
+    challenge, hindrance ← apply_weights(event, weights)
+
+    // Compute stress load
+    stress_load ← appraised_stress(event, challenge,
+        hindrance, config.delta)
+
+    // Evaluate threshold
+    threshold ← config.base_threshold
+        + config.challenge_scale × challenge
+        + config.hindrance_scale × hindrance
+    is_stressed ← stress_load ≥ threshold
+
+    // Update stress dimensions
+    c, o, inten, mom ← update_dimensions(
+        state.controllability, state.overload,
+        challenge, hindrance, is_stressed,
+        config.volatility, state.stress_intensity,
+        state.stress_momentum, state.resilience
+    )
+
+    // Build output
+    delta ← {
+        challenge, hindrance, is_stressed,
+        event_controllability: event.controllability,
+        event_overload: event.overload,
+        stress_controllability: c,
+        stress_overload: o,
+        stress_intensity: inten,
+        stress_momentum: mom
+    }
+    obs ← {
+        event_controllability: event.controllability,
+        event_overload: event.overload,
+        challenge, hindrance, stress_load,
+        threshold, is_stressed
+    }
+    RETURN {delta, obs}
+\end{verbatim}
+
+\subsubsection{Parameters}\label{parameters-1}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{omega\_c}{Controllability weight in appraisal}{1.0}
+\trow{omega\_o}{Overload weight in appraisal}{1.0}
+\trow{bias}{Appraisal bias term}{0.0}
+\trow{gamma}{Sigmoid steepness in appraisal}{6.0}
+\trow{delta}{Polarity effect strength}{0.2}
+\trow{base\_threshold}{Base stress threshold}{0.5}
+\trow{challenge\_scale}{Challenge threshold scale}{0.15}
+\trow{hindrance\_scale}{Hindrance threshold scale}{0.25}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/stress_perception.py\#L28-L130}{src/python/phases/stress\_perception.py:L28-L130}
+
+\subsection{Resilience Activation}\label{resilience-activation}
+
+\subsubsection{Purpose}\label{purpose-4}
+
+Determine coping outcome and update resilience after a stressed event.
+Implements Lazarus secondary appraisal and coping response. Runs the
+full coping pipeline: neighbor influence, coping probability, coping
+outcome, affect/resilience/stress changes, PSS-10 generation, resource
+cost, and protective factor allocation.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} event\_driven
+\item
+  \textbf{Inputs:} challenge, hindrance (from stress perception),
+  affect, resilience, resources, protective\_factors
+\item
+  \textbf{Outputs:} state\_delta: affect, resilience, current\_stress,
+  resources, protective\_factors, pss10, stressed (12 keys)
+\item
+  \textbf{Observation:} coped\_successfully, coping\_probability,
+  resource\_cost
+\end{itemize}
+
+\subsubsection{Algorithm}\label{algorithm-2}
+
+\begin{verbatim}
+FUNCTION run_resilience_activation(state, config, rng):
+    // Determine coping outcome
+    a, r, s, coped ← coping_outcome(
+        state.affect, state.resilience,
+        state.stress, state.challenge,
+        state.hindrance, state.neighbors,
+        config, rng
+    )
+
+    // Update stress dimensions
+    c, o, inten, mom ← update_dimensions(
+        state.controllability, state.overload,
+        state.challenge, state.hindrance,
+        coped, config.volatility,
+        state.stress_intensity,
+        state.stress_momentum, state.resilience
+    )
+
+    // Generate PSS-10
+    pss10 ← generate_pss10(c, o, inten, mom,
+        a, state.resources, r, rng)
+
+    // Resource cost and depletion
+    cost ← resource_cost(config.base_cost,
+        r, state.challenge, state.hindrance)
+    res ← depletion(state.resources, cost, r,
+        coped, config)
+
+    // Track consecutive hindrances
+    hindrances ← state.consecutive_hindrances
+    IF state.hindrance > state.challenge:
+        hindrances ← hindrances + 1
+    ELSE:
+        hindrances ← 0
+
+    // PF allocation if coped
+    pf ← copy(state.protective_factors)
+    IF coped:
+        res ← clamp(res + 0.03, 0, 1)
+        alloc ← allocate_pf(
+            res × config.pf_alloc_fraction,
+            r, state.baseline_resilience, pf, rng
+        )
+        pf ← update_pf(pf, alloc, r)
+        res ← clamp(res - sum(alloc), 0, 1)
+
+    // Build output
+    delta ← {
+        affect: a, resilience: r,
+        stress: s,
+        controllability: c, overload: o,
+        resources: res, protective_factors: pf,
+        consecutive_hindrances: hindrances,
+        stress_breach_count: state.breach_count + 1,
+        pss10: pss10.score,
+        pss10_responses: pss10.responses,
+        stressed: pss10.stressed
+    }
+    obs ← {
+        coped, coping_probability,
+        resilience_effect, resource_cost: cost,
+        delta_stress: s - state.stress,
+        delta_affect: a - state.affect
+    }
+    RETURN {delta, obs}
+\end{verbatim}
+
+\subsubsection{Parameters}\label{parameters-2}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{base\_resource\_cost}{Cost per coping attempt}{0.1}
+\trow{pf\_allocation\_fraction}{Resources allocated to PF on success}{0.15}
+\trow{resource\_reward}{Flat reward for successful coping}{0.03}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/resilience_activation.py\#L42-L252}{src/python/phases/resilience\_activation.py:L42-L252}
+
+\subsection{Social Interaction}\label{social-interaction}
+
+\subsubsection{Purpose}\label{purpose-5}
+
+Dyadic interaction between two agents. Converges affect and resilience
+with negativity bias (negative influence 1.5x stronger), detects support
+from convergence magnitude, and applies resource exchange state machine
+based on mutual stress states.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} event\_driven
+\item
+  \textbf{Inputs:} self\_state, partner\_state (full AgentState)
+\item
+  \textbf{Outputs:} Tuple{[}PhaseOutput, PhaseOutput{]}: delta values
+  (not absolute)
+\item
+  \textbf{Observation:} support\_occurred
+\end{itemize}
+
+\subsubsection{Algorithm}\label{algorithm-3}
+
+\begin{verbatim}
+FUNCTION interact(self_state, partner_state, config, rng):
+    // Affect convergence with negativity bias
+    dA_self ← config.rate × partner.affect
+    dA_partner ← config.rate × self.affect
+    IF dA_self < 0:
+        dA_self ← dA_self × 1.5
+    IF dA_partner < 0:
+        dA_partner ← dA_partner × 1.5
+
+    // Resilience convergence
+    dR_self ← config.resilience_rate × partner.affect
+    dR_partner ← config.resilience_rate × self.affect
+
+    // Support detection
+    total ← |dA_self| + |dA_partner|
+        + |dR_self| + |dR_partner|
+    support ← total > config.threshold
+
+    // Resource exchange
+    IF self.stressed AND partner.stressed:
+        IF support: boost both
+        ELSE: cost both
+    ELSE IF self.stressed:
+        IF support: boost self
+        ELSE: cost self
+    ELSE IF partner.stressed:
+        IF support: boost partner
+        ELSE: cost partner
+    ELSE:
+        small_boost(self, partner)
+
+    RETURN (self_out, partner_out)
+\end{verbatim}
+
+\subsubsection{Parameters}\label{parameters-3}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{influence\_rate}{Affect convergence rate}{0.05}
+\trow{resilience\_influence}{Resilience convergence rate}{0.05}
+\trow{negativity\_bias}{Negative influence multiplier}{1.5}
+\trow{support\_threshold}{Convergence threshold for support detection}{0.1}
+\trow{boost}{Resource boost on support exchange}{0.05}
+\trow{cost}{Resource cost without support}{0.03}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/interaction.py\#L48-L190}{src/python/phases/interaction.py:L48-L190}
+
+\subsection{Resource Allocation}\label{resource-allocation}
+
+\subsubsection{Purpose}\label{purpose-6}
+
+Regenerates resources and allocates to protective factors via softmax.
+Resource regeneration is linear in the deficit, modulated by affect and
+resilience. Allocation uses softmax with temperature for
+bounded-rational distribution across social support, family support,
+formal intervention, and psychological capital.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} daily
+\item
+  \textbf{Inputs:} resources, affect, resilience, protective\_factors
+\item
+  \textbf{Outputs:} state\_delta: resources, protective\_factors
+\item
+  \textbf{Observation:} regeneration\_amount, allocation\_weights
+\end{itemize}
+
+\subsubsection{Algorithm}\label{algorithm-4}
+
+\begin{verbatim}
+FUNCTION run_resource_allocation(state, config, rng):
+    // Resource regeneration
+    a_mult ← 1 + 0.5 × max(0, state.affect)
+    r_mult ← 1 + 0.3 × state.resilience
+    regen ← config.base_rate × (1 - state.resources)
+        × a_mult × r_mult
+
+    // Softmax allocation
+    available ← state.resources + regen
+    spendable ← available × (1 - config.preserve_frac)
+    weights ← softmax(state.efficacies / config.temp)
+    alloc ← spendable × weights
+
+    // Update efficacies (diminishing returns)
+    FOR each factor f:
+        de ← alloc[f] × config.rate
+            × (1 - state.efficacies[f])
+        state.efficacies[f] ← min(1,
+            state.efficacies[f] + de)
+
+    // Remaining resources
+    new_res ← config.preserve_frac × available
+        + (spendable - total(alloc))
+
+    RETURN {delta: {resources: new_res,
+        protective_factors: state.efficacies},
+        obs: {regen, alloc}}
+\end{verbatim}
+
+\subsubsection{Parameters}\label{parameters-4}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{base\_regeneration}{Daily regeneration rate}{0.5}
+\trow{preservable\_fraction}{Fraction of resources preserved}{0.2}
+\trow{softmax\_temperature}{Allocation temperature}{1.0}
+\trow{protective\_improvement\_rate}{PF efficacy update rate}{0.5}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/resource_allocation.py\#L141-L219}{src/python/phases/resource\_allocation.py:L141-L219}
+
+\subsection{Stress Buffering}\label{stress-buffering}
+
+\subsubsection{Purpose}\label{purpose-7}
+
+Applies protective-factor resilience boost and resource mediation of
+stress buffering using Baron \& Kenny mediation framework: a-path
+(stress → resources), b-path (resources → buffering), c'-path (stress →
+buffering \textbar{} resources).
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} daily
+\item
+  \textbf{Inputs:} resilience, baseline\_resilience,
+  protective\_factors, current\_stress, resources
+\item
+  \textbf{Outputs:} state\_delta: resilience, resources
+\item
+  \textbf{Observation:} pf\_boost, buffering\_strength, indirect\_effect
+\end{itemize}
+
+\subsubsection{Algorithm}\label{algorithm-5}
+
+\begin{verbatim}
+FUNCTION run_stress_buffering(state, config, rng):
+    // PF boost to resilience
+    need ← max(0, state.baseline - state.resilience)
+    boost ← Σ(efficacy × need × config.rate)
+    boost ← min(boost, need)
+    new_r ← state.resilience + boost
+
+    // Resource mediation (a-path)
+    eff_stress ← state.stress × (1 + 0.2 × state.overload)
+    depletion ← config.a_coeff × eff_stress
+    new_res ← state.resources + depletion
+
+    // Buffering strength (b-path + c'-path)
+    buf ← max(0,
+        config.b_coeff × new_res
+        + config.c_coeff × state.stress)
+
+    RETURN {delta: {resilience: new_r,
+        resources: new_res},
+        obs: {boost, buf}}
+\end{verbatim}
+
+\subsubsection{Parameters}\label{parameters-5}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{boost\_rate}{PF resilience boost rate}{0.1}
+\trow{a\_coefficient}{Stress→resources path coefficient}{0.3}
+\trow{b\_coefficient}{Resources→buffering path coefficient}{0.7}
+\trow{c\_prime\_coefficient}{Stress→buffering path coefficient}{1.0}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/stress_buffering.py\#L42-L148}{src/python/phases/stress\_buffering.py:L42-L148}
+
+\subsection{Affect Dynamics}\label{affect-dynamics}
+
+\subsubsection{Purpose}\label{purpose-8}
+
+Applies daily affect and resilience dynamics including peer influence,
+event appraisal effects, homeostasis, protective factor boosts, and
+social resilience optimisation. Runs once per day after the subevent
+loop.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} daily
+\item
+  \textbf{Inputs:} affect, baseline\_affect, resilience, resources,
+  current\_stress, neighbor\_affects
+\item
+  \textbf{Outputs:} state\_delta: affect, resilience,
+  consecutive\_hindrances
+\item
+  \textbf{Observation:} neighbor\_affects\_summary, protective\_boost
+\end{itemize}
+
+\subsubsection{Algorithm}\label{algorithm-6}
+
+\begin{verbatim}
+FUNCTION run_affect_dynamics(state, config, rng):
+    // Affect: homeostasis + peers + appraisal
+    new_a ← update_affect(state.affect,
+        state.baseline_affect, state.neighbors,
+        state.challenge, state.hindrance,
+        state.stress, state.resources)
+
+    // Resilience dynamics + PF boost
+    new_r ← update_resilience(state.resilience,
+        state.consecutive_hindrances)
+    pf_boost ← get_pf_boost(state.protective_factors,
+        state.baseline, new_r)
+    new_r ← min(1, new_r + pf_boost)
+
+    // Social resilience optimisation
+    new_r ← social_resilience(new_r,
+        state.interactions, state.support_exchanges,
+        state.resources, state.baseline_resilience,
+        state.protective_factors, rng)
+
+    // Interaction-frequency boost
+    new_r ← new_r + state.interactions × 0.005
+
+    // Hindrance decay
+    new_h ← max(0,
+        state.consecutive_hindrances - config.decay)
+
+    // Homeostatic adjustment
+    new_a ← homeostatic(state.baseline_affect,
+        new_a, config.affect_rate)
+    new_r ← homeostatic(state.baseline_resilience,
+        new_r, config.resilience_rate)
+
+    RETURN {delta: {affect: new_a,
+        resilience: new_r,
+        consecutive_hindrances: new_h},
+        obs: {}}
+\end{verbatim}
+
+\subsubsection{Parameters}\label{parameters-6}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{affect\_homeostatic\_rate}{Affect return rate}{0.5}
+\trow{resilience\_homeostatic\_rate}{Resilience return rate}{0.5}
+\trow{interaction\_boost\_rate}{Per-interaction resilience boost}{0.005}
+\trow{hindrance\_decay\_rate}{Daily hindrance decay}{0.05}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py\#L67-L210}{src/python/agent.py:L67-L210}
+
+\subsection{PSS-10 Consolidation}\label{pss-10-consolidation}
+
+\subsubsection{Purpose}\label{purpose-9}
+
+Consolidates daily PSS-10 scores, updates stress level via exponential
+smoothing, and applies post-hoc adjustments for resilience coupling,
+resource coupling, and mood-congruent appraisal.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} daily
+\item
+  \textbf{Inputs:} daily\_pss10\_scores, current\_stress,
+  stress\_controllability, stress\_overload
+\item
+  \textbf{Outputs:} state\_delta: pss10, pss10\_smoothed,
+  current\_stress, stressed, daily\_pss10\_scores (cleared)
+\item
+  \textbf{Observation:} avg\_pss10, num\_events
+\end{itemize}
+
+\subsubsection{Algorithm}\label{algorithm-7}
+
+\begin{verbatim}
+FUNCTION run_pss10_consolidation(state, config, rng):
+    // Update dimensions from PSS-10 feedback
+    c, o ← update_dimensions_from_pss10(
+        state.controllability, state.overload,
+        state.pss10_responses, state.resources)
+
+    // Compute stress from dimensions
+    new_s ← stress_from_dimensions(c, o,
+        state.affect, state.resources,
+        state.resilience)
+    s ← 0.5 × new_s + 0.5 × state.stress
+
+    // Consolidate daily scores
+    IF state.daily_scores ≠ []:
+        consolidated ← mean(state.daily_scores)
+    ELSE:
+        consolidated ← regenerate(c, o)
+
+    // Exponential smoothing
+    α ← config.smoothing_alpha
+    smoothed ← α × consolidated + (1 - α) × state.pss10_smoothed
+
+    // Post-hoc adjustments
+    final ← smoothed + config.bias
+        - 0.5 × config.coupling
+        × (state.resilience - 0.5)
+    final ← 20 + (final - 20) × 1.2
+    final ← final + (0.5 - state.resources) × 12
+    stressed ← final ≥ config.threshold
+
+    // Mood-congruent appraisal
+    adj ← -state.affect × config.affect_adj
+
+    RETURN {delta: {pss10: final + adj,
+        pss10_smoothed: smoothed,
+        stress: s, controllability: c,
+        overload: o, stressed,
+        daily_scores: []},
+        obs: {}}
+\end{verbatim}
+
+\subsubsection{Parameters}\label{parameters-7}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{pss10\_smoothing\_alpha}{Exponential smoothing factor}{0.3}
+\trow{pss10\_resilience\_coupling}{Resilience penalty coefficient}{3.5}
+\trow{pss10\_threshold}{Clinical cutoff score}{27}
+\trow{pss10\_affect\_adjustment}{Mood-congruent appraisal factor}{0.5}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py\#L212-L348}{src/python/agent.py:L212-L348}
+
+\subsection{Daily Reset}\label{daily-reset}
+
+\subsubsection{Purpose}\label{purpose-10}
+
+Clears daily tracking counters, applies affect reset toward baseline,
+and decays stress and consecutive hindrances. Prepares agent state for
+the next day's events.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} daily
+\item
+  \textbf{Inputs:} affect, baseline\_affect, current\_stress,
+  consecutive\_hindrances, daily counters
+\item
+  \textbf{Outputs:} state\_delta: affect, stress, counters cleared
+\item
+  \textbf{Observation:} stress\_summary
+\end{itemize}
+
+\subsubsection{Algorithm}\label{algorithm-8}
+
+\begin{verbatim}
+FUNCTION run_daily_reset(state, config, rng):
+    // Affect reset toward baseline
+    rate ← scale_rate(config.affect_rate,
+        state.resources, state.stress)
+    new_a ← affect_reset(state.affect,
+        state.baseline_affect, rate)
+
+    // Stress decay
+    new_s ← stress_decay(state.stress, rate)
+
+    // Hindrance decay
+    new_h ← max(0,
+        state.consecutive_hindrances - 0.05)
+
+    // Stress summary
+    events ← state.stress_events
+    summary ← {
+        avg: mean(events.stress_level),
+        max: max(events.stress_level),
+        n: len(events),
+        coped: mean(events.coped)
+    }
+
+    // Clear daily counters
+    state.interactions ← 0
+    state.support_exchanges ← 0
+    state.stress_events ← []
+    state.pss10_scores ← []
+
+    RETURN {delta: {affect: new_a,
+        stress: new_s,
+        consecutive_hindrances: new_h,
+        last_reset_day: state.day},
+        obs: {summary}}
+\end{verbatim}
+
+\subsubsection{Parameters}\label{parameters-8}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{affect\_homeostatic\_rate}{Affect return rate}{0.5}
+\trow{hindrance\_decay\_rate}{Daily hindrance decay}{0.05}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py\#L350-L412}{src/python/agent.py:L350-L412}
+
+\section{Rationale for Cumulative Block
+Experiment}\label{rationale-for-cumulative-block-experiment}
+
+\subsection{Purpose}\label{purpose-11}
+
+Explain why stages 1-7 selectively enable phases and how this
+demonstrates the modularity claim made in the main text.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} N/A (analytical design)
+\item
+  \textbf{Inputs:} N/A
+\item
+  \textbf{Outputs:} N/A
+\end{itemize}
+
+\subsection{Design}\label{design}
+
+The cumulative block experiment assembles the model block by block
+across seven stages, each running the same seeded population (N = 100
+agents, 90 days). Each stage adds one building block on top of the
+previous ones:
+
+\begin{tabularx}{\textwidth}{p{1.5cm}p{4cm}X}
+\toprule
+\textbf{Stage} & \textbf{Blocks Active} & \textbf{Purpose} \\
+\midrule
+1 & Initialization only & Baseline population state \\
+2 & + Stress perception & Isolate appraisal effects \\
+3 & + Resilience activation & Isolate coping effects \\
+4 & + Interaction & Isolate social contagion \\
+5 & + Resource allocation & Isolate resource regeneration \\
+6 & + Stress buffering & Isolate protective buffering \\
+7 & + Full model & Complete homeostatic cycle \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Interpretation}\label{interpretation}
+
+Intermediate stages (2-6) are deliberately partial: they enable
+stress-adding mechanisms without the restorative blocks of the daily
+cycle. This isolation demonstrates that:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Stress perception alone} (stage 2) updates appraisal
+  dimensions without affecting outcome states, so stages 1 and 2
+  coincide
+\item
+  \textbf{Resilience activation} (stage 3) introduces coping, causing
+  population depletion without regeneration
+\item
+  \textbf{Interaction} (stage 4) propagates affect/resilience through
+  the network with negativity bias, dragging both toward lower bounds
+\item
+  \textbf{Resource allocation} (stage 5) restores the resource pool but
+  cannot move affect or resilience
+\item
+  \textbf{Stress buffering} (stage 6) begins pushing resilience back
+  toward baseline
+\end{enumerate}
+
+Stage 7, the complete model, activates the remaining blocks: affect
+dynamics, PSS-10 consolidation, daily reset, and network adaptation.
+This completes the two-loop daily cycle. The homeostatic pull toward
+baseline affect and resilience, the daily stress decay, and adaptive
+rewiring toward more similar peers jointly restore equilibrium.
+
+\subsection{Analytical vs Runtime
+Stacking}\label{analytical-vs-runtime-stacking}
+
+The cumulative block experiment demonstrates \textbf{analytical
+stacking}: selectively enabling/disabling phases to isolate
+contributions. At runtime, the simulation uses \textbf{sequential
+composition}: all phases execute every day in a pipeline, with each
+phase consuming the previous phase's output.
+
+This distinction is important: the modularity claim is validated by the
+cumulative experiment, while the runtime behavior uses the full two-loop
+orchestration described in S3.
+
+See: article.qmd Results → ``Mechanism contribution: cumulative
+building-block build-up''
+
+\section{Network Topology}\label{network-topology}
+
+\subsection{Purpose}\label{purpose-12}
+
+Social network uses Watts-Strogatz small-world topology with high
+clustering and short characteristic path lengths. Network adaptation
+rewires edges based on stress breach counts and homophily similarity.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} model-level (network adaptation runs daily)
+\item
+  \textbf{Inputs:} agent stress\_breach\_count, affect, resilience
+\item
+  \textbf{Outputs:} modified graph edges
+\end{itemize}
+
+\subsection{Algorithm}\label{algorithm-9}
+
+\begin{verbatim}
+FUNCTION build_network(N, k, p, rng):
+    k ← min(k, N - 1)
+    RETURN watts_strogatz(N, k, p, rng)
+
+FUNCTION adapt_network(G, agents, config, rng):
+    FOR each node WHERE breach_count ≥ threshold:
+        worst ← most dissimilar neighbor
+        prob ← sigmoid(similarity, support, homophily)
+        IF rng > prob:
+            best ← most similar non-neighbor
+            rewire(node, worst, best)
+    RETURN G
+\end{verbatim}
+
+\subsection{Parameters}\label{parameters-9}
+
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{N}{Number of agents}{20}
+\trow{k}{Mean degree (must be even, < N)}{4}
+\trow{p}{Rewiring probability}{0.1}
+\trow{threshold}{Breach count for adaptation}{3}
+\trow{homophily}{Similarity weight}{0.7}
+\bottomrule
+\end{tabularx}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/network_utils.py\#L16-L245}{src/python/network\_utils.py:L16-L245}
+
+\section{Data Collection}\label{data-collection}
+
+\subsection{Purpose}\label{purpose-13}
+
+Mesa's DataCollector captures model-level and agent-level metrics using
+named reporter functions. Model reporters track population averages;
+agent reporters track individual trajectories.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Frequency:} model-level (collected each step)
+\item
+  \textbf{Inputs:} agent attributes, model attributes
+\item
+  \textbf{Outputs:} CSV export
+\end{itemize}
+
+\subsection{Agent Reporters}\label{agent-reporters}
+
+\begin{verbatim}
+AGENT_REPORTERS = {
+    pss10, resilience, affect, resources, current_stress,
+    stress_controllability, stress_overload, consecutive_hindrances,
+    coping_success, challenge_appraisal, hindrance_appraisal,
+    interaction_frequency, stressed, support_boost
+}
+\end{verbatim}
+
+\subsection{Model Reporters}\label{model-reporters}
+
+\begin{verbatim}
+MODEL_REPORTERS = {
+    avg_pss10, avg_resilience, avg_affect, coping_success_rate,
+    avg_resources, avg_stress, social_support_rate, network_density,
+    stress_prevalence, low_resilience, high_resilience,
+    avg_challenge, avg_hindrance, challenge_hindrance_ratio
+}
+\end{verbatim}
+
+\subsection{Phase-Level
+Instrumentation}\label{phase-level-instrumentation}
+
+The \texttt{\_last\_phase\_outputs} dictionary stores the
+\texttt{PhaseOutput} from each phase executed during a step. This
+enables phase-specific metric extraction for the cumulative block
+experiment and debugging.
+
+\begin{verbatim}
+last_phase_outputs = {
+    stress_perception: PhaseOutput,
+    resilience_activation: PhaseOutput,
+    interaction_self: PhaseOutput,
+    interaction_partner: PhaseOutput,
+    affect_dynamics: PhaseOutput,
+    resource_allocation: PhaseOutput,
+    stress_buffering: PhaseOutput,
+    pss10_consolidation: PhaseOutput,
+    daily_reset: PhaseOutput,
+}
+\end{verbatim}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/reporters.py\#L289-L333}{src/python/reporters.py:L289-L333}
+
+Reference:
+\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/model.py\#L114-L133}{src/python/model.py:L114-L133}
+
+
+
+
+\end{document}

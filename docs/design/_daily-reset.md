@@ -14,43 +14,53 @@ the next day's events.
 ### Algorithm
 
 ```
-FUNCTION process_daily_reset(state, config, rng):
-    // 1. Affect reset toward baseline
-    scaled_rate ← scale_homeostatic_rate(affect_rate, resources, stress)
-    new_affect ← compute_daily_affect_reset(affect, baseline_affect, scaled_rate)
+FUNCTION run_daily_reset(state, config, rng):
+    // Affect reset toward baseline
+    rate ← scale_rate(config.affect_rate,
+        state.resources, state.stress)
+    new_a ← affect_reset(state.affect,
+        state.baseline_affect, rate)
 
-    // 2. Stress decay
-    new_stress ← compute_stress_decay(stress, scaled_rate)
+    // Stress decay
+    new_s ← stress_decay(state.stress, rate)
 
-    // 3. Hindrance decay
-    new_consecutive_hindrances ← max(0, hindrances - 0.05)
+    // Hindrance decay
+    new_h ← max(0,
+        state.consecutive_hindrances - 0.05)
 
-    // 4. Stress summary observation
-    stress_summary ← {
-        avg_stress: mean(daily_stress_events.stress_level),
-        max_stress: max(daily_stress_events.stress_level),
-        num_events: len(daily_stress_events),
-        coping_success_rate: mean(daily_stress_events.coped_successfully)
+    // Stress summary
+    events ← state.stress_events
+    summary ← {
+        avg: mean(events.stress_level),
+        max: max(events.stress_level),
+        n: len(events),
+        coped: mean(events.coped)
     }
 
-    // 5. Clear daily counters
-    daily_interactions ← 0
-    daily_support_exchanges ← 0
-    daily_stress_events ← []
-    daily_pss10_scores ← []
+    // Clear daily counters
+    state.interactions ← 0
+    state.support_exchanges ← 0
+    state.stress_events ← []
+    state.pss10_scores ← []
 
-    RETURN PhaseOutput(state_delta: {affect, current_stress,
-        daily_interactions, daily_support_exchanges,
-        daily_stress_events, daily_pss10_scores,
-        consecutive_hindrances, last_reset_day: current_day},
-        observation: {stress_summary})
+    RETURN {delta: {affect: new_a,
+        stress: new_s,
+        consecutive_hindrances: new_h,
+        last_reset_day: state.day},
+        obs: {summary}}
 ```
 
 ### Parameters
 
-| Name | Description | Default | Source |
-|------|-------------|---------|--------|
-| `affect_homeostatic_rate` | Affect return rate | 0.5 | assumption |
-| `hindrance_decay_rate` | Daily hindrance decay | 0.05 | assumption |
+```{=latex}
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{affect\_homeostatic\_rate}{Affect return rate}{0.5}
+\trow{hindrance\_decay\_rate}{Daily hindrance decay}{0.05}
+\bottomrule
+\end{tabularx}
+```
 
 Reference: [src/python/agent.py:L350-L412](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py#L350-L412)

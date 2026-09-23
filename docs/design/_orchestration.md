@@ -1,6 +1,6 @@
 # Two-Loop Orchestration
 
-### Purpose
+## Purpose
 
 Explain how `Person.step()` orchestrates phases across two temporal scales
 within a single simulation day: event-driven responses and daily homeostatic
@@ -10,102 +10,99 @@ consolidation.
 - **Inputs:** AgentState at day start
 - **Outputs:** AgentState at day end
 
-### Algorithm
+## Algorithm
 
 ```
-FUNCTION Person.step():
-    // Step 0: Reset phase output instrumentation
-    self._last_phase_outputs ← {}
+FUNCTION step(agent, config, rng):
+    // Reset phase outputs
+    agent.last_phase_outputs ← {}
 
-    // Step 1: Build agent state
-    state ← self._build_agent_state()
+    // Build state from agent attributes
+    state ← build_state(agent)
+    neighbors ← get_neighbor_affects(agent)
 
-    // Step 2: Get shared config values
-    neighbor_affects ← get_neighbor_affects(self, self.model)
-    cfg ← get_config()
-
-    // Step 3: Subevent loop (event-driven phases)
-    n_subevents ← sample_poisson(lam=cfg.agent.subevents_per_day, min_value=1)
-    actions ← random sequence of ["stress", "interact"] of length n_subevents
+    // Subevent loop
+    n ← sample_poisson(config.subevents_per_day)
+    actions ← random_sequence("stress", "interact", n)
     shuffle(actions)
 
-    daily_challenge_total ← 0.0
-    daily_hindrance_total ← 0.0
-    stress_event_count ← 0
+    challenge_total ← 0
+    hindrance_total ← 0
+    stress_count ← 0
 
     FOR EACH action IN actions:
-        // Decay support_boost at each subevent (10% per subevent)
-        state["support_boost"] ← state["support_boost"] × 0.9
+        // Decay support boost
+        state.support_boost ← state.support_boost × 0.9
 
-        IF action == "stress":
-            // Stress perception phase
-            perception_result ← run_stress_perception(state, config, rng)
-            state ← _apply_delta(state, perception_result.state_delta)
+        IF action = "stress":
+            // Appraise stress event
+            result ← run_stress_perception(state, config, rng)
+            state ← apply_delta(state, result.delta)
+            challenge_total ← challenge_total + result.delta.challenge
+            hindrance_total ← hindrance_total + result.delta.hindrance
+            stress_count ← stress_count + 1
 
-            // Accumulate daily totals
-            daily_challenge_total += perception_result.state_delta.challenge
-            daily_hindrance_total += perception_result.state_delta.hindrance
-            stress_event_count += 1
+            // Activate resilience if stressed
+            IF state.is_stressed:
+                r2 ← run_resilience_activation(
+                    state, config, rng)
+                state ← apply_delta(state, r2.delta)
+                scores ← state.pss10_scores
+                state.pss10_scores ← scores ∪ {state.pss10}
 
-            // Resilience activation phase (only if stressed)
-            IF state["is_stressed"]:
-                activation_result ← run_resilience_activation(state, config, rng)
-                state ← _apply_delta(state, activation_result.state_delta)
+            // Record stress event
+            state.stress_events ← state.stress_events ∪ {event}
 
-                // Accumulate PSS-10 score
-                state["daily_pss10_scores"].append(state["pss10"])
+        ELSE IF action = "interact":
+            // Dyadic interaction
+            partner ← random_neighbor(agent)
+            pstate ← build_state(partner)
+            out1, out2 ← interact(state, pstate, config, rng)
+            state ← apply_delta(state, out1.delta)
+            apply_delta(partner, out2.delta)
+            write_back(partner)
 
-            // Track stress event for model-level reporting
-            state["daily_stress_events"].append({...})
+            state.interactions ← state.interactions + 1
+            IF out1.obs.support_occurred:
+                state.support_exchanges ← state.support_exchanges + 1
+                sb ← state.support_boost + 0.1
+                state.support_boost ← min(1, sb)
 
-        ELSE IF action == "interact":
-            // Interaction phase
-            partner ← random neighbor
-            partner_state ← partner._build_agent_state()
-            self_output, partner_output ← process_interaction(state, partner_state, config, rng)
+    // Normalize daily totals
+    IF stress_count > 0:
+        challenge_total ← challenge_total ÷ stress_count
+        hindrance_total ← hindrance_total ÷ stress_count
 
-            // Apply delta values (interaction returns changes, not absolutes)
-            state ← apply_interaction_delta(state, self_output)
-            partner._write_back_state(apply_interaction_delta(partner_state, partner_output))
+    // Daily consolidation
+    state ← apply_delta(state,
+        affect_dynamics(state, config, rng).delta)
+    state ← apply_delta(state,
+        resource_allocation(state, config, rng).delta)
+    state ← apply_delta(state,
+        stress_buffering(state, config, rng).delta)
+    state ← apply_delta(state,
+        pss10_consolidation(state, config, rng).delta)
+    state ← apply_delta(state,
+        daily_reset(state, config, rng).delta)
 
-            state["daily_interactions"] += 1
-            IF self_output.observation.support_occurred:
-                state["daily_support_exchanges"] += 1
-                state["support_boost"] ← min(1.0, state["support_boost"] + 0.10)
-
-    // Normalize daily challenge/hindrance
-    IF stress_event_count > 0:
-        daily_challenge_total /= stress_event_count
-        daily_hindrance_total /= stress_event_count
-
-    // Step 4: Daily consolidation loop
-    affect_result ← process_affect_dynamics(state, config, rng)
-    state ← _apply_delta(state, affect_result.state_delta)
-
-    resource_result ← run_resource_allocation(state, config, rng)
-    state ← _apply_delta(state, resource_result.state_delta)
-
-    buffering_result ← run_stress_buffering(state, config, rng)
-    state ← _apply_delta(state, buffering_result.state_delta)
-
-    pss10_result ← process_pss10_consolidation(state, config, rng)
-    state ← _apply_delta(state, pss10_result.state_delta)
-
-    reset_result ← process_daily_reset(state, config, rng)
-    state ← _apply_delta(state, reset_result.state_delta)
-
-    // Step 5: Write back state
-    self._write_back_state(state)
+    // Write back
+    write_back(agent, state)
 ```
 
-### Parameters
+## Parameters
 
-| Name | Description | Default | Source |
-|------|-------------|---------|--------|
-| `subevents_per_day` | Poisson rate (λ) for daily subevents | 3 | config |
-| `action_distribution` | Probability of stress vs interact | 0.5 each | config |
-| `support_boost_decay` | Per-subevent decay of support boost | 0.9 | assumption |
-| `support_boost_increment` | Per-support-exchange boost increment | 0.10 | assumption |
-| `interaction_boost_rate` | Per-interaction resilience boost | 0.005 | assumption |
+```{=latex}
+\begin{tabularx}{\textwidth}{p{4cm}p{1.8cm}X}
+\toprule
+\textbf{Name} & \textbf{Description} & \textbf{Default} \\
+\midrule
+\trow{subevents\_per\_day}{Poisson rate (\(\lambda\)) for daily subevents}{3}
+\trow{action\_distribution}{Probability of stress vs interact}{0.5 each}
+\trow{support\_boost\_decay}{Per-subevent decay of support boost}{0.9}
+\trow{support\_boost\_increment}{Per-support-exchange boost increment}{0.10}
+\trow{interaction\_boost\_rate}{Per-interaction resilience boost}{0.005}
+\bottomrule
+\end{tabularx}
+```
 
 Reference: [src/python/agent.py:L601-L850](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py#L601-L850)

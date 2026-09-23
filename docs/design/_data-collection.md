@@ -1,6 +1,6 @@
 # Data Collection
 
-### Purpose
+## Purpose
 
 Mesa's DataCollector captures model-level and agent-level metrics using
 named reporter functions. Model reporters track population averages;
@@ -10,7 +10,7 @@ agent reporters track individual trajectories.
 - **Inputs:** agent attributes, model attributes
 - **Outputs:** CSV export
 
-### Agent Reporters
+## Agent Reporters
 
 ```
 AGENT_REPORTERS = {
@@ -21,7 +21,7 @@ AGENT_REPORTERS = {
 }
 ```
 
-### Model Reporters
+## Model Reporters
 
 ```
 MODEL_REPORTERS = {
@@ -32,23 +32,23 @@ MODEL_REPORTERS = {
 }
 ```
 
-### Phase-Level Instrumentation
+## Phase-Level Instrumentation
 
 The `_last_phase_outputs` dictionary stores the `PhaseOutput` from each
 phase executed during a step. This enables phase-specific metric extraction
 for the cumulative block experiment and debugging.
 
-```python
-self._last_phase_outputs = {
-    "stress_perception": PhaseOutput,
-    "resilience_activation": PhaseOutput,
-    "interaction_self": PhaseOutput,
-    "interaction_partner": PhaseOutput,
-    "affect_dynamics": PhaseOutput,
-    "resource_allocation": PhaseOutput,
-    "stress_buffering": PhaseOutput,
-    "pss10_consolidation": PhaseOutput,
-    "daily_reset": PhaseOutput,
+```
+last_phase_outputs = {
+    stress_perception: PhaseOutput,
+    resilience_activation: PhaseOutput,
+    interaction_self: PhaseOutput,
+    interaction_partner: PhaseOutput,
+    affect_dynamics: PhaseOutput,
+    resource_allocation: PhaseOutput,
+    stress_buffering: PhaseOutput,
+    pss10_consolidation: PhaseOutput,
+    daily_reset: PhaseOutput,
 }
 ```
 
