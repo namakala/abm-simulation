@@ -1,6 +1,6 @@
 ### Theoretical Foundation
 
-The simulation architecture is grounded in Lazarus's transactional stress model [@lazarus1984], which posits that stress responses emerge from sequential cognitive processes. Each simulation phase maps to a specific stage of this theoretical framework [@tbl-lazarus-mapping].
+The simulation architecture is grounded in Lazarus's transactional stress model [@folkman2020stress], which posits that stress responses emerge from sequential cognitive processes. Each simulation phase maps to a specific stage of this theoretical framework [@tbl-lazarus-mapping].
 
 | Lazarus Stage | Simulation Phase | Function |
 |---------------|------------------|----------|
