@@ -1108,8 +1108,8 @@ Figure~\ref{fig-initial-population} presents a cross-sectional snapshot
 of agent psychological states before the first simulation day. Baseline
 resilience, affect, and resources are sampled independently, and the
 PSS-10 score is derived from its item responses, so the population
-starts from a neutral point: no pairwise association exceeds 0.19 in
-magnitude, and the PSS-10--stress correlation is only 0.04. This absence
+starts from a neutral point: no pairwise association exceeds 0.26 in
+magnitude, and the PSS-10--stress correlation is only 0.03. This absence
 of predetermined relationships is intentional: any associations observed
 at the end state must therefore emerge from the model's dynamics rather
 than from biased initial conditions.
@@ -1134,14 +1134,14 @@ dynamics}\label{homeostatic-stability-of-population-dynamics}
 Under homogeneous initial conditions simulating a general population,
 the model exhibits stable homeostatic mechanisms: population-level
 metrics remain confined to narrow ranges across all 90 simulation days.
-Mean perceived stress (PSS-10 = 14.401 ± 0.641, CV 4.5\%, range
-13.32--16.29) demonstrates low variability indicative of effective
-homeostatic regulation. Resilience (0.428 ± 0.016, CV 3.7\%) shows
-uniform coping capacity across the population, and affect (-0.121 ±
-0.018, CV 15.0\%) exhibits controlled mood variation near neutral.
-Elevated resource levels (0.339 ± 0.005) indicate effective resource
-management through social network dynamics, and moderate stress (0.294 ±
-0.041) relative to baselines suggests effective stress mitigation.
+Mean perceived stress (PSS-10 = 13.995 ± 0.177, CV 1.3\%, range
+13.58--15.68) demonstrates low variability indicative of effective
+homeostatic regulation. Resilience (0.488 ± 0.005, CV 1.0\%) shows
+uniform coping capacity across the population, and affect (-0.120 ±
+0.006, CV 4.6\%) exhibits controlled mood variation near neutral.
+Elevated resource levels (0.340 ± 0.002) indicate effective resource
+management through social network dynamics, and moderate stress (0.272 ±
+0.012) relative to baselines suggests effective stress mitigation.
 
 Figure~\ref{fig-time-series} depicts the longitudinal trajectories of
 all agents across simulation epochs, showcasing stable temporal
@@ -1178,17 +1178,17 @@ demonstrating homeostatic stability}
 \toprule
   & Variable & Mean ± SD & Interpretation\\
 \midrule
-avg\_pss10 & PSS-10 across agents & 14.401 ± 0.641 & Stable stress perception with moderate elevation\\
-avg\_resilience & Resilience level & 0.428 ± 0.016 & Uniform coping capacity across the population\\
-avg\_affect & Affect (valence) & -0.121 ± 0.018 & Controlled mood variation near neutral\\
-coping\_success\_rate & Coping success rate & 0.693 ± 0.039 & Reliable coping outcomes maintaining homeostasis\\
-avg\_resources & Psychological resources & 0.339 ± 0.005 & Stable resource levels supporting resilience\\
+avg\_pss10 & PSS-10 across agents & 13.995 ± 0.177 & Stable stress perception\\
+avg\_resilience & Resilience level & 0.488 ± 0.005 & Uniform coping capacity\\
+avg\_affect & Affect (valence) & -0.120 ± 0.006 & Controlled mood variation\\
+coping\_success\_rate & Coping success rate & 0.700 ± 0.012 & Reliable coping outcomes\\
+avg\_resources & Psychological resources & 0.340 ± 0.002 & Stable resource levels\\
 \addlinespace
-avg\_stress & Current stress level & 0.294 ± 0.041 & Variable patterns within bounded ranges\\
-avg\_challenge & Challenge appraisal & 0.499 ± 0.016 & Balanced appraisal pattern\\
-avg\_hindrance & Hindrance appraisal & 0.501 ± 0.016 & Balanced appraisal pattern\\
-avg\_consecutive\_hindrances & Hindrance sequence length & 4.401 ± 0.796 & Occasional stress streaks but stable overall\\
- & Challenge–hindrance diff. & -0.003 ± 0.032 & Centered near zero, indicating equilibrium\\
+avg\_stress & Current stress level & 0.272 ± 0.012 & Controlled intensity variation\\
+avg\_challenge & Challenge appraisal & 0.500 ± 0.005 & Balanced appraisal pattern\\
+avg\_hindrance & Hindrance appraisal & 0.500 ± 0.005 & Balanced appraisal pattern\\
+avg\_consecutive\_hindrances & Hindrance sequence length & 4.649 ± 0.256 & Occasional extended periods\\
+ & Challenge–hindrance diff. & -0.000 ± 0.009 & Centered near zero, indicating equilibrium\\
 \bottomrule
 \end{tabular}
 
@@ -1198,12 +1198,12 @@ avg\_consecutive\_hindrances & Hindrance sequence length & 4.401 ± 0.796 & Occa
 
 Table~\ref{tbl-model-level} substantiates a homeostatic system sustained
 by social network dynamics and agent interactions. Coefficients of
-variation range from 1.5\% (resource levels) to 15.0\% (affect),
+variation range from 0.5\% (resource levels) to 4.6\% (affect),
 indicating tight population-level regulation. Balanced
-challenge--hindrance appraisals (challenge 0.499 ± 0.016, hindrance
-0.501 ± 0.016) imply neutral cognitive processing and effective
-appraisal mechanisms, and the consistent coping success rate (0.693 ±
-0.039) across all agents validates the model's capacity to simulate
+challenge--hindrance appraisals (challenge 0.500 ± 0.005, hindrance
+0.500 ± 0.005) imply neutral cognitive processing and effective
+appraisal mechanisms, and the consistent coping success rate (0.700 ±
+0.012) across all agents validates the model's capacity to simulate
 emergent equilibrium from individual interactions that promote mental
 health outcomes.
 
@@ -1221,15 +1221,15 @@ demonstrating individual heterogeneity within population stability}
 \toprule
   & Variable & Mean ± SD & Interpretation\\
 \midrule
-pss10 & PSS-10 per agent-step & 14.401 ± 5.129 & Variable stress levels with realistic range\\
-resilience & Resilience level & 0.428 ± 0.298 & Diverse adaptive capacities\\
-affect & Emotional state & -0.121 ± 0.342 & Variable patterns around neutral\\
-resources & Psychological resources & 0.339 ± 0.033 & Fluctuating resource capacity\\
-current\_stress & Stress intensity & 0.294 ± 0.214 & Variable patterns within bounds\\
+pss10 & PSS-10 per agent-step & 13.995 ± 5.178 & Variable stress levels\\
+resilience & Resilience level & 0.488 ± 0.297 & Diverse adaptive capacities\\
+affect & Emotional state & -0.120 ± 0.347 & Significant mood fluctuations\\
+resources & Psychological resources & 0.340 ± 0.033 & Fluctuating resource capacity\\
+current\_stress & Stress intensity & 0.272 ± 0.211 & Fluctuating stress pressure\\
 \addlinespace
-stress\_controllability & Controllability perception & 0.821 ± 0.165 & Diverse agency experiences\\
-stress\_overload & Overload perception & 0.157 ± 0.143 & Diverse capacity challenges\\
-consecutive\_hindrances & Hindrance streak length & 3.527 ± 3.933 & Variable patterns observed\\
+stress\_controllability & Controllability perception & 0.821 ± 0.159 & Diverse agency experiences\\
+stress\_overload & Overload perception & 0.171 ± 0.153 & Diverse capacity challenges\\
+consecutive\_hindrances & Hindrance streak length & 3.770 ± 4.215 & Unpredictable stress patterns\\
 \bottomrule
 \end{tabular}
 
@@ -1239,20 +1239,20 @@ consecutive\_hindrances & Hindrance streak length & 3.527 ± 3.933 & Variable pa
 
 Table~\ref{tbl-agent-level} reveals substantial dynamic variability
 within the stable population framework. The contrast between
-population-level stability (CVs from 1.5\% to 15.0\%) and
-individual-level heterogeneity (CVs from 35.6\% to 282.2\%) exemplifies
+population-level stability (CVs from 0.5\% to 4.6\%) and
+individual-level heterogeneity (CVs from 37.0\% to 290.0\%) exemplifies
 the dual nature of the modeled system. Individual agents experience
-significant fluctuations in stress (0.294 ± 0.214, CV 72.8\%),
-resilience (0.428 ± 0.298, CV 69.6\%), and affect (-0.121 ± 0.342). Its
+significant fluctuations in stress (0.272 ± 0.211, CV 77.6\%),
+resilience (0.488 ± 0.297, CV 60.8\%), and affect (-0.120 ± 0.347). Its
 large CV reflects a mean near zero on the \([-1, 1]\) scale. The SD of
-0.342 indicates moderate dispersion, but dividing by a near-zero mean
+0.347 indicates moderate dispersion, but dividing by a near-zero mean
 inflates the ratio, making CV uninformative for this variable. These
 variations are constrained by social interactions that maintain
 population equilibrium. Agents perceive their stressors as largely
-controllable (0.821 ± 0.165) and rarely overwhelming (0.157 ± 0.143),
+controllable (0.821 ± 0.159) and rarely overwhelming (0.171 ± 0.153),
 capturing the cognitive appraisal diversity that drives individual
-adaptation strategies. Hindrance streaks remain bounded (3.527 ± 3.933,
-maximum 30.4), demonstrating the system's capacity to prevent
+adaptation strategies. Hindrance streaks remain bounded (3.770 ± 4.215,
+maximum 48.4), demonstrating the system's capacity to prevent
 pathological cascades through network support. Individual diversities
 are harmonized through social dynamics to achieve collective stability:
 social network dynamics transform individual variability into
@@ -1315,14 +1315,14 @@ whose block is not active at a stage are reported as n/a.
 \toprule
 Stage & Block added & PSS-10 & Stress & Affect & Resilience & Resources & Stress prevalence & Coping success\\
 \midrule
-1 & Initialization & 16.080 & 0.425 & 0.026 & 0.435 & 0.494 & 0.030 & n/a\\
-2 & + Stress perception & 16.080 & 0.425 & 0.026 & 0.435 & 0.494 & 0.030 & n/a\\
-3 & + Resilience activation & 16.160 & 0.712 & -0.919 & 0.306 & 0.116 & 0.030 & 0.459\\
-4 & + Interaction & 18.280 & 0.798 & -0.982 & 0.068 & 0.115 & 0.090 & 0.349\\
-5 & + Resource allocation & 18.220 & 0.798 & -0.982 & 0.068 & 0.315 & 0.100 & 0.350\\
+1 & Initialization & 15.571 & 0.443 & 0.024 & 0.504 & 0.484 & 0.006 & n/a\\
+2 & + Stress perception & 15.571 & 0.443 & 0.024 & 0.504 & 0.484 & 0.006 & n/a\\
+3 & + Resilience activation & 17.139 & 0.758 & -0.934 & 0.265 & 0.113 & 0.040 & 0.427\\
+4 & + Interaction & 18.448 & 0.839 & -0.993 & 0.034 & 0.110 & 0.043 & 0.333\\
+5 & + Resource allocation & 18.300 & 0.838 & -0.993 & 0.034 & 0.315 & 0.042 & 0.334\\
 \addlinespace
-6 & + Stress buffering & 17.770 & 0.764 & -0.981 & 0.222 & 0.310 & 0.100 & 0.407\\
-7 & + Full model & 14.800 & 0.291 & -0.139 & 0.432 & 0.337 & 0.060 & 0.693\\
+6 & + Stress buffering & 17.629 & 0.776 & -0.991 & 0.224 & 0.311 & 0.037 & 0.408\\
+7 & + Full model & 13.882 & 0.270 & -0.119 & 0.489 & 0.340 & 0.036 & 0.700\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1369,10 +1369,10 @@ state}\label{emergent-associations-at-the-end-state}
 Figure~\ref{fig-final-population} captures cross-sectional agent states
 at the simulation's conclusion, revealing theoretically grounded
 associations among psychological variables. Resilience exhibits a weak
-positive correlation with affect (0.34), a moderate negative correlation
-with stress (-0.46), and a moderate negative correlation with PSS-10
+positive correlation with affect (0.27), a moderate negative correlation
+with stress (-0.57), and a moderate negative correlation with PSS-10
 (-0.49). In contrast, stress shows a moderate positive correlation with
-PSS-10 (0.50), up from an essentially zero baseline association (0.04),
+PSS-10 (0.58), up from an essentially zero baseline association (0.03),
 accompanied by increasing dispersion in stress levels at higher PSS-10
 scores. This visualization demonstrates model convergence toward
 expected relationships, validating the simulation's capacity to generate
