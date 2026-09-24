@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 
 from src.python.agent import get_neighbor_affects
+from src.python.analysis_utils import compute_interpretation
 from src.python.config import get_config
 from src.python.demos.module_metrics import (
     aggregate_activation,
@@ -52,9 +53,6 @@ from src.python.visualization_utils import (
     create_visualization_report,
 )
 
-DEFAULT_AGENTS = 100
-DEFAULT_DAYS = 90
-DEFAULT_SEED = 42
 
 STAGES: List[Dict[str, Any]] = [
     {"id": 1, "name": "initialization", "blocks_active": ["initialization"]},
@@ -447,6 +445,7 @@ def run_stage7(
     days: int,
     seed: int,
     prefix: str = "stage7",
+    env_file: str = ".env",
 ) -> Tuple[Path, Path]:
     """Run the full model via simulate.py, exporting to output_dir.
 
@@ -459,6 +458,7 @@ def run_stage7(
         days: Simulation length in days.
         seed: RNG seed (matches stages 1-6).
         prefix: Output file prefix for simulate.py.
+        env_file: Path to .env configuration file.
 
     Returns:
         Tuple of (model CSV path, agent CSV path).
@@ -478,6 +478,8 @@ def run_stage7(
         prefix,
         "--output-data",
         str(output_dir),
+        "--env",
+        env_file,
     ]
     subprocess.run(cmd, cwd=_find_project_root(), check=True)
     return output_dir / f"{prefix}_model.csv", output_dir / f"{prefix}_agent.csv"
@@ -634,8 +636,22 @@ def export_results_assets(
     )
 
     rows = _stats_rows("population", model_df, MODEL_STAT_COLUMNS)
-    rows += _stats_rows("agent_step", agent_df, AGENT_STAT_COLUMNS)
-    rows += _stats_rows("final_day", agent_df[agent_df[step_col] == last_step], AGENT_STAT_COLUMNS)
+    for row in rows:
+        row["interpretation"] = compute_interpretation(row["metric"], row["mean"], row["sd"], row["min"], row["max"])
+        row["table"] = "model"
+
+    agent_rows = _stats_rows("agent_step", agent_df, AGENT_STAT_COLUMNS)
+    for row in agent_rows:
+        row["interpretation"] = compute_interpretation(row["metric"], row["mean"], row["sd"], row["min"], row["max"])
+        row["table"] = "agent"
+    rows += agent_rows
+
+    final_day_rows = _stats_rows("final_day", agent_df[agent_df[step_col] == last_step], AGENT_STAT_COLUMNS)
+    for row in final_day_rows:
+        row["interpretation"] = compute_interpretation(row["metric"], row["mean"], row["sd"], row["min"], row["max"])
+        row["table"] = "agent"
+    rows += final_day_rows
+
     if {"pss10", "current_stress"}.issubset(agent_df.columns):
         initial_corr_df = initial_df if {"pss10", "current_stress"}.issubset(initial_df.columns) else None
         corr_slices = [
@@ -655,11 +671,15 @@ def export_results_assets(
                     "cv": float("nan"),
                     "min": float("nan"),
                     "max": float("nan"),
+                    "interpretation": "",  # correlations have no stability interpretation
+                    "table": "correlation",
                 }
             )
 
     stats_csv = out / "stage7_results_stats.csv"
-    pd.DataFrame(rows, columns=["level", "metric", "mean", "sd", "cv", "min", "max"]).to_csv(stats_csv, index=False)
+    pd.DataFrame(rows, columns=["level", "metric", "mean", "sd", "cv", "min", "max", "interpretation", "table"]).to_csv(
+        stats_csv, index=False
+    )
 
     return {
         "initial_population": str(initial_fig) if initial_fig else "",
@@ -670,11 +690,12 @@ def export_results_assets(
 
 
 def run_cumulative_demo(
-    agents: int = DEFAULT_AGENTS,
-    days: int = DEFAULT_DAYS,
-    seed: int = DEFAULT_SEED,
+    agents: int,
+    days: int,
+    seed: int,
     output_dir: str = "data/output",
     figures_dir: str = "docs/figures",
+    env_file: str = ".env",
 ) -> Path:
     """Run all 7 stages and export results to output_dir.
 
@@ -684,6 +705,7 @@ def run_cumulative_demo(
         seed: RNG seed shared across stages.
         output_dir: Output directory (created if missing).
         figures_dir: Directory for stage-7 figures and stats (created if missing).
+        env_file: Path to .env configuration file.
 
     Returns:
         Path of the output directory.
@@ -696,7 +718,7 @@ def run_cumulative_demo(
 
     for stage in STAGES:
         if stage["id"] == 7:
-            model_csv, agent_csv = run_stage7(out, agents, days, seed)
+            model_csv, agent_csv = run_stage7(out, agents, days, seed, env_file=env_file)
             rows.append(compute_stage7_row(model_csv, agents, days, stage))
         else:
             run = run_stage(stage["id"], agents, days, seed)
@@ -721,14 +743,36 @@ def main(argv: Optional[list] = None) -> int:
     """CLI entry point for the cumulative block demo."""
     import argparse
 
+    # Load config to get default values from .env
+    config = get_config()
+
     parser = argparse.ArgumentParser(description="Run the 7-stage cumulative block demo.")
-    parser.add_argument("--agents", type=int, default=DEFAULT_AGENTS, help="population size")
-    parser.add_argument("--days", type=int, default=DEFAULT_DAYS, help="simulation length in days")
-    parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="RNG seed shared across stages")
+    parser.add_argument(
+        "-N",
+        "--agents",
+        type=int,
+        default=config.get("simulation", "num_agents"),
+        help="population size (default: from .env)",
+    )
+    parser.add_argument(
+        "-d",
+        "--days",
+        type=int,
+        default=config.get("simulation", "max_days"),
+        help="simulation length in days (default: from .env)",
+    )
+    parser.add_argument(
+        "-s",
+        "--seed",
+        type=int,
+        default=config.get("simulation", "seed"),
+        help="RNG seed shared across stages (default: from .env)",
+    )
     parser.add_argument("--output-dir", default="data/output", help="output directory")
     parser.add_argument("--figures-dir", default="docs/figures", help="figure and stats directory")
+    parser.add_argument("--env", default=".env", help="path to .env configuration file")
     args = parser.parse_args(argv)
-    out = run_cumulative_demo(args.agents, args.days, args.seed, args.output_dir, args.figures_dir)
+    out = run_cumulative_demo(args.agents, args.days, args.seed, args.output_dir, args.figures_dir, args.env)
     print(f"Cumulative block demo written to {out}")
     return 0
 

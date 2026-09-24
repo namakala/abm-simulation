@@ -91,8 +91,9 @@ class TestExportResultsAssets:
     def test_writes_stats_csv_with_expected_schema(self, export_inputs):
         """Stats CSV is tidy long-format with the four documented levels."""
         df = _read_stats(export_inputs)
-        assert list(df.columns) == ["level", "metric", "mean", "sd", "cv", "min", "max"]
+        assert list(df.columns) == ["level", "metric", "mean", "sd", "cv", "min", "max", "interpretation", "table"]
         assert set(df["level"]) == {"population", "agent_step", "final_day", "correlation"}
+        assert set(df["table"]) == {"model", "agent", "correlation"}
 
     def test_population_stats_values(self, export_inputs):
         """Population rows summarize daily model metrics (mean, sd, cv, range)."""

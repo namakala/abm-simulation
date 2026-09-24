@@ -30,6 +30,8 @@ pop_range <- function(metric) sprintf("%.2f–%.2f", stat_row("population", metr
 agent <- function(metric) sprintf("%.3f ± %.3f", stat_row("agent_step", metric)$mean, stat_row("agent_step", metric)$sd)
 agent_cv <- function(metric) sprintf("%.1f%%", stat_row("agent_step", metric)$cv)
 corr_val <- function(metric) sprintf("%.2f", stat_row("correlation", metric)$mean)
+model_interp <- function(metric) stat_row("population", metric)$interpretation
+agent_interp <- function(metric) stat_row("agent_step", metric)$interpretation
 baseline_max_corr <- function() {
   vars <- c("pss10", "resilience", "affect", "current_stress")
   pairs <- combn(vars, 2, simplify = FALSE)

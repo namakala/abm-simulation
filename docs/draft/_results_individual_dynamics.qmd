@@ -14,21 +14,12 @@ agent_vars <- c(
   "stress_overload" = "Overload perception",
   "consecutive_hindrances" = "Hindrance streak length"
 )
-agent_interpretations <- c(
-  "Variable stress levels with realistic range",
-  "Diverse adaptive capacities",
-  "Variable patterns around neutral",
-  "Fluctuating resource capacity",
-  "Variable patterns within bounds",
-  "Diverse agency experiences",
-  "Diverse capacity challenges",
-  "Variable patterns observed"
-)
 agent_sd <- sapply(names(agent_vars), function(col) sprintf("%.3f ± %.3f", mean(a[[col]]), sd(a[[col]])))
+agent_interp_vals <- sapply(names(agent_vars), agent_interp)
 tbl2 <- data.frame(
   Variable = unname(agent_vars),
   `Mean ± SD` = agent_sd,
-  Interpretation = agent_interpretations,
+  Interpretation = agent_interp_vals,
   check.names = FALSE
 )
 kable(tbl2, format = "latex", booktabs = TRUE)

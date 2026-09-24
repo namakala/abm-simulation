@@ -41,24 +41,15 @@ model_vars <- c(
   "avg_hindrance" = "Hindrance appraisal",
   "avg_consecutive_hindrances" = "Hindrance sequence length"
 )
-interpretations <- c(
-  "Stable stress perception with moderate elevation",
-  "Uniform coping capacity across the population",
-  "Controlled mood variation near neutral",
-  "Reliable coping outcomes maintaining homeostasis",
-  "Stable resource levels supporting resilience",
-  "Variable patterns within bounded ranges",
-  "Balanced appraisal pattern",
-  "Balanced appraisal pattern",
-  "Occasional stress streaks but stable overall"
-)
 mean_sd <- sapply(names(model_vars), function(col) sprintf("%.3f ± %.3f", mean(m[[col]]), sd(m[[col]])))
 chd <- m$avg_challenge - m$avg_hindrance
 mean_sd <- c(mean_sd, sprintf("%.3f ± %.3f", mean(chd), sd(chd)))
+interp <- sapply(names(model_vars), model_interp)
+interp <- c(interp, "Centered near zero, indicating equilibrium")
 tbl <- data.frame(
   Variable = c(unname(model_vars), "Challenge–hindrance diff."),
   `Mean ± SD` = mean_sd,
-  Interpretation = c(interpretations, "Centered near zero, indicating equilibrium"),
+  Interpretation = interp,
   check.names = FALSE
 )
 kable(tbl, format = "latex", booktabs = TRUE)
