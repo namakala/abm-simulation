@@ -66,4 +66,4 @@ FUNCTION interact(self_state, partner_state, config, rng):
 \end{tabularx}
 ```
 
-Reference: [src/python/phases/interaction.py:L48-L190](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/interaction.py#L48-L190)
+Reference: [src/python/phases/interaction.py:L44-L182](https://github.com/namakala/abm-simulation/blob/812534b0da5d3401464acbd1e65c8e1b6eb1bd29/src/python/phases/interaction.py#L44-L182)

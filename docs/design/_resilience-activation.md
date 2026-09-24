@@ -97,4 +97,4 @@ FUNCTION run_resilience_activation(state, config, rng):
 \end{tabularx}
 ```
 
-Reference: [src/python/phases/resilience_activation.py:L42-L252](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/resilience_activation.py#L42-L252)
+Reference: [src/python/phases/resilience_activation.py:L42-L252](https://github.com/namakala/abm-simulation/blob/812534b0da5d3401464acbd1e65c8e1b6eb1bd29/src/python/phases/resilience_activation.py#L42-L252)

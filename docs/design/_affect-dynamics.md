@@ -68,4 +68,4 @@ FUNCTION run_affect_dynamics(state, config, rng):
 \end{tabularx}
 ```
 
-Reference: [src/python/agent.py:L67-L210](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py#L67-L210)
+Reference: [src/python/agent.py:L67-L211](https://github.com/namakala/abm-simulation/blob/812534b0da5d3401464acbd1e65c8e1b6eb1bd29/src/python/agent.py#L67-L211)
