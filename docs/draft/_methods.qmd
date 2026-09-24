@@ -14,7 +14,7 @@
 
 ## Simulation Mechanism
 
-{{< include manuscript/_simulation-mechanism-simplified.qmd >}}
+{{< include manuscript/_simulation-mechanism-manuscript.md >}}
 
 ## Data Analysis
 
