@@ -1,0 +1,46 @@
+### Theoretical Foundation
+
+The simulation architecture is grounded in Lazarus's transactional stress model [@lazarus1984], which posits that stress responses emerge from sequential cognitive processes. Each simulation phase maps to a specific stage of this theoretical framework (Table \@ref(tab-lazarus-mapping)).
+
+| Lazarus Stage | Simulation Phase | Function |
+|---------------|------------------|----------|
+| Primary Appraisal | Stress Perception | Challenge/hindrance evaluation of incoming stressors |
+| Secondary Appraisal | Resilience Activation | Assessment of coping resources and probability |
+| Coping Response | Social Interaction | Support-seeking and emotional contagion |
+| Recovery | Daily Consolidation | Homeostatic return to baseline equilibrium |
+
+Primary appraisal determines whether an event is threatening, challenging, or irrelevant by evaluating controllability and overload attributes. The stress perception phase implements this through a weighted appraisal function that produces challenge and hindrance scores. Secondary appraisal assesses available coping resources, including social support, psychological capital, and protective factors. The resilience activation phase determines coping success probability based on these resources. Coping responses involve both individual and social mechanisms, where social interaction enables emotional contagion and mutual support exchange. Recovery occurs through daily consolidation phases that restore homeostatic equilibrium via affect regulation, resource regeneration, and stress decay.
+
+### Simulation Architecture
+
+The simulation employs a two-loop orchestration pattern within each daily step, separating event-driven responses from daily homeostatic consolidation (Figure \@ref(fig-orchestration)). This separation reflects the temporal distinction between acute stress responses and chronic stress regulation.
+
+#### Event-Driven Loop
+
+The first loop processes discrete stress events and social interactions as they occur throughout the day. The number of daily subevents follows a Poisson distribution ($\lambda = 3$), ensuring at least one subevent per day. Each subevent is randomly assigned as either a stress event or social interaction.
+
+For stress events, the system executes two sequential phases: stress perception (challenge/hindrance appraisal) followed by resilience activation (coping determination) if the event exceeds the stress threshold. For social interactions, the system processes a dyadic exchange between the agent and a randomly selected network neighbor.
+
+The event-driven loop accumulates daily challenge and hindrance totals, tracks support exchanges, and generates PSS-10 scores for consolidation. State updates flow through each phase sequentially, with the output of one phase becoming the input to the next.
+
+#### Daily Consolidation Loop
+
+The second loop executes once per day after all subevents are processed. This loop applies homeostatic mechanisms that restore equilibrium and prepare the agent for the next day's events.
+
+The consolidation loop executes five phases in sequence:
+
+1. **Affect dynamics**: Applies peer influence, event appraisal effects, protective factor boosts, and homeostatic adjustment toward baseline affect
+2. **Resource allocation**: Regenerates resources linearly in deficit and distributes to protective factors via softmax allocation
+3. **Stress buffering**: Applies protective-factor resilience boost and resource-mediated stress buffering using a mediation framework
+4. **PSS-10 consolidation**: Averages daily PSS-10 scores, applies exponential smoothing across days, and updates stressed classification
+5. **Daily reset**: Clears tracking counters, applies affect reset toward baseline, and decays stress and consecutive hindrances
+
+This two-loop design enables the model to capture both acute stress reactivity (event-driven) and chronic stress regulation (daily consolidation), consistent with the theoretical distinction between stress responses and allostasis.
+
+**Modularity and Cumulative Block Analysis**
+
+The phase-based architecture enables modular composition, where each phase can be independently tested and selectively enabled or disabled. This modularity is validated through a cumulative block experiment (see Results: "Mechanism contribution: cumulative building-block build-up"), where seven stages progressively add phases to demonstrate each mechanism's contribution to population-level outcomes.
+
+Stage 1 initializes baseline populations; stages 2--6 add stress perception, resilience activation, interaction, resource allocation, and stress buffering sequentially; stage 7 activates the complete model with daily consolidation phases and network adaptation. The intermediate stages are deliberately partial, enabling stress-adding mechanisms without restorative blocks, which isolates each phase's contribution. Stage 7 demonstrates how homeostatic mechanisms restore equilibrium through the full two-loop cycle.
+
+Implementation details for each phase, including algorithmic specifications and parameter definitions, are provided in Supplementary Material S4.

@@ -179,7 +179,7 @@ def apply_stress_adaptation(
     Returns:
         Tuple of (modified graph, number of rewired edges).
     """
-    new_G = G.copy()
+    G_prime = G.copy()
     rewired_count = 0
 
     threshold = config.get("adaptation_threshold", 3)
@@ -188,14 +188,14 @@ def apply_stress_adaptation(
     affect_weight = config.get("affect_weight", 1.0)
     resilience_weight = config.get("resilience_weight", 1.0)
 
-    for node in list(new_G.nodes()):
+    for node in list(G_prime.nodes()):
         agent = agents[node]
         breach_count = getattr(agent, "stress_breach_count", 0)
 
         if breach_count < threshold:
             continue
 
-        neighbors = list(new_G.neighbors(node))
+        neighbors = list(G_prime.neighbors(node))
         if not neighbors:
             continue
 
@@ -229,7 +229,7 @@ def apply_stress_adaptation(
         if rng.random() > retention_prob:
             # Find a better candidate
             candidate = _find_rewire_candidate(
-                new_G,
+                G_prime,
                 node,
                 agents,
                 rng,
@@ -238,8 +238,8 @@ def apply_stress_adaptation(
                 resilience_weight,
             )
             if candidate >= 0:
-                new_G.remove_edge(node, worst_neighbor)
-                new_G.add_edge(node, candidate)
+                G_prime.remove_edge(node, worst_neighbor)
+                G_prime.add_edge(node, candidate)
                 rewired_count += 1
 
-    return new_G, rewired_count
+    return G_prime, rewired_count

@@ -43,45 +43,32 @@ kable(
 
 ### Stage metrics
 
-Each block contributes its own metric family: perception adds challenge/hindrance appraisal, activation adds coping success, interaction adds social support exchange, allocation adds resource regeneration, and buffering adds buffering strength and stress depletion. Empty cells mark metrics whose block is not yet active. Stage 7 runs through `simulate.py`, which does not export the allocation and buffering phase metrics, so those cells remain empty.
+Each stage adds one building block on top of the previous ones and the table
+reports the resulting final-day population state. All seven stages share the
+same seeded population and network, so differences between consecutive rows
+isolate the contribution of the added block. Cells whose block is not active
+at a stage are reported as n/a.
 
 ```{r}
 #| label: cum-stage-metrics
 #| echo: false
 #| results: asis
-key_cols <- c(
-  "avg_pss10", "avg_stress", "avg_affect", "avg_resilience", "avg_resources",
-  "stress_prevalence", "avg_challenge", "avg_hindrance", "coping_success_rate",
-  "support_exchange_rate", "avg_regeneration", "avg_buffering_strength"
-)
-label_map <- c(
-  "avg_pss10" = "PSS-10",
-  "avg_stress" = "Current stress",
-  "avg_affect" = "Affect",
-  "avg_resilience" = "Resilience",
-  "avg_resources" = "Resources",
-  "stress_prevalence" = "Stress prevalence",
-  "avg_challenge" = "Challenge appraisal",
-  "avg_hindrance" = "Hindrance appraisal",
-  "coping_success_rate" = "Coping success rate",
-  "support_exchange_rate" = "Support exchange rate",
-  "avg_regeneration" = "Regeneration",
-  "avg_buffering_strength" = "Buffering strength"
-)
-num <- blocks[, key_cols]
-tbl <- t(num)
-chr <- round(tbl, 3)
-chr[is.na(chr)] <- "n/a"
-colnames(chr) <- paste("Stage", blocks$stage)
-rownames(chr) <- unname(label_map[rownames(chr)])
-kable(
-  chr,
-  format = "latex", booktabs = TRUE,
-  caption = "Cumulative building-block metrics by stage (means over the run)"
-)
+key_cols <- c("avg_pss10", "avg_stress", "avg_affect", "avg_resilience", "avg_resources", "stress_prevalence", "coping_success_rate")
+label_map <- c("avg_pss10" = "PSS-10", "avg_stress" = "Stress", "avg_affect" = "Affect", "avg_resilience" = "Resilience", "avg_resources" = "Resources", "stress_prevalence" = "Stress prevalence", "coping_success_rate" = "Coping success")
+block_added <- c("1" = "Initialization", "2" = "+ Stress perception", "3" = "+ Resilience activation", "4" = "+ Interaction", "5" = "+ Resource allocation", "6" = "+ Stress buffering", "7" = "+ Full model")
+nm <- blocks[, key_cols]
+nm[] <- lapply(nm, function(x) {
+  v <- format(round(x, 3), nsmall = 3, trim = TRUE)
+  v[is.na(x)] <- "n/a"
+  v
+})
+colnames(nm) <- unname(label_map[colnames(nm)])
+tbl <- data.frame("Stage" = blocks$stage, "Block added" = unname(block_added[as.character(blocks$stage)]), nm, check.names = FALSE)
+kable(tbl, format = "latex", booktabs = TRUE, col.names = c("Stage", "Block added", unname(label_map[key_cols])), caption = "Cumulative building-block metrics by stage (final-day population state)")
 ```
 
-The build-up shows how each mechanism shifts the population metrics.
-Stage 7 -- the complete model -- is the configuration reported in the
-model-level and agent-level tables above; its final-day population state
-and agent heterogeneity are examined in the next section.
+Each added block shifts the population metrics in a way that makes its contribution explicit. Stress perception (stage 2) updates only the appraisal dimensions and leaves the outcome states untouched, so stages 1 and 2 coincide. Resilience activation (stage 3) introduces coping, and every stress event that is coped with unsuccessfully lowers affect and resilience, raises stress, and consumes resources; no regeneration, decay, or homeostatic return opposes it yet, so the population settles into a depleted, stressed state. Interaction (stage 4) propagates affect and resilience through the network with a negativity bias stronger than the positive one, dragging both toward their lower bounds. Resource allocation (stage 5) restores the resource pool but cannot move affect or resilience, and stress buffering (stage 6) starts pushing resilience back toward its baseline, albeit with small buffering strength.
+
+These intermediate stages are deliberately partial: they enable the stress-adding mechanisms without the restorative blocks of the daily cycle. Stage 7, the complete model, activates the remaining blocks -- affect dynamics, PSS-10 consolidation, daily reset, and network adaptation -- completing the two-loop daily cycle of the production pipeline (\texttt{Person.step()} in \texttt{simulate.py}). The homeostatic pull toward baseline affect and resilience, the daily stress decay, and adaptive rewiring toward more similar peers jointly restore the equilibrium reported in the model-level tables: affect returns near neutral, resilience near its baseline, perceived stress falls to a moderate range, and coping success rises in parallel. The phase-specific metrics (regeneration, buffering strength) are exported for stage 7 by the same model reporters that feed stages 1--6, so those cells are populated throughout; the support-exchange rates for stages 1--6 are computed from per-event interaction records, whereas the stage-7 value is the daily support-to-interaction ratio exported by the production model, so the two definitions are not directly comparable.
+
+Stage 7 is the configuration reported in the model-level and agent-level tables above; its final-day population state and agent heterogeneity are examined in the next section.

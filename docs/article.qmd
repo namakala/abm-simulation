@@ -8,6 +8,8 @@ format:
     include-in-header:
       file: _header.tex
     output-file: agent-based-model-psychological-resilience.pdf
+    cite-method: natbib
+    natbiboptions: "round,authoryear"
 
 metadata-files:
   - _author.yml
@@ -23,6 +25,10 @@ metadata-files:
 {{< include draft/_discussion.qmd >}}
 
 {{< include draft/_conclusion.qmd >}}
+
+# Funding
+
+This work was supported by The Indonesia Endowment Funds for Education (LPDP) in the form of a PhD scholarship to AL with Grant Agreement Number 0007457/PHA/D/2/lpdp2022 (28 August 2026).
 
 # References {-}
 

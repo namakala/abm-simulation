@@ -58,34 +58,23 @@ Resources naturally regenerate toward maximum capacity, representing rest, recov
 
 **Resource Regeneration Equation:**
 
-$$R' = \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A))$$
+$$R' = \lambda_R \cdot (1 - R)$$
 
 Where:
 - $R' > 0$ is resource regeneration amount
-- $\lambda_R \in [0,1]$ is regeneration rate
-- $R_{\max} = 1$ is maximum resources
+- $\lambda_R \in [0,1]$ is regeneration rate (default 0.50)
 - $R \in [0,1]$ is current resources
-- $\beta_a > 0$ is affect influence parameter
-- $A \in [-1,1]$ is current affect
 
-**Implementation**: [`compute_resource_regeneration()`](../../src/python/affect_utils.py#L360-L381) in `affect_utils.py`
+**Implementation**: [`compute_resource_regeneration()`](../../src/python/affect_utils.py#L368-L387) in `affect_utils.py`
 
-### Affect-Modulated Regeneration
+### Affect-Integrated Regeneration
 
 **Affect Influence**:
-Positive emotional states enhance recovery and resource rebuilding, while negative states may slow regeneration.
+Positive emotional states enhance recovery and resource rebuilding, while negative states may slow regeneration. This is now modelled through the affect--resource coupling term in the affect update (see `affect-dynamics.md`), not inside the regeneration equation itself.
 
-**Psychological Foundation**: Positive affect broadens thought-action repertoires and builds personal resources.
+**Psychological Foundation**: Positive affect broadens thought-action repertoires and builds personal resources (broaden-and-build theory).
 
-**Affect-Modulated Regeneration:**
-
-$$R' = \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A))$$
-
-Where:
-- $\beta_a > 0$ is affect influence parameter
-- $A \in [-1,1]$ is current affect
-
-**Implementation**: [`compute_resource_regeneration()`](../../src/python/affect_utils.py#L360-L381) in `affect_utils.py`
+**Implementation**: affect--resource coupling applied in [`update_affect_dynamics()`](../../src/python/affect_utils.py#L1187-L1247) in `affect_utils.py`
 
 ## Resource Consumption Patterns
 

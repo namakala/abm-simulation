@@ -6,9 +6,11 @@ Test script to verify the model properly integrates with new stress processing m
 import pytest
 import pandas as pd
 import networkx as nx
+import numpy as np
 from unittest.mock import patch, MagicMock
 
 from src.python.model import StressModel
+from src.python.reporters import MODEL_REPORTERS
 
 
 def test_model_integration():
@@ -408,6 +410,53 @@ def test_apply_network_adaptation_with_adapted_agents():
     # Should return non-negative integer (actual count depends on config)
     assert isinstance(adaptation_count, int)
     assert adaptation_count >= 0
+
+
+def test_network_adaptation_preserves_neighbors():
+    """Test that network adaptation keeps agents reachable via get_neighbors.
+
+    Regression test: rebuilding the grid after adaptation must not lose the
+    per-node agent lists that Mesa's get_neighbors reads.
+    """
+    model = StressModel(N=20, max_days=1, seed=42)
+
+    # Force adaptation to trigger on several agents
+    for i, agent in enumerate(model.agents):
+        if i < 5:
+            agent.stress_breach_count = 3
+
+    grid_id = id(model.grid)
+    adaptation_count = model._apply_network_adaptation()
+    assert isinstance(adaptation_count, int)
+    assert adaptation_count >= 0
+
+    # The grid instance must survive adaptation (only the graph is swapped)
+    assert id(model.grid) == grid_id
+    # Agents must remain placed in the grid
+    assert len(model.grid.agents) > 0
+    # At least one agent must still find neighbors through the grid
+    found = any(
+        len(model.grid.get_neighbors(agent.pos, include_center=False)) > 0
+        for agent in model.agents
+        if agent.pos is not None
+    )
+    assert found
+
+
+def test_allocation_buffering_model_reporters():
+    """New model reporters export regeneration and buffering strength."""
+    assert "avg_regeneration" in MODEL_REPORTERS
+    assert "avg_buffering_strength" in MODEL_REPORTERS
+
+    model = StressModel(N=5, max_days=1, seed=42)
+    model.step()
+
+    regen = MODEL_REPORTERS["avg_regeneration"](model)
+    buff = MODEL_REPORTERS["avg_buffering_strength"](model)
+    assert np.isfinite(regen)
+    assert regen >= 0.0
+    assert np.isfinite(buff)
+    assert buff >= 0.0
 
 
 def test_population_summary_with_empty_agent_data():

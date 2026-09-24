@@ -93,39 +93,6 @@
 \makeatother
 
 
-% definitions for citeproc citations
-\NewDocumentCommand\citeproctext{}{}
-\NewDocumentCommand\citeproc{mm}{%
-  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
-\makeatletter
- % allow citations to break across lines
- \let\@cite@ofmt\@firstofone
- % avoid brackets around text for \cite:
- \def\@biblabel#1{}
- \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
-\makeatother
-\newlength{\cslhangindent}
-\setlength{\cslhangindent}{1.5em}
-\newlength{\csllabelwidth}
-\setlength{\csllabelwidth}{3em}
-\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
- {\begin{list}{}{%
-  \setlength{\itemindent}{0pt}
-  \setlength{\leftmargin}{0pt}
-  \setlength{\parsep}{0pt}
-  % turn on hanging indent if param 1 is 1
-  \ifodd #1
-   \setlength{\leftmargin}{\cslhangindent}
-   \setlength{\itemindent}{-1\cslhangindent}
-  \fi
-  % set entry spacing
-  \setlength{\itemsep}{#2\baselineskip}}}
- {\end{list}}
-\usepackage{calc}
-\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
-\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
-\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
-\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
 
 
@@ -137,6 +104,8 @@
 
 
  
+\usepackage[round,authoryear]{natbib}
+\bibliographystyle{plainnat}
 
 
 \usepackage{longtable}
@@ -224,14 +193,14 @@
 
 Anxiety and depression are among the most prevalent psychological
 disorders in the general population, generating substantial
-socioeconomic consequences (GBD Collaborators 2022; Arias, Saxena, and
-Verguet 2022). These conditions impose considerable direct and indirect
-costs, while curative and rehabilitative approaches often demonstrate
-limited effectiveness (Mekonen et al. 2021). Strengthening psychological
+socioeconomic consequences \citep{gbd2022global, arias2022quantifying}.
+These conditions impose considerable direct and indirect costs, while
+curative and rehabilitative approaches often demonstrate limited
+effectiveness \citep{mekonen2021estimating}. Strengthening psychological
 resilience offers a preventive pathway to reduce vulnerability to such
-disorders (Troy et al. 2023). Public health policy should therefore
-prioritize preventive strategies that foster resilience. However,
-designing cost-effective preventive policies requires rigorous
+disorders \citep{troy2023psychological}. Public health policy should
+therefore prioritize preventive strategies that foster resilience.
+However, designing cost-effective preventive policies requires rigorous
 assessment methods. Agent-based modeling (ABM) provides a promising
 approach to simulate psychological resilience and generate evidence to
 guide interventions aimed at enhancing resilience at the population
@@ -249,21 +218,21 @@ our framework. Collectively, these studies provided a foundation for
 constructing comprehensive and realistic ABM simulations in the context
 of mental health and social dynamics.
 
-Romanyukha et al. (2023) implemented an ABM to evaluate the mental
-health consequences of policy measures during the COVID-19 pandemic. The
-model integrated epidemic dynamics with the development of mental
-disorders in a large urban population. Using Quality-Adjusted Life Years
-(QALY) as an outcome measure, the study considered major depressive
-disorder, anxiety disorder, COVID-19 cases (lethal and non-lethal), and
-immunization. The results showed that mental disorders accounted for a
-substantial share of pandemic-related health losses, and under strong
-lockdown conditions, the lowest QALY loss occurred when approximately
-70\% of the population was isolated. These findings demonstrate that ABM
-can quantify the impact of policy interventions on mental health
-outcomes, supporting its use for evaluating preventive strategies that
-enhance psychological resilience.
+\citet{Romanyukha2023} implemented an ABM to evaluate the mental health
+consequences of policy measures during the COVID-19 pandemic. The model
+integrated epidemic dynamics with the development of mental disorders in
+a large urban population. Using Quality-Adjusted Life Years (QALY) as an
+outcome measure, the study considered major depressive disorder, anxiety
+disorder, COVID-19 cases (lethal and non-lethal), and immunization. The
+results showed that mental disorders accounted for a substantial share
+of pandemic-related health losses, and under strong lockdown conditions,
+the lowest QALY loss occurred when approximately 70\% of the population
+was isolated. These findings demonstrate that ABM can quantify the
+impact of policy interventions on mental health outcomes, supporting its
+use for evaluating preventive strategies that enhance psychological
+resilience.
 
-Murase et al. (2021) introduced a generalized weighted social network
+\citet{Murase2021} introduced a generalized weighted social network
 (GWSN) model to describe the formation of social ties and networks. The
 GWSN model integrates mechanisms previously examined in isolation,
 including triadic closure (the tendency for friends of friends to become
@@ -277,9 +246,9 @@ interactions, this approach is directly relevant for simulating how
 social connectivity influences resilience and the spread of mental
 disorders in ABM.
 
-Andarlia and Gunawan (2021) examined the contagion effect of
-psychological disorders using ABM to simulate the spread of depression
-in a population. The model accounted for the influence of close social
+\citet{Andarlia2021} examined the contagion effect of psychological
+disorders using ABM to simulate the spread of depression in a
+population. The model accounted for the influence of close social
 relationships, which could trigger mild, moderate, or severe depressive
 episodes, and modeled recovery through therapy with transition dynamics
 and recovery rates differentiated by gender. Simulation results
@@ -290,10 +259,10 @@ propagation and mitigation of mental disorders through social
 mechanisms, a key component for modeling interventions aimed at
 strengthening psychological resilience.
 
-López and Giovanini (2024) introduced a methodology embedding an ABM
-within adaptive temporal networks to simulate daily interactions and
-examine the interplay between infectious disease spread and individual
-behavior. The model integrates individual behavior, social dynamics, and
+\citet{Lopez2024} introduced a methodology embedding an ABM within
+adaptive temporal networks to simulate daily interactions and examine
+the interplay between infectious disease spread and individual behavior.
+The model integrates individual behavior, social dynamics, and
 epidemiological factors, validated using real-world influenza outbreak
 data, and can simulate complex social phenomena such as social
 awareness. By incorporating self-organized system logic, agents respond
@@ -304,7 +273,7 @@ phenomena arising from the interaction of social behavior and health,
 providing a powerful tool for testing policies that influence population
 resilience.
 
-Benny et al. (2022) employed ABM to evaluate the impact of government
+\citet{Benny2022} employed ABM to evaluate the impact of government
 policies on mental health, focusing on depression in expectant mothers.
 The model incorporated parameters from the ``All Our Families'' cohort
 dataset and literature, including household income, age, education, and
@@ -323,27 +292,26 @@ psychological disorders.
 This study simulates stress perception using an ABM approach. Stress
 perception is operationalized as a generalization of the Perceived
 Stress Scale-10 (PSS-10), following the guidance provided in its
-interpretation manual (Cohen 1988). Modeling stress perception is
-essential for capturing the activation of psychological resilience
-(Parsons, Kruijt, and Fox 2016). Under equivalent stress exposure,
-agents with higher resilience are less likely to develop psychological
-disorders, whereas less resilient agents are more vulnerable. The
-simulation incorporates multiple psychological resources, including
-social support, family support, and psychological capital, with the
-latter encompassing personality traits such as openness,
-conscientiousness, and extraversion (Hobfoll 1989; Klaver et al. 2021;
-Zager Kocjan, Kavčič, and Avsec 2021).
+interpretation manual \citep{cohen1988perceived}. Modeling stress
+perception is essential for capturing the activation of psychological
+resilience \citep{parsons2016cognitive}. Under equivalent stress
+exposure, agents with higher resilience are less likely to develop
+psychological disorders, whereas less resilient agents are more
+vulnerable. The simulation incorporates multiple psychological
+resources, including social support, family support, and psychological
+capital, with the latter encompassing personality traits such as
+openness, conscientiousness, and extraversion
+\citep{Hobfoll1989, klaver2021exposure, ZagerKocjan2021}.
 
 The relevance of ABM lies in its ability to simulate complex social
 dynamics that traditional methods cannot capture. Psychological
 resilience operates through homeostatic mechanisms influenced by social
 interactions, where supportive networks enhance resource conservation
-and mitigate stress (Hobfoll 2002; Fasihi Harandi, Mohammad Taghinasab,
-and Dehghan Nayeri 2017). ABM allows for the representation of
-heterogeneous agents with varying baseline characteristics, enabling the
-exploration of how agent interactions affect population-level resilience
-(Andarlia and Gunawan 2021; López and Giovanini 2024). Our ABM
-implementation aimed to resolve the question:
+and mitigate stress \citep{Hobfoll2002, FasihiHarandi2017}. ABM allows
+for the representation of heterogeneous agents with varying baseline
+characteristics, enabling the exploration of how agent interactions
+affect population-level resilience \citep{Andarlia2021, Lopez2024}. Our
+ABM implementation aimed to resolve the question:
 
 \begin{quote}
 Can agent-based simulations effectively model the homeostatic mechanisms
@@ -361,15 +329,15 @@ within a constant range, reflecting a stable homeostatic state.
 
 \subsection{Modelling Approach}\label{modelling-approach}
 
-The core components from prior ABM literature (Romanyukha et al. 2023;
-Murase et al. 2021; Andarlia and Gunawan 2021; López and Giovanini 2024;
-Benny et al. 2022) were integrated into a unified framework for
-evaluating the homeostasis mechanism of the human psyche. Building on
-established social network dynamics and mental health contagion
-mechanisms, our model incorporated comprehensive stress perception via
-the Perceived Stress Scale-10 (PSS-10), challenge-hindrance appraisal,
-and resilience dynamics, enabling simulation of homeostatic mechanisms
-that determine population-level mental health outcomes.
+The core components from prior ABM literature
+\citep{Romanyukha2023, Murase2021, Andarlia2021, Lopez2024, Benny2022}
+were integrated into a unified framework for evaluating the homeostasis
+mechanism of the human psyche. Building on established social network
+dynamics and mental health contagion mechanisms, our model incorporated
+comprehensive stress perception via the Perceived Stress Scale-10
+(PSS-10), challenge-hindrance appraisal, and resilience dynamics,
+enabling simulation of homeostatic mechanisms that determine
+population-level mental health outcomes.
 
 The simulation was operated through structured daily steps: (1) agent
 initialization with baseline resilience, affect, and resources; (2)
@@ -384,483 +352,445 @@ effectiveness.
 Key departures from prior work included PSS-10 integration for validated
 stress measurement and explicit resource dynamics with softmax
 allocation. Literature-supported elements include social contagion
-(Andarlia and Gunawan 2021) and network formation (Murase et al. 2021),
-while PSS-10 bifactor modeling and resilience mechanisms remain
-empirically grounded but require further validation against longitudinal
-data. Model is highly applicable for simulating psychological
-resilience, though limitations include unvalidated parameter ranges,
-necessitating sensitivity analysis.
+\citep{Andarlia2021} and network formation \citep{Murase2021}, while
+PSS-10 bifactor modeling and resilience mechanisms remain empirically
+grounded but require further validation against longitudinal data. Model
+is highly applicable for simulating psychological resilience, though
+limitations include unvalidated parameter ranges, necessitating
+sensitivity analysis.
+
+\subsection{Theoretical Foundation and Simulation
+Architecture}\label{theoretical-foundation-and-simulation-architecture}
+
+\subsubsection{Theoretical Foundation}\label{theoretical-foundation}
+
+The simulation architecture is grounded in Lazarus's transactional
+stress model \citep{lazarus1984}, which posits that stress responses
+emerge from sequential cognitive processes. Each simulation phase maps
+to a specific stage of this theoretical framework (Table
+@ref(tab-lazarus-mapping)).
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3488}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4186}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2326}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Lazarus Stage
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Simulation Phase
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Function
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Primary Appraisal & Stress Perception & Challenge/hindrance evaluation
+of incoming stressors \\
+Secondary Appraisal & Resilience Activation & Assessment of coping
+resources and probability \\
+Coping Response & Social Interaction & Support-seeking and emotional
+contagion \\
+Recovery & Daily Consolidation & Homeostatic return to baseline
+equilibrium \\
+\end{longtable}
+
+Primary appraisal determines whether an event is threatening,
+challenging, or irrelevant by evaluating controllability and overload
+attributes. The stress perception phase implements this through a
+weighted appraisal function that produces challenge and hindrance
+scores. Secondary appraisal assesses available coping resources,
+including social support, psychological capital, and protective factors.
+The resilience activation phase determines coping success probability
+based on these resources. Coping responses involve both individual and
+social mechanisms, where social interaction enables emotional contagion
+and mutual support exchange. Recovery occurs through daily consolidation
+phases that restore homeostatic equilibrium via affect regulation,
+resource regeneration, and stress decay.
+
+\subsubsection{Simulation Architecture}\label{simulation-architecture}
+
+The simulation employs a two-loop orchestration pattern within each
+daily step, separating event-driven responses from daily homeostatic
+consolidation (Figure @ref(fig-orchestration)). This separation reflects
+the temporal distinction between acute stress responses and chronic
+stress regulation.
+
+\paragraph{Event-Driven Loop}\label{event-driven-loop}
+
+The first loop processes discrete stress events and social interactions
+as they occur throughout the day. The number of daily subevents follows
+a Poisson distribution (\(\lambda = 3\)), ensuring at least one subevent
+per day. Each subevent is randomly assigned as either a stress event or
+social interaction.
+
+For stress events, the system executes two sequential phases: stress
+perception (challenge/hindrance appraisal) followed by resilience
+activation (coping determination) if the event exceeds the stress
+threshold. For social interactions, the system processes a dyadic
+exchange between the agent and a randomly selected network neighbor.
+
+The event-driven loop accumulates daily challenge and hindrance totals,
+tracks support exchanges, and generates PSS-10 scores for consolidation.
+State updates flow through each phase sequentially, with the output of
+one phase becoming the input to the next.
+
+\paragraph{Daily Consolidation Loop}\label{daily-consolidation-loop}
+
+The second loop executes once per day after all subevents are processed.
+This loop applies homeostatic mechanisms that restore equilibrium and
+prepare the agent for the next day's events.
+
+The consolidation loop executes five phases in sequence:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Affect dynamics}: Applies peer influence, event appraisal
+  effects, protective factor boosts, and homeostatic adjustment toward
+  baseline affect
+\item
+  \textbf{Resource allocation}: Regenerates resources linearly in
+  deficit and distributes to protective factors via softmax allocation
+\item
+  \textbf{Stress buffering}: Applies protective-factor resilience boost
+  and resource-mediated stress buffering using a mediation framework
+\item
+  \textbf{PSS-10 consolidation}: Averages daily PSS-10 scores, applies
+  exponential smoothing across days, and updates stressed classification
+\item
+  \textbf{Daily reset}: Clears tracking counters, applies affect reset
+  toward baseline, and decays stress and consecutive hindrances
+\end{enumerate}
+
+This two-loop design enables the model to capture both acute stress
+reactivity (event-driven) and chronic stress regulation (daily
+consolidation), consistent with the theoretical distinction between
+stress responses and allostasis.
+
+\textbf{Modularity and Cumulative Block Analysis}
+
+The phase-based architecture enables modular composition, where each
+phase can be independently tested and selectively enabled or disabled.
+This modularity is validated through a cumulative block experiment (see
+Results: ``Mechanism contribution: cumulative building-block
+build-up''), where seven stages progressively add phases to demonstrate
+each mechanism's contribution to population-level outcomes.
+
+Stage 1 initializes baseline populations; stages 2--6 add stress
+perception, resilience activation, interaction, resource allocation, and
+stress buffering sequentially; stage 7 activates the complete model with
+daily consolidation phases and network adaptation. The intermediate
+stages are deliberately partial, enabling stress-adding mechanisms
+without restorative blocks, which isolates each phase's contribution.
+Stage 7 demonstrates how homeostatic mechanisms restore equilibrium
+through the full two-loop cycle.
+
+Implementation details for each phase, including algorithmic
+specifications and parameter definitions, are provided in Supplementary
+Material S4.
+
+\subsection{Model Parameters}\label{model-parameters}
 
 \setlength\LTleft{0pt}
 \setlength\LTright{0pt}
 
-\begin{longtable}{ll}
+\begin{longtable}{lp{2.4cm}p{1.6cm}p{1.7cm}p{5.2cm}}
 
-\caption{\label{tbl-parameters}Summary of model parameters and variables used in the agent-based mental health simulation}
+\caption{\label{tbl-parameters}Summary of model parameters and variables used in the agent-based mental health simulation. Status: Validated = value grounded in peer-reviewed empirical literature; Plausible = theoretically grounded within a literature-supported range; Assumed = model-internal constant without direct empirical evidence; variable = computed state derived from the update equations.}
 
 \tabularnewline
 
  \\
  \\
 \toprule
-\multicolumn{2}{c}{\textbf{Model Structure}} \\
+\textbf{Symbol} & \textbf{Description} & \textbf{Value} & \textbf{Status} & \textbf{Note} \\
 \midrule
-$N$ & Network size (number of agents) \\
-$WS_k$ & Mean degree in Watts-Strogatz network topology \\
-$WS_p$ & Rewiring probability in Watts-Strogatz network \\
+\multicolumn{5}{c}{\textbf{Simulation and Network}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Agent Initialization}} \\
+$N$ & Number of agents (population size) & 20 & Plausible & \cite{watts1998}: prototype scale; scalable to 1000+ \\
+$T_{\max}$ & Maximum simulation days & 100 & Assumed & Assumes 100 days suffice for stress dynamics to stabilise; the model steps through daily loops over this horizon. \\
+$S_{\mathrm{seed}}$ & Random seed & 42 & Assumed & Assumes a fixed seed for full reproducibility; controls the RNG only and carries no behavioural content. \\
+$WS_k$ & Mean degree in Watts-Strogatz network & 4 & Plausible & \cite{watts1998}: k must be even; degree 4 typical for small-world topology. \\
+$WS_p$ & Rewiring probability in Watts-Strogatz network & 0.1 & Plausible & \cite{watts1998}: p = 0.1 is the standard small-world regime. \\
 \midrule
-$\mu_{\mathfrak{R}, \text{0}}$ & Initial resilience mean \\
-$\sigma_{\mathfrak{R},\text{0}}$ & Initial resilience standard deviation \\
-$\mu_{A, \text{0}}$ & Initial affect mean \\
-$\sigma_{A,\text{0}}$ & Initial affect standard deviation \\
-$\mu_{R, \text{0}}$ & Initial resources mean \\
-$\sigma_{R,\text{0}}$ & Initial resources standard deviation \\
-$X$ & Random variable for baseline generation \\
+\multicolumn{5}{c}{\textbf{Agent Initialization}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Stress Processing}} \\
+$\mu_{\mathfrak{R},0}$ & Initial resilience latent mean & 0.0 & Plausible & \cite{shively2020}: sigmoid(N(0,1)) centres near 0.5, consistent with CD-RISC norms $\approx$ 0.74--0.80. \\
+$\sigma_{\mathfrak{R},0}$ & Initial resilience latent SD & 1.0 & Plausible & \cite{connor2003}: empirical SD $\approx$ 0.13--0.19 on [0,1]; latent SD 1.0 spans the full interval. \\
+$\mu_{A,0}$ & Initial affect latent mean & 0.0 & Plausible & \cite{watson1988}: tanh maps latent 0 to neutral valence; empirical population mean $\approx$ 0.1--0.2 on [-1,1]. \\
+$\sigma_{A,0}$ & Initial affect latent SD & 1.0 & Plausible & \cite{watson1988}: empirical SD $\approx$ 0.3--0.4 on [-1,1]; latent SD 1.0 gives full-range spread. \\
+$\mu_{R,0}$ & Initial resources latent mean & 0.0 & Plausible & \cite{hobfoll2001}: sigmoid centres resources near 0.5; right-skewed population norms. \\
+$\sigma_{R,0}$ & Initial resources latent SD & 1.0 & Plausible & \cite{hobfoll2001}: latent default spanning [0,1]. \\
 \midrule
-$\omega_c$ & Controllability weight in appraisal \\
-$\omega_o$ & Overload weight in appraisal \\
-$b$ & Bias term in appraisal function \\
-$\gamma$ & Sigmoid steepness parameter \\
-$\eta_{\chi}$ & Challenge threshold modifier \\
-$\eta_{\zeta}$ & Hindrance threshold modifier \\
-$\eta_{\text{0}}$ & Base stress threshold \\
+\multicolumn{5}{c}{\textbf{Agent Behaviour}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Coping}} \\
+$p_{\mathrm{stress}}$ & Probability of a daily stressor & 0.2 & Validated & \cite{almeida2002}: 0.1--0.3 for clinically significant events; 40\% of days contain at least one stressor. \\
+$p_b$ & Base coping success rate & 0.5 & Validated & \cite{skinner2003}: approach coping 0.60--0.75, avoidance 0.30--0.40; 0.5 is the community midpoint. \\
+$\lambda_s$ & Subevent (Poisson) rate per day & 3 & Plausible & \cite{almeida2002}: Poisson rate 2--5 events/day. \\
+$\kappa$ & Resource cost of a coping attempt & 0.03 & Assumed & Assumes each coping attempt consumes 3\% of the resource pool; applied linearly per coping event. \\
 \midrule
-$p_b$ & Base probability for successful coping \\
-$\theta_{\text{cope,}\chi}$ & Challenge bonus for coping \\
-$\theta_{\text{cope,}\zeta}$ & Hindrance penalty for coping \\
-$\delta_{\text{cope,soc}}$ & Social influence on coping \\
+\multicolumn{5}{c}{\textbf{Stress Events}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Affect Dynamics}} \\
+$\mu_c$ & Controllability mean of stress events & 0.5 & Validated & \cite{bolger1991}: 0.4--0.6 on [0,1]. \\
+$\sigma_c$ & Controllability SD of stress events & 0.2 & Validated & \cite{bolger1991}: SD 0.2--0.3. \\
+$\mu_o$ & Overload mean of stress events & 0.5 & Validated & \cite{bolger1991}: 0.4--0.6 on [0,1]. \\
+$\sigma_o$ & Overload SD of stress events & 0.2 & Validated & \cite{bolger1991}: SD 0.2--0.3. \\
 \midrule
-$\alpha_p$ & Peer influence rate \\
-$\alpha_e$ & Event appraisal rate \\
-$\lambda_{\text{affect}}$ & Affect homeostasis rate \\
-$k$ & Number of neighbors \\
-$k_{\text{influence}}$ & Number of influencing neighbors \\
+\multicolumn{5}{c}{\textbf{Appraisal and Threshold}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Resilience Dynamics}} \\
+$\omega_c$ & Controllability weight in appraisal & 1.0 & Plausible & \cite{cavanaugh2000}: ratio $\omega_c:\omega_o \approx 1:1$ (0.8--1.2). \\
+$\omega_o$ & Overload weight in appraisal & 1.0 & Plausible & \cite{cavanaugh2000}: ratio $\approx 1:1$. \\
+$b$ & Appraisal bias term & 0.0 & Assumed & Assumes no systematic appraisal bias; at neutral event attributes the population splits evenly between challenge and hindrance. \\
+$\gamma$ & Sigmoid steepness in appraisal & 3.0 & Plausible & \cite{cavanaugh2000}: 4--6 recommended; 3.0 yields graded rather than binary appraisal. \\
+$\alpha_\beta$ & Beta shape parameter for stress sampling & 2.0 & Plausible & \cite{lazarus1984}: Beta(2,2) is symmetric and unimodal on [0,1]. \\
+$\beta_\beta$ & Beta shape parameter for stress sampling & 2.0 & Plausible & \cite{lazarus1984}: Beta(2,2) is symmetric and unimodal. \\
+$\eta_0$ & Base stress threshold & 0.5 & Plausible & \cite{cavanaugh2000}: midpoint of the appraisal space. \\
+$\eta_{\chi}$ & Challenge threshold scale & 0.15 & Plausible & \cite{cavanaugh2000}: challenge raises the effective threshold (protective). \\
+$\eta_{\zeta}$ & Hindrance threshold scale & 0.25 & Plausible & \cite{podsakoff2007}: hindrance lowers the threshold; negativity bias (0.25 > 0.15). \\
+$\lambda_C$ & Challenge modifier for appraised stress & 0.8 & Plausible & \cite{cavanaugh2000}: challenge dampens appraised stress ($<1$). \\
+$\lambda_H$ & Hindrance modifier for appraised stress & 1.2 & Plausible & \cite{cavanaugh2000}: hindrance amplifies appraised stress ($>1$). \\
+$\delta$ & Polarity effect strength & 0.4 & Assumed & Assumes balanced events anchor appraised stress at 0.5; applied in $L = 0.5 + \delta(\zeta - \chi)$. \\
 \midrule
-$\lambda_{\text{resilience}}$ & Resilience homeostasis rate \\
-$\theta_{\text{boost}}$ & Resilience boost rate \\
-$\theta_{\text{boost|cope}}$ & Boost rate for successful coping \\
-$\alpha_s$ & Social support rate for resilience \\
-$\eta_{\text{res,overload}}$ & Threshold for overload effects \\
-$h_c$ & Consecutive hindrances count \\
-$F$ & Set of protective factors \\
-$e_f$ & Efficacy of factor $f$ \\
+\multicolumn{5}{c}{\textbf{Social Interaction}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Resource}} \\
+$\alpha_{\mathrm{int}}$ & Influence rate in social interactions & 0.05 & Plausible & \cite{centola2018}: affect convergence 0.05--0.15 per interaction. \\
+$\delta_{\mathrm{res,int}}$ & Resilience influence in interactions & 0.05 & Plausible & \cite{centola2018}: contagion rate for resilience transfer. \\
+$k_{\max}$ & Maximum neighbours per interaction & 10 & Assumed & Assumes up to 10 neighbours can influence one interaction; caps social reach and computational load. \\
 \midrule
-$\lambda_R$ & Resource regeneration rate \\
-$\beta_{\text{softmax}}$ & Softmax temperature parameter \\
-$\beta_a$ & Affect influence parameter \\
-$R_{\max}$ & Maximum resources \\
-$R_a$ & Available resources \\
-$w_f$ & Allocation weight for factor $f$ \\
-$r_f$ & Resources allocated to factor $f$ \\
-$\gamma_p$ & Protective improvement rate \\
+\multicolumn{5}{c}{\textbf{Affect Dynamics}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Social Network}} \\
+$\alpha_p$ & Peer influence rate on affect & 0.1 & Validated & \cite{centola2018}: 0.05--0.15 per interaction. \\
+$\alpha_e$ & Event appraisal rate on affect & 0.15 & Plausible & \cite{lazarus1984}: daily challenge/hindrance shift affect. \\
+$\lambda_{\mathrm{affect}}$ & Affect homeostatic rate & 0.5 & Plausible & \cite{friston2016}: set-point return to baseline affect. \\
+$k_{\mathrm{influence}}$ & Number of influencing neighbours & 5 & Assumed & Assumes 5 neighbours drive peer influence; affect differences are averaged over this subset. \\
 \midrule
-$\delta_{\text{homophily}}$ & Homophily strength \\
-$\eta_{\text{exchange}}$ & Support exchange threshold \\
-$s_{ij}$ & Similarity between agents \\
-$e_s$ & Support effectiveness \\
-$p_{\text{keep}}$ & Connection retention probability \\
-$c_{\text{breach}}$ & Stress breach count \\
-$\eta_{\text{adapt}}$ & Adaptation threshold \\
-$p_{\text{rewire}}$ & Rewiring probability \\
-$A_i, A_j$ & Affect values for agents $i,j$ \\
-$\mathfrak{R}_i, \mathfrak{R}_j$ & Resilience values for agents $i,j$ \\
+\multicolumn{5}{c}{\textbf{Resilience Dynamics}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{PSS-10}} \\
+$\lambda_{\mathrm{resilience}}$ & Resilience homeostatic rate & 0.5 & Plausible & \cite{shively2020}: return to baseline resilience; scaled by resources and stress in code. \\
+$\theta_{\mathrm{boost|cope}}$ & Resilience gain from successful coping & 0.1 & Plausible & \cite{cavanaugh2000}: successful challenge coping builds resilience. \\
+$\alpha_s$ & Social support rate for resilience & 0.08 & Plausible & \cite{Hobfoll1989}: supportive exchanges transfer resilience. \\
+$\eta_{\mathrm{res,overload}}$ & Overload threshold & 3 & Assumed & Assumes 3 consecutive hindrance events trigger resilience depletion; coarse allostatic-load mechanism. \\
+$h_c$ & Consecutive hindrance count & 3 & Assumed & Assumes 3 consecutive hindrance events count toward overload detection; decays by $\delta_{\mathrm{stress}}$ per day. \\
+$\theta_{\mathrm{boost}}$ & Protective factor boost rate & 0.1 & Plausible & \cite{Hobfoll1989}: protective factors boost resilience toward baseline. \\
 \midrule
-$\mu_c$ & Controllability dimension mean \\
-$\sigma_c$ & Controllability dimension standard deviation \\
-$\mu_o$ & Overload dimension mean \\
-$\sigma_o$ & Overload dimension standard deviation \\
-$\rho_\Psi$ & PSS-10 dimension correlation \\
-$\eta_\Psi$ & PSS-10 stress threshold \\
-$\Psi_i$ & PSS-10 item response for item $i$ \\
-$\lambda_{c,\Psi,i}$ & Factor loading for item $j$ on controllability dimension \\
-$\lambda_{o,\Psi,i}$ & Factor loading for item $j$ on overload dimension \\
-$\epsilon$ & Measurement error \\
-$c_\Psi$ & PSS-10 controllability dimension \\
-$o_\Psi$ & PSS-10 overload dimension \\
-$\Psi$ & Total PSS-10 score \\
+\multicolumn{5}{c}{\textbf{Resource Dynamics}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Core Variables}} \\
+$e_{f}$ & Protective factor efficacy (social, family, intervention, PsyCap) & 0.5 each & Plausible & \cite{Hobfoll1989}: baseline efficacy 0.5 on [0,1]. \\
+$\gamma_p$ & Protective improvement rate & 0.5 & Assumed & Assumes allocated resources convert to protective effect at 50\% per day; applied as a linear conversion in the allocation update. \\
+$\lambda_R$ & Resource base regeneration rate & 0.50 & Assumed & Assumes 50\% of the deficit regenerates daily ($R' = \lambda_R(1 - R_t)$); exceeds the empirical 0.2--0.3 range and models fast recovery. \\
+$\kappa_{\mathrm{alloc}}$ & Resource allocation cost & 0.15 & Plausible & \cite{Hobfoll1989}: convex cost of allocation, $c_a = \kappa_{\mathrm{alloc}} \cdot a^{\gamma_c}$. \\
+$\gamma_c$ & Resource cost exponent & 1.5 & Plausible & \cite{Hobfoll1989}: diminishing returns on allocation. \\
+$\rho_{\mathrm{exch}}$ & Social resource exchange rate & 0.5 & Assumed & Assumes 50\% of the resource difference transfers between agents during a support interaction. \\
+$t_{\mathrm{exch}}$ & Resource exchange threshold & 0.2 & Assumed & Assumes exchange occurs only when the resource gap exceeds 0.2, preventing trivial transfers. \\
+$m_{\mathrm{exch}}$ & Maximum exchange ratio & 0.5 & Assumed & Assumes at most 50\% of an agent's resources are exchanged in a single interaction. \\
 \midrule
-$\mathfrak{R}$ & Agent resilience level \\
-$A$ & Agent affect level \\
-$R$ & Agent resource level \\
-$S$ & Agent stress level \\
-$z$ & Weighted appraisal score \\
-$\chi$ & Challenge component \\
-$\zeta$ & Hindrance component \\
-$\eta_{\mathrm{eff}}$ & Effective stress threshold \\
-$p_{\mathrm{coping}}$ & Probability of successful coping \\
-$c$ & Controllability \\
-$o$ & Overload \\
-$s$ & Event magnitude \\
-$\delta$ & Polarity effect strength \\
-$L$ & Appraised stress load \\
-$A_t$ & Current affect at time t \\
-$\mathfrak{R}_t$ & Current resilience at time t \\
-$S_t$ & Current stress at time t \\
-$\mathfrak{R}_0$ & Baseline resilience \\
+\multicolumn{5}{c}{\textbf{Utility}} \\
 \midrule
-\multicolumn{2}{c}{\textbf{Daily Integration Variables}} \\
+$\beta_{\mathrm{softmax}}$ & Softmax temperature & 1.0 & Plausible & \cite{simon1955a}: bounded-rationality default balancing exploration and exploitation. \\
 \midrule
-$\bar{\chi}_d$ & Daily average challenge \\
-$\bar{\zeta}_d$ & Daily average hindrance \\
-$\Delta A_p$ & Peer influence effect on affect \\
-$\Delta A_e$ & Event appraisal effect on affect \\
-$\Delta A_h$ & Homeostatic effect on affect \\
-$\Delta \mathfrak{R}_p$ & Protective factor contribution \\
-$\delta_{\text{stress}}$ & Stress decay rate \\
-$\lambda_s$ & Subevent rate parameter \\
-$\mathcal{P}(\lambda)$ & Poisson distribution \\
-$\Delta \mathfrak{R}_{\chi\zeta}$ & Resilience change from challenge/hindrance \\
-$\Delta \mathfrak{R}_p$ & Resilience boost from protective factors \\
-$\Delta \mathfrak{R}_o$ & Resilience change from overload \\
-$\Delta \mathfrak{R}_s$ & Resilience change from social support \\
-$\Delta A_{t+1}$ & Affect change at time t+1 \\
-$\mathfrak{R}_{t+1}$ & Resilience at time t+1 \\
-$S_{t+1}$ & Stress level at time t+1 \\
-$\mathrm{clamp}(x, a, b)$ & Clamping function to bind the value of $x$ into the range of $[a, b]$ \\
-$n_s$ & Number of subevents per day \\
-$n_e$ & Number of stress events in day \\
+\multicolumn{5}{c}{\textbf{Coping Mechanism}} \\
+\midrule
+$p_{\mathrm{cope}}$ & Base coping probability & 0.5 & Validated & \cite{skinner2003}: community midpoint. \\
+$\theta_{\mathrm{cope},\chi}$ & Challenge bonus for coping & 0.2 & Plausible & \cite{cavanaugh2000}: challenge appraisal raises coping probability. \\
+$\theta_{\mathrm{cope},\zeta}$ & Hindrance penalty for coping & 0.3 & Plausible & \cite{bakker2017}: negativity bias (penalty $>$ bonus). \\
+$\delta_{\mathrm{cope,soc}}$ & Social influence on coping & 0.1 & Plausible & \cite{centola2018}: contagion range. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Daily Dynamics}} \\
+\midrule
+$\delta_{\mathrm{stress}}$ & Stress decay rate & 0.05 & Plausible & \cite{lazarus1984}: half-life of about 14 days; applied as $S_{t+1} = \max(0.03, S_t(1 - \delta_{\mathrm{stress}}))$. \\
+$\eta_{\mathrm{stress}}$ & Stress threshold for stressed state & 0.7 & Assumed & Assumes a stress value above 0.7 marks a stressed state; combined with the affect threshold for detection. \\
+$\eta_{\mathrm{affect}}$ & Affect threshold for stressed state & 0.3 & Assumed & Assumes affect below the 0.3 band contributes to stressed-state detection alongside stress. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Network Adaptation}} \\
+\midrule
+$\eta_{\mathrm{adapt}}$ & Network adaptation threshold & 3 & Assumed & Assumes rewiring is triggered after 3 stress breaches; counts adaptation events. \\
+$\delta_{\mathrm{homophily}}$ & Homophily strength & 0.7 & Plausible & \cite{centola2018}: homophily is well documented; 0.7 is an assumed magnitude. \\
+$p_{\mathrm{rewire}}$ & Network rewiring probability & 0.01 & Plausible & \cite{watts1998}: low rewiring preserves small-world structure. \\
+\midrule
+\multicolumn{5}{c}{\textbf{PSS-10}} \\
+\midrule
+$\mu_i$ & Per-item means & [1.43, 1.38, 1.51, 1.31, 1.50, 1.40, 1.43, 1.60, 1.14, 1.31] & Validated & \cite{liu2020}: raw 1.59--2.22 scaled by 0.72 to US norms; total $\approx$ 14/40. \\
+$\sigma_i$ & Per-item SDs & [0.89, 0.89, 0.93, 0.92, 0.80, 0.78, 0.78, 0.88, 0.91, 0.93] & Validated & \cite{liu2020}: 0.78--0.93. \\
+$\lambda_{o,\Psi,i}$ & Overload factor loadings & [1, 1, 1, 0, 0, 1, 0, 0, 1, 1] (empirical); 0.2--0.9 (code) & Validated & \cite{liu2020}: items 1, 2, 3, 6, 9, 10; code uses graded loadings. \\
+$\lambda_{c,\Psi,i}$ & Controllability factor loadings & [0, 0, 0, 1, 1, 0, 1, 1, 0, 0] (empirical); 0.1--0.8 (code) & Validated & \cite{liu2020}: items 4, 5, 7, 8; code uses graded loadings. \\
+$\rho_{\Psi}$ & Bifactor correlation & $-0.3$ & Validated & \cite{reis2017}: r = $-0.3$. \\
+$\sigma_{o,\Psi}$ & Overload dimension SD & 1.0 (used as /4) & Assumed & Assumes dimension SD of 1.0, regularized to 0.25 in the multivariate normal generating PSS dimensions. \\
+$\sigma_{c,\Psi}$ & Controllability dimension SD & 1.0 (used as /4) & Assumed & Assumes dimension SD of 1.0, regularized to 0.25 in the multivariate normal. \\
+$\eta_{\Psi}$ & PSS-10 clinical cut-off & 27 & Validated & \cite{cohen1983}: 27--28 clinically elevated. \\
+$c_{\Psi}$ & PSS-10 score scale & 6.0 & Assumed & Assumes a scaling factor of 6.0 mapping latent stress to the 0--40 PSS range. \\
+$\epsilon_{\Psi}$ & PSS-10 measurement noise SD & 2.0 & Assumed & Assumes measurement error SD of 2.0 scaled by item SD; applied in item response generation. \\
+$\gamma_{\Psi}$ & PSS-10 skew parameter & 3.0 & Assumed & Assumes a skew parameter of 3.0 controlling the skew of the score distribution. \\
+$\sigma_{\mathrm{bias}}$ & PSS-10 between-person SD & 1.0 & Assumed & Assumes between-person variance SD of 1.0 in the resilience coupling plus noise term; added as static bias. \\
+$\beta_{\mathrm{res}}$ & PSS-10 resilience coupling & 3.5 & Assumed & Assumes a coupling strength of 3.5; applied as daily penalty $-0.5\beta_{\mathrm{res}}(\mathfrak{R} - 0.5)$ and init bias. \\
+$\phi_{\mathrm{damp}}$ & PSS-10 stress dampening & 1.0 & Assumed & Assumes a dampening factor of 1.0 (no dampening); values below 1 weaken the resource--stress cascade. \\
+$\xi_{\mathrm{sens}}$ & PSS-10 sensitivity & 0.5 & Assumed & Assumes a response rate of 0.5 for how quickly perceived stress reacts to events. \\
+$\xi_{\mathrm{mom}}$ & PSS-10 momentum weight & 0.3 & Assumed & Assumes 0.3 autocorrelation smoothing of stress perception, reflecting rumination. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Stress Dynamics}} \\
+\midrule
+$\nu_c$ & Controllability update rate & 0.05 & Assumed & Assumes a per-event learning rate of 0.05 updating the controllability dimension. \\
+$\nu_o$ & Overload update rate & 0.05 & Assumed & Assumes a per-event learning rate of 0.05 updating the overload dimension. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Assumption Constants: Coping}} \\
+\midrule
+$A_{\mathrm{cope}}$ & Coping outcome constants (15) & 0.10; 0.20; 0.05; 0.2; 0.4; 0.15; 0.2; 0.3; $-0.1$; 0.1; $-0.4$; 0.2; 0.3; 0.2; $-0.4$ & Assumed & Assumes model-internal tuning of resource rewards/penalties, protective-factor allocation fraction, affect/resilience change scales, and challenge/hindrance coping outcomes; applied as fixed increments to state variables after each coping result. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Assumption Constants: Stress}} \\
+\midrule
+$A_{\mathrm{stress}}$ & Stress constants (21) & 0.10; 0.05; 0.05; 0.10; 0.5; 0.5; 0.05; 0.05; 0.7; 1.3; 1.5; 0.8; 0.2; 0.1; 0.05; 0.01; 0.9; 10.0; 8.0; 12.0; 3.0 & Assumed & Assumes tuning of appraisal weights, baselines, homeostasis rates, event intensity weights, failed-coping multiplier, momentum dynamics, and PSS-10 estimation; applied in the stress update equations. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Assumption Constants: Resource}} \\
+\midrule
+$A_{\mathrm{res}}$ & Resource constants (17) & 0.15; 0.05; 0.5; 0.3; 1.3; 0.3; 0.1; 0.2; 0.1; 0.1; 0.1; 0.1; 0.1; 0.5; 0.3; 0.02; 0.02 & Assumed & Assumes tuning of resilience efficiency, thresholds, cost floors, penalties, efficiency gains, social boosts, allocation penalties, and regeneration multipliers; applied in the resource allocation and regeneration equations. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Assumption Constants: Social}} \\
+\midrule
+$A_{\mathrm{soc}}$ & Social constants (3) & 0.05; 0.3; 0.1 & Assumed & Assumes tuning of support exchange threshold, social support probability, and exchange boost; applied in interaction mechanics. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Assumption Constants: Buffering}} \\
+\midrule
+$A_{\mathrm{buf}}$ & Buffering constants (24) & 0.3; 0.7; 1.0; 1.0; 0.5; 0.1; 0.05; 0.15; 0.2; 0.2; 0.35; 0.30; 0.20; 0.85; 0.05; 0.10; $-0.008$; 0.15; 0.15; 0.50; $-0.2$; 0.5; 0.5; $-0.0$ & Assumed & Assumes tuning of resilience thresholds, volatility priors, initial protective-factor values, buffering coefficients, homeostasis rates, smoothing alpha, and exchange reduction; applied in the buffering and resilience-moderation equations. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Coupling Constants}} \\
+\midrule
+$C_{\mathrm{coup}}$ & State-variable couplings (15) & 0.10; 0.20; 0.08; 1.0; 1.0; 0.03; 1.0; 0.15; 0.60; 2.0; 0.15; 3.0; 0.08; 0.08; 0.25 & Assumed & Assumes linear coupling strengths between stress, resilience, affect, resources, and PSS-10 score, plus stress erosion and network-similarity weights; applied as additive coupling terms between state variables each day. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Core Variables}} \\
+\midrule
+$\mathfrak{R}_0$ & Baseline resilience & [0,1] & variable & $\mathfrak{R}_0 = \sigma_6\left(\frac{X - \mu_{\mathfrak{R},0}}{\sigma_{\mathfrak{R},0}}\right)$ with $X \sim \mathcal{N}(\mu_{\mathfrak{R},0},\sigma_{\mathfrak{R},0}^2)$ and sigmoid steepness fixed at 6. \\
+$A_0$ & Baseline affect & [-1,1] & variable & $A_0 = \tanh\left(\frac{X - \mu_{A,0}}{\sigma_{A,0}}\right)$ with $X \sim \mathcal{N}(\mu_{A,0},\sigma_{A,0}^2)$. \\
+$R_0$ & Baseline resources & [0,1] & variable & $R_0 = \sigma_6\left(\frac{X - \mu_{R,0}}{\sigma_{R,0}}\right)$, sigmoid-transformed normal. \\
+$\mathfrak{R}_t$ & Current resilience & [0,1] & variable & Update below in Daily Integration Variables; clamped to [0,1]. \\
+$A_t$ & Current affect & [-1,1] & variable & Update below in Daily Integration Variables; clamped to [-1,1]. \\
+$S_t$ & Current stress & [0,1] & variable & $S_{t+1} = \max(0.03,\; S_t (1 - \delta_{\mathrm{stress}}))$ and smoothed daily from dimensions. \\
+$R_t$ & Current resources & [0,1] & variable & $R_{t+1} = R_t + \lambda_R (1 - R_t) - \text{costs}$; regeneration is linear in code. \\
+$z$ & Weighted appraisal score & $\mathbb{R}$ & variable & $z = \omega_c \cdot c - \omega_o \cdot o + b$. \\
+$\chi$ & Challenge component & [0,1] & variable & $\chi = \sigma_\gamma(z) = 1/(1 + e^{-\gamma z})$. \\
+$\zeta$ & Hindrance component & [0,1] & variable & $\zeta = 1 - \chi$. \\
+$L$ & Appraised stress load & [0,1] & variable & $L = \mathrm{clamp}\big(0.5 + \delta(\zeta - \chi),\, 0,\, 1\big)$. \\
+$\eta_{\mathrm{eff}}$ & Effective stress threshold & [0,1] & variable & $\eta_{\mathrm{eff}} = \mathrm{clamp}(\eta_0 + \eta_\chi \chi - \eta_\zeta \zeta,\, 0,\, 1)$. \\
+$p_{\mathrm{coping}}$ & Coping success probability & [0,1] & variable & $p_{\mathrm{coping}} = \mathrm{clamp}\big(p_b + \theta_{\mathrm{cope},\chi}\chi - \theta_{\mathrm{cope},\zeta}\zeta + \delta_{\mathrm{cope,soc}}\bar{A}_{\mathrm{nb}} + \gamma_{rc}\mathfrak{R} + \gamma_{ss}e_{\mathrm{soc}} + \gamma_{sb}\beta_0,\, 0,\, 1\big)$. \\
+$c_\Psi$ & PSS-10 controllability dimension & [0,1] & variable & $(c_\Psi, o_\Psi) \sim \mathcal{N}\big((\mu_c,\mu_o), \Sigma\big)$, $\Sigma_{11} = (\sigma_c/4)^2$, $\Sigma_{22} = (\sigma_o/4)^2$, $\Sigma_{12} = \rho_\Psi (\sigma_c\sigma_o)/16$; clamped. \\
+$o_\Psi$ & PSS-10 overload dimension & [0,1] & variable & Same bivariate draw; $o_\Psi$ updated per event and via PSS-10 feedback. \\
+$c$ & Event controllability attribute & [0,1] & variable & $c \sim \mathrm{clamp}\big(\mathcal{N}(\mu_c, \sigma_c^2), 0, 1\big)$ per stress event. \\
+$o$ & Event overload attribute & [0,1] & variable & $o \sim \mathrm{clamp}\big(\mathcal{N}(\mu_o, \sigma_o^2), 0, 1\big)$ per stress event. \\
+$s$ & Event intensity (magnitude) & $[0,\infty)$ & variable & $s = \lambda_{\chi}^{\mathrm{int}} \cdot \chi + \lambda_{\zeta}^{\mathrm{int}} \cdot \zeta$ (challenge/hindrance weights 0.7/1.3). \\
+$\varepsilon$ & PSS-10 item residual & $\mathbb{R}$ & variable & $\varepsilon \sim \mathcal{N}(0, (\sigma_i \cdot \epsilon_{\Psi})^2)$. \\
+$\Psi$ & PSS-10 total score & [0,40] & variable & $\Psi = \sum_{i=1}^{10} y_i$, with $y_i \sim \mathrm{clamp}\big(\mathcal{N}\big(\mu_i + \lambda_{c,i}c'_\Psi + \lambda_{o,i}o'_\Psi,\, (\sigma_i \epsilon_{\Psi})^2\big), 0, 4\big)$ rounded, items 4,5,7,8 reverse-scored; smoothed across days. \\
+\midrule
+\multicolumn{5}{c}{\textbf{Daily Integration Variables}} \\
+\midrule
+$n_s$ & Number of subevents per day & $\mathbb{N}$ & variable & $n_s \sim \max(\mathcal{P}(\lambda_s), 1)$. \\
+$n_e$ & Number of stress events in day & $\mathbb{N}$ & variable & Count of stress-processing subevents in the day. \\
+$\bar{\chi}_d$ & Daily average challenge & [0,1] & variable & $\bar{\chi}_d = \frac{1}{n_e}\sum_{i=1}^{n_e}\chi_i$. \\
+$\bar{\zeta}_d$ & Daily average hindrance & [0,1] & variable & $\bar{\zeta}_d = \frac{1}{n_e}\sum_{i=1}^{n_e}\zeta_i$. \\
+$\Delta A_p$ & Peer influence on affect & $\mathbb{R}$ & variable & $\Delta A_p = \frac{1}{k}\sum_{j=1}^{k} \alpha_p (A_j - A_t)$, $k = \min(n_{\mathrm{nb}}, k_{\mathrm{influence}})$. \\
+$\Delta A_e$ & Event appraisal effect on affect & $\mathbb{R}$ & variable & $\Delta A_e = \alpha_e \bar{\chi}_d (1 - A_t) - \alpha_e \bar{\zeta}_d \max(0.1, A_t + 1)$. \\
+$\Delta A_h$ & Homeostatic effect on affect & $\mathbb{R}$ & variable & $\Delta A_h = \lambda_{\mathrm{affect}}^s \cdot (A_0 - A_t)$ with stress- and resource-scaled rate. \\
+$\Delta A_{\mathrm{ero}}$ & Stress erosion effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{ero}} = -\lambda_{\mathrm{ero}} \cdot S_t \cdot m_{\mathrm{ero}}$ (STRESS\_EROSION\_RATE $\times$ stress $\times$ assumption multiplier). \\
+$\Delta A_{\mathrm{res}}$ & Resource effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{res}} = \beta_{ra}(R_t - 0.5)\big(1 + (\mathfrak{R}_t - 0.5)\cdot 0.5\big)$; $\beta_{ra} = $ ASSUMPTION\_RESOURCE\_AFFECT\_COUPLING. \\
+$A_{t+1}$ & Affect at time t+1 & [-1,1] & variable & $A_{t+1} = \mathrm{clamp}\big(A_t + \Delta A_p + \Delta A_e + \Delta A_h + \Delta A_{\mathrm{ero}} + \Delta A_{\mathrm{res}},\, -1, 1\big)$. \\
+$\Delta \mathfrak{R}_{\chi\zeta}$ & Resilience change from coping & $\mathbb{R}$ & variable & Success: $(0.3\chi + 0.1\zeta)(1 - \mathfrak{R}_t)$; failure: $(-0.1\chi - 0.4\zeta)(1 - \mathfrak{R}_t)$; ceiling-damped. \\
+$\Delta \mathfrak{R}_p$ & Protective factor boost & $\mathbb{R}$ & variable & $\Delta \mathfrak{R}_p = \sum_{f \in F} e_f (\mathfrak{R}_0 - \mathfrak{R}_t) \theta_{\mathrm{boost}}$. \\
+$\Delta \mathfrak{R}_o$ & Overload effect & $\mathbb{R}$ & variable & $\Delta \mathfrak{R}_o = -0.2 \cdot \min(h_c / \eta_{\mathrm{res,overload}},\, 2)$ if $h_c \geq \eta_{\mathrm{res,overload}}$, else 0. \\
+$\Delta \mathfrak{R}_s$ & Social support effect & $\mathbb{R}$ & variable & $\Delta \mathfrak{R}_s = \alpha_s$ if support exchange occurred, else 0. \\
+$\Delta \mathfrak{R}_{\mathrm{int}}$ & Interaction-frequency boost & $\mathbb{R}$ & variable & $\Delta \mathfrak{R}_{\mathrm{int}} = n_{\mathrm{int}} \cdot 0.005$ per daily interaction. \\
+$\mathfrak{R}_{t+1}$ & Resilience at time t+1 & [0,1] & variable & $\mathfrak{R}_{t+1} = \mathrm{clamp}\big(\mathfrak{R}_t + \Delta\mathfrak{R}_{\chi\zeta} + \Delta\mathfrak{R}_p + \Delta\mathfrak{R}_o + \Delta\mathfrak{R}_s + \Delta\mathfrak{R}_{\mathrm{int}} + \lambda_{\mathrm{res}}^s(\mathfrak{R}_0 - \mathfrak{R}_t),\, 0, 1\big)$. \\
+$S^{\mathrm{new}}$ & Dimension-derived stress & [0,1] & variable & $S^{\mathrm{new}} = \mathrm{clamp}\big(\tfrac{o_{\Psi}^{m} + (1 - c_{\Psi}^{m})}{2} \cdot \phi_{\mathrm{damp}},\, 0, 1\big)$ with couplings on dimensions. \\
+$S_{t+1}$ & Stress at time t+1 & [0,1] & variable & $S_{t+1} = \mathrm{clamp}(0.5 S^{\mathrm{new}} + 0.5 S_t,\, 0, 1)$ then decay $\max(0.03, S_{t+1}(1 - \delta_{\mathrm{stress}}))$. \\
+$\mathrm{clamp}(x,a,b)$ & Clamping function & $[a,b]$ & variable & $\min(b, \max(a, x))$, applied to all state variables after every update. \\
 \bottomrule
 
 \end{longtable}
 
 \subsection{Simulation Mechanism}\label{simulation-mechanism}
 
-\subsubsection{Agent Initialization and State
-Management}\label{agent-initialization-and-state-management}
+\subsubsection{Agent Initialization}\label{agent-initialization}
 
 Each agent was initialized with baseline values representing natural
 equilibrium points using mathematical transformations ensuring proper
 statistical distributions. Resilience baselines utilized sigmoid
 transformation and affect baselines employed hyperbolic tangent
-transformation, both using seeded random number generation for
-reproducibility:
+transformation (Equation @ref(eq-baseline-transformations)):
 
 \begin{align*}
 \mathfrak{R}_{\text{0}} &= \sigma\left(\frac{X - \mu_{\mathfrak{R},\text{0}}}{\sigma_{\mathfrak{R},\text{0}}}\right) \\
-R_{\text{0}} &= \sigma\left(\frac{X - \mu_{R,\text{0}}}{\sigma_{R,\text{0}}}\right) \\
 A_{\text{0}} &= \tanh\left(\frac{X - \mu_{A,\text{0}}}{\sigma_{A,\text{0}}}\right)
 \end{align*} \label{eq-baseline-transformations}
 
-where \(X \sim \mathcal{N}(\mu, \sigma^2)\) is a normal random variable,
-\(\sigma(x) = \frac{1}{1+e^{-x}}\) is the sigmoid function, and
-\(\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}\) is the hyperbolic
-tangent function.
-
 Core state variables included resilience (\(\mathfrak{R} \in [0,1]\)),
 affect (\(A \in [-1,1]\)), resources (\(R \in [0,1]\)), and current
-stress (\(S \in [0,1]\)). The model integrated comprehensive Perceived
-Stress Scale-10 (PSS-10) functionality using a bifactor model with
-dimension score generation and validated theoretical correlations:
+stress (\(S \in [0,1]\)). The model integrated Perceived Stress Scale-10
+(PSS-10) functionality using a bifactor model with dimension score
+generation and validated theoretical correlations (Equation
+@ref(eq-pss10-dimension-score)).
 
-\begin{equation}\phantomsection\label{eq-pss10-dimension-score}{
-\begin{pmatrix}
-c_\Psi \\ o_\Psi
-\end{pmatrix}
-\sim
-\mathcal{N}\left(
-\begin{pmatrix}
-\mu_c \\ \mu_o
-\end{pmatrix},
-\begin{pmatrix}
-\sigma_c^2 & \rho_\Psi \sigma_c \sigma_o \\
-\rho_\Psi \sigma_c \sigma_o & \sigma_o^2
-\end{pmatrix}
-\right)
-}\end{equation}
+\subsubsection{Phase Implementations}\label{phase-implementations}
 
-Where \(c_\Psi, o_\Psi \in [0,1]\) are PSS-10 dimension scores,
-\(\rho_\Psi \in [-1,1]\) is the bifactor correlation, and
-\(\mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})\) denotes the
-multivariate normal distribution.
+Each phase implements a pure function with the signature
+\texttt{(state,\ config,\ rng)\ →\ PhaseOutput}, where \texttt{state} is
+the agent state dictionary, \texttt{config} contains phase-specific
+parameters, and \texttt{rng} is a seeded random number generator. Phase
+outputs consist of \texttt{state\_delta} (updates to apply) and
+\texttt{observation} (metrics for logging). Detailed algorithms and
+parameter tables for each phase are provided in Supplementary Material
+S4.
 
-\subsubsection{Stress Event Processing and
-Coping}\label{stress-event-processing-and-coping}
+\textbf{Stress Perception} (event-driven) transforms raw stress events
+into appraised challenge/hindrance scores using a weighted appraisal
+function and determines whether the event exceeds the agent's adaptive
+threshold (Equation @ref(eq-stress-processing)).
 
-The stress processing pipeline transformed life events into
-psychological responses through challenge-hindrance appraisal. Events
-were generated with controllability (\(c\)) and overload (\(o\))
-attributes, then appraised using the following mathematical framework:
-
-\begin{align}
-z &= \omega_c \cdot c - \omega_o \cdot o + b \\
-\chi &= \sigma(\gamma \cdot z) \\
-\zeta &= 1 - \chi \\
-\eta_{\mathrm{eff}} &= \eta_{\text{0}} + \eta_{\chi} \cdot \chi - \eta_{\zeta} \cdot \zeta \\
-p_{\mathrm{coping}} &= p_b + \theta_{\text{cope,}\chi} \cdot \chi - \theta_{\text{cope,}\zeta} \cdot \zeta + \delta_{\text{cope,soc}} \cdot \frac{1}{k} \sum_{j=1}^k A_j
-\label{eq-stress-processing}
-\end{align}
-
-where \(c, o \in [0,1]\) are event attributes,
-\(\omega_c, \omega_o \in \mathbb{R}\) are appraisal weights,
-\(b \in \mathbb{R}\) is bias, \(\gamma > 0\) controls sigmoid steepness,
-\(\eta_{\text{0}}, \eta_{\chi}, \eta_{\zeta} \in [0,1]\) are threshold
-parameters, \(p_b \in [0,1]\) is base coping probability,
-\(\theta_{\text{cope,}\chi}, \theta_{\text{cope,}\zeta} > 0\) are coping
-modifiers, \(\delta_{\text{cope,soc}} \in [0,1]\) is social influence,
-\(k\) is number of neighbors, and \(A_j \in [-1,1]\) are neighbor affect
-values.
-
-Dynamic threshold evaluation adjusted stress response based on event
-characteristics, and coping success determination integrated
-challenge/hindrance effects with social influence through probability
-calculation.
-
-\subsubsection{Social Interaction
-Mechanism}\label{social-interaction-mechanism}
-
-Social interactions occurred between neighboring agents in the network
-topology, enabling emotional contagion and mutual support. The system
-processed interactions through utility functions computing mutual
-emotional and resilience effects, with social influence on affect
-determined by neighbor states and relationship dynamics.
-
-\paragraph{Mutual Influence Mechanism}\label{mutual-influence-mechanism}
-
-Social interactions created bidirectional changes where both individuals
-affect each other's emotional state. The model recognized that negative
-emotional states tended to have stronger influence than positive ones:
-
-\begin{equation}\phantomsection\label{eq-mutual-influence}{
-\Delta A_i = \alpha_p \cdot (A_j - A_i) \cdot \begin{cases}
-1.5 & \text{if } A_j - A_i < 0 \\
-1.0 & \text{if } A_j - A_i \geq 0
-\end{cases}
-}\end{equation}
-
-Where \(\Delta A_i\) is affect change for agent \(i\),
-\(\alpha_p \in [0,1]\) is peer influence rate, and
-\(A_i, A_j \in [-1,1]\) are affect values.
-
-\paragraph{Network Adaptation
-Mechanism}\label{network-adaptation-mechanism}
-
-When individuals experienced repeated stress, they adapted their social
-connections to better suit their needs. Network adaptation triggers
-based on stress breach counts:
-
-\begin{equation}\phantomsection\label{eq-adaptation-trigger}{
-\mathrm{trigger\ adaptation} = \begin{cases}
-1 & \text{if } c_{\text{breach}} \geq \eta_{\text{adapt}} \\
-0 & \text{otherwise}
-\end{cases}
-}\end{equation}
-
-Where \(c_{\text{breach}} \in \mathbb{N}\) is stress breach count and
-\(\eta_{\text{adapt}} \in \mathbb{N}\) is adaptation threshold.
-\(c_{\text{breach}}\) is a mechanism to record chronic stress pattern,
-reflecting the count of perceived stress exceeding
-\(\eta_{\mathrm{eff}}\).
-
-Connection preferences were determined by similarity and support
-effectiveness:
-
-\begin{equation}\phantomsection\label{eq-connection-similarity}{
-s_{ij} = 1 - \frac{|A_i - A_j| + |\mathfrak{R}_i - \mathfrak{R}_j|}{2}
-}\end{equation}
-
-Where \(s_{ij} \in [0,1]\) is similarity between agents \(i,j\),
-\(A_i, A_j \in [-1,1]\) are affect values, and
-\(\mathfrak{R}_i, \mathfrak{R}_j \in [0,1]\) are resilience values.
-
-Connection retention probability balanced homophily with support
-effectiveness:
-
-\begin{equation}\phantomsection\label{eq-retention-probability}{
-p_{\text{keep}} = s_{ij} \cdot \delta_{\text{homophily}} + e_s \cdot (1 - \delta_{\text{homophily}})
-}\end{equation}
-
-where \(p_{\text{keep}} \in [0,1]\) is probability of keeping
-connection, \(\delta_{\text{homophily}} \in [0,1]\) is homophily
-strength, and \(e_s \in [0,1]\) is support effectiveness.
-
-\paragraph{Social Support Dynamics}\label{social-support-dynamics}
-
-Support effectiveness depended on the neighbor's resilience and affect:
-
-\begin{equation}\phantomsection\label{eq-support-effectiveness}{
-e_s = \frac{\mathfrak{R}_j + (1 + A_j)/2}{2} + 0.2
-}\end{equation}
-
-where \(e_s \in [0,1]\) is support effectiveness,
-\(\mathfrak{R}_j \in [0,1]\) is neighbor's resilience, and
-\(A_j \in [-1,1]\) is neighbor's affect.
-
-Social support exchange was detected when meaningful improvements
-occurred:
-
-\begin{equation}\phantomsection\label{eq-support-exchange}{
-\mathrm{support\ exchange} = \begin{cases}
-1 & \text{if } \max\{|\Delta A_i|, |\Delta \mathfrak{R}_i|, |\Delta A_j|, |\Delta \mathfrak{R}_j|, |\Delta \text{resources}|\} > \eta_{\text{exchange}} \\
-0 & \text{otherwise}
-\end{cases}
-}\end{equation}
-
-where \(\Delta A_i, \Delta A_j\) are affect changes,
-\(\Delta \mathfrak{R}_i, \Delta \mathfrak{R}_j\) are resilience changes,
-\(\Delta \text{resources}\) is resource transfer, and
-\(\eta_{\text{exchange}} \in [0,1]\) is exchange threshold.
-
-\subsubsection{Daily Simulation Step}\label{daily-simulation-step}
-
-Each simulation day followed a structured sequence ensuring proper
-mechanism integration. The process initiated with daily initialization,
-capturing initial affect and resilience values while obtaining neighbor
-emotional states. Subevent generation determined daily activity through
-Poisson sampling, creating random sequences of interactions and stress
-events:
-
-\begin{align}
-n_s &\sim \max(\mathcal{P}(\lambda_s), 1) \\
-\bar{\chi}_d &= \frac{1}{n_e}\sum_{i=1}^{n_e} \chi_i \\
-\bar{\zeta}_d &= \frac{1}{n_e}\sum_{i=1}^{n_e} \zeta_i
-\label{eq-daily-integration}
-\end{align}
-
-where \(n_s \in \mathbb{N}\) is number of subevents;
-\(\mathcal{P}(\lambda_s)\) is Poisson distribution with rate
-\(\lambda_s\); \(\bar{\chi}_d, \bar{\zeta}_d \in [0,1]\) are daily
-averages; and \(n_e\) is number of stress events.
-
-Daily integration normalized challenge/hindrance values by event count,
-providing inputs for dynamics application. Dynamics updates applied
-integrated affect and resilience dynamics:
-
-\begin{align}
-A_{t+1} &= A_t + \Delta A_p + \Delta A_e + \Delta A_h \\
-\mathfrak{R}_{t+1} &= \mathfrak{R}_t + \Delta \mathfrak{R}_{\chi\zeta} + \Delta \mathfrak{R}_p + \Delta \mathfrak{R}_o + \Delta \mathfrak{R}_s + \lambda_{\text{resilience}} \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t) \\
-S_{t+1} &= S_t \cdot (1 - \delta_{\text{stress}})
-\label{eq-dynamics-updates}
-\end{align}
-
-where \(A_t, \mathfrak{R}_t, S_t \in [0,1]\) are current values;
-\(\Delta A_p, \Delta A_e, \Delta A_h\) are affect changes;
-\(\Delta \mathfrak{R}_{\chi\zeta}, \Delta \mathfrak{R}_p, \Delta \mathfrak{R}_o, \Delta \mathfrak{R}_s\)
-are resilience changes; \(\lambda_{\text{resilience}} \in [0,1]\) is
-homeostatic rate; \(\mathfrak{R}_{\text{0}} \in [0,1]\) is baseline
-resilience; and \(\delta_{\text{stress}} \in [0,1]\) is stress decay
-rate.
-
-Homeostatic adjustment applied natural pull toward baseline equilibrium
-for affect and resilience, while stress decay followed exponential
-reduction. Daily reset procedures cleared tracking variables and stored
-summaries for analysis.
-
-\subsubsection{Affect and Resilience
-Dynamics}\label{affect-and-resilience-dynamics}
-
-Integrated affect dynamics combined peer influence, event appraisal
-effects, and homeostasis through the following mathematical framework:
-
-\begin{align}
-\Delta A_p &= \frac{1}{k} \sum_{j=1}^{k} \alpha_p \cdot (A_j - A_t) \cdot \mathbb{1}_{j \leq k_{\text{influence}}} \\
-\Delta A_e &= \alpha_e \cdot \bar{\chi}_d \cdot (1 - A_t) - \alpha_e \cdot \bar{\zeta}_d \cdot \max(0.1, A_t + 1) \\
-\Delta A_h &= \lambda_{\text{affect}} \cdot (A_{\text{0}} - A_t)
-\label{eq-affect-dynamics}
-\end{align}
-
-where \(\Delta A_p, \Delta A_e, \Delta A_h\) are affect change
-components; \(k\) is number of neighbors; \(k_{\text{influence}}\) is
-number of influencing neighbors; \(\alpha_p, \alpha_e \in [0,1]\) are
-influence rates; \(\bar{\chi}_d, \bar{\zeta}_d \in [0,1]\) are daily
-averages; \(A_t, A_j \in [-1,1]\) are affect values;
-\(\lambda_{\text{affect}} \in [0,1]\) is homeostatic rate;
-\(A_{\text{0}} \in [-1,1]\) is baseline affect; and \(\mathbb{1}\) is
-indicator function.
-
-Resilience dynamics integrated challenge-hindrance effects, protective
-factor boosts, overload effects, and social support contributions:
-
-\begin{equation}\phantomsection\label{eq-resilience-boosts}{
-\Delta \mathfrak{R}_p = \sum_{f \in F} e_f \cdot (\mathfrak{R}_{\text{0}} - \mathfrak{R}_t) \cdot \theta_{\text{boost}}
-}\end{equation}
-
-where \(\Delta \mathfrak{R}_p\) is resilience boost from protective
-factors;
-\(F = \{\mathrm{soc}, \mathrm{fam}, \mathrm{int}, \mathrm{cap}\}\) is
-set of protective factors; \(e_f \in [0,1]\) is efficacy of factor
-\(f\); \(\mathfrak{R}_{\text{0}}, \mathfrak{R}_t \in [0,1]\) are
-baseline and current resilience; and \(\theta_{\text{boost}} > 0\) is
-boost rate parameter.
-
-Challenge-hindrance effects varied based on coping outcomes: successful
-coping yields positive resilience changes while failed coping produces
+\textbf{Resilience Activation} (event-driven) determines coping outcome
+through probability calculation incorporating social influence,
+resilience level, and protective factor efficacy. Successful coping
+yields positive affect and resilience changes; failed coping produces
 negative impacts.
 
-\subsubsection{Resource Management
-System}\label{resource-management-system}
+\textbf{Social Interaction} (event-driven) processes dyadic exchanges
+between neighboring agents. Affect convergence incorporates negativity
+bias (negative influence 1.5x stronger), and resource exchange follows a
+state machine based on mutual stress states.
 
-Resources represented finite psychological and physical capacity for
-coping and protective factor maintenance. Resource regeneration followed
-affect-modulated recovery, while consumption occurred during coping
-attempts. Protective factor allocation utilized softmax decision
-framework for bounded rational resource distribution across social
-support, family support, formal intervention, and psychological capital:
+\textbf{Resource Allocation} (daily) regenerates resources linearly in
+deficit and distributes to protective factors via softmax allocation
+bounded by resource availability.
 
-\begin{align}
-R' &= \lambda_R \cdot (R_{\max} - R) \cdot (1 + \beta_a \cdot \max(0, A)) \\
-w_f &= \frac{\exp(e_f / \beta_{\text{softmax}})}{\sum_{k \in F} \exp(e_k / \beta_{\text{softmax}})}
-\label{eq-resource-dynamics}
-\end{align}
+\textbf{Stress Buffering} (daily) applies protective-factor resilience
+boost and resource-mediated stress buffering using a mediation
+framework.
 
-where \(R' > 0\) is resource regeneration; \(\lambda_R \in [0,1]\) is
-regeneration rate; \(R_{\max} = 1\) is maximum resources;
-\(R \in [0,1]\) is current resources; \(\beta_a > 0\) is affect
-influence parameter; \(A \in [-1,1]\) is current affect;
-\(w_f \in [0,1]\) is allocation weight for factor \(f\);
-\(e_f \in [0,1]\) is efficacy of factor \(f\);
-\(\beta_{\text{softmax}} > 0\) is softmax temperature; and \(F\) is set
-of protective factors.
+\textbf{Affect Dynamics} (daily) applies peer influence, event appraisal
+effects, protective factor boosts, and homeostatic adjustment toward
+baseline affect and resilience.
 
-\subsubsection{Model-Level Simulation
-Orchestration}\label{model-level-simulation-orchestration}
+\textbf{PSS-10 Consolidation} (daily) averages daily PSS-10 scores,
+applies exponential smoothing across days, and updates stressed
+classification based on clinical thresholds.
 
-The simulation employed Mesa's agent-based modeling framework with
-dual-class architecture separating agent behaviors from model
-orchestration. Network structure utilized Watts-Strogatz small-world
-topology providing realistic social connection patterns with local
-clustering and short path lengths. The network was initialized with a
-mean degree of \(WS_k\) and rewiring probability of \(WS_p\).
+\textbf{Daily Reset} (daily) clears tracking counters, applies affect
+reset toward baseline, and decays stress and consecutive hindrances.
 
-Model-level coordination managed population statistics, network
-adaptation tracking, and cumulative social support monitoring. The
-orchestration ensured proper temporal sequencing and data collection
-while maintaining computational efficiency for large-scale simulations.
+\subsubsection{Social Network Structure}\label{social-network-structure}
 
-\subsubsection{Data Collection and Analysis
-Framework}\label{data-collection-and-analysis-framework}
+Network structure utilized Watts-Strogatz small-world topology, which
+generates graphs with high clustering coefficients and short
+characteristic path lengths \citep{watts1998}. Network adaptation
+rewires edges when agents experience chronic stress, with connection
+preferences determined by weighted similarity across stress, affect, and
+resilience homophily dimensions.
+
+\subsubsection{Data Collection}\label{data-collection}
 
 The simulation implemented Mesa's \texttt{DataCollector} for
-standardized, efficient data collection replacing manual tracking
-systems. Model-level reporters captured population metrics including
-average PSS-10 scores (\(\bar{\Psi}\)), resilience levels
-(\(\bar{\mathfrak{R}}\)), affect states (\(\bar{A}\)), stress prevalence
-(\(P_{\text{stressed}}\)), and social network characteristics.
-Agent-level reporters tracked individual trajectories for PSS-10 scores,
-resilience, affect, resources, current stress, stress controllability,
-stress overload, and consecutive hindrances. Recovery potential,
-vulnerability index, challenge-hindrance balance, and coping success
-rates were also computed for comprehensive analysis. The data collection
-framework supported comprehensive research applications including
-baseline versus intervention comparison, individual trajectory analysis,
-network analysis, and parameter sensitivity studies.
+standardized data collection. Model-level reporters captured population
+metrics including average PSS-10 scores, resilience levels, affect
+states, stress prevalence, and social network characteristics.
+Agent-level reporters tracked individual trajectories for comprehensive
+analysis.
 
 \subsection{Data Analysis}\label{data-analysis}
 
@@ -922,8 +852,8 @@ Figure~\ref{fig-initial-population} presents a cross-sectional snapshot
 of agent psychological states before the first simulation day. Baseline
 resilience, affect, and resources are sampled independently, and the
 PSS-10 score is derived from its item responses, so the population
-starts from a neutral point: no pairwise association exceeds 0.20 in
-magnitude, and the PSS-10--stress correlation is only 0.03. This absence
+starts from a neutral point: no pairwise association exceeds 0.19 in
+magnitude, and the PSS-10--stress correlation is only 0.04. This absence
 of predetermined relationships is intentional: any associations observed
 at the end state must therefore emerge from the model's dynamics rather
 than from biased initial conditions.
@@ -948,14 +878,14 @@ dynamics}\label{homeostatic-stability-of-population-dynamics}
 Under homogeneous initial conditions simulating a general population,
 the model exhibits stable homeostatic mechanisms: population-level
 metrics remain confined to narrow ranges across all 90 simulation days.
-Mean perceived stress (PSS-10 = 13.533 ± 0.760, CV 5.6\%, range
-12.34--16.56) demonstrates low variability indicative of effective
-homeostatic regulation. Resilience (0.439 ± 0.015, CV 3.4\%) shows
-uniform coping capacity across the population, and affect (-0.060 ±
-0.016, CV 27.3\%) exhibits controlled mood variation near neutral.
-Elevated resource levels (0.338 ± 0.005) indicate effective resource
-management through social network dynamics, and moderate stress (0.241 ±
-0.055) relative to baselines suggests effective stress mitigation.
+Mean perceived stress (PSS-10 = 14.401 ± 0.641, CV 4.5\%, range
+13.32--16.29) demonstrates low variability indicative of effective
+homeostatic regulation. Resilience (0.428 ± 0.016, CV 3.7\%) shows
+uniform coping capacity across the population, and affect (-0.121 ±
+0.018, CV 15.0\%) exhibits controlled mood variation near neutral.
+Elevated resource levels (0.339 ± 0.005) indicate effective resource
+management through social network dynamics, and moderate stress (0.294 ±
+0.041) relative to baselines suggests effective stress mitigation.
 
 Figure~\ref{fig-time-series} depicts the longitudinal trajectories of
 all agents across simulation epochs, showcasing stable temporal
@@ -992,17 +922,17 @@ demonstrating homeostatic stability}
 \toprule
   & Variable & Mean ± SD & Interpretation\\
 \midrule
-avg\_pss10 & PSS-10 across agents & 13.533 ± 0.760 & Stable stress perception with moderate elevation\\
-avg\_resilience & Resilience level & 0.439 ± 0.015 & Uniform coping capacity across the population\\
-avg\_affect & Affect (valence) & -0.060 ± 0.016 & Controlled mood variation near neutral\\
-coping\_success\_rate & Coping success rate & 0.742 ± 0.045 & Reliable coping outcomes maintaining homeostasis\\
-avg\_resources & Psychological resources & 0.338 ± 0.005 & Stable resource levels supporting resilience\\
+avg\_pss10 & PSS-10 across agents & 14.401 ± 0.641 & Stable stress perception with moderate elevation\\
+avg\_resilience & Resilience level & 0.428 ± 0.016 & Uniform coping capacity across the population\\
+avg\_affect & Affect (valence) & -0.121 ± 0.018 & Controlled mood variation near neutral\\
+coping\_success\_rate & Coping success rate & 0.693 ± 0.039 & Reliable coping outcomes maintaining homeostasis\\
+avg\_resources & Psychological resources & 0.339 ± 0.005 & Stable resource levels supporting resilience\\
 \addlinespace
-avg\_stress & Current stress level & 0.241 ± 0.055 & Variable patterns within bounded ranges\\
-avg\_challenge & Challenge appraisal & 0.499 ± 0.015 & Balanced appraisal pattern\\
-avg\_hindrance & Hindrance appraisal & 0.501 ± 0.015 & Balanced appraisal pattern\\
-avg\_consecutive\_hindrances & Hindrance sequence length & 4.263 ± 0.765 & Occasional stress streaks but stable overall\\
- & Challenge–hindrance diff. & -0.003 ± 0.030 & Centered near zero, indicating equilibrium\\
+avg\_stress & Current stress level & 0.294 ± 0.041 & Variable patterns within bounded ranges\\
+avg\_challenge & Challenge appraisal & 0.499 ± 0.016 & Balanced appraisal pattern\\
+avg\_hindrance & Hindrance appraisal & 0.501 ± 0.016 & Balanced appraisal pattern\\
+avg\_consecutive\_hindrances & Hindrance sequence length & 4.401 ± 0.796 & Occasional stress streaks but stable overall\\
+ & Challenge–hindrance diff. & -0.003 ± 0.032 & Centered near zero, indicating equilibrium\\
 \bottomrule
 \end{tabular}
 
@@ -1012,12 +942,12 @@ avg\_consecutive\_hindrances & Hindrance sequence length & 4.263 ± 0.765 & Occa
 
 Table~\ref{tbl-model-level} substantiates a homeostatic system sustained
 by social network dynamics and agent interactions. Coefficients of
-variation range from 1.4\% (resource levels) to 27.3\% (affect),
+variation range from 1.5\% (resource levels) to 15.0\% (affect),
 indicating tight population-level regulation. Balanced
-challenge--hindrance appraisals (challenge 0.499 ± 0.015, hindrance
-0.501 ± 0.015) imply neutral cognitive processing and effective
-appraisal mechanisms, and the consistent coping success rate (0.742 ±
-0.045) across all agents validates the model's capacity to simulate
+challenge--hindrance appraisals (challenge 0.499 ± 0.016, hindrance
+0.501 ± 0.016) imply neutral cognitive processing and effective
+appraisal mechanisms, and the consistent coping success rate (0.693 ±
+0.039) across all agents validates the model's capacity to simulate
 emergent equilibrium from individual interactions that promote mental
 health outcomes.
 
@@ -1035,15 +965,15 @@ demonstrating individual heterogeneity within population stability}
 \toprule
   & Variable & Mean ± SD & Interpretation\\
 \midrule
-pss10 & PSS-10 per agent-step & 13.533 ± 4.709 & Variable stress levels with realistic range\\
-resilience & Resilience level & 0.439 ± 0.198 & Diverse adaptive capacities\\
-affect & Emotional state & -0.060 ± 0.282 & Variable patterns around neutral\\
-resources & Psychological resources & 0.338 ± 0.031 & Fluctuating resource capacity\\
-current\_stress & Stress intensity & 0.241 ± 0.196 & Variable patterns within bounds\\
+pss10 & PSS-10 per agent-step & 14.401 ± 5.129 & Variable stress levels with realistic range\\
+resilience & Resilience level & 0.428 ± 0.298 & Diverse adaptive capacities\\
+affect & Emotional state & -0.121 ± 0.342 & Variable patterns around neutral\\
+resources & Psychological resources & 0.339 ± 0.033 & Fluctuating resource capacity\\
+current\_stress & Stress intensity & 0.294 ± 0.214 & Variable patterns within bounds\\
 \addlinespace
-stress\_controllability & Controllability perception & 0.839 ± 0.166 & Diverse agency experiences\\
-stress\_overload & Overload perception & 0.139 ± 0.143 & Diverse capacity challenges\\
-consecutive\_hindrances & Hindrance streak length & 3.466 ± 3.839 & Variable patterns observed\\
+stress\_controllability & Controllability perception & 0.821 ± 0.165 & Diverse agency experiences\\
+stress\_overload & Overload perception & 0.157 ± 0.143 & Diverse capacity challenges\\
+consecutive\_hindrances & Hindrance streak length & 3.527 ± 3.933 & Variable patterns observed\\
 \bottomrule
 \end{tabular}
 
@@ -1053,18 +983,20 @@ consecutive\_hindrances & Hindrance streak length & 3.466 ± 3.839 & Variable pa
 
 Table~\ref{tbl-agent-level} reveals substantial dynamic variability
 within the stable population framework. The contrast between
-population-level stability (CVs from 1.4\% to 27.3\%) and
-individual-level heterogeneity (CVs from 34.8\% to 470.6\%) exemplifies
+population-level stability (CVs from 1.5\% to 15.0\%) and
+individual-level heterogeneity (CVs from 35.6\% to 282.2\%) exemplifies
 the dual nature of the modeled system. Individual agents experience
-significant fluctuations in stress (0.241 ± 0.196, CV 81.4\%),
-resilience (0.439 ± 0.198, CV 45.2\%), and affect (-0.060 ± 0.282; its
-large CV reflects a mean near zero rather than extreme dispersion).
-These variations are constrained by social interactions that maintain
+significant fluctuations in stress (0.294 ± 0.214, CV 72.8\%),
+resilience (0.428 ± 0.298, CV 69.6\%), and affect (-0.121 ± 0.342). Its
+large CV reflects a mean near zero on the \([-1, 1]\) scale. The SD of
+0.342 indicates moderate dispersion, but dividing by a near-zero mean
+inflates the ratio, making CV uninformative for this variable. These
+variations are constrained by social interactions that maintain
 population equilibrium. Agents perceive their stressors as largely
-controllable (0.839 ± 0.166) and rarely overwhelming (0.139 ± 0.143),
+controllable (0.821 ± 0.165) and rarely overwhelming (0.157 ± 0.143),
 capturing the cognitive appraisal diversity that drives individual
-adaptation strategies. Hindrance streaks remain bounded (3.466 ± 3.839,
-maximum 30.2), demonstrating the system's capacity to prevent
+adaptation strategies. Hindrance streaks remain bounded (3.527 ± 3.933,
+maximum 30.4), demonstrating the system's capacity to prevent
 pathological cascades through network support. Individual diversities
 are harmonized through social dynamics to achieve collective stability:
 social network dynamics transform individual variability into
@@ -1113,44 +1045,67 @@ Stage & Blocks active\\
 
 \subsubsection{Stage metrics}\label{stage-metrics}
 
-Each block contributes its own metric family: perception adds
-challenge/hindrance appraisal, activation adds coping success,
-interaction adds social support exchange, allocation adds resource
-regeneration, and buffering adds buffering strength and stress
-depletion. Empty cells mark metrics whose block is not yet active. Stage
-7 runs through \texttt{simulate.py}, which does not export the
-allocation and buffering phase metrics, so those cells remain empty.
+Each stage adds one building block on top of the previous ones and the
+table reports the resulting final-day population state. All seven stages
+share the same seeded population and network, so differences between
+consecutive rows isolate the contribution of the added block. Cells
+whose block is not active at a stage are reported as n/a.
 
 \begin{table}
 
-\caption{\label{tab:cum-stage-metrics}Cumulative building-block metrics by stage (means over the run)}
+\caption{\label{tab:cum-stage-metrics}Cumulative building-block metrics by stage (final-day population state)}
 \centering
-\begin{tabular}[t]{llllllll}
+\begin{tabular}[t]{rllllllll}
 \toprule
-  & Stage 1 & Stage 2 & Stage 3 & Stage 4 & Stage 5 & Stage 6 & Stage 7\\
+Stage & Block added & PSS-10 & Stress & Affect & Resilience & Resources & Stress prevalence & Coping success\\
 \midrule
-PSS-10 & 15.96 & 15.96 & 16.18 & 18.28 & 18.22 & 17.89 & 13.77\\
-Current stress & 0.425 & 0.425 & 0.715 & 0.798 & 0.798 & 0.762 & 0.237\\
-Affect & 0.026 & 0.026 & -0.92 & -0.982 & -0.982 & -0.981 & -0.064\\
-Resilience & 0.459 & 0.459 & 0.297 & 0.068 & 0.068 & 0.208 & 0.447\\
-Resources & 0.493 & 0.493 & 0.116 & 0.115 & 0.315 & 0.311 & 0.338\\
+1 & Initialization & 16.080 & 0.425 & 0.026 & 0.435 & 0.494 & 0.030 & n/a\\
+2 & + Stress perception & 16.080 & 0.425 & 0.026 & 0.435 & 0.494 & 0.030 & n/a\\
+3 & + Resilience activation & 16.160 & 0.712 & -0.919 & 0.306 & 0.116 & 0.030 & 0.459\\
+4 & + Interaction & 18.280 & 0.798 & -0.982 & 0.068 & 0.115 & 0.090 & 0.349\\
+5 & + Resource allocation & 18.220 & 0.798 & -0.982 & 0.068 & 0.315 & 0.100 & 0.350\\
 \addlinespace
-Stress prevalence & 0.03 & 0.03 & 0.03 & 0.09 & 0.1 & 0.11 & 0.01\\
-Challenge appraisal & n/a & 0.499 & 0.502 & 0.498 & 0.498 & 0.498 & 0.499\\
-Hindrance appraisal & n/a & 0.501 & 0.498 & 0.502 & 0.502 & 0.502 & 0.501\\
-Coping success rate & n/a & n/a & 0.457 & 0.349 & 0.35 & 0.407 & 0.742\\
-Support exchange rate & n/a & n/a & n/a & 0.297 & 0.297 & 0.685 & 0.007\\
-\addlinespace
-Regeneration & n/a & n/a & n/a & n/a & 0.366 & 0.366 & n/a\\
-Buffering strength & n/a & n/a & n/a & n/a & n/a & 0.03 & n/a\\
+6 & + Stress buffering & 17.770 & 0.764 & -0.981 & 0.222 & 0.310 & 0.100 & 0.407\\
+7 & + Full model & 14.800 & 0.291 & -0.139 & 0.432 & 0.337 & 0.060 & 0.693\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The build-up shows how each mechanism shifts the population metrics.
-Stage 7 -- the complete model -- is the configuration reported in the
-model-level and agent-level tables above; its final-day population state
-and agent heterogeneity are examined in the next section.
+Each added block shifts the population metrics in a way that makes its
+contribution explicit. Stress perception (stage 2) updates only the
+appraisal dimensions and leaves the outcome states untouched, so stages
+1 and 2 coincide. Resilience activation (stage 3) introduces coping, and
+every stress event that is coped with unsuccessfully lowers affect and
+resilience, raises stress, and consumes resources; no regeneration,
+decay, or homeostatic return opposes it yet, so the population settles
+into a depleted, stressed state. Interaction (stage 4) propagates affect
+and resilience through the network with a negativity bias stronger than
+the positive one, dragging both toward their lower bounds. Resource
+allocation (stage 5) restores the resource pool but cannot move affect
+or resilience, and stress buffering (stage 6) starts pushing resilience
+back toward its baseline, albeit with small buffering strength.
+
+These intermediate stages are deliberately partial: they enable the
+stress-adding mechanisms without the restorative blocks of the daily
+cycle. Stage 7, the complete model, activates the remaining blocks --
+affect dynamics, PSS-10 consolidation, daily reset, and network
+adaptation -- completing the two-loop daily cycle of the production
+pipeline (\texttt{Person.step()} in \texttt{simulate.py}). The
+homeostatic pull toward baseline affect and resilience, the daily stress
+decay, and adaptive rewiring toward more similar peers jointly restore
+the equilibrium reported in the model-level tables: affect returns near
+neutral, resilience near its baseline, perceived stress falls to a
+moderate range, and coping success rises in parallel. The phase-specific
+metrics (regeneration, buffering strength) are exported for stage 7 by
+the same model reporters that feed stages 1--6, so those cells are
+populated throughout; the support-exchange rates for stages 1--6 are
+computed from per-event interaction records, whereas the stage-7 value
+is the daily support-to-interaction ratio exported by the production
+model, so the two definitions are not directly comparable.
+
+Stage 7 is the configuration reported in the model-level and agent-level
+tables above; its final-day population state and agent heterogeneity are
+examined in the next section.
 
 \subsection{Emergent associations at the end
 state}\label{emergent-associations-at-the-end-state}
@@ -1158,10 +1113,10 @@ state}\label{emergent-associations-at-the-end-state}
 Figure~\ref{fig-final-population} captures cross-sectional agent states
 at the simulation's conclusion, revealing theoretically grounded
 associations among psychological variables. Resilience exhibits a weak
-positive correlation with affect (0.26), a moderate negative correlation
-with stress (-0.42), and a moderate negative correlation with PSS-10
-(-0.47). In contrast, stress shows a moderate positive correlation with
-PSS-10 (0.50), up from an essentially zero baseline association (0.03),
+positive correlation with affect (0.34), a moderate negative correlation
+with stress (-0.46), and a moderate negative correlation with PSS-10
+(-0.49). In contrast, stress shows a moderate positive correlation with
+PSS-10 (0.50), up from an essentially zero baseline association (0.04),
 accompanied by increasing dispersion in stress levels at higher PSS-10
 scores. This visualization demonstrates model convergence toward
 expected relationships, validating the simulation's capacity to generate
@@ -1190,24 +1145,24 @@ interactions determine mental health outcomes within constrained ranges.
 
 The observed homeostatic stability aligns with resilience research. This
 emphasizes social support systems as protective factors against
-psychological distress (Hobfoll 1989). The model successfully reproduced
-empirically grounded associations between psychological variables.
-Resilience showed negative correlations with stress and PSS-10 scores.
-These patterns mirror community resilience studies demonstrating
-supportive networks enhance resource conservation and stress mitigation
-(Fasihi Harandi, Mohammad Taghinasab, and Dehghan Nayeri 2017).
+psychological distress \citep{Hobfoll1989}. The model successfully
+reproduced empirically grounded associations between psychological
+variables. Resilience showed negative correlations with stress and
+PSS-10 scores. These patterns mirror community resilience studies
+demonstrating supportive networks enhance resource conservation and
+stress mitigation \citep{FasihiHarandi2017}.
 
 As demonstrated in Figure~\ref{fig-final-population}, the agent
 population exhibits bimodal distribution on affect and stress levels.
 This pattern appeared as distinct clustering around stable equilibrium
 points. It captured complex adaptive system behaviors where local
-heterogeneity supports global stability (Yan, Martinez, and Liu 2017).
-Previous ABM mental health research demonstrated similar emergent
-phenomena through social contagion mechanisms (Andarlia and Gunawan
-2021). The current model extends these findings by incorporating
-comprehensive appraisal processes and resource management systems. The
-simulation framework provides a robust foundation for evaluating
-preventive mental health interventions.
+heterogeneity supports global stability \citep{Yan2017}. Previous ABM
+mental health research demonstrated similar emergent phenomena through
+social contagion mechanisms \citep{Andarlia2021}. The current model
+extends these findings by incorporating comprehensive appraisal
+processes and resource management systems. The simulation framework
+provides a robust foundation for evaluating preventive mental health
+interventions.
 
 The phenomenon emerged from the interaction of multiple mechanisms
 operating at different scales. The network adaptation equation
@@ -1247,9 +1202,9 @@ emerge from complex interactions. These occur between individual
 characteristics, social network structures, and environmental stressors.
 The model validated agent-based approaches for evaluating preventive
 strategies that enhance psychological resilience through social support
-optimization (Benny et al. 2022). However, this study exclusive focused
-on resilience mechanisms without incorporating mental health outcomes.
-The validation was primarily through pattern matching rather than
+optimization \citep{Benny2022}. However, this study exclusive focused on
+resilience mechanisms without incorporating mental health outcomes. The
+validation was primarily through pattern matching rather than
 longitudinal empirical integration. The simulation also makes
 assumptions of stationary social network structures that ignore
 demographic transitions over extended periods. Notwithstanding these
@@ -1274,117 +1229,20 @@ framework enables systematic exploration of how individual
 characteristics, social connections, and environmental factors combine
 to determine collective mental health outcomes.
 
+\section{Funding}\label{funding}
+
+This work was supported by The Indonesia Endowment Funds for Education
+(LPDP) in the form of a PhD scholarship to AL with Grant Agreement
+Number 0007457/PHA/D/2/lpdp2022 (28 August 2026).
+
 \section*{References}\label{references}
 \addcontentsline{toc}{section}{References}
 
 \multicols{2}
 \footnotesize
 
-\phantomsection\label{refs}
-\begin{CSLReferences}{1}{0}
-\bibitem[\citeproctext]{ref-Andarlia2021}
-Andarlia, H T, and I Gunawan. 2021. {``An Agent-Based Model of Contagion
-Effects in Affected Depression and Its Recovery Process.''}
-\emph{Journal of Physics: Conference Series} 1751 (1): 012007.
-\url{https://doi.org/10.1088/1742-6596/1751/1/012007}.
 
-\bibitem[\citeproctext]{ref-arias2022quantifying}
-Arias, Daniel, Shekhar Saxena, and Stéphane Verguet. 2022.
-{``Quantifying the Global Burden of Mental Disorders and Their Economic
-Value.''} \emph{EClinicalMedicine} 54.
-
-\bibitem[\citeproctext]{ref-Benny2022}
-Benny, Claire, Shelby Yamamoto, Sheila McDonald, Radha Chari, and Roman
-Pabayo. 2022. {``Modelling Maternal Depression: An Agent-Based Model to
-Examine the Complex Relationship Between Relative Income and
-Depression.''} \emph{International Journal of Environmental Research and
-Public Health} 19 (7): 4208.
-\url{https://doi.org/10.3390/ijerph19074208}.
-
-\bibitem[\citeproctext]{ref-cohen1988perceived}
-Cohen, Sheldon. 1988. {``Perceived Stress in a Probability Sample of the
-United States.''}
-
-\bibitem[\citeproctext]{ref-FasihiHarandi2017}
-Fasihi Harandi, Tayebeh, Maryam Mohammad Taghinasab, and Tayebeh Dehghan
-Nayeri. 2017. {``The Correlation of Social Support with Mental Health: A
-Meta-Analysis.''} \emph{Electronic Physician} 9 (9): 5212--22.
-\url{https://doi.org/10.19082/5212}.
-
-\bibitem[\citeproctext]{ref-gbd2022global}
-GBD Collaborators. 2022. {``Global, Regional, and National Burden of 12
-Mental Disorders in 204 Countries and Territories, 1990--2019: A
-Systematic Analysis for the Global Burden of Disease Study 2019.''}
-\emph{The Lancet Psychiatry} 9 (2): 137--50.
-
-\bibitem[\citeproctext]{ref-Hobfoll1989}
-Hobfoll, Stevan E. 1989. {``Conservation of Resources: A New Attempt at
-Conceptualizing Stress.''} \emph{American Psychologist} 44 (3): 513--24.
-\url{https://doi.org/10.1037/0003-066x.44.3.513}.
-
-\bibitem[\citeproctext]{ref-Hobfoll2002}
----------. 2002. {``Social and Psychological Resources and
-Adaptation.''} \emph{Review of General Psychology} 6 (4): 307--24.
-\url{https://doi.org/10.1037/1089-2680.6.4.307}.
-
-\bibitem[\citeproctext]{ref-klaver2021exposure}
-Klaver, M, BJ Van den Hoofdakker, H Wouters, G De Kuijper, PJ Hoekstra,
-and A De Bildt. 2021. {``Exposure to Challenging Behaviours and Burnout
-Symptoms Among Care Staff: The Role of Psychological Resources.''}
-\emph{Journal of Intellectual Disability Research} 65 (2): 173--85.
-
-\bibitem[\citeproctext]{ref-Lopez2024}
-López, Leonardo, and Leonardo Giovanini. 2024. {``Adaptive Dynamic
-Social Networks Using an Agent-Based Model to Study the Role of Social
-Awareness in Infectious Disease Spread,''} July.
-\url{https://doi.org/10.1101/2024.07.16.24310475}.
-
-\bibitem[\citeproctext]{ref-mekonen2021estimating}
-Mekonen, Tesfa, Gary CK Chan, Jason P Connor, Leanne Hides, and Janni
-Leung. 2021. {``Estimating the Global Treatment Rates for Depression: A
-Systematic Review and Meta-Analysis.''} \emph{Journal of Affective
-Disorders} 295: 1234--42.
-
-\bibitem[\citeproctext]{ref-Murase2021}
-Murase, Yohsuke, Hang-Hyun Jo, János Török, János Kertész, and Kimmo
-Kaski. 2021. {``Deep Learning Exploration of Agent-Based Social Network
-Model Parameters.''} \emph{Frontiers in Big Data} 4 (September).
-\url{https://doi.org/10.3389/fdata.2021.739081}.
-
-\bibitem[\citeproctext]{ref-parsons2016cognitive}
-Parsons, Sam, Anne-Wil Kruijt, and Elaine Fox. 2016. {``A Cognitive
-Model of Psychological Resilience.''} \emph{Journal of Experimental
-Psychopathology} 7 (3): 296--310.
-
-\bibitem[\citeproctext]{ref-Romanyukha2023}
-Romanyukha, Alexei Alexeevich, Konstantin Alexandrovich Novikov,
-Konstantin Konstantinovich Avilov, Timofey Alexandrovich Nestik, and
-Tatiana Evgenevna Sannikova. 2023. {``The Trade-Off Between COVID-19 and
-Mental Diseases Burden During a Lockdown: Mathematical Modeling of
-Control Measures.''} \emph{Infectious Disease Modelling} 8 (2): 403--14.
-\url{https://doi.org/10.1016/j.idm.2023.04.003}.
-
-\bibitem[\citeproctext]{ref-troy2023psychological}
-Troy, Allison S, Emily C Willroth, Amanda J Shallcross, Nicole R
-Giuliani, James J Gross, and Iris B Mauss. 2023. {``Psychological
-Resilience: An Affect-Regulation Framework.''} \emph{Annual Review of
-Psychology} 74 (1): 547--76.
-
-\bibitem[\citeproctext]{ref-Yan2017}
-Yan, Gang, Neo D. Martinez, and Yang-Yu Liu. 2017. {``Degree
-Heterogeneity and Stability of Ecological Networks.''} \emph{Journal of
-The Royal Society Interface} 14 (131): 20170189.
-\url{https://doi.org/10.1098/rsif.2017.0189}.
-
-\bibitem[\citeproctext]{ref-ZagerKocjan2021}
-Zager Kocjan, Gaja, Tina Kavčič, and Andreja Avsec. 2021. {``Resilience
-Matters: Explaining the Association Between Personality and
-Psychological Functioning During the COVID-19 Pandemic.''}
-\emph{International Journal of Clinical and Health Psychology} 21 (1):
-100198. \url{https://doi.org/10.1016/j.ijchp.2020.08.002}.
-
-\end{CSLReferences}
-
+\bibliography{ref.bib}
 
 
 

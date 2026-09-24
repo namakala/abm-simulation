@@ -42,8 +42,7 @@ individual-level heterogeneity (CVs from `r agent_cv("pss10")` to
 Individual agents experience significant fluctuations in stress
 (`r agent("current_stress")`, CV `r agent_cv("current_stress")`), resilience
 (`r agent("resilience")`, CV `r agent_cv("resilience")`), and affect
-(`r agent("affect")`; its large CV reflects a mean near zero rather than
-extreme dispersion). These variations are constrained by social
+(`r agent("affect")`). Its large CV reflects a mean near zero on the $[-1, 1]$ scale. The SD of `r sprintf("%.3f", sd(a$affect))` indicates moderate dispersion, but dividing by a near-zero mean inflates the ratio, making CV uninformative for this variable. These variations are constrained by social
 interactions that maintain population equilibrium. Agents perceive their
 stressors as largely controllable (`r agent("stress_controllability")`) and
 rarely overwhelming (`r agent("stress_overload")`), capturing the

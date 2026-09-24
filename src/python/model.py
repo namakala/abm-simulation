@@ -260,8 +260,8 @@ class StressModel(mesa.Model):
             "resilience_weight": assumptions.network.similarity_resilience_weight,
         }
 
-        new_G, rewired_count = apply_stress_adaptation(self.grid.G, agents_list, adaptation_config, self.rng)
-        self.grid = NetworkGrid(new_G)
+        G_prime, rewired_count = apply_stress_adaptation(self.grid.G, agents_list, adaptation_config, self.rng)
+        self.grid.G = G_prime
         return rewired_count
 
     def get_network_adaptation_summary(self) -> Dict[str, Any]:

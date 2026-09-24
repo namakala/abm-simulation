@@ -1,0 +1,25 @@
+---
+title: Test
+author: Test
+format:
+  pdf:
+    keep-tex: true
+    include-in-header:
+      text: |
+        \usepackage{tabularx}
+        \usepackage{xparse}
+        \NewDocumentCommand{\trow}{m m m}{%
+          \texttt{\allowbreak #1} & #2 & #3 \\
+        }
+        \NewDocumentCommand{\trowfour}{m m m m}{%
+          \texttt{\allowbreak #1} & #2 & #3 & #4 \\
+        }
+---
+
+\begin{tabular}{p{4cm}p{1.8cm}p{2cm}X}
+\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Range} & \textbf{Description} \\
+\midrule
+\trowfour{baseline\_resilience}{float}{$[0, 1]$}{Initial resilience (fixed)}
+\bottomrule
+\end{tabular}

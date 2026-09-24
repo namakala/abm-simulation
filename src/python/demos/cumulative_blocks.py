@@ -487,7 +487,8 @@ def compute_stage7_row(model_csv: Path, agents: int, days: int, stage: Dict[str,
     """Build the stage 7 row from simulate.py's model CSV.
 
     State columns come from the final day; phase columns are run means.
-    Allocation/buffering columns are not exported by simulate.py and stay NaN.
+    Allocation and buffering metrics are read from the model-level CSV
+    (exported via MODEL_REPORTERS).
 
     Args:
         model_csv: Path to simulate.py model-level CSV.
@@ -517,6 +518,9 @@ def compute_stage7_row(model_csv: Path, agents: int, days: int, stage: Dict[str,
         row["interactions_per_agent_day"] = float(model_df["social_interactions"].mean()) / agents
     if "daily_social_support_rate" in model_df.columns:
         row["support_exchange_rate"] = float(model_df["daily_social_support_rate"].mean())
+    for col in ("avg_regeneration", "avg_buffering_strength"):
+        if col in model_df.columns:
+            row[col] = float(model_df[col].mean())
     return row
 
 

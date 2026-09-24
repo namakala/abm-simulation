@@ -141,6 +141,8 @@ class TestComputeStage7Row:
                 "stress_events": [400.0, 410.0, 420.0],
                 "social_interactions": [300.0, 310.0, 320.0],
                 "daily_social_support_rate": [0.3, 0.31, 0.32],
+                "avg_regeneration": [0.1, 0.2, 0.3],
+                "avg_buffering_strength": [0.01, 0.02, 0.03],
             }
         )
         model_csv = tmp_path / "stage7_model.csv"
@@ -165,9 +167,9 @@ class TestComputeStage7Row:
         assert row["coping_success_rate"] == pytest.approx(0.41)
         assert row["stress_event_rate"] == pytest.approx(4.1)
         assert row["interactions_per_agent_day"] == pytest.approx(3.1)
-        # Not present in simulate.py output
-        assert math.isnan(row["avg_regeneration"])
-        assert math.isnan(row["avg_buffering_strength"])
+        # Allocation and buffering phase metrics are now exported by simulate.py
+        assert row["avg_regeneration"] == pytest.approx(0.2)
+        assert row["avg_buffering_strength"] == pytest.approx(0.02)
 
 
 class TestRunCumulativeDemo:

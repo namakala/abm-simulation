@@ -237,6 +237,53 @@ def model_report_daily_coping_support_corr(model: Any) -> float:
     return model._compute_daily_coping_support_corr()
 
 
+def _phase_observation(agent: Any, phase_key: str, obs_key: str) -> float:
+    """Extract one float value from an agent's last phase observation.
+
+    Returns ``float("nan")`` when the agent has no recorded phase output
+    (or the output is not a proper dict, e.g. uninitialized agents).
+
+    Args:
+        agent: Agent instance.
+        phase_key: Key under ``_last_phase_outputs``, e.g. "resource_allocation".
+        obs_key: Observation field to read, e.g. "regeneration_amount".
+
+    Returns:
+        The observed float value or NaN.
+    """
+    outputs = getattr(agent, "_last_phase_outputs", None)
+    if not isinstance(outputs, dict):
+        return float("nan")
+    phase_out = outputs.get(phase_key)
+    if not isinstance(phase_out, dict):
+        return float("nan")
+    obs = phase_out.get("observation")
+    if not isinstance(obs, dict):
+        return float("nan")
+    value = obs.get(obs_key, float("nan"))
+    return float(value) if isinstance(value, (int, float)) else float("nan")
+
+
+def model_report_avg_regeneration(model: Any) -> float:
+    """Population mean of the daily resource regeneration amount.
+
+    Reads the last allocation phase output observed by each agent.
+    Returns ``float("nan")`` when no agent recorded an observation.
+    """
+    values = [_phase_observation(agent, "resource_allocation", "regeneration_amount") for agent in model.agents]
+    return float(np.nanmean(values)) if values else float("nan")
+
+
+def model_report_avg_buffering_strength(model: Any) -> float:
+    """Population mean of the daily stress buffering strength.
+
+    Reads the last buffering phase output observed by each agent.
+    Returns ``float("nan")`` when no agent recorded an observation.
+    """
+    values = [_phase_observation(agent, "stress_buffering", "buffering_strength") for agent in model.agents]
+    return float(np.nanmean(values)) if values else float("nan")
+
+
 # ── Lookup dicts for DataCollector construction ────────────────────
 
 AGENT_REPORTERS = {
@@ -281,4 +328,6 @@ MODEL_REPORTERS = {
     "total_interactions": model_report_total_interactions,
     "social_support_exchanges": model_report_social_support_exchanges,
     "daily_coping_support_corr": model_report_daily_coping_support_corr,
+    "avg_regeneration": model_report_avg_regeneration,
+    "avg_buffering_strength": model_report_avg_buffering_strength,
 }
