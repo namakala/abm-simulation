@@ -79,21 +79,21 @@ def run_phase(
           ``c_prime_coefficient``,
           ``indirect_effect``, ``social_support_mediation``.
     """
-    # ── Unpack state ────────────────────────────────────────────────
+    ## Unpack state
     protective_factors: Dict[str, float] = dict(state.get("protective_factors", {f: 0.5 for f in _FACTORS}))
     baseline_resilience = state.get("baseline_resilience", 0.5)
     current_resilience = state.get("resilience", 0.5)
     current_stress = state.get("current_stress", 0.0)
     resources = state.get("resources", 0.5)
 
-    # ── Unpack config ───────────────────────────────────────────────
+    ## Unpack config
     boost_rate = config.get("boost_rate", _DEFAULT_BOOST_RATE)
     a_coefficient = config.get("a_coefficient", _DEFAULT_A_COEFFICIENT)
     b_coefficient = config.get("b_coefficient", _DEFAULT_B_COEFFICIENT)
     c_prime_coefficient = config.get("c_prime_coefficient", _DEFAULT_C_PRIME_COEFFICIENT)
     social_buffering_path = config.get("social_buffering_path", _DEFAULT_SOCIAL_BUFFERING_PATH)
 
-    # ── Mechanism 1: PF boost to resilience ─────────────────────────
+    ## Mechanism 1: PF boost to resilience
     # Boost is larger when resilience is far below baseline.
     # Never exceeds (baseline - current) — can't overshoot baseline.
     resilience_need = max(0.0, baseline_resilience - current_resilience)
@@ -107,7 +107,7 @@ def run_phase(
     pf_boost = min(pf_boost, resilience_need)
     new_resilience = min(1.0, current_resilience + pf_boost)
 
-    # ── Mechanism 2: Resource mediation of stress buffering ─────────
+    ## Mechanism 2: Resource mediation of stress buffering
     # a-path: stress -> resources (negative coefficient → depletion)
     # Weak overload modulation adds consistent cross-seed signal without
     # dominating the PSS-10↔resources shared-cause correlation.
@@ -129,7 +129,7 @@ def run_phase(
     social_support_efficacy = protective_factors.get("social_support", 0.0)
     social_support_mediation = social_support_efficacy * social_buffering_path
 
-    # ── Build PhaseOutput ───────────────────────────────────────────
+    ## Build PhaseOutput
     state_delta: Dict[str, Any] = {
         "resilience": new_resilience,
         "resources": new_resources,

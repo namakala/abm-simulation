@@ -23,9 +23,7 @@ from src.python.affect_utils import (
 )
 from src.python.resource_utils import ResourceOptimizationConfig
 
-# ──────────────────────────────────────────────
-# Fixtures
-# ──────────────────────────────────────────────
+## Fixtures
 
 
 # Default agent state for resilience activation tests
@@ -78,9 +76,7 @@ FAIL_CONFIG: Dict[str, Any] = {
 }
 
 
-# ──────────────────────────────────────────────
-# Coping Probability Theory Tests
-# ──────────────────────────────────────────────
+## Coping Probability Theory Tests
 
 
 class TestCopingProbabilityTheory:
@@ -194,9 +190,7 @@ class TestCopingProbabilityTheory:
                 assert 0.0 <= prob <= 1.0, f"Coping prob {prob} out of [0,1] for ch={challenge}, hi={hindrance}"
 
 
-# ──────────────────────────────────────────────
-# Coping Outcome Theory Tests
-# ──────────────────────────────────────────────
+## Coping Outcome Theory Tests
 
 
 class TestCopingOutcomeTheory:
@@ -385,9 +379,7 @@ class TestCopingOutcomeTheory:
         assert delta_stress >= 0, f"Failed coping should increase stress, got delta={delta_stress:.4f}"
 
 
-# ──────────────────────────────────────────────
-# Asymmetry Tests
-# ──────────────────────────────────────────────
+## Asymmetry Tests
 
 
 class TestAsymmetry:
@@ -441,9 +433,7 @@ class TestAsymmetry:
         assert effect == -0.4, f"Max overload effect should be -0.4, got {effect}"
 
 
-# ──────────────────────────────────────────────
-# Phase Function Integration Tests
-# ──────────────────────────────────────────────
+## Phase Function Integration Tests
 
 
 class TestPhaseFunctionIntegration:
@@ -534,9 +524,7 @@ class TestPhaseFunctionIntegration:
         )
 
 
-# ──────────────────────────────────────────────
-# Resource Cost Theory Tests
-# ──────────────────────────────────────────────
+## Resource Cost Theory Tests
 
 
 class TestResourceCostTheory:
@@ -646,9 +634,7 @@ class TestResourceCostTheory:
             assert final_pf == initial_pf, "Protective factors should not change after failed coping"
 
 
-# ──────────────────────────────────────────────
-# PSS-10 / Stress Dimension Tests
-# ──────────────────────────────────────────────
+## PSS-10 / Stress Dimension Tests
 
 
 class TestStressDimensionUpdates:
@@ -683,9 +669,7 @@ class TestStressDimensionUpdates:
             assert 0 <= v <= 4, f"PSS-10 item response {v} out of range"
 
 
-# ──────────────────────────────────────────────
-# Homeostasis Tests
-# ──────────────────────────────────────────────
+## Homeostasis Tests
 
 
 class TestHomeostasisTheory:
@@ -743,9 +727,7 @@ class TestHomeostasisTheory:
         assert updated_c > 0.1, f"Homeostasis should pull low controllability up, got {updated_c:.4f}"
 
 
-# ──────────────────────────────────────────────
-# Edge Case Tests
-# ──────────────────────────────────────────────
+## Edge Case Tests
 
 
 class TestEdgeCases:
@@ -835,9 +817,7 @@ class TestEdgeCases:
         assert "observation" in result
 
 
-# ──────────────────────────────────────────────
-# Observation Tests
-# ──────────────────────────────────────────────
+## Observation Tests
 
 
 class TestObservationContent:

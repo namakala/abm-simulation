@@ -25,9 +25,7 @@ from src.python.stress_utils import (
 from src.python.phases.stress_perception import run_phase
 from src.python.phases.interfaces import AgentState
 
-# ──────────────────────────────────────────────
-# Fixtures
-# ──────────────────────────────────────────────
+## Fixtures
 
 
 @pytest.fixture
@@ -75,9 +73,7 @@ def neutral_state():
     )
 
 
-# ──────────────────────────────────────────────
-# Appraisal Monotonicity Tests
-# ──────────────────────────────────────────────
+## Appraisal Monotonicity Tests
 
 
 class TestAppraisalMonotonicity:
@@ -118,9 +114,7 @@ class TestAppraisalMonotonicity:
         assert ch_one > 0.5, "c=1, o=0 should give challenge > 0.5"
 
 
-# ──────────────────────────────────────────────
-# Appraisal Complementarity Tests
-# ──────────────────────────────────────────────
+## Appraisal Complementarity Tests
 
 
 class TestAppraisalComplementarity:
@@ -135,9 +129,7 @@ class TestAppraisalComplementarity:
         assert abs(ch + hi - 1.0) < 1e-10, f"ch + hi = {ch + hi} != 1 for c={c}, o={o}"
 
 
-# ──────────────────────────────────────────────
-# Threshold Behaviour Tests
-# ──────────────────────────────────────────────
+## Threshold Behaviour Tests
 
 
 class TestThresholdBehaviour:
@@ -202,9 +194,7 @@ class TestThresholdBehaviour:
         assert result is False
 
 
-# ──────────────────────────────────────────────
-# Stress Classification Tests
-# ──────────────────────────────────────────────
+## Stress Classification Tests
 
 
 class TestStressClassification:
@@ -248,9 +238,7 @@ class TestStressClassification:
         )
 
 
-# ──────────────────────────────────────────────
-# Non-Stressed Path Tests
-# ──────────────────────────────────────────────
+## Non-Stressed Path Tests
 
 
 class TestNonStressedPath:
@@ -312,9 +300,7 @@ class TestNonStressedPath:
         assert sm == 0.0
 
 
-# ──────────────────────────────────────────────
-# Event Sampling Tests
-# ──────────────────────────────────────────────
+## Event Sampling Tests
 
 
 class TestEventSampling:
@@ -339,9 +325,7 @@ class TestEventSampling:
         )
 
 
-# ──────────────────────────────────────────────
-# Phase Function Contract Tests
-# ──────────────────────────────────────────────
+## Phase Function Contract Tests
 
 
 class TestPhaseFunctionContract:

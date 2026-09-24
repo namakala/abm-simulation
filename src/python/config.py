@@ -183,9 +183,7 @@ class Config:
     def _load_all_parameters(self) -> None:
         """Load all configuration parameters from environment variables."""
 
-        # ==============================================
-        # SIMULATION AND NETWORK PARAMETERS
-        # ==============================================
+        ## SIMULATION AND NETWORK PARAMETERS
         self.num_agents = self._get_env_value("SIMULATION_NUM_AGENTS", int, 20)
         self.max_days = self._get_env_value("SIMULATION_MAX_DAYS", int, 100)
         self.seed = self._get_env_value("SIMULATION_SEED", int, 42)
@@ -199,9 +197,7 @@ class Config:
         self.network_rewire_probability = self._get_env_value("NETWORK_REWIRE_PROBABILITY", float, 0.01)
         self.network_homophily_strength = self._get_env_value("NETWORK_HOMOPHILY_STRENGTH", float, 0.7)
 
-        # ==============================================
-        # AGENT STATE AND BEHAVIOR PARAMETERS
-        # ==============================================
+        ## AGENT STATE AND BEHAVIOR PARAMETERS
         self.agent_initial_resilience_mean = self._get_env_value("AGENT_INITIAL_RESILIENCE_MEAN", float, 0.0)
         self.agent_initial_resilience_sd = self._get_env_value("AGENT_INITIAL_RESILIENCE_SD", float, 1.0)
         self.agent_initial_affect_mean = self._get_env_value("AGENT_INITIAL_AFFECT_MEAN", float, 0.0)
@@ -219,9 +215,7 @@ class Config:
         self.agent_initial_affect = self.agent_initial_affect_mean
         self.agent_initial_resources = self.agent_initial_resources_mean
 
-        # ==============================================
-        # STRESS EVENT PARAMETERS
-        # ==============================================
+        ## STRESS EVENT PARAMETERS
         self.stress_controllability_mean = self._get_env_value("STRESS_CONTROLLABILITY_MEAN", float, 0.5)
         self.stress_controllability_sd = self._get_env_value("STRESS_CONTROLLABILITY_SD", float, 0.2)
         self.stress_overload_mean = self._get_env_value("STRESS_OVERLOAD_MEAN", float, 0.5)
@@ -229,9 +223,7 @@ class Config:
         self.stress_beta_alpha = self._get_env_value("STRESS_BETA_ALPHA", float, 2.0)
         self.stress_beta_beta = self._get_env_value("STRESS_BETA_BETA", float, 2.0)
 
-        # ==============================================
-        # APPRAISAL AND THRESHOLD PARAMETERS
-        # ==============================================
+        ## APPRAISAL AND THRESHOLD PARAMETERS
         self.appraisal_omega_c = self._get_env_value("APPRAISAL_OMEGA_C", float, 1.0)
         self.appraisal_omega_o = self._get_env_value("APPRAISAL_OMEGA_O", float, 1.0)
         self.appraisal_bias = self._get_env_value("APPRAISAL_BIAS", float, 0.0)
@@ -247,9 +239,7 @@ class Config:
         self.stress_alpha_hindrance = self._get_env_value("STRESS_ALPHA_HINDRANCE", float, 1.2)
         self.stress_delta = self._get_env_value("STRESS_DELTA", float, 0.4)
 
-        # ==============================================
-        # PSS-10 SCORE GENERATION PARAMETERS
-        # ==============================================
+        ## PSS-10 SCORE GENERATION PARAMETERS
         self.pss10_item_means = self._get_env_array(
             "PSS10_ITEM_MEAN",
             float,
@@ -310,16 +300,12 @@ class Config:
         self.coping_challenge_bonus = self._get_env_value("COPING_CHALLENGE_BONUS", float, 0.2)
         self.coping_hindrance_penalty = self._get_env_value("COPING_HINDRANCE_PENALTY", float, 0.3)
 
-        # ==============================================
-        # SOCIAL INTERACTION PARAMETERS
-        # ==============================================
+        ## SOCIAL INTERACTION PARAMETERS
         self.interaction_influence_rate = self._get_env_value("INTERACTION_INFLUENCE_RATE", float, 0.05)
         self.interaction_resilience_influence = self._get_env_value("INTERACTION_RESILIENCE_INFLUENCE", float, 0.05)
         self.interaction_max_neighbors = self._get_env_value("INTERACTION_MAX_NEIGHBORS", int, 10)
 
-        # ==============================================
-        # AFFECT AND RESILIENCE DYNAMICS PARAMETERS
-        # ==============================================
+        ## AFFECT AND RESILIENCE DYNAMICS PARAMETERS
         self.affect_peer_influence_rate = self._get_env_value("AFFECT_PEER_INFLUENCE_RATE", float, 0.1)
         self.affect_event_appraisal_rate = self._get_env_value("AFFECT_EVENT_APPRAISAL_RATE", float, 0.15)
         # Homeostatic rates migrated to ASSUMPTION_AFFECT_HOMEOSTATIC_RATE / ASSUMPTION_RESILIENCE_HOMEOSTATIC_RATE
@@ -339,9 +325,7 @@ class Config:
         # Stress and affect dynamics parameters
         self.stress_decay_rate = self._get_env_value("STRESS_DECAY_RATE", float, 0.05)
 
-        # ==============================================
-        # RESOURCE DYNAMICS PARAMETERS
-        # ==============================================
+        ## RESOURCE DYNAMICS PARAMETERS
         self.protective_social_support = self._get_env_value("PROTECTIVE_SOCIAL_SUPPORT", float, 0.5)
         self.protective_family_support = self._get_env_value("PROTECTIVE_FAMILY_SUPPORT", float, 0.5)
         self.protective_formal_intervention = self._get_env_value("PROTECTIVE_FORMAL_INTERVENTION", float, 0.5)
@@ -359,14 +343,10 @@ class Config:
         self.resource_exchange_threshold = self._get_env_value("RESOURCE_EXCHANGE_THRESHOLD", float, 0.2)
         self.resource_max_exchange_ratio = self._get_env_value("RESOURCE_MAX_EXCHANGE_RATIO", float, 0.5)
 
-        # ==============================================
-        # MATHEMATICAL UTILITY PARAMETERS
-        # ==============================================
+        ## MATHEMATICAL UTILITY PARAMETERS
         self.utility_softmax_temperature = self._get_env_value("UTILITY_SOFTMAX_TEMPERATURE", float, 1.0)
 
-        # ==============================================
-        # ASSUMPTION PARAMETERIZATION (Plan 007)
-        # ==============================================
+        ## ASSUMPTION PARAMETERIZATION (Plan 007)
         assumptions = get_assumptions()
 
         # Coping
@@ -585,9 +565,7 @@ class Config:
             "ASSUMPTION_INITIAL_PROTECTIVE_FACTOR_VALUES", float, assumptions.buffering.initial_protective_factor_values
         )
 
-        # ==============================================
-        # OUTPUT AND LOGGING CONFIGURATION
-        # ==============================================
+        ## OUTPUT AND LOGGING CONFIGURATION
         self.log_level = self._get_env_value("LOG_LEVEL", str, "INFO")
 
         self.output_results_dir = self._get_env_value("OUTPUT_RESULTS_DIR", str, "data/processed")

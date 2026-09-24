@@ -25,9 +25,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
-# =========================================================================
-# Helper: load a float env var with a default
-# =========================================================================
+## Helper: load a float env var with a default
 
 
 def _env_float(key: str, default: float) -> float:
@@ -41,9 +39,7 @@ def _env_float(key: str, default: float) -> float:
         return default
 
 
-# =========================================================================
-# Sub-group configs
-# =========================================================================
+## Sub-group configs
 
 
 @dataclass(frozen=True)
@@ -341,9 +337,7 @@ class AssumptionBufferingConfig:
     )
 
 
-# =========================================================================
-# Top-level config container
-# =========================================================================
+## Top-level config container
 
 
 @dataclass(frozen=True)
@@ -367,9 +361,7 @@ class AssumptionConfig:
     buffering: AssumptionBufferingConfig = field(default_factory=AssumptionBufferingConfig)
 
 
-# =========================================================================
-# Global singleton-like accessor (lightweight, freezable dataclass)
-# =========================================================================
+## Global singleton-like accessor (lightweight, freezable dataclass)
 
 _assumptions: Optional[AssumptionConfig] = None
 

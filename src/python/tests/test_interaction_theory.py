@@ -15,9 +15,7 @@ import numpy as np
 from src.python.phases.interaction import process_interaction
 from src.python.phases.interfaces import AgentState
 
-# ──────────────────────────────────────────────
-# Constants matching planned hardcoded defaults
-# ──────────────────────────────────────────────
+## Constants matching planned hardcoded defaults
 
 INFLUENCE_RATE = 0.05
 RESILIENCE_INFLUENCE = 0.05
@@ -27,9 +25,7 @@ COST = 0.05
 SMALL_BOOST = 0.02
 
 
-# ──────────────────────────────────────────────
-# Fixtures
-# ──────────────────────────────────────────────
+## Fixtures
 
 
 @pytest.fixture
@@ -81,9 +77,7 @@ def make_state(**overrides) -> AgentState:
     return AgentState(**defaults)
 
 
-# ──────────────────────────────────────────────
-# Affect convergence
-# ──────────────────────────────────────────────
+## Affect convergence
 
 
 class TestAffectConvergence:
@@ -136,9 +130,7 @@ class TestAffectConvergence:
         assert self_delta["state_delta"]["resilience"] == pytest.approx(0.0, abs=1e-10)
 
 
-# ──────────────────────────────────────────────
-# Negativity bias
-# ──────────────────────────────────────────────
+## Negativity bias
 
 
 class TestNegativityBias:
@@ -181,9 +173,7 @@ class TestNegativityBias:
         )
 
 
-# ──────────────────────────────────────────────
-# No PF in resource-exchange scenarios
-# ──────────────────────────────────────────────
+## No PF in resource-exchange scenarios
 
 
 class TestNoPFEfficacyModification:
@@ -210,9 +200,7 @@ class TestNoPFEfficacyModification:
         assert "protective_factors" not in partner_delta["state_delta"]
 
 
-# ──────────────────────────────────────────────
-# Resource state machine — all 5 scenarios
-# ──────────────────────────────────────────────
+## Resource state machine -- all 5 scenarios
 
 
 class TestResourceStateMachine:
@@ -298,9 +286,7 @@ class TestResourceStateMachine:
         assert "psychological_capital" not in pf_delta
 
 
-# ──────────────────────────────────────────────
-# Support detection
-# ──────────────────────────────────────────────
+## Support detection
 
 
 class TestSupportDetection:
@@ -341,9 +327,7 @@ class TestSupportDetection:
         assert self_delta["observation"]["support_occurred"] == partner_delta["observation"]["support_occurred"]
 
 
-# ──────────────────────────────────────────────
-# Edge cases
-# ──────────────────────────────────────────────
+## Edge cases
 
 
 class TestEdgeCases:

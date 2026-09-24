@@ -181,7 +181,7 @@ def run_phase(
     # Fraction of regenerated resources to preserve (not allocate)
     preservable_fraction = config.get("preservable_allocation_fraction", 0.1)
 
-    # ── 1. Resource regeneration ────────────────────────────────────
+    ## 1. Resource regeneration
     regeneration = _compute_regeneration(resources, affect, resilience, base_regeneration)
 
     # Total resources available after regeneration
@@ -191,17 +191,17 @@ def run_phase(
     preserved = available_for_allocation * preservable_fraction
     spendable = available_for_allocation - preserved
 
-    # ── 2. Softmax allocation ───────────────────────────────────────
+    ## 2. Softmax allocation
     allocations = _allocate_resources(spendable, efficacies_before, temperature)
     total_allocated = sum(allocations.values())
 
-    # ── 3. PF efficacy updates (diminishing returns) ────────────────
+    ## 3. PF efficacy updates (diminishing returns)
     efficacies_after = _update_efficacies(efficacies_before, allocations, resilience, improvement_rate)
 
-    # ── 4. Remaining resources (preserved + unspent) ────────────────
+    ## 4. Remaining resources (preserved + unspent)
     new_resources = min(1.0, max(0.0, preserved + (spendable - total_allocated)))
 
-    # ── Build PhaseOutput ───────────────────────────────────────────
+    ## Build PhaseOutput
     state_delta: Dict[str, Any] = {
         "resources": new_resources,
         "protective_factors": efficacies_after,

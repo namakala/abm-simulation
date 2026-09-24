@@ -20,7 +20,7 @@ from src.python.config import reload_config
 
 logger = logging.getLogger(__name__)
 
-# ── Default calibration parameters ────────────────────────────────
+## Default calibration parameters
 
 DEFAULT_CALIBRATION_PARAMS: Dict[str, float] = {
     "target_mean_min": 13.0,
@@ -31,7 +31,7 @@ DEFAULT_CALIBRATION_PARAMS: Dict[str, float] = {
     "learning_rate": 0.5,
 }
 
-# ── Public API ────────────────────────────────────────────────────
+## Public API
 
 
 def compute_pss10_population_stats(
@@ -205,7 +205,7 @@ def run_calibration(
     return result
 
 
-# ── Internal helpers ──────────────────────────────────────────────
+## Internal helpers
 
 
 def _measure_across_seeds(

@@ -50,7 +50,7 @@ _LEAKING_ENV_KEYS = [
     "STRESS_DELTA",
 ]
 
-# ── Phase-specific fixtures ──────────────────────────────────────
+## Phase-specific fixtures
 
 
 @pytest.fixture

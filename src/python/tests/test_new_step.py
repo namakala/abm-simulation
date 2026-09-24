@@ -15,7 +15,7 @@ import pytest
 from src.python.agent import Person
 
 
-# ── Fixtures ──────────────────────────────────────────────────────
+## Fixtures
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def agent(mock_model):
     return Person(mock_model)
 
 
-# ── Basic smoke tests ─────────────────────────────────────────────
+## Basic smoke tests
 
 
 class TestStepSmoke:
@@ -89,7 +89,7 @@ class TestStepSmoke:
         assert 0.0 <= agent2.resilience <= 1.0
 
 
-# ── Orchestrator pattern tests ────────────────────────────────────
+## Orchestrator pattern tests
 
 
 class TestStepOrchestratorPattern:
@@ -118,7 +118,7 @@ class TestStepOrchestratorPattern:
             mock_delta.assert_called()
 
 
-# ── Behavioral determinism ────────────────────────────────────────
+## Behavioral determinism
 
 
 class TestStepDeterminism:

@@ -23,7 +23,7 @@ pytestmark = pytest.mark.xfail(
     reason="Calibration partial: mean ~15.8 (in range), SD ~4.5 (target 6-8); stress-resources r still outside bounds"
 )
 
-# ── Empirical correlation targets ─────────────────────────────────
+## Empirical correlation targets
 # Sources:
 #   Kermott et al. (2019) — PLOS ONE, 14(6), e0218092.
 #   Yang et al. (2020) — Frontiers in Psychiatry, 11, 588968.
@@ -144,7 +144,7 @@ CORRELATION_TARGETS = [
     },
 ]
 
-# ── Simulation Parameters ─────────────────────────────────────────
+## Simulation Parameters
 SIM_N = 200
 SIM_D = 100
 SIM_SEEDS = [42, 123, 456, 789, 101112, 2021, 777, 888, 999, 1111]

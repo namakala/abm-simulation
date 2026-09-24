@@ -9,7 +9,7 @@ from unittest.mock import Mock
 from src.python.agent import Person
 
 
-# ─── Fixtures ────────────────────────────────────────────────────
+## Fixtures
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def agent(mock_model):
     return Person(mock_model)
 
 
-# ─── _build_agent_state tests ────────────────────────────────────
+## _build_agent_state tests
 
 
 class TestBuildAgentState:
@@ -111,7 +111,7 @@ class TestBuildAgentState:
         assert "interaction_config" in state
 
 
-# ─── _apply_delta tests ──────────────────────────────────────────
+## _apply_delta tests
 
 
 class TestApplyDelta:
@@ -205,7 +205,7 @@ class TestApplyDelta:
         assert new_state["affect"] == 0.9
 
 
-# ─── _write_back_state tests ─────────────────────────────────────
+## _write_back_state tests
 
 
 class TestWriteBackState:

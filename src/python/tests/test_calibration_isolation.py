@@ -23,7 +23,7 @@ from src.python.config import reload_config
 from src.python.assumption_config import reload_assumptions
 
 
-# ── Sweep-winning parameter values ────────────────────────────────
+## Sweep-winning parameter values
 
 WINNING_DEFAULTS: Dict[str, str] = {
     # From config.py (5 parameters)
@@ -42,7 +42,7 @@ WINNING_DEFAULTS: Dict[str, str] = {
     "ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR": "0.30",
 }
 
-# ── Stress dimension mechanism fixes ──────────────────────────────
+## Stress dimension mechanism fixes
 # The sweep shows PSS-10 vs stress r~0.17. Root cause: stress dimensions
 # (controllability, overload) don't diverge enough between agents because:
 #  1. resilience_coping_factor (0.10) is too weak — resilience barely
@@ -57,7 +57,7 @@ STRESS_DIMENSION_FIXES: Dict[str, str] = {
 }
 
 
-# ── Helpers ──
+## Helpers
 
 
 def _apply_overrides(overrides: Dict[str, str]) -> Dict[str, Optional[str]]:
@@ -95,7 +95,7 @@ def _run_and_measure(N: int = 75, max_days: int = 75, seed: int = 42) -> Dict[st
     return {"r": r_val, "p": p_val, "n": valid.sum()}
 
 
-# ── Tests ──
+## Tests
 
 
 class TestPSS10StressCorrelation:

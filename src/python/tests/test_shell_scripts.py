@@ -24,7 +24,7 @@ def _run_awk(file: Path, *input_files: str) -> str:
     return result.stdout
 
 
-# ── extract_env.awk ───────────────────────────────────────────────
+## extract_env.awk
 
 
 class TestExtractEnvAwk:
@@ -120,7 +120,7 @@ class TestExtractEnvAwk:
         assert output.strip() == ""
 
 
-# ── parameterize_env.sh ────────────────────────────────────────────
+## parameterize_env.sh
 
 
 class TestParameterizeEnv:

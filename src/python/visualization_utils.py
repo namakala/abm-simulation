@@ -62,7 +62,7 @@ def create_visualization_report(
     Raises:
         ValueError: If data is empty or contains no valid rows after removing missing values.
     """
-    # ── Validate input before matplotlib check ──────────────────────
+    ## Validate input before matplotlib check
     if isinstance(data, list):
         # Convert list of Person agents to DataFrame
         try:
@@ -280,7 +280,7 @@ def create_time_series_visualization(
     Raises:
         ValueError: If required columns are missing or data is empty after removing NaN.
     """
-    # ── Validate input before matplotlib check ──────────────────────
+    ## Validate input before matplotlib check
     required_cols = ["avg_pss10", "avg_stress", "avg_resilience", "avg_affect"]
     missing_cols = [col for col in required_cols if col not in model_data.columns]
     if missing_cols:

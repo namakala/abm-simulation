@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 
 
-# ── Agent-level reporters ──────────────────────────────────────────
+## Agent-level reporters
 
 
 def report_pss10(agent: Any) -> int:
@@ -96,7 +96,7 @@ def report_support_boost(agent: Any) -> float:
     return getattr(agent, "support_boost", 0.0)
 
 
-# ── Model-level reporters ──────────────────────────────────────────
+## Model-level reporters
 
 
 def model_report_avg_pss10(model: Any) -> float:
@@ -284,7 +284,7 @@ def model_report_avg_buffering_strength(model: Any) -> float:
     return float(np.nanmean(values)) if values else float("nan")
 
 
-# ── Lookup dicts for DataCollector construction ────────────────────
+## Lookup dicts for DataCollector construction
 
 AGENT_REPORTERS = {
     "pss10": report_pss10,
