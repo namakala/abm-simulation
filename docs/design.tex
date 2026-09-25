@@ -229,7 +229,7 @@ event\_driven: runs per stress event or interaction (multiple times/day)
 daily: runs once per day during consolidation loop
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/interfaces.py\#L1-L85}{src/python/phases/interfaces.py:L1-L85}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/interfaces.py\#L1-L85}{src/python/phases/interfaces.py:L1-L85}
 
 \section{AgentState Schema}\label{agentstate-schema}
 
@@ -320,7 +320,7 @@ phases; phases read from and write to this schema via
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/interfaces.py\#L18-L75}{src/python/phases/interfaces.py:L18-L75}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/interfaces.py\#L18-L77}{src/python/phases/interfaces.py:L18-L77}
 
 \section{Two-Loop Orchestration}\label{two-loop-orchestration}
 
@@ -434,7 +434,7 @@ FUNCTION step(agent, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py\#L601-L850}{src/python/agent.py:L601-L850}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/agent.py\#L601-L836}{src/python/agent.py:L601-L836}
 
 \section{Phase Implementations}\label{phase-implementations}
 
@@ -524,7 +524,7 @@ FUNCTION run_stress_perception(state, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/stress_perception.py\#L28-L130}{src/python/phases/stress\_perception.py:L28-L130}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/stress_perception.py\#L28-L130}{src/python/phases/stress\_perception.py:L28-L130}
 
 \subsection{Resilience Activation}\label{resilience-activation}
 
@@ -634,7 +634,7 @@ FUNCTION run_resilience_activation(state, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/resilience_activation.py\#L42-L252}{src/python/phases/resilience\_activation.py:L42-L252}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/resilience_activation.py\#L42-L252}{src/python/phases/resilience\_activation.py:L42-L252}
 
 \subsection{Social Interaction}\label{social-interaction}
 
@@ -711,7 +711,7 @@ FUNCTION interact(self_state, partner_state, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/interaction.py\#L48-L190}{src/python/phases/interaction.py:L48-L190}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/interaction.py\#L44-L182}{src/python/phases/interaction.py:L44-L182}
 
 \subsection{Resource Allocation}\label{resource-allocation}
 
@@ -781,7 +781,7 @@ FUNCTION run_resource_allocation(state, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/resource_allocation.py\#L141-L219}{src/python/phases/resource\_allocation.py:L141-L219}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/resource_allocation.py\#L141-L219}{src/python/phases/resource\_allocation.py:L141-L219}
 
 \subsection{Stress Buffering}\label{stress-buffering}
 
@@ -844,7 +844,7 @@ FUNCTION run_stress_buffering(state, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/stress_buffering.py\#L42-L148}{src/python/phases/stress\_buffering.py:L42-L148}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/stress_buffering.py\#L42-L148}{src/python/phases/stress\_buffering.py:L42-L148}
 
 \subsection{Affect Dynamics}\label{affect-dynamics}
 
@@ -925,7 +925,7 @@ FUNCTION run_affect_dynamics(state, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py\#L67-L210}{src/python/agent.py:L67-L210}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/agent.py\#L67-L211}{src/python/agent.py:L67-L211}
 
 \subsection{PSS-10 Consolidation}\label{pss-10-consolidation}
 
@@ -1007,7 +1007,7 @@ FUNCTION run_pss10_consolidation(state, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py\#L212-L348}{src/python/agent.py:L212-L348}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/agent.py\#L212-L349}{src/python/agent.py:L212-L349}
 
 \subsection{Daily Reset}\label{daily-reset}
 
@@ -1081,7 +1081,7 @@ FUNCTION run_daily_reset(state, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py\#L350-L412}{src/python/agent.py:L350-L412}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/agent.py\#L350-L450}{src/python/agent.py:L350-L450}
 
 \section{Rationale for Cumulative Block
 Experiment}\label{rationale-for-cumulative-block-experiment}
@@ -1221,7 +1221,7 @@ FUNCTION adapt_network(G, agents, config, rng):
 \end{tabularx}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/network_utils.py\#L16-L245}{src/python/network\_utils.py:L16-L245}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/network_utils.py\#L16-L245}{src/python/network\_utils.py:L16-L245}
 
 \section{Data Collection}\label{data-collection}
 
@@ -1286,10 +1286,10 @@ last_phase_outputs = {
 \end{verbatim}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/reporters.py\#L289-L333}{src/python/reporters.py:L289-L333}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/reporters.py\#L289-L333}{src/python/reporters.py:L289-L333}
 
 Reference:
-\href{https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/model.py\#L114-L133}{src/python/model.py:L114-L133}
+\href{https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/model.py\#L114-L133}{src/python/model.py:L114-L133}
 
 
 
