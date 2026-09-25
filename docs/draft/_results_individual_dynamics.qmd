@@ -44,5 +44,5 @@ strategies. Hindrance streaks remain bounded
 `r sprintf("%.1f", max(a$consecutive_hindrances))`), demonstrating the
 system's capacity to prevent pathological cascades through network
 support. Individual diversities are harmonized through social dynamics
-to achieve collective stability: social network dynamics transform
+to achieve collective stability, where social network dynamics transform
 individual variability into population-level equilibrium.

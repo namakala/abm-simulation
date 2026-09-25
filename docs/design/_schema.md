@@ -89,4 +89,4 @@ phases read from and write to this schema via `state_delta`.
 \end{tabularx}
 ```
 
-Reference: [src/python/phases/interfaces.py:L18-L77](https://github.com/namakala/abm-simulation/blob/812534b0da5d3401464acbd1e65c8e1b6eb1bd29/src/python/phases/interfaces.py#L18-L77)
+Reference: [src/python/phases/interfaces.py:L18-L77](https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/interfaces.py#L18-L77)

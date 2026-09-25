@@ -16,7 +16,7 @@ metadata-files:
   - _knitr-bib.yml
 ---
 
-```{r init, echo = FALSE}
+```{r init, output = FALSE}
 pkgs <- c("knitr", "kableExtra")
 pkgs_load <- sapply(pkgs, library, character.only = TRUE)
 ```

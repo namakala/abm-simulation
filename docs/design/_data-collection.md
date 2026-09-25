@@ -52,6 +52,6 @@ last_phase_outputs = {
 }
 ```
 
-Reference: [src/python/reporters.py:L289-L333](https://github.com/namakala/abm-simulation/blob/812534b0da5d3401464acbd1e65c8e1b6eb1bd29/src/python/reporters.py#L289-L333)
+Reference: [src/python/reporters.py:L289-L333](https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/reporters.py#L289-L333)
 
-Reference: [src/python/model.py:L114-L133](https://github.com/namakala/abm-simulation/blob/812534b0da5d3401464acbd1e65c8e1b6eb1bd29/src/python/model.py#L114-L133)
+Reference: [src/python/model.py:L114-L133](https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/model.py#L114-L133)

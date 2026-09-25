@@ -207,10 +207,6 @@
 \maketitle
 
 
-\begin{verbatim}
-| systemfonts and textshaping have been compiled with different versions of Freetype. Because of this, textshaping will not use the font cache provided by systemfonts
-\end{verbatim}
-
 \section{Introduction}\label{introduction}
 
 Anxiety and depression are among the most prevalent psychological
@@ -356,10 +352,10 @@ The core components from prior ABM literature
 were integrated into a unified framework for evaluating the homeostasis
 mechanism of the human psyche. Building on established social network
 dynamics and mental health contagion mechanisms, our model incorporated
-comprehensive stress perception via the Perceived Stress Scale-10
-(PSS-10), challenge-hindrance appraisal, and resilience dynamics,
-enabling simulation of homeostatic mechanisms that determine
-population-level mental health outcomes.
+stress perception via the Perceived Stress Scale-10 (PSS-10),
+challenge-hindrance appraisal, and resilience dynamics, enabling
+simulation of homeostatic mechanisms that determine population-level
+mental health outcomes.
 
 The simulation was operated through structured daily steps: (1) agent
 initialization with baseline resilience, affect, and resources; (2)
@@ -370,16 +366,6 @@ exchanges; (6) resource allocation across protective factors; and (7)
 homeostatic adjustments toward equilibrium. Network adaptation occurred
 when chronic stress triggers rewiring based on homophily and support
 effectiveness.
-
-Key departures from prior work included PSS-10 integration for validated
-stress measurement and explicit resource dynamics with softmax
-allocation. Literature-supported elements include social contagion
-\citep{Andarlia2021} and network formation \citep{Murase2021}, while
-PSS-10 bifactor modeling and resilience mechanisms remain empirically
-grounded but require further validation against longitudinal data. Model
-is highly applicable for simulating psychological resilience, though
-limitations include unvalidated parameter ranges, necessitating
-sensitivity analysis.
 
 \subsection{Theoretical Foundation and Simulation
 Architecture}\label{theoretical-foundation-and-simulation-architecture}
@@ -696,8 +682,8 @@ $\bar{\zeta}_d$ & Daily average hindrance & [0,1] & variable & $\bar{\zeta}_d = 
 $\Delta A_p$ & Peer influence on affect & $\mathbb{R}$ & variable & $\Delta A_p = \frac{1}{k}\sum_{j=1}^{k} \alpha_p (A_j - A_t)$, $k = \min(n_{\mathrm{nb}}, k_{\mathrm{influence}})$. \\
 $\Delta A_e$ & Event appraisal effect on affect & $\mathbb{R}$ & variable & $\Delta A_e = \alpha_e \bar{\chi}_d (1 - A_t) - \alpha_e \bar{\zeta}_d \max(0.1, A_t + 1)$. \\
 $\Delta A_h$ & Homeostatic effect on affect & $\mathbb{R}$ & variable & $\Delta A_h = \lambda_{\mathrm{affect}}^s \cdot (A_0 - A_t)$ with stress- and resource-scaled rate. \\
-$\Delta A_{\mathrm{ero}}$ & Stress erosion effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{ero}} = -\lambda_{\mathrm{ero}} \cdot S_t \cdot m_{\mathrm{ero}}$ (STRESS\_EROSION\_RATE $\times$ stress $\times$ assumption multiplier). \\
-$\Delta A_{\mathrm{res}}$ & Resource effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{res}} = \beta_{ra}(R_t - 0.5)\big(1 + (\mathfrak{R}_t - 0.5)\cdot 0.5\big)$; $\beta_{ra} = $ ASSUMPTION\_RESOURCE\_AFFECT\_COUPLING. \\
+$\Delta A_{\mathrm{ero}}$ & Stress erosion effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{ero}} = -\lambda_{\mathrm{ero}} \cdot S_t \cdot m_{\mathrm{ero}}$ (stress erosion rate $\times$ stress $\times$ assumption multiplier). \\
+$\Delta A_{\mathrm{res}}$ & Resource effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{res}} = \beta_{ra}(R_t - 0.5)\big(1 + (\mathfrak{R}_t - 0.5)\cdot 0.5\big)$; $\beta_{ra} = $ assumption resource affect coupling. \\
 $A_{t+1}$ & Affect at time t+1 & [-1,1] & variable & $A_{t+1} = \mathrm{clamp}\big(A_t + \Delta A_p + \Delta A_e + \Delta A_h + \Delta A_{\mathrm{ero}} + \Delta A_{\mathrm{res}},\, -1, 1\big)$. \\
 $\Delta \mathfrak{R}_{\chi\zeta}$ & Resilience change from coping & $\mathbb{R}$ & variable & Success: $(0.3\chi + 0.1\zeta)(1 - \mathfrak{R}_t)$; failure: $(-0.1\chi - 0.4\zeta)(1 - \mathfrak{R}_t)$; ceiling-damped. \\
 $\Delta \mathfrak{R}_p$ & Protective factor boost & $\mathbb{R}$ & variable & $\Delta \mathfrak{R}_p = \sum_{f \in F} e_f (\mathfrak{R}_0 - \mathfrak{R}_t) \theta_{\mathrm{boost}}$. \\
@@ -1123,18 +1109,17 @@ the individual heterogeneity underlying that stability together with the
 contribution of each model mechanism, and finally the associations that
 emerge at the end state.
 
-\subsection{Baseline: initial population
-state}\label{baseline-initial-population-state}
+\subsection{Initial population state}\label{initial-population-state}
 
 Figure~\ref{fig-initial-population} presents a cross-sectional snapshot
 of agent psychological states before the first simulation day. Baseline
 resilience, affect, and resources are sampled independently, and the
 PSS-10 score is derived from its item responses, so the population
-starts from a neutral point: no pairwise association exceeds 0.26 in
-magnitude, and the PSS-10--stress correlation is only 0.03. This absence
-of predetermined relationships is intentional: any associations observed
-at the end state must therefore emerge from the model's dynamics rather
-than from biased initial conditions.
+starts from a neutral point. No pairwise association exceeds 0.26 in
+magnitude, and the PSS-10--stress correlation is 0.03. This absence of
+predetermined relationships is intentional. Any associations observed at
+the end state should therefore reflect emerged associations from the
+model's dynamics rather than from biased initial conditions.
 
 \begin{figure}
 
@@ -1154,7 +1139,7 @@ randomly generated distributions}
 dynamics}\label{homeostatic-stability-of-population-dynamics}
 
 Under homogeneous initial conditions simulating a general population,
-the model exhibits stable homeostatic mechanisms: population-level
+the model exhibits stable homeostatic mechanisms. Population-level
 metrics remain confined to narrow ranges across all 90 simulation days.
 Mean perceived stress (PSS-10 = 13.995 ± 0.177, CV 1.3\%, range
 13.58--15.68) demonstrates low variability indicative of effective
@@ -1168,12 +1153,11 @@ management through social network dynamics, and moderate stress (0.272 ±
 Figure~\ref{fig-time-series} depicts the longitudinal trajectories of
 all agents across simulation epochs, showcasing stable temporal
 variation indicative of effective homeostatic mechanisms. Drawing from
-comprehensive agent-state data over time, this figure reveals
-equilibrium maintenance through consistent fluctuations: population
-metrics remain within constant ranges, affirming that agent-based
-simulations can model homeostatic resilience via social network
-dynamics, where interactions sustain mental health equilibrium without
-excessive variability.
+agent-state data over time, this figure reveals equilibrium maintenance
+through consistent fluctuations. Population metrics remain within
+constant ranges, affirming that agent-based simulations can model
+homeostatic resilience via social network dynamics, where interactions
+sustain mental health equilibrium without excessive variability.
 
 \begin{figure}
 
@@ -1276,33 +1260,29 @@ capturing the cognitive appraisal diversity that drives individual
 adaptation strategies. Hindrance streaks remain bounded (3.770 ± 4.215,
 maximum 48.4), demonstrating the system's capacity to prevent
 pathological cascades through network support. Individual diversities
-are harmonized through social dynamics to achieve collective stability:
-social network dynamics transform individual variability into
+are harmonized through social dynamics to achieve collective stability,
+where social network dynamics transform individual variability into
 population-level equilibrium.
 
-\subsection{Mechanism contribution: cumulative building-block
-build-up}\label{mechanism-contribution-cumulative-building-block-build-up}
+\subsection{Cumulative building-block
+build-up}\label{cumulative-building-block-build-up}
 
 To make the contribution of each mechanism explicit, the model is
 assembled block by block. Seven stages run the same seeded population (N
-= 100 agents, 90 days): each stage adds one building block on top of the
-previous ones and reports the metrics that block introduces. Stage 1 is
-initialization only; stages 2--6 add stress perception, resilience
-activation, interaction, resource allocation, and stress buffering in
-turn; stage 7 is the full model, including the remaining daily-cycle
-internals (affect dynamics, PSS-10 consolidation, daily reset) and
-network adaptation, run through the production pipeline
-(\texttt{simulate.py}). Results are computed by
-\texttt{pixi\ run\ cumulative-blocks} and exported to
-\texttt{data/output/}.
+= 100 agents, 90 days), with each stage adds one building block on top
+of the previous ones and reports the metrics that block introduces.
+Stage 1 is initialization only; stages 2--6 add stress perception,
+resilience activation, interaction, resource allocation, and stress
+buffering in turn; stage 7 is the full model, including the remaining
+daily-cycle internals (affect dynamics, PSS-10 consolidation, daily
+reset) and network adaptation.
 
 \subsubsection{Stage metrics}\label{stage-metrics}
 
 Each stage adds one building block on top of the previous ones and the
 table reports the resulting final-day population state. All seven stages
 share the same seeded population and network, so differences between
-consecutive rows isolate the contribution of the added block. Cells
-whose block is not active at a stage are reported as n/a.
+consecutive rows isolate the contribution of the added block.
 
 \begin{landscape}
 
@@ -1367,16 +1347,14 @@ allocation (stage 5) restores the resource pool but cannot move affect
 or resilience, and stress buffering (stage 6) starts pushing resilience
 back toward its baseline, albeit with small buffering strength.
 
-These intermediate stages are deliberately partial: they enable the
+These intermediate stages are deliberately partial as they enable the
 stress-adding mechanisms without the restorative blocks of the daily
-cycle. Stage 7, the complete model, activates the remaining blocks --
-affect dynamics, PSS-10 consolidation, daily reset, and network
-adaptation -- completing the two-loop daily cycle of the production
-pipeline (\texttt{Person.step()} in \texttt{simulate.py}). The
+cycle. Stage 7, the complete model, activates the remaining blocks
+completing the two-loop daily cycle of the production pipeline. The
 homeostatic pull toward baseline affect and resilience, the daily stress
 decay, and adaptive rewiring toward more similar peers jointly restore
-the equilibrium reported in the model-level tables: affect returns near
-neutral, resilience near its baseline, perceived stress falls to a
+the equilibrium reported in the model-level tables, where affect returns
+near neutral, resilience near its baseline, perceived stress falls to a
 moderate range, and coping success rises in parallel. The phase-specific
 metrics (regeneration, buffering strength) are exported for stage 7 by
 the same model reporters that feed stages 1--6, so those cells are
@@ -1384,10 +1362,6 @@ populated throughout; the support-exchange rates for stages 1--6 are
 computed from per-event interaction records, whereas the stage-7 value
 is the daily support-to-interaction ratio exported by the production
 model, so the two definitions are not directly comparable.
-
-Stage 7 is the configuration reported in the model-level and agent-level
-tables above; its final-day population state and agent heterogeneity are
-examined in the next section.
 
 \subsection{Emergent associations at the end
 state}\label{emergent-associations-at-the-end-state}

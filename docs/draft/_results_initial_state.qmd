@@ -1,14 +1,14 @@
-## Baseline: initial population state
+## Initial population state
 
 @fig-initial-population presents a cross-sectional snapshot of agent
 psychological states before the first simulation day. Baseline
 resilience, affect, and resources are sampled independently, and the
 PSS-10 score is derived from its item responses, so the population
-starts from a neutral point: no pairwise association exceeds
+starts from a neutral point. No pairwise association exceeds
 `r baseline_max_corr()` in magnitude, and the PSS-10--stress correlation is
-only `r baseline_corr("pss10", "current_stress")`. This absence of
-predetermined relationships is intentional: any associations observed at
-the end state must therefore emerge from the model's dynamics rather
-than from biased initial conditions.
+`r baseline_corr("pss10", "current_stress")`. This absence of
+predetermined relationships is intentional. Any associations observed at
+the end state should therefore reflect emerged associations from the model's
+dynamics rather than from biased initial conditions.
 
 ![Cross-sectional visualization of agent psychological states at baseline, highlighting uncorrelated randomly generated distributions](figures/full_model_initial_population.pdf){#fig-initial-population}

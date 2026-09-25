@@ -105,4 +105,4 @@ FUNCTION step(agent, config, rng):
 \end{tabularx}
 ```
 
-Reference: [src/python/agent.py:L601-L836](https://github.com/namakala/abm-simulation/blob/812534b0da5d3401464acbd1e65c8e1b6eb1bd29/src/python/agent.py#L601-L836)
+Reference: [src/python/agent.py:L601-L836](https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/agent.py#L601-L836)

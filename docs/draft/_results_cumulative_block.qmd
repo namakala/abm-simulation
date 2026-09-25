@@ -1,6 +1,6 @@
-## Mechanism contribution: cumulative building-block build-up
+## Cumulative building-block build-up
 
-To make the contribution of each mechanism explicit, the model is assembled block by block. Seven stages run the same seeded population (N = 100 agents, 90 days): each stage adds one building block on top of the previous ones and reports the metrics that block introduces. Stage 1 is initialization only; stages 2--6 add stress perception, resilience activation, interaction, resource allocation, and stress buffering in turn; stage 7 is the full model, including the remaining daily-cycle internals (affect dynamics, PSS-10 consolidation, daily reset) and network adaptation, run through the production pipeline (`simulate.py`). Results are computed by `pixi run cumulative-blocks` and exported to `data/output/`.
+To make the contribution of each mechanism explicit, the model is assembled block by block. Seven stages run the same seeded population (N = 100 agents, 90 days), with each stage adds one building block on top of the previous ones and reports the metrics that block introduces. Stage 1 is initialization only; stages 2--6 add stress perception, resilience activation, interaction, resource allocation, and stress buffering in turn; stage 7 is the full model, including the remaining daily-cycle internals (affect dynamics, PSS-10 consolidation, daily reset) and network adaptation.
 
 ```{r}
 #| label: cum-setup
@@ -28,8 +28,7 @@ data_dir <- find_data_dir()
 Each stage adds one building block on top of the previous ones and the table
 reports the resulting final-day population state. All seven stages share the
 same seeded population and network, so differences between consecutive rows
-isolate the contribution of the added block. Cells whose block is not active
-at a stage are reported as n/a.
+isolate the contribution of the added block.
 
 ::: {.landscape}
 
@@ -93,10 +92,6 @@ kableExtra::kable(
     1,
     width = "3.5cm"
   ) |>
-  #kableExtra::column_spec(
-  #  2:8,
-  #  width = "1cm"
-  #) |>
   kableExtra::footnote(
     general = c(
       "Stage 1: Initialization.",
@@ -117,6 +112,4 @@ kableExtra::kable(
 
 Each added block shifts the population metrics in a way that makes its contribution explicit. Stress perception (stage 2) updates only the appraisal dimensions and leaves the outcome states untouched, so stages 1 and 2 coincide. Resilience activation (stage 3) introduces coping, and every stress event that is coped with unsuccessfully lowers affect and resilience, raises stress, and consumes resources; no regeneration, decay, or homeostatic return opposes it yet, so the population settles into a depleted, stressed state. Interaction (stage 4) propagates affect and resilience through the network with a negativity bias stronger than the positive one, dragging both toward their lower bounds. Resource allocation (stage 5) restores the resource pool but cannot move affect or resilience, and stress buffering (stage 6) starts pushing resilience back toward its baseline, albeit with small buffering strength.
 
-These intermediate stages are deliberately partial: they enable the stress-adding mechanisms without the restorative blocks of the daily cycle. Stage 7, the complete model, activates the remaining blocks -- affect dynamics, PSS-10 consolidation, daily reset, and network adaptation -- completing the two-loop daily cycle of the production pipeline (\texttt{Person.step()} in \texttt{simulate.py}). The homeostatic pull toward baseline affect and resilience, the daily stress decay, and adaptive rewiring toward more similar peers jointly restore the equilibrium reported in the model-level tables: affect returns near neutral, resilience near its baseline, perceived stress falls to a moderate range, and coping success rises in parallel. The phase-specific metrics (regeneration, buffering strength) are exported for stage 7 by the same model reporters that feed stages 1--6, so those cells are populated throughout; the support-exchange rates for stages 1--6 are computed from per-event interaction records, whereas the stage-7 value is the daily support-to-interaction ratio exported by the production model, so the two definitions are not directly comparable.
-
-Stage 7 is the configuration reported in the model-level and agent-level tables above; its final-day population state and agent heterogeneity are examined in the next section.
+These intermediate stages are deliberately partial as they enable the stress-adding mechanisms without the restorative blocks of the daily cycle. Stage 7, the complete model, activates the remaining blocks completing the two-loop daily cycle of the production pipeline. The homeostatic pull toward baseline affect and resilience, the daily stress decay, and adaptive rewiring toward more similar peers jointly restore the equilibrium reported in the model-level tables, where affect returns near neutral, resilience near its baseline, perceived stress falls to a moderate range, and coping success rises in parallel. The phase-specific metrics (regeneration, buffering strength) are exported for stage 7 by the same model reporters that feed stages 1--6, so those cells are populated throughout; the support-exchange rates for stages 1--6 are computed from per-event interaction records, whereas the stage-7 value is the daily support-to-interaction ratio exported by the production model, so the two definitions are not directly comparable.

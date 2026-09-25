@@ -52,4 +52,4 @@ FUNCTION run_stress_buffering(state, config, rng):
 \end{tabularx}
 ```
 
-Reference: [src/python/phases/stress_buffering.py:L42-L148](https://github.com/namakala/abm-simulation/blob/812534b0da5d3401464acbd1e65c8e1b6eb1bd29/src/python/phases/stress_buffering.py#L42-L148)
+Reference: [src/python/phases/stress_buffering.py:L42-L148](https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/stress_buffering.py#L42-L148)
