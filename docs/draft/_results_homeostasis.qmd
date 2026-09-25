@@ -52,7 +52,7 @@ tbl <- data.frame(
   Interpretation = interp,
   check.names = FALSE
 )
-kable(tbl, format = "latex", booktabs = TRUE)
+kable(tbl, format = "latex", booktabs = TRUE, row.names = FALSE)
 ```
 
 @tbl-model-level substantiates a homeostatic system sustained by social

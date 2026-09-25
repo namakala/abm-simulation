@@ -24,23 +24,6 @@ find_data_dir <- function() {
 data_dir <- find_data_dir()
 ```
 
-### Stage composition
-
-The seven stages accumulate building blocks; each row lists the blocks active at that stage.
-
-```{r}
-#| label: cum-stage-blocks
-#| echo: false
-#| results: asis
-blocks <- read.csv(file.path(data_dir, "cumulative_stages_metrics.csv"), check.names = FALSE)
-kable(
-  blocks[, c("stage", "blocks_active")],
-  format = "latex", booktabs = TRUE,
-  col.names = c("Stage", "Blocks active"),
-  caption = "Cumulative stage composition: building blocks active per stage"
-)
-```
-
 ### Stage metrics
 
 Each stage adds one building block on top of the previous ones and the table
@@ -53,18 +36,61 @@ at a stage are reported as n/a.
 #| label: cum-stage-metrics
 #| echo: false
 #| results: asis
-key_cols <- c("avg_pss10", "avg_stress", "avg_affect", "avg_resilience", "avg_resources", "stress_prevalence", "coping_success_rate")
-label_map <- c("avg_pss10" = "PSS-10", "avg_stress" = "Stress", "avg_affect" = "Affect", "avg_resilience" = "Resilience", "avg_resources" = "Resources", "stress_prevalence" = "Stress prevalence", "coping_success_rate" = "Coping success")
-block_added <- c("1" = "Initialization", "2" = "+ Stress perception", "3" = "+ Resilience activation", "4" = "+ Interaction", "5" = "+ Resource allocation", "6" = "+ Stress buffering", "7" = "+ Full model")
+key_cols <- c("avg_pss10", "avg_stress", "avg_affect", "avg_resilience",
+              "avg_resources", "stress_prevalence", "coping_success_rate")
+metric_labels <- c(
+  avg_pss10 = "PSS-10",
+  avg_stress = "Stress",
+  avg_affect = "Affect",
+  avg_resilience = "Resilience",
+  avg_resources = "Resources",
+  stress_prevalence = "Stress prevalence",
+  coping_success_rate = "Coping success"
+)
+interpretations <- c(
+  avg_pss10 = "Perceived stress scale",
+  avg_stress = "Stress intensity",
+  avg_affect = "Emotional valence",
+  avg_resilience = "Adaptive capacity",
+  avg_resources = "Psychological resources",
+  stress_prevalence = "Proportion stressed",
+  coping_success_rate = "Coping success rate"
+)
+blocks <- read.csv(file.path(data_dir, "cumulative_stages_metrics.csv"),
+                   check.names = FALSE)
 nm <- blocks[, key_cols]
 nm[] <- lapply(nm, function(x) {
   v <- format(round(x, 3), nsmall = 3, trim = TRUE)
   v[is.na(x)] <- "n/a"
   v
 })
-colnames(nm) <- unname(label_map[colnames(nm)])
-tbl <- data.frame("Stage" = blocks$stage, "Block added" = unname(block_added[as.character(blocks$stage)]), nm, check.names = FALSE)
-kable(tbl, format = "latex", booktabs = TRUE, col.names = c("Stage", "Block added", unname(label_map[key_cols])), caption = "Cumulative building-block metrics by stage (final-day population state)")
+tbl <- data.frame(
+  Metric = unname(metric_labels[key_cols]),
+  Interpretation = unname(interpretations[key_cols]),
+  nm,
+  check.names = FALSE
+)
+colnames(tbl) <- c("Metric", "Interpretation",
+                    paste0("S", blocks$stage))
+
+footer <- paste0(
+  "\\\\footnotesize ",
+  "Stage 1: Initialization. ",
+  "Stage 2: + Stress perception. ",
+  "Stage 3: + Resilience activation. ",
+  "Stage 4: + Interaction. ",
+  "Stage 5: + Resource allocation. ",
+  "Stage 6: + Stress buffering. ",
+  "Stage 7: + Full model (affect dynamics, PSS-10 consolidation, daily reset, network adaptation)."
+)
+out <- capture.output(
+  kable(tbl, format = "latex", booktabs = TRUE,
+        caption = "Cumulative building-block metrics by stage (final-day population state)")
+)
+# Insert footer before \end{tabular}
+end_idx <- grep("end{tabular}", out, fixed = TRUE)
+out <- c(out[1:(end_idx - 1)], footer, out[end_idx:length(out)])
+cat(paste(out, collapse = "\n"))
 ```
 
 Each added block shifts the population metrics in a way that makes its contribution explicit. Stress perception (stage 2) updates only the appraisal dimensions and leaves the outcome states untouched, so stages 1 and 2 coincide. Resilience activation (stage 3) introduces coping, and every stress event that is coped with unsuccessfully lowers affect and resilience, raises stress, and consumes resources; no regeneration, decay, or homeostatic return opposes it yet, so the population settles into a depleted, stressed state. Interaction (stage 4) propagates affect and resilience through the network with a negativity bias stronger than the positive one, dragging both toward their lower bounds. Resource allocation (stage 5) restores the resource pool but cannot move affect or resilience, and stress buffering (stage 6) starts pushing resilience back toward its baseline, albeit with small buffering strength.
