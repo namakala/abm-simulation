@@ -3,7 +3,6 @@
 #| echo: false
 #| message: false
 #| warning: false
-library(knitr)
 find_data_dir <- function() {
   candidates <- c(
     file.path(getwd(), "data", "output"),

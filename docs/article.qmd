@@ -16,6 +16,11 @@ metadata-files:
   - _knitr-bib.yml
 ---
 
+```{r init, echo = FALSE}
+pkgs <- c("knitr", "kableExtra")
+pkgs_load <- sapply(pkgs, library, character.only = TRUE)
+```
+
 {{< include draft/_introduction.qmd >}}
 
 {{< include draft/_methods.qmd >}}

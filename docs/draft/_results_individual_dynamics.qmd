@@ -22,7 +22,8 @@ tbl2 <- data.frame(
   Interpretation = agent_interp_vals,
   check.names = FALSE
 )
-kable(tbl2, format = "latex", booktabs = TRUE, row.names = FALSE)
+kable(tbl2, format = "latex", booktabs = TRUE, row.names = FALSE) |> 
+  kableExtra::kable_styling(full_width = TRUE)
 ```
 
 @tbl-agent-level reveals substantial dynamic variability within the

@@ -108,6 +108,21 @@
 \bibliographystyle{plainnat}
 
 
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabularx}
+\usepackage{xltabular}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
 \usepackage{longtable}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -163,6 +178,9 @@
 \newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
 \makeatother
 \makeatletter
+\usepackage{pdflscape}
+\makeatother
+\makeatletter
 \makeatother
 \makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
@@ -188,6 +206,10 @@
 \begin{document}
 \maketitle
 
+
+\begin{verbatim}
+| systemfonts and textshaping have been compiled with different versions of Freetype. Because of this, textshaping will not use the font cache provided by systemfonts
+\end{verbatim}
 
 \section{Introduction}\label{introduction}
 
@@ -1174,23 +1196,23 @@ demonstrating homeostatic stability}
 
 \centering{
 
-\begin{tabular}{llll}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
-  & Variable & Mean ± SD & Interpretation\\
+Variable & Mean ± SD & Interpretation\\
 \midrule
-avg\_pss10 & PSS-10 across agents & 13.995 ± 0.177 & Stable stress perception\\
-avg\_resilience & Resilience level & 0.488 ± 0.005 & Uniform coping capacity\\
-avg\_affect & Affect (valence) & -0.120 ± 0.006 & Controlled mood variation\\
-coping\_success\_rate & Coping success rate & 0.700 ± 0.012 & Reliable coping outcomes\\
-avg\_resources & Psychological resources & 0.340 ± 0.002 & Stable resource levels\\
+PSS-10 across agents & 13.995 ± 0.177 & Stable stress perception\\
+Resilience level & 0.488 ± 0.005 & Uniform coping capacity\\
+Affect (valence) & -0.120 ± 0.006 & Controlled mood variation\\
+Coping success rate & 0.700 ± 0.012 & Reliable coping outcomes\\
+Psychological resources & 0.340 ± 0.002 & Stable resource levels\\
 \addlinespace
-avg\_stress & Current stress level & 0.272 ± 0.012 & Controlled intensity variation\\
-avg\_challenge & Challenge appraisal & 0.500 ± 0.005 & Balanced appraisal pattern\\
-avg\_hindrance & Hindrance appraisal & 0.500 ± 0.005 & Balanced appraisal pattern\\
-avg\_consecutive\_hindrances & Hindrance sequence length & 4.649 ± 0.256 & Occasional extended periods\\
- & Challenge–hindrance diff. & -0.000 ± 0.009 & Centered near zero, indicating equilibrium\\
+Current stress level & 0.272 ± 0.012 & Controlled intensity variation\\
+Challenge appraisal & 0.500 ± 0.005 & Balanced appraisal pattern\\
+Hindrance appraisal & 0.500 ± 0.005 & Balanced appraisal pattern\\
+Hindrance sequence length & 4.649 ± 0.256 & Occasional extended periods\\
+Challenge–hindrance diff. & -0.000 ± 0.009 & Centered near zero, indicating equilibrium\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 
 }
 
@@ -1217,21 +1239,21 @@ demonstrating individual heterogeneity within population stability}
 
 \centering{
 
-\begin{tabular}{llll}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
-  & Variable & Mean ± SD & Interpretation\\
+Variable & Mean ± SD & Interpretation\\
 \midrule
-pss10 & PSS-10 per agent-step & 13.995 ± 5.178 & Variable stress levels\\
-resilience & Resilience level & 0.488 ± 0.297 & Diverse adaptive capacities\\
-affect & Emotional state & -0.120 ± 0.347 & Significant mood fluctuations\\
-resources & Psychological resources & 0.340 ± 0.033 & Fluctuating resource capacity\\
-current\_stress & Stress intensity & 0.272 ± 0.211 & Fluctuating stress pressure\\
+PSS-10 per agent-step & 13.995 ± 5.178 & Variable stress levels\\
+Resilience level & 0.488 ± 0.297 & Diverse adaptive capacities\\
+Emotional state & -0.120 ± 0.347 & Significant mood fluctuations\\
+Psychological resources & 0.340 ± 0.033 & Fluctuating resource capacity\\
+Stress intensity & 0.272 ± 0.211 & Fluctuating stress pressure\\
 \addlinespace
-stress\_controllability & Controllability perception & 0.821 ± 0.159 & Diverse agency experiences\\
-stress\_overload & Overload perception & 0.171 ± 0.153 & Diverse capacity challenges\\
-consecutive\_hindrances & Hindrance streak length & 3.770 ± 4.215 & Unpredictable stress patterns\\
+Controllability perception & 0.821 ± 0.159 & Diverse agency experiences\\
+Overload perception & 0.171 ± 0.153 & Diverse capacity challenges\\
+Hindrance streak length & 3.770 ± 4.215 & Unpredictable stress patterns\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 
 }
 
@@ -1274,31 +1296,6 @@ network adaptation, run through the production pipeline
 \texttt{pixi\ run\ cumulative-blocks} and exported to
 \texttt{data/output/}.
 
-\subsubsection{Stage composition}\label{stage-composition}
-
-The seven stages accumulate building blocks; each row lists the blocks
-active at that stage.
-
-\begin{table}
-
-\caption{\label{tab:cum-stage-blocks}Cumulative stage composition: building blocks active per stage}
-\centering
-\begin{tabular}[t]{rl}
-\toprule
-Stage & Blocks active\\
-\midrule
-1 & initialization\\
-2 & initialization,stress\_perception\\
-3 & initialization,stress\_perception,resilience\_activation\\
-4 & initialization,stress\_perception,resilience\_activation,interaction\\
-5 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation\\
-\addlinespace
-6 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation,stress\_buffering\\
-7 & initialization,stress\_perception,resilience\_activation,interaction,resource\_allocation,stress\_buffering,affect\_dynamics,pss10\_consolidation,daily\_reset,network\_adaptation\\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \subsubsection{Stage metrics}\label{stage-metrics}
 
 Each stage adds one building block on top of the previous ones and the
@@ -1307,25 +1304,54 @@ share the same seeded population and network, so differences between
 consecutive rows isolate the contribution of the added block. Cells
 whose block is not active at a stage are reported as n/a.
 
-\begin{table}
+\begin{landscape}
 
+\begin{table}[!h]
+\centering
 \caption{\label{tab:cum-stage-metrics}Cumulative building-block metrics by stage (final-day population state)}
 \centering
-\begin{tabular}[t]{rllllllll}
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+\fontsize{9}{11}\selectfont
+\begin{threeparttable}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.5cm}>{\raggedleft\arraybackslash}X>{\raggedleft\arraybackslash}X>{\raggedleft\arraybackslash}X>{\raggedleft\arraybackslash}X>{\raggedleft\arraybackslash}X>{\raggedleft\arraybackslash}X>{\raggedleft\arraybackslash}X}
 \toprule
-Stage & Block added & PSS-10 & Stress & Affect & Resilience & Resources & Stress prevalence & Coping success\\
+Metric & S1 & S2 & S3 & S4 & S5 & S6 & S7\\
 \midrule
-1 & Initialization & 15.571 & 0.443 & 0.024 & 0.504 & 0.484 & 0.006 & n/a\\
-2 & + Stress perception & 15.571 & 0.443 & 0.024 & 0.504 & 0.484 & 0.006 & n/a\\
-3 & + Resilience activation & 17.139 & 0.758 & -0.934 & 0.265 & 0.113 & 0.040 & 0.427\\
-4 & + Interaction & 18.448 & 0.839 & -0.993 & 0.034 & 0.110 & 0.043 & 0.333\\
-5 & + Resource allocation & 18.300 & 0.838 & -0.993 & 0.034 & 0.315 & 0.042 & 0.334\\
+PSS-10 & 15.571 & 15.571 & 17.139 & 18.448 & 18.300 & 17.629 & 13.882\\
+Stress & 0.443 & 0.443 & 0.758 & 0.839 & 0.838 & 0.776 & 0.270\\
+Affect & 0.024 & 0.024 & -0.934 & -0.993 & -0.993 & -0.991 & -0.119\\
+Resilience & 0.504 & 0.504 & 0.265 & 0.034 & 0.034 & 0.224 & 0.489\\
+Resources & 0.484 & 0.484 & 0.113 & 0.110 & 0.315 & 0.311 & 0.340\\
 \addlinespace
-6 & + Stress buffering & 17.629 & 0.776 & -0.991 & 0.224 & 0.311 & 0.037 & 0.408\\
-7 & + Full model & 13.882 & 0.270 & -0.119 & 0.489 & 0.340 & 0.036 & 0.700\\
+Stress prevalence & 0.006 & 0.006 & 0.040 & 0.043 & 0.042 & 0.037 & 0.036\\
+Challenge appraisal & NA & 0.500 & 0.500 & 0.500 & 0.500 & 0.500 & 0.500\\
+Hindrance appraisal & NA & 0.500 & 0.500 & 0.500 & 0.500 & 0.500 & 0.500\\
+Stress event rate & 0.000 & 1.526 & 1.526 & 1.527 & 1.527 & 1.527 & 1.522\\
+Coping success & NA & NA & 0.427 & 0.333 & 0.334 & 0.408 & 0.700\\
+\addlinespace
+Interactions/agent-day & NA & NA & NA & 1.526 & 1.526 & 1.526 & 1.497\\
+Support exchange rate & NA & NA & NA & 0.242 & 0.243 & 0.688 & 0.624\\
+Regeneration & NA & NA & NA & NA & 0.369 & 0.367 & 0.348\\
+Net resource change & NA & NA & NA & NA & 0.053 & 0.049 & NA\\
+Buffering strength & NA & NA & NA & NA & NA & 0.028 & 0.093\\
+\addlinespace
+Stress depletion & NA & NA & NA & NA & NA & -0.006 & NA\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\begin{tablenotes}
+\item \textit{Note:} 
+\item Stage 1: Initialization.
+\item Stage 2: + Stress perception.
+\item Stage 3: + Resilience activation.
+\item Stage 4: + Interaction.
+\item Stage 5: + Resource allocation.
+\item Stage 6: + Stress buffering.
+\item Stage 7: + Full model.
+\end{tablenotes}
+\end{threeparttable}}
 \end{table}
+
+\end{landscape}
 
 Each added block shifts the population metrics in a way that makes its
 contribution explicit. Stress perception (stage 2) updates only the

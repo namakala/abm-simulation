@@ -7,7 +7,6 @@ To make the contribution of each mechanism explicit, the model is assembled bloc
 #| echo: false
 #| message: false
 #| warning: false
-library(knitr)
 find_data_dir <- function() {
   candidates <- c(
     file.path(getwd(), "data", "output"),
@@ -32,12 +31,17 @@ same seeded population and network, so differences between consecutive rows
 isolate the contribution of the added block. Cells whose block is not active
 at a stage are reported as n/a.
 
+::: {.landscape}
+
 ```{r}
 #| label: cum-stage-metrics
 #| echo: false
 #| results: asis
-key_cols <- c("avg_pss10", "avg_stress", "avg_affect", "avg_resilience",
-              "avg_resources", "stress_prevalence", "coping_success_rate")
+blocks <- read.csv(file.path(data_dir, "cumulative_stages_metrics.csv"),
+                   check.names = FALSE)
+
+metric_cols <- setdiff(names(blocks), c("stage", "blocks_active"))
+
 metric_labels <- c(
   avg_pss10 = "PSS-10",
   avg_stress = "Stress",
@@ -45,53 +49,71 @@ metric_labels <- c(
   avg_resilience = "Resilience",
   avg_resources = "Resources",
   stress_prevalence = "Stress prevalence",
-  coping_success_rate = "Coping success"
+  avg_challenge = "Challenge appraisal",
+  avg_hindrance = "Hindrance appraisal",
+  stress_event_rate = "Stress event rate",
+  coping_success_rate = "Coping success",
+  interactions_per_agent_day = "Interactions/agent-day",
+  support_exchange_rate = "Support exchange rate",
+  avg_regeneration = "Regeneration",
+  avg_net_resource_change = "Net resource change",
+  avg_buffering_strength = "Buffering strength",
+  avg_stress_depletion = "Stress depletion"
 )
-interpretations <- c(
-  avg_pss10 = "Perceived stress scale",
-  avg_stress = "Stress intensity",
-  avg_affect = "Emotional valence",
-  avg_resilience = "Adaptive capacity",
-  avg_resources = "Psychological resources",
-  stress_prevalence = "Proportion stressed",
-  coping_success_rate = "Coping success rate"
-)
-blocks <- read.csv(file.path(data_dir, "cumulative_stages_metrics.csv"),
-                   check.names = FALSE)
-nm <- blocks[, key_cols]
-nm[] <- lapply(nm, function(x) {
-  v <- format(round(x, 3), nsmall = 3, trim = TRUE)
-  v[is.na(x)] <- "n/a"
-  v
-})
-tbl <- data.frame(
-  Metric = unname(metric_labels[key_cols]),
-  Interpretation = unname(interpretations[key_cols]),
-  nm,
-  check.names = FALSE
-)
-colnames(tbl) <- c("Metric", "Interpretation",
-                    paste0("S", blocks$stage))
 
-footer <- paste0(
-  "\\\\footnotesize ",
-  "Stage 1: Initialization. ",
-  "Stage 2: + Stress perception. ",
-  "Stage 3: + Resilience activation. ",
-  "Stage 4: + Interaction. ",
-  "Stage 5: + Resource allocation. ",
-  "Stage 6: + Stress buffering. ",
-  "Stage 7: + Full model (affect dynamics, PSS-10 consolidation, daily reset, network adaptation)."
-)
-out <- capture.output(
-  kable(tbl, format = "latex", booktabs = TRUE,
-        caption = "Cumulative building-block metrics by stage (final-day population state)")
-)
-# Insert footer before \end{tabular}
-end_idx <- grep("end{tabular}", out, fixed = TRUE)
-out <- c(out[1:(end_idx - 1)], footer, out[end_idx:length(out)])
-cat(paste(out, collapse = "\n"))
+# Transpose: metrics as rows, stages as columns
+tbl <- blocks[, c("stage", metric_cols)]
+rownames(tbl) <- paste0("S", tbl$stage)
+tbl$stage <- NULL
+tbl <- t(tbl)
+
+# Apply human-readable labels
+rownames(tbl) <- ifelse(is.na(metric_labels[rownames(tbl)]),
+                        rownames(tbl),
+                        unname(metric_labels[rownames(tbl)]))
+
+# Convert to data.frame, add Metric column
+tbl <- as.data.frame(tbl, stringsAsFactors = FALSE)
+tbl <- cbind(Metric = rownames(tbl), tbl, row.names = NULL)
+
+kableExtra::kable(
+  tbl,
+  format = "latex",
+  booktabs = TRUE,
+  digits = 3,
+  na = "-",
+  caption = "Cumulative building-block metrics by stage (final-day population state)"
+) |>
+  kableExtra::kable_styling(
+    latex_options = c("hold_position", "scale_down"),
+    font_size = 9,
+    full_width = TRUE
+  ) |>
+  kableExtra::column_spec(
+    1,
+    width = "3.5cm"
+  ) |>
+  #kableExtra::column_spec(
+  #  2:8,
+  #  width = "1cm"
+  #) |>
+  kableExtra::footnote(
+    general = c(
+      "Stage 1: Initialization.",
+      "Stage 2: + Stress perception.",
+      "Stage 3: + Resilience activation.",
+      "Stage 4: + Interaction.",
+      "Stage 5: + Resource allocation.",
+      "Stage 6: + Stress buffering.",
+      "Stage 7: + Full model."
+    ),
+    general_title = "Note:",
+    threeparttable = TRUE
+  )
+
 ```
+
+:::
 
 Each added block shifts the population metrics in a way that makes its contribution explicit. Stress perception (stage 2) updates only the appraisal dimensions and leaves the outcome states untouched, so stages 1 and 2 coincide. Resilience activation (stage 3) introduces coping, and every stress event that is coped with unsuccessfully lowers affect and resilience, raises stress, and consumes resources; no regeneration, decay, or homeostatic return opposes it yet, so the population settles into a depleted, stressed state. Interaction (stage 4) propagates affect and resilience through the network with a negativity bias stronger than the positive one, dragging both toward their lower bounds. Resource allocation (stage 5) restores the resource pool but cannot move affect or resilience, and stress buffering (stage 6) starts pushing resilience back toward its baseline, albeit with small buffering strength.
 
