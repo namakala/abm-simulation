@@ -254,11 +254,16 @@ class Config:
         )
 
         # PSS-10 bifactor model parameters
+        # Empirical two-factor loadings from Schafer et al. (2023), Front. Psychiatry
+        # Helplessness items (1,2,3,6,9,10) -> overload; Self-efficacy items (4,5,7,8) -> controllability
         self.pss10_load_controllability = self._get_env_array(
-            "PSS10_LOAD_CONTROLLABILITY", float, [0, 0, 0, 1, 1, 0, 1, 1, 0, 0], expected_length=10
+            "PSS10_LOAD_CONTROLLABILITY",
+            float,
+            [0.0, 0.0, 0.0, 0.65, 0.75, 0.0, 0.79, 0.74, 0.0, 0.0],
+            expected_length=10,
         )
         self.pss10_load_overload = self._get_env_array(
-            "PSS10_LOAD_OVERLOAD", float, [1, 1, 1, 0, 0, 1, 0, 0, 1, 1], expected_length=10
+            "PSS10_LOAD_OVERLOAD", float, [0.78, 0.87, 0.82, 0.0, 0.0, 0.88, 0.0, 0.0, 0.56, 0.90], expected_length=10
         )
         self.pss10_bifactor_correlation = self._get_env_value("PSS10_BIFACTOR_COR", float, -0.3)
 

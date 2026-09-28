@@ -117,12 +117,9 @@ class TestDataclassEnvironmentVariableUsage:
     @pytest.mark.config
     def test_default_value_fallback(self, clean_env, reload_config_fixture):
         """Test that missing environment variables use defaults."""
-        # Temporarily move .env file to test defaults
-        env_file = ".env"
-        backup_env = ".env.backup"
-
-        if os.path.exists(env_file):
-            os.rename(env_file, backup_env)
+        # Pin DOTENV_FILE to a nonexistent path so reload_config never reads
+        # the real .env — avoids os.rename which fails when .env is busy.
+        os.environ["DOTENV_FILE"] = ".env.empty"
 
         try:
             # Clear relevant environment variables
@@ -153,9 +150,8 @@ class TestDataclassEnvironmentVariableUsage:
             assert default_protective_factors.social_support == expected_social_support
 
         finally:
-            # Restore .env file
-            if os.path.exists(backup_env):
-                os.rename(backup_env, env_file)
+            # Remove the injected DOTENV_FILE so other tests are unaffected
+            os.environ.pop("DOTENV_FILE", None)
 
     @pytest.mark.config
     def test_type_conversion(self, clean_env, reload_config_fixture):

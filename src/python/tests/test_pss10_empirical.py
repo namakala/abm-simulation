@@ -70,7 +70,7 @@ class TestPSS10Item:
             assert item.weight_controllability > 0.5
 
         # Overload dimension: items 1, 2, 3, 5, 6, 9, 10 (1-indexed)
-        overload_items = [1, 2, 3, 5, 6, 9, 10]
+        overload_items = [1, 2, 3, 6, 9, 10]
         for item_num in overload_items:
             item = mapping[item_num]
             # These should have higher overload loadings
@@ -426,8 +426,8 @@ class TestPSS10ResponseGeneration:
         custom_config = {
             "item_means": [2.0] * 10,
             "item_sds": [0.3] * 10,
-            "load_controllability": [1.0] * 10,
-            "load_overload": [0.0] * 10,
+            "load_controllability": [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+            "load_overload": [1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0],
             "bifactor_correlation": 0.0,
             "pss10_scale": 3.5,
             "pss10_noise_sd": 0.1,
@@ -702,11 +702,12 @@ class TestPSS10Configuration:
     def test_pss10_config_defaults(self):
         """Test PSS-10 configuration default values."""
         os.environ.clear()
+        os.environ["DOTENV_FILE"] = ".env.empty"
         config = Config()
 
-        # Check that defaults match expected empirical values
-        expected_controllability = [0, 0, 0, 1, 1, 0, 1, 1, 0, 0]
-        expected_overload = [1, 1, 1, 0, 0, 1, 0, 0, 1, 1]
+        # Check that defaults match empirical values from Schafer et al. (2023)
+        expected_controllability = [0.0, 0.0, 0.0, 0.65, 0.75, 0.0, 0.79, 0.74, 0.0, 0.0]
+        expected_overload = [0.78, 0.87, 0.82, 0.0, 0.0, 0.88, 0.0, 0.0, 0.56, 0.90]
 
         assert config.get("pss10", "load_controllability") == expected_controllability
         assert config.get("pss10", "load_overload") == expected_overload

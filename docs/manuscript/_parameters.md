@@ -113,8 +113,8 @@ $p_{\mathrm{rewire}}$ & Network rewiring probability & 0.01 & Plausible & \cite{
 \midrule
 $\mu_i$ & Per-item means & [1.43, 1.38, 1.51, 1.31, 1.50, 1.40, 1.43, 1.60, 1.14, 1.31] & Validated & \cite{liu2020}: raw 1.59--2.22 scaled by 0.72 to US norms; total $\approx$ 14/40. \\
 $\sigma_i$ & Per-item SDs & [0.89, 0.89, 0.93, 0.92, 0.80, 0.78, 0.78, 0.88, 0.91, 0.93] & Validated & \cite{liu2020}: 0.78--0.93. \\
-$\lambda_{o,\Psi,i}$ & Overload factor loadings & [1, 1, 1, 0, 0, 1, 0, 0, 1, 1] (empirical); 0.2--0.9 (code) & Validated & \cite{liu2020}: items 1, 2, 3, 6, 9, 10; code uses graded loadings. \\
-$\lambda_{c,\Psi,i}$ & Controllability factor loadings & [0, 0, 0, 1, 1, 0, 1, 1, 0, 0] (empirical); 0.1--0.8 (code) & Validated & \cite{liu2020}: items 4, 5, 7, 8; code uses graded loadings. \\
+$\lambda_{o,\Psi,i}$ & Overload factor loadings & [0.78, 0.87, 0.82, 0, 0, 0.88, 0, 0, 0.56, 0.90] & Validated & \cite{schfer2023a}: two-factor CFA; helplessness items map to overload dimension. \\
+$\lambda_{c,\Psi,i}$ & Controllability factor loadings & [0, 0, 0, 0.65, 0.75, 0, 0.79, 0.74, 0, 0] & Validated & \cite{schfer2023a}: two-factor CFA; self-efficacy items map to controllability dimension. \\
 $\rho_{\Psi}$ & Bifactor correlation & $-0.3$ & Validated & \cite{reis2017}: r = $-0.3$. \\
 $\sigma_{o,\Psi}$ & Overload dimension SD & 1.0 (used as /4) & Assumed & Assumes dimension SD of 1.0, regularized to 0.25 in the multivariate normal generating PSS dimensions. \\
 $\sigma_{c,\Psi}$ & Controllability dimension SD & 1.0 (used as /4) & Assumed & Assumes dimension SD of 1.0, regularized to 0.25 in the multivariate normal. \\
