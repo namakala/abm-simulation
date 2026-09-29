@@ -250,74 +250,53 @@ def process_stress_event(
     return is_stressed, challenge, hindrance
 
 
-def create_pss10_mapping() -> Dict[int, PSS10Item]:
+def create_pss10_mapping(
+    load_controllability: Optional[list] = None,
+    load_overload: Optional[list] = None,
+) -> Dict[int, PSS10Item]:
     """
-    Create PSS-10 item mapping with empirically grounded factor loadings for bifactor model.
+    Create PSS-10 item mapping with factor loadings for bifactor model.
+
+    When load_controllability/load_overload are provided, use them to set
+    weight_controllability/weight_overload on each item.  When None, fall back
+    to hardcoded defaults.
+
+    Args:
+        load_controllability: 10-element list of controllability loadings (optional).
+        load_overload: 10-element list of overload loadings (optional).
 
     Returns:
-        Dictionary mapping item numbers (1-10) to PSS10Item objects with controllability and overload weights
+        Dictionary mapping item numbers (1-10) to PSS10Item objects.
     """
+    # Default hardcoded values (backward-compatible fallback)
+    default_controllability = [0.2, 0.8, 0.1, 0.7, 0.6, 0.1, 0.8, 0.6, 0.7, 0.1]
+    default_overload = [0.7, 0.3, 0.8, 0.2, 0.4, 0.9, 0.2, 0.3, 0.4, 0.9]
+
+    cc = load_controllability if load_controllability is not None else default_controllability
+    ol = load_overload if load_overload is not None else default_overload
+
+    items_text = [
+        "In the last month, how often have you been upset because of something that happened unexpectedly?",
+        "In the last month, how often have you felt that you were unable to control the important things in your life?",
+        "In the last month, how often have you felt nervous and 'stressed'?",
+        "In the last month, how often have you felt confident about your ability to handle your personal problems?",
+        "In the last month, how often have you felt that things were going your way?",
+        "In the last month, how often have you found that you could not cope with all the things that you had to do?",
+        "In the last month, how often have you been able to control irritations in your life?",
+        "In the last month, how often have you felt that you were on top of things?",
+        "In the last month, how often have you been angered because of things that were outside of your control?",
+        "In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?",
+    ]
+    reverse_flags = [False, False, False, True, True, False, True, True, False, False]
+
     return {
-        1: PSS10Item(
-            text="In the last month, how often have you been upset because of something that happened unexpectedly?",
-            reverse_scored=False,
-            weight_controllability=0.2,  # Low controllability loading
-            weight_overload=0.7,  # High overload loading
-        ),
-        2: PSS10Item(
-            text="In the last month, how often have you felt that you were unable to control the important things in your life?",
-            reverse_scored=False,
-            weight_controllability=0.8,  # High controllability loading
-            weight_overload=0.3,  # Medium overload loading
-        ),
-        3: PSS10Item(
-            text="In the last month, how often have you felt nervous and 'stressed'?",
-            reverse_scored=False,
-            weight_controllability=0.1,  # Low controllability loading
-            weight_overload=0.8,  # High overload loading
-        ),
-        4: PSS10Item(
-            text="In the last month, how often have you felt confident about your ability to handle your personal problems?",
-            reverse_scored=True,  # Reverse scored item
-            weight_controllability=0.7,  # High controllability loading
-            weight_overload=0.2,  # Low overload loading
-        ),
-        5: PSS10Item(
-            text="In the last month, how often have you felt that things were going your way?",
-            reverse_scored=True,  # Reverse scored item
-            weight_controllability=0.6,  # Medium-high controllability loading
-            weight_overload=0.4,  # Medium overload loading
-        ),
-        6: PSS10Item(
-            text="In the last month, how often have you found that you could not cope with all the things that you had to do?",
-            reverse_scored=False,
-            weight_controllability=0.1,  # Low controllability loading
-            weight_overload=0.9,  # Very high overload loading
-        ),
-        7: PSS10Item(
-            text="In the last month, how often have you been able to control irritations in your life?",
-            reverse_scored=True,  # Reverse scored item
-            weight_controllability=0.8,  # High controllability loading
-            weight_overload=0.2,  # Low overload loading
-        ),
-        8: PSS10Item(
-            text="In the last month, how often have you felt that you were on top of things?",
-            reverse_scored=True,  # Reverse scored item
-            weight_controllability=0.6,  # Medium-high controllability loading
-            weight_overload=0.3,  # Low-medium overload loading
-        ),
-        9: PSS10Item(
-            text="In the last month, how often have you been angered because of things that were outside of your control?",
-            reverse_scored=False,
-            weight_controllability=0.7,  # High controllability loading
-            weight_overload=0.4,  # Medium overload loading
-        ),
-        10: PSS10Item(
-            text="In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?",
-            reverse_scored=False,
-            weight_controllability=0.1,  # Low controllability loading
-            weight_overload=0.9,  # Very high overload loading
-        ),
+        i + 1: PSS10Item(
+            text=items_text[i],
+            reverse_scored=reverse_flags[i],
+            weight_controllability=cc[i],
+            weight_overload=ol[i],
+        )
+        for i in range(10)
     }
 
 
@@ -584,8 +563,11 @@ def generate_pss10_responses(
         overload_sd=config.get("overload_sd"),
     )
 
-    # Get PSS-10 item mapping
-    pss10_items = create_pss10_mapping()
+    # Get PSS-10 item mapping using config loadings
+    pss10_items = create_pss10_mapping(
+        load_controllability=config.get("load_controllability"),
+        load_overload=config.get("load_overload"),
+    )
     responses = {}
 
     # Generate response for each item using bifactor model

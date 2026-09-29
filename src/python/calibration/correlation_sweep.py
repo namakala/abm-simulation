@@ -26,7 +26,7 @@ from src.python.model import StressModel
 from src.python.config import reload_config
 from src.python.assumption_config import reload_assumptions
 
-# ── Correlation targets (from test_integrated_population_theory.py) ──
+## Correlation targets (from test_integrated_population_theory.py)
 
 CORRELATION_TARGETS: List[Dict] = [
     {
@@ -101,7 +101,7 @@ CORRELATION_TARGETS: List[Dict] = [
     },
 ]
 
-# ── Sweep parameters (env var -> list of values to try) ──
+## Sweep parameters (env var -> list of values to try)
 
 SWEEP_PARAMS: Dict[str, List[str]] = {
     "PSS10_RESILIENCE_COUPLING": ["2.0", "4.0", "6.0"],
@@ -111,7 +111,7 @@ SWEEP_PARAMS: Dict[str, List[str]] = {
     "ASSUMPTION_AFFECT_HOMEOSTATIC_RATE": ["0.05", "0.08", "0.12"],
 }
 
-# ── Fixed secondary overrides (applied to all combos) ──
+## Fixed secondary overrides (applied to all combos)
 
 FIXED_OVERRIDES: Dict[str, str] = {
     "ASSUMPTION_AFFECT_DETERIORATION_SCALE": "0.5",
@@ -123,13 +123,13 @@ FIXED_OVERRIDES: Dict[str, str] = {
     "ASSUMPTION_COPING_SUPPORT_BOOST_FACTOR": "0.20",
 }
 
-# ── Default simulation parameters ──
+## Default simulation parameters
 
 SIM_N = 200
 SIM_D = 100
 SIM_SEED = 42
 
-# ── Data structures ──
+## Data structures
 
 
 @dataclass
@@ -144,7 +144,7 @@ class SweepResult:
     pss10_std: float = 0.0
 
 
-# ── Helpers ──
+## Helpers
 
 
 def _compute_pearsonr(series_a, series_b):
@@ -204,7 +204,7 @@ def _with_env(overrides: Dict[str, str], func, *args, **kwargs):
         reload_assumptions()
 
 
-# ── Core computation ──
+## Core computation
 
 
 def compute_correlation_metrics(N: int = 200, max_days: int = 100, seed: int = 42) -> Dict[str, float]:
@@ -378,7 +378,7 @@ def print_results(results: List[SweepResult]) -> None:
             print(f"    {icon} {label:<30} r={r_val:.4f}  CI=[{target['ci_lower']:.3f}, {target['ci_upper']:.3f}]")
 
 
-# ── Entry point ──
+## Entry point
 
 
 def main():

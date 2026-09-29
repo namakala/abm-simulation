@@ -111,6 +111,58 @@ def get_stability_interpretation(stability: str, metric_type: str) -> str:
     return interpretations.get(metric_type, {}).get(stability, "Variable patterns observed")
 
 
+# Metric name to metric type mapping for interpretation generation.
+_METRIC_TYPE_MAP = {
+    "avg_pss10": "PSS-10",
+    "pss10": "PSS-10",
+    "avg_resilience": "resilience",
+    "resilience": "resilience",
+    "avg_affect": "affect",
+    "affect": "affect",
+    "coping_success_rate": "coping_success",
+    "avg_resources": "resources",
+    "resources": "resources",
+    "avg_stress": "current_stress",
+    "current_stress": "current_stress",
+    "avg_challenge": "challenge_hindrance",
+    "avg_hindrance": "challenge_hindrance",
+    "avg_consecutive_hindrances": "hindrance_streak",
+    "consecutive_hindrances": "hindrance_streak",
+    "social_interactions": "social_exchanges",
+    "support_exchanges": "support_transactions",
+    "stress_controllability": "controllability",
+    "stress_overload": "overload",
+}
+
+
+def compute_interpretation(metric: str, mean: float, sd: float, min_val: float, max_val: float) -> str:
+    """Compute interpretation string from metric stats.
+
+    Uses CV and relative range to assess stability, then maps to a
+    metric-specific interpretation string.
+
+    Args:
+        metric: Metric column name (e.g., "avg_pss10", "pss10").
+        mean: Mean value.
+        sd: Standard deviation.
+        min_val: Minimum value.
+        max_val: Maximum value.
+
+    Returns:
+        Interpretation string.
+    """
+    if pd.isna(mean) or pd.isna(sd) or pd.isna(min_val) or pd.isna(max_val):
+        return "Data unavailable"
+    if mean == 0:
+        return "Variable patterns observed"
+
+    cv = sd / abs(mean)
+    relative_range = (max_val - min_val) / abs(mean)
+    stability = assess_stability(cv, relative_range)
+    metric_type = _METRIC_TYPE_MAP.get(metric, "default")
+    return get_stability_interpretation(stability, metric_type)
+
+
 def generate_interpretation(description: str, mean_val: float, std_val: float, min_val: float, max_val: float) -> str:
     """Generate concise interpretation based on stats, focusing on stability."""
     if pd.isna(mean_val) or pd.isna(std_val) or pd.isna(min_val) or pd.isna(max_val):

@@ -21,8 +21,8 @@ $\mu_{\mathfrak{R},0}$ & Initial resilience latent mean & 0.0 & Plausible & \cit
 $\sigma_{\mathfrak{R},0}$ & Initial resilience latent SD & 1.0 & Plausible & \cite{connor2003}: empirical SD $\approx$ 0.13--0.19 on [0,1]; latent SD 1.0 spans the full interval. \\
 $\mu_{A,0}$ & Initial affect latent mean & 0.0 & Plausible & \cite{watson1988}: tanh maps latent 0 to neutral valence; empirical population mean $\approx$ 0.1--0.2 on [-1,1]. \\
 $\sigma_{A,0}$ & Initial affect latent SD & 1.0 & Plausible & \cite{watson1988}: empirical SD $\approx$ 0.3--0.4 on [-1,1]; latent SD 1.0 gives full-range spread. \\
-$\mu_{R,0}$ & Initial resources latent mean & 0.0 & Plausible & \cite{hobfoll2001}: sigmoid centres resources near 0.5; right-skewed population norms. \\
-$\sigma_{R,0}$ & Initial resources latent SD & 1.0 & Plausible & \cite{hobfoll2001}: latent default spanning [0,1]. \\
+$\mu_{R,0}$ & Initial resources latent mean & 0.0 & Plausible & \cite{Hobfoll2001}: sigmoid centres resources near 0.5; right-skewed population norms. \\
+$\sigma_{R,0}$ & Initial resources latent SD & 1.0 & Plausible & \cite{Hobfoll2001}: latent default spanning [0,1]. \\
 \midrule
 \multicolumn{5}{c}{\textbf{Agent Behaviour}} \\
 \midrule
@@ -44,8 +44,8 @@ $\omega_c$ & Controllability weight in appraisal & 1.0 & Plausible & \cite{cavan
 $\omega_o$ & Overload weight in appraisal & 1.0 & Plausible & \cite{cavanaugh2000}: ratio $\approx 1:1$. \\
 $b$ & Appraisal bias term & 0.0 & Assumed & Assumes no systematic appraisal bias; at neutral event attributes the population splits evenly between challenge and hindrance. \\
 $\gamma$ & Sigmoid steepness in appraisal & 3.0 & Plausible & \cite{cavanaugh2000}: 4--6 recommended; 3.0 yields graded rather than binary appraisal. \\
-$\alpha_\beta$ & Beta shape parameter for stress sampling & 2.0 & Plausible & \cite{lazarus1984}: Beta(2,2) is symmetric and unimodal on [0,1]. \\
-$\beta_\beta$ & Beta shape parameter for stress sampling & 2.0 & Plausible & \cite{lazarus1984}: Beta(2,2) is symmetric and unimodal. \\
+$\alpha_\beta$ & Beta shape parameter for stress sampling & 2.0 & Plausible & \cite{folkman2020stress}: Beta(2,2) is symmetric and unimodal on [0,1]. \\
+$\beta_\beta$ & Beta shape parameter for stress sampling & 2.0 & Plausible & \cite{folkman2020stress}: Beta(2,2) is symmetric and unimodal. \\
 $\eta_0$ & Base stress threshold & 0.5 & Plausible & \cite{cavanaugh2000}: midpoint of the appraisal space. \\
 $\eta_{\chi}$ & Challenge threshold scale & 0.15 & Plausible & \cite{cavanaugh2000}: challenge raises the effective threshold (protective). \\
 $\eta_{\zeta}$ & Hindrance threshold scale & 0.25 & Plausible & \cite{podsakoff2007}: hindrance lowers the threshold; negativity bias (0.25 > 0.15). \\
@@ -55,14 +55,14 @@ $\delta$ & Polarity effect strength & 0.4 & Assumed & Assumes balanced events an
 \midrule
 \multicolumn{5}{c}{\textbf{Social Interaction}} \\
 \midrule
-$\alpha_{\mathrm{int}}$ & Influence rate in social interactions & 0.05 & Plausible & \cite{centola2018}: affect convergence 0.05--0.15 per interaction. \\
-$\delta_{\mathrm{res,int}}$ & Resilience influence in interactions & 0.05 & Plausible & \cite{centola2018}: contagion rate for resilience transfer. \\
+$\alpha_{\mathrm{int}}$ & Influence rate in social interactions & 0.05 & Plausible & \cite{Boomgaard2018}: affect convergence 0.05--0.15 per interaction. \\
+$\delta_{\mathrm{res,int}}$ & Resilience influence in interactions & 0.05 & Plausible & \cite{Boomgaard2018}: contagion rate for resilience transfer. \\
 $k_{\max}$ & Maximum neighbours per interaction & 10 & Assumed & Assumes up to 10 neighbours can influence one interaction; caps social reach and computational load. \\
 \midrule
 \multicolumn{5}{c}{\textbf{Affect Dynamics}} \\
 \midrule
-$\alpha_p$ & Peer influence rate on affect & 0.1 & Validated & \cite{centola2018}: 0.05--0.15 per interaction. \\
-$\alpha_e$ & Event appraisal rate on affect & 0.15 & Plausible & \cite{lazarus1984}: daily challenge/hindrance shift affect. \\
+$\alpha_p$ & Peer influence rate on affect & 0.1 & Validated & \cite{Boomgaard2018}: 0.05--0.15 per interaction. \\
+$\alpha_e$ & Event appraisal rate on affect & 0.15 & Plausible & \cite{folkman2020stress}: daily challenge/hindrance shift affect. \\
 $\lambda_{\mathrm{affect}}$ & Affect homeostatic rate & 0.5 & Plausible & \cite{friston2016}: set-point return to baseline affect. \\
 $k_{\mathrm{influence}}$ & Number of influencing neighbours & 5 & Assumed & Assumes 5 neighbours drive peer influence; affect differences are averaged over this subset. \\
 \midrule
@@ -95,26 +95,26 @@ $\beta_{\mathrm{softmax}}$ & Softmax temperature & 1.0 & Plausible & \cite{simon
 $p_{\mathrm{cope}}$ & Base coping probability & 0.5 & Validated & \cite{skinner2003}: community midpoint. \\
 $\theta_{\mathrm{cope},\chi}$ & Challenge bonus for coping & 0.2 & Plausible & \cite{cavanaugh2000}: challenge appraisal raises coping probability. \\
 $\theta_{\mathrm{cope},\zeta}$ & Hindrance penalty for coping & 0.3 & Plausible & \cite{bakker2017}: negativity bias (penalty $>$ bonus). \\
-$\delta_{\mathrm{cope,soc}}$ & Social influence on coping & 0.1 & Plausible & \cite{centola2018}: contagion range. \\
+$\delta_{\mathrm{cope,soc}}$ & Social influence on coping & 0.1 & Plausible & \cite{Boomgaard2018}: contagion range. \\
 \midrule
 \multicolumn{5}{c}{\textbf{Daily Dynamics}} \\
 \midrule
-$\delta_{\mathrm{stress}}$ & Stress decay rate & 0.05 & Plausible & \cite{lazarus1984}: half-life of about 14 days; applied as $S_{t+1} = \max(0.03, S_t(1 - \delta_{\mathrm{stress}}))$. \\
+$\delta_{\mathrm{stress}}$ & Stress decay rate & 0.05 & Plausible & \cite{folkman2020stress}: half-life of about 14 days; applied as $S_{t+1} = \max(0.03, S_t(1 - \delta_{\mathrm{stress}}))$. \\
 $\eta_{\mathrm{stress}}$ & Stress threshold for stressed state & 0.7 & Assumed & Assumes a stress value above 0.7 marks a stressed state; combined with the affect threshold for detection. \\
 $\eta_{\mathrm{affect}}$ & Affect threshold for stressed state & 0.3 & Assumed & Assumes affect below the 0.3 band contributes to stressed-state detection alongside stress. \\
 \midrule
 \multicolumn{5}{c}{\textbf{Network Adaptation}} \\
 \midrule
 $\eta_{\mathrm{adapt}}$ & Network adaptation threshold & 3 & Assumed & Assumes rewiring is triggered after 3 stress breaches; counts adaptation events. \\
-$\delta_{\mathrm{homophily}}$ & Homophily strength & 0.7 & Plausible & \cite{centola2018}: homophily is well documented; 0.7 is an assumed magnitude. \\
+$\delta_{\mathrm{homophily}}$ & Homophily strength & 0.7 & Plausible & \cite{Boomgaard2018}: homophily is well documented; 0.7 is an assumed magnitude. \\
 $p_{\mathrm{rewire}}$ & Network rewiring probability & 0.01 & Plausible & \cite{watts1998}: low rewiring preserves small-world structure. \\
 \midrule
 \multicolumn{5}{c}{\textbf{PSS-10}} \\
 \midrule
 $\mu_i$ & Per-item means & [1.43, 1.38, 1.51, 1.31, 1.50, 1.40, 1.43, 1.60, 1.14, 1.31] & Validated & \cite{liu2020}: raw 1.59--2.22 scaled by 0.72 to US norms; total $\approx$ 14/40. \\
 $\sigma_i$ & Per-item SDs & [0.89, 0.89, 0.93, 0.92, 0.80, 0.78, 0.78, 0.88, 0.91, 0.93] & Validated & \cite{liu2020}: 0.78--0.93. \\
-$\lambda_{o,\Psi,i}$ & Overload factor loadings & [1, 1, 1, 0, 0, 1, 0, 0, 1, 1] (empirical); 0.2--0.9 (code) & Validated & \cite{liu2020}: items 1, 2, 3, 6, 9, 10; code uses graded loadings. \\
-$\lambda_{c,\Psi,i}$ & Controllability factor loadings & [0, 0, 0, 1, 1, 0, 1, 1, 0, 0] (empirical); 0.1--0.8 (code) & Validated & \cite{liu2020}: items 4, 5, 7, 8; code uses graded loadings. \\
+$\lambda_{o,\Psi,i}$ & Overload factor loadings & [0.78, 0.87, 0.82, 0, 0, 0.88, 0, 0, 0.56, 0.90] & Validated & \cite{schfer2023a}: two-factor CFA; helplessness items map to overload dimension. \\
+$\lambda_{c,\Psi,i}$ & Controllability factor loadings & [0, 0, 0, 0.65, 0.75, 0, 0.79, 0.74, 0, 0] & Validated & \cite{schfer2023a}: two-factor CFA; self-efficacy items map to controllability dimension. \\
 $\rho_{\Psi}$ & Bifactor correlation & $-0.3$ & Validated & \cite{reis2017}: r = $-0.3$. \\
 $\sigma_{o,\Psi}$ & Overload dimension SD & 1.0 (used as /4) & Assumed & Assumes dimension SD of 1.0, regularized to 0.25 in the multivariate normal generating PSS dimensions. \\
 $\sigma_{c,\Psi}$ & Controllability dimension SD & 1.0 (used as /4) & Assumed & Assumes dimension SD of 1.0, regularized to 0.25 in the multivariate normal. \\
@@ -189,8 +189,8 @@ $\bar{\zeta}_d$ & Daily average hindrance & [0,1] & variable & $\bar{\zeta}_d = 
 $\Delta A_p$ & Peer influence on affect & $\mathbb{R}$ & variable & $\Delta A_p = \frac{1}{k}\sum_{j=1}^{k} \alpha_p (A_j - A_t)$, $k = \min(n_{\mathrm{nb}}, k_{\mathrm{influence}})$. \\
 $\Delta A_e$ & Event appraisal effect on affect & $\mathbb{R}$ & variable & $\Delta A_e = \alpha_e \bar{\chi}_d (1 - A_t) - \alpha_e \bar{\zeta}_d \max(0.1, A_t + 1)$. \\
 $\Delta A_h$ & Homeostatic effect on affect & $\mathbb{R}$ & variable & $\Delta A_h = \lambda_{\mathrm{affect}}^s \cdot (A_0 - A_t)$ with stress- and resource-scaled rate. \\
-$\Delta A_{\mathrm{ero}}$ & Stress erosion effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{ero}} = -\lambda_{\mathrm{ero}} \cdot S_t \cdot m_{\mathrm{ero}}$ (STRESS\_EROSION\_RATE $\times$ stress $\times$ assumption multiplier). \\
-$\Delta A_{\mathrm{res}}$ & Resource effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{res}} = \beta_{ra}(R_t - 0.5)\big(1 + (\mathfrak{R}_t - 0.5)\cdot 0.5\big)$; $\beta_{ra} = $ ASSUMPTION\_RESOURCE\_AFFECT\_COUPLING. \\
+$\Delta A_{\mathrm{ero}}$ & Stress erosion effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{ero}} = -\lambda_{\mathrm{ero}} \cdot S_t \cdot m_{\mathrm{ero}}$ (stress erosion rate $\times$ stress $\times$ assumption multiplier). \\
+$\Delta A_{\mathrm{res}}$ & Resource effect on affect & $\mathbb{R}$ & variable & $\Delta A_{\mathrm{res}} = \beta_{ra}(R_t - 0.5)\big(1 + (\mathfrak{R}_t - 0.5)\cdot 0.5\big)$; $\beta_{ra} = $ assumption resource affect coupling. \\
 $A_{t+1}$ & Affect at time t+1 & [-1,1] & variable & $A_{t+1} = \mathrm{clamp}\big(A_t + \Delta A_p + \Delta A_e + \Delta A_h + \Delta A_{\mathrm{ero}} + \Delta A_{\mathrm{res}},\, -1, 1\big)$. \\
 $\Delta \mathfrak{R}_{\chi\zeta}$ & Resilience change from coping & $\mathbb{R}$ & variable & Success: $(0.3\chi + 0.1\zeta)(1 - \mathfrak{R}_t)$; failure: $(-0.1\chi - 0.4\zeta)(1 - \mathfrak{R}_t)$; ceiling-damped. \\
 $\Delta \mathfrak{R}_p$ & Protective factor boost & $\mathbb{R}$ & variable & $\Delta \mathfrak{R}_p = \sum_{f \in F} e_f (\mathfrak{R}_0 - \mathfrak{R}_t) \theta_{\mathrm{boost}}$. \\

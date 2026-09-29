@@ -76,4 +76,4 @@ FUNCTION run_stress_perception(state, config, rng):
 \end{tabularx}
 ```
 
-Reference: [src/python/phases/stress_perception.py:L28-L130](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/phases/stress_perception.py#L28-L130)
+Reference: [src/python/phases/stress_perception.py:L28-L130](https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/phases/stress_perception.py#L28-L130)

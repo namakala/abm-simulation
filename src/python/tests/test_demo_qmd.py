@@ -50,7 +50,7 @@ DEMO_FILES = [
 ]
 
 
-# ── WP-1: _quarto.yml ──────────────────────────────────────────────
+## WP-1: _quarto.yml
 
 
 class TestQuartoYml:
@@ -88,7 +88,7 @@ class TestQuartoYml:
         assert "freeze: auto" in content or "freeze:\n  auto" in content, "_quarto.yml should set execute.freeze: auto"
 
 
-# ── WP-2: index.qmd ────────────────────────────────────────────────
+## WP-2: index.qmd
 
 
 class TestIndexQmd:
@@ -118,7 +118,7 @@ class TestIndexQmd:
             assert html in content, f"index.qmd must reference {html}"
 
 
-# ── WP-3: PROJECT_ROOT replaced with sys.path.insert ──────────────
+## WP-3: PROJECT_ROOT replaced with sys.path.insert
 
 
 def _load_pixi_tasks() -> dict:
@@ -211,7 +211,7 @@ class TestQmdNoProjectRoot:
         assert "sys.path.append" not in content, f"{filename} must not use sys.path.append; use sys.path.insert instead"
 
 
-# ── File structure (existing demos must still exist) ────────────────
+## File structure (existing demos must still exist)
 
 
 class TestDemoFileExistence:

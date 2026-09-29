@@ -7,9 +7,7 @@ from typing import Any, Dict, List, Literal, Protocol, TypedDict
 
 from numpy.random import Generator
 
-# ──────────────────────────────────────────────
-# Agent State (single source of truth)
-# ──────────────────────────────────────────────
+## Agent State (single source of truth)
 
 
 class AgentState(TypedDict, total=False):
@@ -70,9 +68,7 @@ class AgentState(TypedDict, total=False):
     event_overload: float  # [0, 1] — from stress event generation
 
 
-# ──────────────────────────────────────────────
-# Phase Output Contract
-# ──────────────────────────────────────────────
+## Phase Output Contract
 
 
 class PhaseOutput(TypedDict):
@@ -87,16 +83,12 @@ class PhaseOutput(TypedDict):
     observation: Dict[str, Any]
 
 
-# ──────────────────────────────────────────────
-# Phase Frequency
-# ──────────────────────────────────────────────
+## Phase Frequency
 
 PhaseFrequency = Literal["event_driven", "daily"]
 
 
-# ──────────────────────────────────────────────
-# Phase Function Protocol
-# ──────────────────────────────────────────────
+## Phase Function Protocol
 
 
 class PhaseFunction(Protocol):

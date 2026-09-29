@@ -50,10 +50,10 @@ def run_phase(
                          updated stress dimensions.
             observation: event attrs, appraisal values, threshold values.
     """
-    # ── 1. Generate stress event ───────────────────────────────────
+    ## 1. Generate stress event
     event = generate_stress_event(rng)
 
-    # ── 2. Build appraisal weights from config ─────────────────────
+    ## 2. Build appraisal weights from config
     weights = AppraisalWeights(
         omega_c=config.get("omega_c", 1.0),
         omega_o=config.get("omega_o", 1.0),
@@ -61,13 +61,13 @@ def run_phase(
         gamma=config.get("gamma", 6.0),
     )
 
-    # ── 3. Compute challenge / hindrance ───────────────────────────
+    ## 3. Compute challenge / hindrance
     challenge, hindrance = apply_weights(event, weights)
 
-    # ── 4. Compute appraised stress load ───────────────────────────
+    ## 4. Compute appraised stress load
     appraised_stress = compute_appraised_stress(event, challenge, hindrance, {"delta": config.get("delta", 0.2)})
 
-    # ── 5. Evaluate stress threshold ───────────────────────────────
+    ## 5. Evaluate stress threshold
     threshold_params = ThresholdParams(
         base_threshold=config.get("base_threshold", 0.5),
         challenge_scale=config.get("challenge_scale", 0.15),
@@ -83,7 +83,7 @@ def run_phase(
     )
     effective_threshold = max(0.0, min(1.0, float(effective_threshold)))
 
-    # ── 6. Update stress dimensions ─────────────────────────────────
+    ## 6. Update stress dimensions
     volatility = state.get("volatility", 0.5)
     current_controllability = state.get("stress_controllability", 0.5)
     current_overload = state.get("stress_overload", 0.5)
@@ -104,7 +104,7 @@ def run_phase(
         resilience=current_resilience,
     )
 
-    # ── 7. Build PhaseOutput ────────────────────────────────────────
+    ## 7. Build PhaseOutput
     state_delta: Dict[str, Any] = {
         "challenge": challenge,
         "hindrance": hindrance,

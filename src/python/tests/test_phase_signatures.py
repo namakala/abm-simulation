@@ -27,9 +27,7 @@ from src.python.phases import (
 from src.python.phases.interfaces import AgentState, PhaseOutput
 from src.python.phases.interaction import process_interaction
 
-# ──────────────────────────────────────────────
-# Registry: (name, run_phase_fn, expected_frequency)
-# ──────────────────────────────────────────────
+## Registry: (name, run_phase_fn, expected_frequency)
 
 PHASES = [
     ("stress_perception", run_stress_perception, STRESS_PERCEPTION_FREQUENCY, "event_driven"),
@@ -79,9 +77,7 @@ PHASE_STATE_DELTA_KEYS = {
 }
 
 
-# ──────────────────────────────────────────────
-# 1. Importability
-# ──────────────────────────────────────────────
+## 1. Importability
 
 
 class TestPhaseImportability:
@@ -98,9 +94,7 @@ class TestPhaseImportability:
         assert actual_freq in ("event_driven", "daily"), f"{name}: invalid frequency"
 
 
-# ──────────────────────────────────────────────
-# 2. Frequency correctness
-# ──────────────────────────────────────────────
+## 2. Frequency correctness
 
 
 class TestPhaseFrequencyLock:
@@ -112,9 +106,7 @@ class TestPhaseFrequencyLock:
         assert actual == expected, f"{name}: expected {expected}, got {actual}"
 
 
-# ──────────────────────────────────────────────
-# 3. Parameter count and return type
-# ──────────────────────────────────────────────
+## 3. Parameter count and return type
 
 
 class TestPhaseSignature:
@@ -144,9 +136,7 @@ class TestPhaseSignature:
         assert ret == PhaseOutput, msg
 
 
-# ──────────────────────────────────────────────
-# 4. Plan 005: process_interaction returns Tuple[PhaseOutput, PhaseOutput]
-# ──────────────────────────────────────────────
+## 4. Plan 005: process_interaction returns Tuple[PhaseOutput, PhaseOutput]
 
 
 class TestProcessInteractionSignature:
@@ -182,9 +172,7 @@ class TestProcessInteractionSignature:
         assert args[1] == PhaseOutput, f"Second tuple element is {args[1]}, expected PhaseOutput"
 
 
-# ──────────────────────────────────────────────
-# 5. State delta keys exist in AgentState
-# ──────────────────────────────────────────────
+## 5. State delta keys exist in AgentState
 
 
 class TestStateDeltaKeysInAgentState:

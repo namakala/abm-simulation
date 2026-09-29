@@ -63,4 +63,4 @@ FUNCTION run_daily_reset(state, config, rng):
 \end{tabularx}
 ```
 
-Reference: [src/python/agent.py:L350-L412](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/agent.py#L350-L412)
+Reference: [src/python/agent.py:L350-L450](https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/agent.py#L350-L450)

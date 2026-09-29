@@ -406,9 +406,7 @@ def compute_allocation_cost(allocated_amount: float, config: Optional[ResourcePa
     return cost
 
 
-# ==============================================
-# NEW STRESS PROCESSING MECHANISMS
-# ==============================================
+## NEW STRESS PROCESSING MECHANISMS
 
 
 @dataclass

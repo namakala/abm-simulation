@@ -10,7 +10,7 @@ import pytest
 from src.python.model import StressModel
 
 
-# ── Fixtures ──────────────────────────────────────────────────────
+## Fixtures
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def model():
     return StressModel(N=6, max_days=5, seed=42)
 
 
-# ── Reset removal tests ───────────────────────────────────────────
+## Reset removal tests
 
 
 class TestModelStepNoDoubleReset:

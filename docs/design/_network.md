@@ -43,4 +43,4 @@ FUNCTION adapt_network(G, agents, config, rng):
 \end{tabularx}
 ```
 
-Reference: [src/python/network_utils.py:L16-L245](https://github.com/namakala/abm-simulation/blob/7e40a44f82da76b18910b774cd882c938bc79992/src/python/network_utils.py#L16-L245)
+Reference: [src/python/network_utils.py:L16-L245](https://github.com/namakala/abm-simulation/blob/84ff9b37fb0c569bef9f122e789d9c23a89348ec/src/python/network_utils.py#L16-L245)

@@ -17,7 +17,7 @@ from src.python.agent import (
 from src.python.affect_utils import update_affect_dynamics, AffectDynamicsConfig
 from src.python.math_utils import create_rng
 
-# ── Fixtures ──────────────────────────────────────────────────────
+## Fixtures
 
 
 @pytest.fixture
@@ -73,7 +73,7 @@ def affect_config() -> Dict[str, Any]:
     }
 
 
-# ── process_affect_dynamics ───────────────────────────────────────
+## process_affect_dynamics
 
 
 class TestProcessAffectDynamics:
@@ -305,7 +305,7 @@ class TestProcessAffectDynamics:
         )
 
 
-# ── process_pss10_consolidation ───────────────────────────────────
+## process_pss10_consolidation
 
 
 class TestProcessPss10Consolidation:
@@ -424,7 +424,7 @@ class TestProcessPss10Consolidation:
         )
 
 
-# ── process_daily_reset ───────────────────────────────────────────
+## process_daily_reset
 
 
 class TestProcessDailyReset:

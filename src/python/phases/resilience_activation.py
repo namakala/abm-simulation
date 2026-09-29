@@ -68,7 +68,7 @@ def run_phase(
           resilience_effect, delta_stress, delta_affect, resource_cost,
           resource_reward (if success) / resource_penalty (if failure).
     """
-    # ── Unpack state ────────────────────────────────────────────────
+    ## Unpack state
     current_affect = state["affect"]
     current_resilience = state["resilience"]
     current_stress = state["current_stress"]
@@ -93,11 +93,11 @@ def run_phase(
     )
     consecutive_hindrances = state.get("consecutive_hindrances", 0.0)
 
-    # ── Unpack config ───────────────────────────────────────────────
+    ## Unpack config
     neighbor_affects = config.get("neighbor_affects", [])
     base_resource_cost = config.get("base_resource_cost", 0.1)
 
-    # ── STEP 1: Coping outcome ──────────────────────────────────────
+    ## STEP 1: Coping outcome
     stress_config = StressProcessingConfig()
     social_support_efficacy = protective_factors.get("social_support", 0.5)
     support_boost: float = state.get("support_boost", 0.0)  # type: ignore[return-value]
@@ -132,7 +132,7 @@ def run_phase(
         current_resilience=current_resilience,
     )
 
-    # ── STEP 2: Update stress dimensions from event ─────────────────
+    ## STEP 2: Update stress dimensions from event
     updated_controllability, updated_overload, updated_intensity, updated_momentum = (
         update_stress_dimensions_from_event(
             current_controllability=stress_controllability,
@@ -148,7 +148,7 @@ def run_phase(
         )
     )
 
-    # ── STEP 3: Generate PSS-10 from updated stress dimensions ──────
+    ## STEP 3: Generate PSS-10 from updated stress dimensions
     pss10_data = generate_pss10_from_stress_dimensions(
         stress_controllability=updated_controllability,
         stress_overload=updated_overload,
@@ -163,7 +163,7 @@ def run_phase(
     new_pss10 = pss10_data["pss10_score"]
     new_stressed = pss10_data["stressed"]
 
-    # ── STEP 5: Resource cost and depletion ─────────────────────────
+    ## STEP 5: Resource cost and depletion
     resource_config = ResourceOptimizationConfig()
     optimized_cost = compute_resilience_optimized_resource_cost(
         base_cost=base_resource_cost,
@@ -181,13 +181,13 @@ def run_phase(
         config=resource_config,
     )
 
-    # ── STEP 7: Track consecutive hindrances ────────────────────────
+    ## STEP 7: Track consecutive hindrances
     new_consecutive_hindrances = consecutive_hindrances + 1.0 if hindrance > challenge else 0.0
 
-    # ── STEP 8: Increment stress breach count ───────────────────────
+    ## STEP 8: Increment stress breach count
     new_stress_breach_count = state.get("stress_breach_count", 0) + 1
 
-    # ── STEP 9: PF allocation + resource reward (Fix 4) ──────────
+    ## STEP 9: PF allocation + resource reward (Fix 4)
     # Successful coping yields a small resource reward, compensating for
     # the PF allocation cost. This restores the face-valid relationship
     # where successful copers end with more resources than failed copers,
@@ -219,7 +219,7 @@ def run_phase(
         total_allocated = sum(allocations.values())
         new_resources = clamp(new_resources - total_allocated, 0.0, 1.0)
 
-    # ── Build state_delta ───────────────────────────────────────────
+    ## Build state_delta
     state_delta: Dict[str, Any] = {
         "affect": new_affect,
         "resilience": new_resilience,
@@ -235,7 +235,7 @@ def run_phase(
         "stressed": new_stressed,
     }
 
-    # ── Build observation ───────────────────────────────────────────
+    ## Build observation
     observation: Dict[str, Any] = {
         "coped_successfully": coped_successfully,
         "coping_probability": coping_probability,

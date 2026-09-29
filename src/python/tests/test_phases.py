@@ -26,9 +26,7 @@ from src.python.phases import (
     INTERACTION_FREQUENCY,
 )
 
-# ──────────────────────────────────────────────
-# Constants
-# ──────────────────────────────────────────────
+## Constants
 
 PHASE_MODULES = [
     ("stress_perception", run_stress_perception, STRESS_PERCEPTION_FREQUENCY, "event_driven"),
@@ -45,9 +43,7 @@ STUB_MODULES = [
     if m[0] not in ("stress_perception", "resilience_activation", "resource_allocation", "stress_buffering")
 ]
 
-# ──────────────────────────────────────────────
-# Import & structural tests
-# ──────────────────────────────────────────────
+## Import & structural tests
 
 
 class TestPhaseImports:
@@ -119,9 +115,7 @@ class TestPhaseImports:
         assert freq2 == "daily"
 
 
-# ──────────────────────────────────────────────
-# Frequency tests
-# ──────────────────────────────────────────────
+## Frequency tests
 
 
 class TestPhaseFrequencies:
@@ -138,9 +132,7 @@ class TestPhaseFrequencies:
         assert actual in ("event_driven", "daily"), f"{name}: invalid frequency {actual}"
 
 
-# ──────────────────────────────────────────────
-# PhaseFunction protocol tests
-# ──────────────────────────────────────────────
+## PhaseFunction protocol tests
 
 
 class TestPhaseFunctionProtocol:
@@ -171,9 +163,7 @@ class TestPhaseFunctionProtocol:
         assert pf is fn
 
 
-# ──────────────────────────────────────────────
-# Stub behaviour (NotImplementedError)
-# ──────────────────────────────────────────────
+## Stub behaviour (NotImplementedError)
 
 
 class TestStubBehaviour:
@@ -203,9 +193,7 @@ class TestStubBehaviour:
         assert dict(phase_minimal_state) == state_before, f"{name}: state mutated before NotImplementedError"
 
 
-# ──────────────────────────────────────────────
-# RNG determinism
-# ──────────────────────────────────────────────
+## RNG determinism
 
 
 class TestRNGDeterminism:
@@ -222,9 +210,7 @@ class TestRNGDeterminism:
             fn(phase_minimal_state, phase_config, rng2)
 
 
-# ──────────────────────────────────────────────
-# Edge case tests
-# ──────────────────────────────────────────────
+## Edge case tests
 
 
 class TestEdgeCases:
@@ -268,9 +254,7 @@ class TestEdgeCases:
             fn(phase_minimal_state, phase_config, None)
 
 
-# ──────────────────────────────────────────────
-# Namespace isolation
-# ──────────────────────────────────────────────
+## Namespace isolation
 
 
 class TestNamespaceIsolation:

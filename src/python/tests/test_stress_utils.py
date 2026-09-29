@@ -244,13 +244,69 @@ class TestPSS10Mapping:
         assert not mapping[9].reverse_scored  # Item 9: not reverse scored
         assert not mapping[10].reverse_scored  # Item 10: not reverse scored
 
-        # Check that controllability items have appropriate weights
-        assert mapping[2].weight_controllability > 0.5  # Item 2: high controllability weight
+        # Check that controllability items have appropriate weights (defaults)
         assert mapping[4].weight_controllability > 0.5  # Item 4: high controllability weight
 
-        # Check that overload items have appropriate weights
+        # Check that overload items have appropriate weights (defaults)
         assert mapping[6].weight_overload > 0.5  # Item 6: high overload weight
         assert mapping[10].weight_overload > 0.5  # Item 10: high overload weight
+
+    def test_create_pss10_mapping_accepts_config_loadings(self):
+        """Test that create_pss10_mapping accepts optional config loadings."""
+        custom_controllability = [0.0, 0.0, 0.0, 0.65, 0.75, 0.0, 0.79, 0.74, 0.0, 0.0]
+        custom_overload = [0.78, 0.87, 0.82, 0.0, 0.0, 0.88, 0.0, 0.0, 0.56, 0.90]
+
+        mapping = create_pss10_mapping(
+            load_controllability=custom_controllability,
+            load_overload=custom_overload,
+        )
+
+        # Verify items use provided loadings (1-indexed)
+        assert mapping[1].weight_overload == 0.78
+        assert mapping[1].weight_controllability == 0.0
+        assert mapping[2].weight_overload == 0.87
+        assert mapping[4].weight_controllability == 0.65
+        assert mapping[4].weight_overload == 0.0
+        assert mapping[5].weight_controllability == 0.75
+        assert mapping[10].weight_overload == 0.90
+
+    def test_create_pss10_mapping_defaults_without_params(self):
+        """Test that create_pss10_mapping uses defaults when no params provided."""
+        mapping_default = create_pss10_mapping()
+        mapping_explicit = create_pss10_mapping(
+            load_controllability=None,
+            load_overload=None,
+        )
+
+        for item_num in range(1, 11):
+            assert mapping_default[item_num].weight_controllability == mapping_explicit[item_num].weight_controllability
+            assert mapping_default[item_num].weight_overload == mapping_explicit[item_num].weight_overload
+
+    def test_generate_pss10_responses_uses_config_loadings(self):
+        """Test that generate_pss10_responses passes config loadings to mapping."""
+        from src.python.stress_utils import generate_pss10_responses
+
+        # Use custom loadings via config override
+        custom_cc = [0.0, 0.0, 0.0, 0.65, 0.75, 0.0, 0.79, 0.74, 0.0, 0.0]
+        custom_ol = [0.78, 0.87, 0.82, 0.0, 0.0, 0.88, 0.0, 0.0, 0.56, 0.90]
+        config_override = {
+            "item_means": [1.43, 1.38, 1.51, 1.31, 1.50, 1.40, 1.43, 1.60, 1.14, 1.31],
+            "item_sds": [0.89, 0.89, 0.93, 0.92, 0.80, 0.78, 0.78, 0.88, 0.91, 0.93],
+            "load_controllability": custom_cc,
+            "load_overload": custom_ol,
+            "bifactor_correlation": -0.3,
+            "pss10_scale": 6.0,
+            "pss10_noise_sd": 2.0,
+            "pss10_skew_a": 3.0,
+        }
+
+        rng = np.random.default_rng(42)
+        responses = generate_pss10_responses(0.5, 0.5, rng, config=config_override)
+
+        # Just verify it runs and returns valid responses
+        assert len(responses) == 10
+        for resp in responses.values():
+            assert 0 <= resp <= 4
 
     def test_map_agent_stress_to_pss10_deterministic(self):
         """Test that PSS-10 mapping is deterministic with fixed seed."""

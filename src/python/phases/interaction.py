@@ -27,9 +27,7 @@ from src.python.assumption_config import get_assumptions
 
 PHASE_FREQUENCY: PhaseFrequency = "event_driven"
 
-# ──────────────────────────────────────────────
-# Default configuration constants (Plan 007)
-# ──────────────────────────────────────────────
+## Default configuration constants (Plan 007)
 
 _assumptions = get_assumptions()
 _DEFAULT_INFLUENCE_RATE = 0.05
@@ -40,9 +38,7 @@ _DEFAULT_COST = 0.05
 _DEFAULT_SMALL_BOOST = 0.02
 
 
-# ──────────────────────────────────────────────
-# Core interaction logic
-# ──────────────────────────────────────────────
+## Core interaction logic
 
 
 def process_interaction(
@@ -71,7 +67,7 @@ def process_interaction(
                 protective_factors changes.
             observation: support_occurred flag.
     """
-    # ── 0. Read config ─────────────────────────────────────────────
+    ## 0. Read config
     influence_rate = config.get("influence_rate", _DEFAULT_INFLUENCE_RATE)
     resilience_influence = config.get("resilience_influence", _DEFAULT_RESILIENCE_INFLUENCE)
     support_threshold = config.get("support_threshold", _DEFAULT_SUPPORT_THRESHOLD)
@@ -79,7 +75,7 @@ def process_interaction(
     cost = config.get("cost", _DEFAULT_COST)
     small_boost = config.get("small_boost", _DEFAULT_SMALL_BOOST)
 
-    # ── 1. Read inputs ─────────────────────────────────────────────
+    ## 1. Read inputs
     self_affect = self_state.get("affect", 0.0)
     partner_affect = partner_state.get("affect", 0.0)
     self_resilience = self_state.get("resilience", 0.5)
@@ -87,7 +83,7 @@ def process_interaction(
     self_stressed = self_state.get("stressed", False)
     partner_stressed = partner_state.get("stressed", False)
 
-    # ── 2. Affect convergence (with negativity bias) ───────────────
+    ## 2. Affect convergence (with negativity bias)
     raw_self_affect_change = influence_rate * partner_affect
     raw_partner_affect_change = influence_rate * self_affect
 
@@ -103,7 +99,7 @@ def process_interaction(
     self_affect_change = new_self_affect - self_affect
     partner_affect_change = new_partner_affect - partner_affect
 
-    # ── 3. Resilience convergence ───────────────────────────────────
+    ## 3. Resilience convergence
     self_resilience_change = resilience_influence * partner_affect
     partner_resilience_change = resilience_influence * self_affect
 
@@ -114,7 +110,7 @@ def process_interaction(
     self_resilience_change = new_self_resilience - self_resilience
     partner_resilience_change = new_partner_resilience - partner_resilience
 
-    # ── 4. Support detection from convergence magnitude ─────────────
+    ## 4. Support detection from convergence magnitude
     total_convergence = (
         abs(self_affect_change)
         + abs(partner_affect_change)
@@ -123,7 +119,7 @@ def process_interaction(
     )
     support_occurred = total_convergence > support_threshold
 
-    # ── 5. Resource exchange state machine ─────────────────────────
+    ## 5. Resource exchange state machine
     self_resource_change: float = 0.0
     partner_resource_change: float = 0.0
     self_pf_delta: Dict[str, float] = {}
@@ -153,7 +149,7 @@ def process_interaction(
     # (only self-stressed cases get resource changes; partner-stressed
     # alone is handled when that agent is 'self' in their own call)
 
-    # ── 6. Build deltas (change values — applied additively by caller) ──
+    ## 6. Build deltas (change values — applied additively by caller)
     self_delta: Dict[str, Any] = {
         "affect": self_affect_change,
         "resilience": self_resilience_change,
@@ -184,9 +180,7 @@ def process_interaction(
     )
 
 
-# ──────────────────────────────────────────────
-# Phase protocol wrapper (event-driven)
-# ──────────────────────────────────────────────
+## Phase protocol wrapper (event-driven)
 
 
 def run_phase(

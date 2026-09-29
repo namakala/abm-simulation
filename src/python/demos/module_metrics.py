@@ -19,7 +19,7 @@ from numpy.random import Generator, PCG64
 from src.python.phases.interfaces import AgentState, PhaseOutput
 
 
-# ── Metric Schemas (one TypedDict per module) ──────────────────────
+## Metric Schemas (one TypedDict per module)
 
 
 class PerceptionMetrics(TypedDict):
@@ -121,7 +121,7 @@ class InteractionMetrics(TypedDict):
     influence_magnitude: float
 
 
-# ── Extraction Functions ───────────────────────────────────────────
+## Extraction Functions
 
 
 def extract_perception_metrics(
@@ -442,7 +442,7 @@ def extract_interaction_metrics(
     )
 
 
-# ── Aggregation Functions ──────────────────────────────────────────
+## Aggregation Functions
 
 
 def _compute_stats(values: List[float]) -> Dict[str, float]:
@@ -629,7 +629,7 @@ def aggregate_interaction(metrics: List[InteractionMetrics]) -> Dict[str, Any]:
     return result
 
 
-# ── Isolation Input Generator ──────────────────────────────────────
+## Isolation Input Generator
 
 
 def compute_isolation_inputs(

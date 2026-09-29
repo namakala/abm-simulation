@@ -14,24 +14,16 @@ agent_vars <- c(
   "stress_overload" = "Overload perception",
   "consecutive_hindrances" = "Hindrance streak length"
 )
-agent_interpretations <- c(
-  "Variable stress levels with realistic range",
-  "Diverse adaptive capacities",
-  "Variable patterns around neutral",
-  "Fluctuating resource capacity",
-  "Variable patterns within bounds",
-  "Diverse agency experiences",
-  "Diverse capacity challenges",
-  "Variable patterns observed"
-)
 agent_sd <- sapply(names(agent_vars), function(col) sprintf("%.3f ± %.3f", mean(a[[col]]), sd(a[[col]])))
+agent_interp_vals <- sapply(names(agent_vars), agent_interp)
 tbl2 <- data.frame(
   Variable = unname(agent_vars),
   `Mean ± SD` = agent_sd,
-  Interpretation = agent_interpretations,
+  Interpretation = agent_interp_vals,
   check.names = FALSE
 )
-kable(tbl2, format = "latex", booktabs = TRUE)
+kable(tbl2, format = "latex", booktabs = TRUE, row.names = FALSE) |> 
+  kableExtra::kable_styling(full_width = TRUE)
 ```
 
 @tbl-agent-level reveals substantial dynamic variability within the
@@ -52,5 +44,5 @@ strategies. Hindrance streaks remain bounded
 `r sprintf("%.1f", max(a$consecutive_hindrances))`), demonstrating the
 system's capacity to prevent pathological cascades through network
 support. Individual diversities are harmonized through social dynamics
-to achieve collective stability: social network dynamics transform
+to achieve collective stability, where social network dynamics transform
 individual variability into population-level equilibrium.

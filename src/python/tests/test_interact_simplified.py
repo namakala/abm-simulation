@@ -13,7 +13,7 @@ from src.python.agent import Person
 from src.python.phases.interfaces import PhaseOutput
 
 
-# ── Fixtures ──────────────────────────────────────────────────────
+## Fixtures
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ def agent_with_neighbors():
     return a1, a2, agent_model
 
 
-# ─── Return dict contract tests ───────────────────────────────────
+## Return dict contract tests
 
 
 class TestInteractReturnDict:
@@ -85,7 +85,7 @@ class TestInteractReturnDict:
         assert "received_resources" in result
 
 
-# ─── Edge cases ───────────────────────────────────────────────────
+## Edge cases
 
 
 class TestInteractEdgeCases:
@@ -134,7 +134,7 @@ class TestInteractEdgeCases:
         assert -1.0 <= a2.affect <= 1.0
 
 
-# ─── Delegation test ──────────────────────────────────────────────
+## Delegation test
 
 
 class TestInteractDelegation:
